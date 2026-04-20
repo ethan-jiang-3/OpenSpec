@@ -31,7 +31,7 @@ OpenSpec 是个**纯文件 + JSON API** 的 CLI（grep 整个 src/ 搜 `openai|a
 
 **关键事实**：OpenSpec 全程**只做 IO 和模板拼装，不调任何 LLM**。
 
-→ 详细握手流程：[05-cli-reference/workflow-cli.md §0](05-cli-reference/workflow-cli.md#§0-openspec-怎么借用宿主-coding-agent-的-llm)
+→ 详细握手流程：[06-agent-protocol.md §0](06-agent-protocol.md#0-openspec-怎么借用宿主-coding-agent-的-llm)
 
 ---
 
@@ -52,7 +52,7 @@ OpenSpec 是个**纯文件 + JSON API** 的 CLI（grep 整个 src/ 搜 `openai|a
 | `propose` | `/opsx:propose` | `/openspec-propose` |
 | `archive` | `/opsx:archive` | `/openspec-archive-change` |
 
-→ 详细对照：[02-commands/tool-specific-syntax.md §0](02-commands/tool-specific-syntax.md)
+→ 详细对照：[05-usage-advanced.md §4](05-usage-advanced.md#4-openspec--vs-opsx--前缀之辨)
 
 ---
 
@@ -74,7 +74,7 @@ openspec config profile
 
 这样**只装 commands、不装 SKILL.md**，纯靠斜杠命令触发。
 
-→ 详细分档：[04-supported-tools/installation-paths.md §3](04-supported-tools/installation-paths.md#3-安装的副作用与触发模型)
+→ 详细分档：[02-installation.md §7](02-installation.md#7-安装的副作用与触发模型)
 
 ---
 
@@ -96,7 +96,7 @@ cd my-project
 npx @fission-ai/openspec init --tools claude,cursor    # 用 npx，不全局装
 ```
 
-→ 详细方案：[05-cli-reference/setup.md §3](05-cli-reference/setup.md#3-单项目隔离--只让-openspec-影响一个项目其它项目完全不动)
+→ 详细方案：[02-installation.md §3](02-installation.md#3-单项目隔离)
 
 ---
 
@@ -113,7 +113,7 @@ openspec init --tools none                 # 只建 openspec/，跳过 skill/com
 
 预勾逻辑：项目里有 `.claude/` 就预勾 Claude，有 `.cursor/` 就预勾 Cursor。所以一般 `openspec init` 自己会推荐你正在用的工具。
 
-→ 详细安装路径表：[04-supported-tools/installation-paths.md](04-supported-tools/installation-paths.md)
+→ 详细安装路径表：[02-installation.md §6](02-installation.md#6-每个工具的安装路径)
 
 ---
 
@@ -130,7 +130,7 @@ openspec init --tools none                 # 只建 openspec/，跳过 skill/com
 
 **为什么引入**：把"工作流"从源码硬编码改成数据文件。**Legacy** 时代所有项目必须 `proposal → specs → design → tasks`；**现在**你可以写 `rapid.yaml`（只有 proposal+tasks）、`research-first.yaml`（先 research 再 proposal）等，多种工作流共存。
 
-→ 详细解析（含 ASCII DAG 图）：[05-cli-reference/schema-cli.md §0](05-cli-reference/schema-cli.md#§0-openspec-里的-schema-到底是什么)
+→ 详细解析（含 ASCII DAG 图）：[03-concepts.md §3](03-concepts.md#3-schema-是什么为什么这么叫)
 
 ---
 
@@ -148,7 +148,7 @@ openspec init --tools none                 # 只建 openspec/，跳过 skill/com
 
 简单说：**skill 是"使用手册"，command 是"快捷键"**，多数工具同时装两份。
 
-→ 详细映射：[02-commands/command-to-skill-map.md](02-commands/command-to-skill-map.md)
+→ 详细映射：[05-usage-advanced.md §3](05-usage-advanced.md#3-workflow--skill--command-三对映射)
 
 ---
 
@@ -202,7 +202,7 @@ openspec init --tools none                 # 只建 openspec/，跳过 skill/com
 
 也可以**接自己的 LLM pipeline**：跑 `openspec instructions <id> --json` 拿到结构化 prompt，自己调 OpenAI/Anthropic API，把返回写到 JSON 里给的 `outputPath`。
 
-→ 详细原理：[05-cli-reference/workflow-cli.md §0](05-cli-reference/workflow-cli.md#§0-openspec-怎么借用宿主-coding-agent-的-llm)
+→ 详细原理：[06-agent-protocol.md §0](06-agent-protocol.md#0-openspec-怎么借用宿主-coding-agent-的-llm)
 
 ---
 
@@ -238,7 +238,7 @@ openspec instructions proposal --change my-change --json
 - 在 config 的 rules 里加更明确的约束
 - 在 explore 阶段先 `/opsx:explore` 把需求理清
 
-→ 详细 instructions JSON 字段：[05-cli-reference/workflow-cli.md `openspec instructions` 段](05-cli-reference/workflow-cli.md#openspec-instructions)
+→ 详细 instructions JSON 字段：[06-agent-protocol.md §2](06-agent-protocol.md#2-openspec-instructions)
 
 ---
 
@@ -252,7 +252,7 @@ cd <project>
 rm -rf openspec
 rm -rf .claude/skills/openspec-* .claude/commands/opsx
 rm -rf .cursor/skills/openspec-* .cursor/commands/opsx-*.md
-# ... 其它工具看 04-supported-tools/installation-paths.md
+# ... 其它工具看 02-installation.md §6
 
 # 2. 清 Codex 全局（如果之前选过 codex）
 rm -f ~/.codex/prompts/opsx-*.md

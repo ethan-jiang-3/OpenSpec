@@ -29,7 +29,7 @@
  │◀── 完成 ──────────────│                              │
 ```
 
-→ 完整解释：[05-cli-reference/workflow-cli.md §0](05-cli-reference/workflow-cli.md#§0-openspec-怎么借用宿主-coding-agent-的-llm)
+→ 完整解释：[06-agent-protocol.md §0](06-agent-protocol.md#0-openspec-怎么借用宿主-coding-agent-的-llm)
 
 ---
 
@@ -56,7 +56,7 @@ openspec init
 ```
 
 **不同 agent 命令前缀不同**：Claude 用 `/opsx:`，Cursor/Cline/OpenCode 用 `/opsx-`，Trae 用 `/openspec-`。
-→ 详见 [02-commands/tool-specific-syntax.md](02-commands/tool-specific-syntax.md)
+→ 详见 [05-usage-advanced.md §4](05-usage-advanced.md#4-openspec--vs-opsx--前缀之辨)
 
 ---
 
@@ -68,127 +68,82 @@ openspec init
 
 | 我想... | 去看 |
 |---------|------|
-| 用 5 分钟搞清楚 OpenSpec 是什么 | [01-opsx-overview/README.md](01-opsx-overview/README.md)（3 分钟）|
-| 知道它跟以前那套有什么不同 | [01-opsx-overview/opsx-vs-legacy.md](01-opsx-overview/opsx-vs-legacy.md)（5 分钟）|
-| 看核心几个命令是干啥的 | [02-commands/core-commands.md](02-commands/core-commands.md)（5 分钟）|
-| 看一张总流程图 | [03-workflow-sequence/sequence-diagrams.md](03-workflow-sequence/sequence-diagrams.md)（3 分钟）|
+| 用 5 分钟搞清楚 OpenSpec 是什么 | [01-overview.md](01-overview.md)（3 分钟） |
+| 知道它跟以前那套有什么不同 | [01-overview.md §5](01-overview.md#5-opsx-vs-legacy-对比)（5 分钟） |
+| 看核心几个命令是干啥的 | [04-usage-basic.md §2](04-usage-basic.md#2-core-四个斜杠命令)（5 分钟） |
+| 看一张总流程图 | [04-usage-basic.md §3](04-usage-basic.md#3-命令次序流程图)（3 分钟） |
 
 ### 安装 / 配置阶段（**新手常卡这里**）
 
 | 我想... | 去看 |
 |---------|------|
-| 知道支持我哪个 AI 工具 | [04-supported-tools/README.md](04-supported-tools/README.md) |
-| 担心装了会不会污染 / 自动跑出来 | [FAQ Q3](FAQ.md#q3-装上-openspec-之后ai-会不会平时就主动跳出来烦我) + [04 §3](04-supported-tools/installation-paths.md#3-安装的副作用与触发模型) |
-| 只想给一个项目装，别影响其它项目 | [FAQ Q4](FAQ.md#q4-我有些项目要-openspec有些不要能完全隔离吗) + [05 setup §3](05-cli-reference/setup.md#3-单项目隔离--只让-openspec-影响一个项目其它项目完全不动) |
-| 在 CI 里自动 init | [05-cli-reference/setup.md](05-cli-reference/setup.md) |
-| 不想要全部命令，只装核心 4 个 | [03-workflow-sequence/README.md](03-workflow-sequence/README.md)（profile 切换）|
+| 知道支持我哪个 AI 工具 | [02-installation.md §4](02-installation.md#4-28-个支持的工具总表) |
+| 担心装了会不会污染 / 自动跑出来 | [FAQ Q3](FAQ.md#q3-装上-openspec-之后ai-会不会平时就主动跳出来烦我) + [02 §7](02-installation.md#7-安装的副作用与触发模型) |
+| 只想给一个项目装，别影响其它项目 | [FAQ Q4](FAQ.md#q4-我有些项目要-openspec有些不要能完全隔离吗) + [02 §3](02-installation.md#3-单项目隔离) |
+| 在 CI 里自动 init | [02-installation.md §5](02-installation.md#5---tools-id-清单ci-用) |
+| 不想要全部命令，只装核心 4 个 | [04-usage-basic.md §1](04-usage-basic.md#1-profile-简介)（profile 切换） |
 
 ### 日常使用阶段
 
 | 我想... | 去看 |
 |---------|------|
-| 知道每个 `/opsx:*` 命令做什么 | [02-commands/core-commands.md](02-commands/core-commands.md) + [expanded-commands.md](02-commands/expanded-commands.md) |
-| `ff` 和 `continue` 该用哪个 | [03-workflow-sequence/when-to-use-what.md](03-workflow-sequence/when-to-use-what.md) |
-| 写 delta spec（修改已有规格）的语法 | [06-schemas-and-artifacts/delta-spec-format.md](06-schemas-and-artifacts/delta-spec-format.md) |
-| 看进度 / 状态 | [05-cli-reference/browsing-and-validation.md](05-cli-reference/browsing-and-validation.md) |
+| 知道每个 `/opsx:*` 命令做什么 | [04-usage-basic.md §2](04-usage-basic.md#2-core-四个斜杠命令) + [05-usage-advanced.md §1](05-usage-advanced.md#1-expanded-7-个扩展命令) |
+| `ff` 和 `continue` 该用哪个 | [04-usage-basic.md §4](04-usage-basic.md#4-决策树什么时候用什么) |
+| 写 delta spec（修改已有规格）的语法 | [03-concepts.md §2](03-concepts.md#2-delta-spec-格式) |
+| 看进度 / 状态 | [04-usage-basic.md §5](04-usage-basic.md#5-浏览-cli-list--view--show) |
 | AI 生成的不对怎么调 | [FAQ Q12](FAQ.md#q12-opsxpropose-之后-ai-卡住或生成的不对怎么办) |
 
 ### 定制 / 集成阶段
 
 | 我想... | 去看 |
 |---------|------|
-| 搞懂 schema 到底是什么 | [FAQ Q6](FAQ.md#q6-schema-是什么为啥-openspec-要引入这个词) + [05 schema-cli §0](05-cli-reference/schema-cli.md#§0-openspec-里的-schema-到底是什么) |
-| 自己写一份工作流 schema | [07-customization/custom-schemas.md](07-customization/custom-schemas.md) |
-| 给团队定制项目级配置（context / rules）| [07-customization/project-config.md](07-customization/project-config.md) |
-| 把 OpenSpec 接入自己的 LLM pipeline | [05 workflow-cli §0](05-cli-reference/workflow-cli.md#§0-openspec-怎么借用宿主-coding-agent-的-llm) |
-| 加一个新 agent 适配器 | [08-architecture/extension-points.md](08-architecture/extension-points.md) |
-| 看源码地图 | [08-architecture/source-map.md](08-architecture/source-map.md) |
+| 搞懂 schema 到底是什么 | [FAQ Q6](FAQ.md#q6-schema-是什么为啥-openspec-要引入这个词) + [03-concepts.md §3](03-concepts.md#3-schema-是什么为什么这么叫) |
+| 自己写一份工作流 schema | [07-customization.md §2](07-customization.md#2-自定义-schema) |
+| 给团队定制项目级配置（context / rules） | [07-customization.md §1](07-customization.md#1-项目-config-openspecconfigyaml) |
+| 把 OpenSpec 接入自己的 LLM pipeline | [06-agent-protocol.md §0](06-agent-protocol.md#0-openspec-怎么借用宿主-coding-agent-的-llm) |
+| 加一个新 agent 适配器 | [08-architecture.md §2](08-architecture.md#2-扩展点想改加东西时看哪里) |
+| 看源码地图 | [08-architecture.md §1](08-architecture.md#1-源码地图) |
 
 ### 排查 / 卸载阶段
 
 | 我想... | 去看 |
 |---------|------|
-| 某个命令在我这工具叫啥 | [02-commands/tool-specific-syntax.md](02-commands/tool-specific-syntax.md) |
-| 调试 schema 解析优先级 | [07-customization/schema-resolution-order.md](07-customization/schema-resolution-order.md) |
+| 某个命令在我这工具叫啥 | [05-usage-advanced.md](05-usage-advanced.md) |
+| 调试 schema 解析优先级 | [07-customization.md §3](07-customization.md#3-schema-解析优先级) |
 | 完全卸载 OpenSpec | [FAQ Q13](FAQ.md#q13-我能不能完全卸载-openspec) |
-| 验证我的 change 文件夹合不合法 | `openspec validate` → [05 browsing-and-validation](05-cli-reference/browsing-and-validation.md) |
+| 验证我的 change 文件夹合不合法 | `openspec validate` → [04-usage-basic.md §6](04-usage-basic.md#6-校验-cli-validate) |
 
 ---
 
-## 📚 完整文件地图（带阅读时长）
+## 📚 完整文件地图（平铺结构，10 个文件）
 
-阅读时长按 ~30 行/分钟估算。⭐ = 强烈推荐先读。
+⭐ = 强烈推荐先读。阅读时长按 ~60 行/分钟估算。
 
-### 🟢 入门必读（共 ~12 分钟）
+| 文件 | 内容摘要 | 时长 |
+|------|---------|------|
+| ⭐ **[00-index.md](00-index.md)** | 本文件，总导读 | 3 min |
+| ⭐ **[FAQ.md](FAQ.md)** | 13 个最常困惑的 Q&A——新人必读 | 8 min |
+| ⭐ **[01-overview.md](01-overview.md)** | OPSX 是什么 + 四条哲学 + vs legacy 对比 | 5 min |
+| ⭐ **[02-installation.md](02-installation.md)** | `init` / `update` + 28 工具总表 + 路径 + 副作用 + 项目隔离 | 15 min |
+| **[03-concepts.md](03-concepts.md)** | artifact DAG + delta spec 格式 + schema 概念 + spec-driven + change 目录 | 12 min |
+| ⭐ **[04-usage-basic.md](04-usage-basic.md)** | core 4 命令 + 流程图 + 决策树 + 浏览/校验/archive CLI | 14 min |
+| **[05-usage-advanced.md](05-usage-advanced.md)** | expanded 7 命令 + openspec- vs opsx- + Trae/Cline/OpenCode 深挖 | 12 min |
+| ⭐ **[06-agent-protocol.md](06-agent-protocol.md)** | **§0 OpenSpec 如何借用 LLM** + agent 用的 4 个 CLI | 10 min |
+| **[07-customization.md](07-customization.md)** | project config + 自定义 schema + 解析优先级 + schema/config CLI | 15 min |
+| **[08-architecture.md](08-architecture.md)** | 源码地图 + 7 个扩展点 | 8 min |
 
-| 文件 | 行数 | 时长 | 内容 |
-|------|------|------|------|
-| ⭐ [FAQ.md](FAQ.md) | 250 | 8 min | **13 个最常困惑的 Q&A**——新人必读 |
-| ⭐ [01-opsx-overview/README.md](01-opsx-overview/README.md) | 60 | 2 min | OPSX 是什么 + 四条哲学 |
-| [01-opsx-overview/opsx-vs-legacy.md](01-opsx-overview/opsx-vs-legacy.md) | 80 | 3 min | 新旧对比 + 流程图 |
-
-### 🟢 命令与工作流（共 ~25 分钟）
-
-| 文件 | 行数 | 时长 | 内容 |
-|------|------|------|------|
-| ⭐ [02-commands/core-commands.md](02-commands/core-commands.md) | 110 | 4 min | 4 个核心命令 |
-| [02-commands/expanded-commands.md](02-commands/expanded-commands.md) | 170 | 6 min | 7 个扩展命令 |
-| [02-commands/tool-specific-syntax.md](02-commands/tool-specific-syntax.md) | 350 | 12 min | 跨工具语法差异（**含 Trae/Cline/OpenCode 深挖**）|
-| [02-commands/command-to-skill-map.md](02-commands/command-to-skill-map.md) | 60 | 2 min | command ↔ skill 映射表 |
-| [03-workflow-sequence/README.md](03-workflow-sequence/README.md) | 50 | 2 min | core / custom profile |
-| [03-workflow-sequence/sequence-diagrams.md](03-workflow-sequence/sequence-diagrams.md) | 110 | 4 min | 5 张 mermaid 流程图 |
-| [03-workflow-sequence/when-to-use-what.md](03-workflow-sequence/when-to-use-what.md) | 100 | 3 min | 决策树 |
-
-### 🟡 工具适配（按需）
-
-| 文件 | 行数 | 时长 | 内容 |
-|------|------|------|------|
-| [04-supported-tools/README.md](04-supported-tools/README.md) | 60 | 2 min | 28 个 agent 总表 |
-| ⭐ [04-supported-tools/installation-paths.md](04-supported-tools/installation-paths.md) | 250 | 8 min | 路径表 + **§3 副作用与触发模型** |
-| [04-supported-tools/tool-ids.md](04-supported-tools/tool-ids.md) | 80 | 3 min | `--tools` 可用 ID（CI 用）|
-
-### 🟡 CLI 手册（查阅型）
-
-| 文件 | 行数 | 时长 | 内容 |
-|------|------|------|------|
-| ⭐ [05-cli-reference/setup.md](05-cli-reference/setup.md) | 250 | 8 min | `init` / `update` + **§3 单项目隔离** |
-| [05-cli-reference/browsing-and-validation.md](05-cli-reference/browsing-and-validation.md) | 140 | 5 min | `list` / `view` / `show` / `validate` |
-| ⭐ [05-cli-reference/workflow-cli.md](05-cli-reference/workflow-cli.md) | 290 | 10 min | **§0 OpenSpec 如何借用 LLM** + agent 用的 4 个命令 |
-| ⭐ [05-cli-reference/schema-cli.md](05-cli-reference/schema-cli.md) | 330 | 11 min | **§0 schema 是什么** + `schema init/fork/validate/which` |
-| [05-cli-reference/config-cli.md](05-cli-reference/config-cli.md) | 90 | 3 min | `config profile` 等全局配置 |
-| [05-cli-reference/misc.md](05-cli-reference/misc.md) | 100 | 4 min | `archive` / `feedback` / `completion` + 环境变量 |
-
-### 🔵 概念深入（定制开发用）
-
-| 文件 | 行数 | 时长 | 内容 |
-|------|------|------|------|
-| [06-schemas-and-artifacts/artifact-graph.md](06-schemas-and-artifacts/artifact-graph.md) | 110 | 4 min | DAG + 状态机（done / ready / blocked）|
-| [06-schemas-and-artifacts/delta-spec-format.md](06-schemas-and-artifacts/delta-spec-format.md) | 100 | 4 min | ADDED / MODIFIED / REMOVED / RENAMED 语法 |
-| [06-schemas-and-artifacts/spec-driven-schema.md](06-schemas-and-artifacts/spec-driven-schema.md) | 90 | 3 min | 内置 schema 全貌 |
-| [06-schemas-and-artifacts/change-folder-layout.md](06-schemas-and-artifacts/change-folder-layout.md) | 90 | 3 min | change/ 目录约定 |
-| [07-customization/project-config.md](07-customization/project-config.md) | 110 | 4 min | `openspec/config.yaml` 三个字段 |
-| [07-customization/custom-schemas.md](07-customization/custom-schemas.md) | 220 | 7 min | 写自定义 schema 的三种模板 |
-| [07-customization/schema-resolution-order.md](07-customization/schema-resolution-order.md) | 90 | 3 min | 两级四档解析优先级 |
-
-### 🔵 架构与扩展
-
-| 文件 | 行数 | 时长 | 内容 |
-|------|------|------|------|
-| [08-architecture/source-map.md](08-architecture/source-map.md) | 115 | 4 min | src/ 目录到职责映射 |
-| [08-architecture/extension-points.md](08-architecture/extension-points.md) | 145 | 5 min | 加新 agent / workflow / schema 的方法 |
-
-**总计**：~3800 行 / ~130 分钟。**全部读完不必要**。按上面的"按意图导航"挑着读才合理。
+**总计**：~100 分钟。**全部读完不必要**。按上面的"按意图导航"挑着读才合理。
 
 ---
 
 ## 🎯 三条推荐路径
 
-### 路径 A：纯使用者（30 分钟）
+### 路径 A：纯使用者（25 分钟）
 
 只想用，不想知道内部：
 
 ```
-FAQ.md  →  01 README  →  02 core-commands  →  03 sequence-diagrams
+FAQ.md  →  01-overview.md  →  04-usage-basic.md
         ↓
    遇到问题再回 FAQ 查
 ```
@@ -200,27 +155,27 @@ FAQ.md  →  01 README  →  02 core-commands  →  03 sequence-diagrams
 ```
 FAQ.md
   ↓
-01 README + opsx-vs-legacy
+01-overview.md
   ↓
-04 installation-paths §3 (副作用)
+02-installation.md §7 (副作用)
   ↓
-05 setup §3 (单项目隔离)
+02-installation.md §3 (单项目隔离)
 ```
 
-### 路径 C：定制 / 集成开发者（90 分钟）
+### 路径 C：定制 / 集成开发者（80 分钟）
 
 要做 schema 定制 / 加 agent / 接 LLM pipeline：
 
 ```
-01 README → FAQ Q1+Q6+Q10
+01-overview.md → FAQ Q1+Q6+Q10
   ↓
-05 workflow-cli §0 (协议)
-05 schema-cli §0 (schema 概念)
+06-agent-protocol.md §0 (协议)
+03-concepts.md §3 (schema 概念)
   ↓
-06 整个目录
-07 整个目录
+03-concepts.md（artifact / delta / schema）
+07-customization.md（全文）
   ↓
-08 source-map + extension-points
+08-architecture.md（源码地图 + 扩展点）
 ```
 
 ---

@@ -1,8 +1,18 @@
-# CLI · Workflow 相关（给 Agent 用）
+# 06 · Agent Protocol（CLI 给 AI 用）
+
+> 回 [导读](00-index.md) · [FAQ](FAQ.md)
 
 这四个命令是 **OPSX 的核心骨架**——AI agent 在执行 `/opsx:*` 命令时会调它们拿结构化数据。人类也能用它们检查进度。
 
-实现在 [src/commands/workflow/](../../src/commands/workflow/)。
+实现在 [src/commands/workflow/](../src/commands/workflow/)。
+
+## 目录
+
+- [§0 OpenSpec 怎么"借用"宿主 coding agent 的 LLM](#0-openspec-怎么借用宿主-coding-agent-的-llm)
+- [§1 `openspec status`](#1-openspec-status)
+- [§2 `openspec instructions`](#2-openspec-instructions)
+- [§3 `openspec templates`](#3-openspec-templates)
+- [§4 `openspec schemas`](#4-openspec-schemas)
 
 ---
 
@@ -99,7 +109,7 @@
 - 用人话告诉 LLM"OpenSpec 是什么、有哪些命令、协议是什么"
 - 一步步指导 LLM"调哪个命令、解析哪个字段、什么时候写文件"
 
-源码佐证 ([`src/core/templates/workflows/apply-change.ts:28-46`](../../src/core/templates/workflows/apply-change.ts) 节选)：
+源码佐证 ([src/core/templates/workflows/apply-change.ts](../src/core/templates/workflows/apply-change.ts) 节选)：
 
 ```text
 2. **Check status to understand the schema**
@@ -126,7 +136,7 @@
 
 | 维度 | Legacy | OPSX (现在) |
 |------|--------|-------------|
-| Prompt 来自 | 源码里写死的字符串 | CLI 实时返回（`openspec instructions --json`）|
+| Prompt 来自 | 源码里写死的字符串 | CLI 实时返回（`openspec instructions --json`） |
 | 项目特定上下文 | 靠 LLM "自己读 project.md" | CLI 主动注入到 `<context>` 标签 |
 | 依赖 artifact 内容 | LLM 自己 grep | CLI 在 JSON 里直接给完整内容 |
 | 升级 OpenSpec | 要重新生成所有 prompt 文件 | 升级 CLI 即可，模板/逻辑都在 CLI 里 |
@@ -145,7 +155,7 @@
 
 ---
 
-## `openspec status`
+## §1 `openspec status`
 
 显示某个 change 的 artifact 完成状态。
 
@@ -184,11 +194,11 @@ openspec status --change add-dark-mode --json
 }
 ```
 
-状态的三种值来自 [src/core/artifact-graph/state.ts](../../src/core/artifact-graph/state.ts)：`done` / `ready` / `blocked`。
+状态的三种值来自 [src/core/artifact-graph/state.ts](../src/core/artifact-graph/state.ts)：`done` / `ready` / `blocked`。
 
 ---
 
-## `openspec instructions`
+## §2 `openspec instructions`
 
 拿到创建某个 artifact 或 apply 阶段的**富上下文指令**。agent 主要靠这个命令拼提示词。
 
@@ -228,7 +238,7 @@ openspec instructions design --change add-dark-mode --json
 
 ---
 
-## `openspec templates`
+## §3 `openspec templates`
 
 查看某个 schema 的模板文件实际解析到哪里。
 
@@ -261,11 +271,11 @@ Templates:
   tasks     → ~/.openspec/schemas/spec-driven/templates/tasks.md
 ```
 
-模板解析优先级：**project → user global → package built-in**（见 [07-customization/schema-resolution-order.md](../07-customization/schema-resolution-order.md)）。
+模板解析优先级：**project → user global → package built-in**（见 [07-customization.md §3](07-customization.md#3-schema-解析优先级)）。
 
 ---
 
-## `openspec schemas`
+## §4 `openspec schemas`
 
 列出所有可用 schema 和它们的来源。
 
