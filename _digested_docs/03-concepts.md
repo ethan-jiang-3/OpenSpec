@@ -4,11 +4,105 @@
 
 ## 目录
 
+- [§0 先抓大图：OpenSpec 到底在管理什么](#0-先抓大图openspec-到底在管理什么)
 - [§1 Artifact 依赖图（DAG）](#1-artifact-依赖图dag)
 - [§2 Delta Spec 格式](#2-delta-spec-格式)
 - [§3 Schema 是什么、为什么这么叫](#3-schema-是什么为什么这么叫)
 - [§4 内置 `spec-driven` schema 详解](#4-内置-spec-driven-schema-详解)
 - [§5 Change 目录结构](#5-change-目录结构)
+
+---
+
+## §0 先抓大图：OpenSpec 到底在管理什么
+
+如果你一开始就盯着 `schema`、artifact DAG、skill、adapter，很容易越看越碎。
+
+官方文档真正先讲清的是一件更朴素的事：
+
+> **OpenSpec 在管理的，不是“AI 提示词集合”，而是“项目当前规格基线，以及针对这条基线的一次次增量变更”。**
+
+先把这四句话钉住：
+
+| 东西 | 它是什么 | 先怎么理解最不容易错 |
+|------|----------|----------------------|
+| `openspec/specs/` | 项目当前已经成立的行为规格 | 当前能力基线，source of truth |
+| `openspec/changes/<name>/` | 一次变更工作区 | 针对基线做的增量提案 |
+| `proposal/specs/design/tasks` | 这次变更的几类 artifact | 为什么改、改什么、怎么改、怎么做 |
+| `schema` | artifact 的结构和依赖定义 | “这类 change 应该长什么样” |
+
+### 先看目录，不要先看机制
+
+```text
+项目根/
+└── openspec/
+    ├── specs/                       ← 当前系统已成立的规格
+    │   ├── auth/spec.md
+    │   └── billing/spec.md
+    ├── changes/
+    │   └── add-sso-login/           ← 一次变更
+    │       ├── proposal.md          ← 为什么改 / 范围
+    │       ├── design.md            ← 技术方案
+    │       ├── tasks.md             ← 实施清单
+    │       └── specs/
+    │           └── auth/spec.md     ← delta spec：这次要怎么改 auth 规格
+    └── config.yaml                  ← 默认 schema + context + rules
+```
+
+### 最核心的关系：`specs` 和 `changes`
+
+官方文档里最重要、也最值得前置的，其实是下面这张心智图：
+
+```text
+openspec/
+
+  specs/      = 当前真实规格
+  changes/    = 准备对真实规格做的修改
+```
+
+换句话说：
+
+- `specs/` 不是“计划做什么”，而是“系统现在被承认成什么样”
+- `changes/` 不是“另一套正式规格”，而是“准备怎么改正式规格”
+- archive 之后，`changes/<name>/specs/` 里的 delta 会 merge 回 `specs/`
+
+### 最核心的动作链：不是 phases，而是围绕 change 的一组动作
+
+对默认 `core` profile 来说，最值得先记住的是这个：
+
+```text
+/opsx:propose ──► /opsx:apply ──► /opsx:archive
+```
+
+它背后的文档链条是：
+
+```text
+proposal ──► specs ──► design ──► tasks ──► implement
+```
+
+可以把它记成一句话：
+
+- `proposal` 管为什么和范围
+- `specs` 管行为变化
+- `design` 管技术方案
+- `tasks` 管实施步骤
+
+### 为什么很多人会在这里看乱
+
+因为 OpenSpec 有两层东西很容易被提前看到：
+
+1. **交付层**：`.cline/`、`.claude/`、commands、skills
+2. **机制层**：schema、instruction injection、artifact graph
+
+它们都重要，但都不该先于“项目基线 + 变更增量”这个主轴进入脑子。
+
+所以更顺的阅读顺序应该是：
+
+1. 先明白 `specs/` 和 `changes/` 分别是什么
+2. 再明白 change 里四种 artifact 的职责
+3. 再看 delta spec 怎么 merge
+4. 最后再看 schema、config、skill、agent protocol
+
+带着这个大图再看后面的 DAG、delta 和 schema，会顺很多。
 
 ---
 
