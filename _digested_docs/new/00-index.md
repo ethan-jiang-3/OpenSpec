@@ -86,7 +86,7 @@ graph LR
 | **specs/** | 项目当前正式规格基线 | `openspec/specs/auth/spec.md` |
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
-| **profile** | 选择安装哪些工作流命令 | core（4个命令）vs expanded（更多命令） |
+| **profile** | 选择安装哪些工作流命令 | core（4个命令）vs custom（自选命令） |
 | **brownfield** | 已有代码库，在上面继续改 | 接手一个跑了 3 年的系统 |
 | **greenfield** | 从零开始的新项目 | 白纸一张，全新设计 |
 
@@ -94,15 +94,18 @@ graph LR
 
 ## 命令速查
 
-### 日常最常用（core profile）
+### 日常最常用（core profile，默认包含 4 个命令）
 
 | 命令 | 作用 | 典型场景 |
 |------|------|---------|
 | `/opsx:propose <name>` | 发起一个 change，生成 artifacts | 开始一个新功能或修复 |
+| `/opsx:explore` | 探索/调研模式，不生成 artifacts | 了解现有代码、调研技术方案 |
 | `/opsx:apply [name]` | 按 tasks.md 实现代码 | 开始写代码 |
 | `/opsx:archive [name]` | 收尾，合并 delta spec 回基线 | 功能完成后归档 |
 
-### 扩展工作流（expanded profile）
+### 扩展工作流（custom profile）
+
+通过 `openspec config profile` 切换到 custom profile 后，可以启用更多命令：
 
 | 命令 | 作用 |
 |------|------|
@@ -121,7 +124,7 @@ graph LR
 | `openspec init` | 初始化项目 |
 | `openspec list` | 列出所有 changes |
 | `openspec show <name>` | 查看某个 change 详情 |
-| `openspec validate` | 验证 artifacts 结构 |
+| `openspec validate` | 验证 artifacts 结构 | **只验证格式和结构**，不验证内容质量 |
 | `openspec archive <name>` | 归档 change |
 | `openspec config profile` | 切换工作流 profile |
 | `openspec update` | 更新 AI 工具的 skills/commands |

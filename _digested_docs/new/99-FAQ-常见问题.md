@@ -31,10 +31,10 @@
 - 跳过某些步骤（比如简单 change 可以不写 design）
 - 这就是"Actions, not phases"的意思
 
-### Q6: 什么时候该用 core profile，什么时候用 expanded？
+### Q6: 什么时候该用 core profile，什么时候用 custom？
 **A**:
-- **core**（默认）：只有 4 个命令，适合大多数场景
-- **expanded**：更多命令（explore/verify/sync等），适合复杂项目
+- **core**（默认）：只有 4 个命令（propose/explore/apply/archive），适合大多数场景
+- **custom**：自选命令（可以启用 verify/sync/continue 等），适合复杂项目
 - **切换**：`openspec config profile`
 
 ---
@@ -121,7 +121,7 @@
 
 ### Q18: profile 和 schema 有什么区别？
 **A**:
-- **profile**：你能用哪些命令（core/expanded）
+- **profile**：你能用哪些命令（core/custom）
 - **schema**：每个 change 长什么样（spec-driven/task-driven）
 
 ### Q19: `.openspec.yaml` 是什么？

@@ -11,7 +11,7 @@ OpenSpec 有两种 profile（配置模式）：
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
 | **core** | 4 个命令 | 快速开发，简单场景 | ✅ 是（默认） |
-| **expanded** | 10+ 个命令 | 复杂项目，需要更多控制 | ❌ 否 |
+| **custom** | 10+ 个命令 | 复杂项目，需要更多控制 | ❌ 否 |
 
 ### 检查你当前的 Profile
 
@@ -32,7 +32,7 @@ openspec config profile
 /opsx:archive [name]   # 归档 change
 ```
 
-### Expanded Profile 的额外命令
+### Custom Profile 的额外命令
 
 ```bash
 /opsx:new <name>       # 只创建 change 目录
@@ -44,7 +44,7 @@ openspec config profile
 /opsx:onboard          # 新成员快速了解项目
 ```
 
-### 如何切换到 Expanded Profile
+### 如何切换到 Custom Profile
 
 ```bash
 # 步骤 1：切换 profile
@@ -59,7 +59,7 @@ openspec update
 
 ### 本文档的假设
 
-**本文档中的某些示例使用 expanded profile 的命令**（如 `/opsx:continue`）。
+**本文档中的某些示例使用 custom profile 的命令**（如 `/opsx:continue`）。
 
 如果你使用 **core profile**（默认），请参考每个场景下的"Core Profile 替代方案"。
 
@@ -258,7 +258,7 @@ for offline reconciliation and sharing with the finance department.
 - 丢失所有手动修改
 - 需要重新审查内容
 
-**示例场景（Expanded Profile）**：
+**示例场景（Custom Profile）**：
 ```bash
 # 场景：proposal 完全偏离了需求，需要重写
 
@@ -568,7 +568,7 @@ openspec instructions proposal --json | jq '.context, .rules'
 
 **步骤 3：创建测试 change 验证**
 
-**Expanded Profile**：
+**Custom Profile**：
 ```bash
 # 创建一个测试 change
 /opsx:propose test-config
@@ -659,7 +659,7 @@ which is error-prone and time-consuming (30+ minutes per report).
 
 **修改方式 2：让 AI 辅助**
 
-**Expanded Profile**：
+**Custom Profile**：
 ```markdown
 # 在 Cline 里说：
 "请帮我扩展 proposal.md 的 Why 部分，补充以下信息：
@@ -906,7 +906,7 @@ Use streaming CSV generation with Papa Parse library.
 | 需求完全变了 | ✅ 需要 | 删除后让 AI 重新生成 |
 | 格式完全乱了 | ✅ 需要 | 删除后让 AI 重新生成 |
 
-**重新生成的步骤（Expanded Profile）**：
+**重新生成的步骤（Custom Profile）**：
 ```bash
 # 1. 删除文件
 rm openspec/changes/add-csv-export/proposal.md

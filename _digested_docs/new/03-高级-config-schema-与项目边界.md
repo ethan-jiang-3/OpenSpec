@@ -78,7 +78,6 @@ context: |
   Testing: Vitest + Playwright
   Public APIs should remain backward compatible.
 
-# 方式1：结构化 rules（按 artifact 分类）
 rules:
   proposal:
     - Include rollback plan
@@ -86,18 +85,9 @@ rules:
     - Add unhappy-path scenarios
   design:
     - Explain migration risk
-
-# 方式2：纯文本 rules（更灵活）
-# rules: |
-#   - New user-visible behavior must be reflected in OpenSpec artifacts
-#   - Approval-related changes must preserve authorization regression coverage
-#   - Do not bypass published domain interfaces
 ```
 
-**注意**：两种 rules 格式都支持：
-- **结构化**（方式1）：按 artifact 分类，适合规则很多的项目
-- **纯文本**（方式2）：更灵活，适合规则较少的项目
-- 选一种用就行，不要混用
+**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类），不支持纯文本格式。
 
 ### config.yaml vs schema：对比表
 
@@ -273,9 +263,12 @@ schema 管的是：
 
 **场景**：你想用 OpenSpec，但只想要最简单的工作流。
 
-1. **选 profile**：`openspec config profile` 选 `core`
-   - 结果：你只有 4 个命令（propose/apply/archive/list）
+1. **选 profile**：`openspec config profile` 选 `core` 或 `custom`
+   - core：你只有 4 个命令（propose/explore/apply/archive）
+   - custom：自选命令（可以启用 new/continue/ff/verify/sync 等）
    - 这是"入口层"的选择
+
+**⚠️ 警告**：切换 profile 可能会删除或添加 workflow 文件。切换前确保你理解影响。
 
 2. **选 schema**：在 `config.yaml` 里写 `schema: spec-driven`
    - 结果：每个 change 都有 proposal/specs/design/tasks 四个 artifact
