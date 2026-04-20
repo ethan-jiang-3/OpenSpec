@@ -68,7 +68,9 @@ openspec init
 
 | 我想... | 去看 |
 |---------|------|
+| **先锚定核心术语**（artifact / change / spec / delta / schema / workflow / profile / skill / command） | [01-overview.md §0 术语速查](01-overview.md#0-核心术语速查读其它文件前先过一遍)（3 分钟） |
 | 用 5 分钟搞清楚 OpenSpec 是什么 | [01-overview.md](01-overview.md)（3 分钟） |
+| **先锚定 10 个核心术语再读其它文档** | ⭐ [01-overview.md §0 核心术语速查](01-overview.md#0-核心术语速查读其它文件前先过一遍)（3 分钟）|
 | 知道它跟以前那套有什么不同 | [01-overview.md §5](01-overview.md#5-opsx-vs-legacy-对比)（5 分钟） |
 | 看核心几个命令是干啥的 | [04-usage-basic.md §2](04-usage-basic.md#2-core-四个斜杠命令)（5 分钟） |
 | 看一张总流程图 | [04-usage-basic.md §3](04-usage-basic.md#3-命令次序流程图)（3 分钟） |
@@ -123,7 +125,7 @@ openspec init
 |------|---------|------|
 | ⭐ **[00-index.md](00-index.md)** | 本文件，总导读 | 3 min |
 | ⭐ **[FAQ.md](FAQ.md)** | 13 个最常困惑的 Q&A——新人必读 | 8 min |
-| ⭐ **[01-overview.md](01-overview.md)** | OPSX 是什么 + 四条哲学 + vs legacy 对比 | 5 min |
+| ⭐ **[01-overview.md](01-overview.md)** | **§0 核心术语速查** + OPSX 是什么 + 四条哲学 + vs legacy 对比 | 5 min |
 | ⭐ **[02-installation.md](02-installation.md)** | `init` / `update` + 28 工具总表 + 路径 + 副作用 + 项目隔离 | 15 min |
 | **[03-concepts.md](03-concepts.md)** | artifact DAG + delta spec 格式 + schema 概念 + spec-driven + change 目录 | 12 min |
 | ⭐ **[04-usage-basic.md](04-usage-basic.md)** | core 4 命令 + 流程图 + 决策树 + 浏览/校验/archive CLI | 14 min |

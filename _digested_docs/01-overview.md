@@ -4,6 +4,7 @@
 
 ## 目录
 
+- [§0 核心术语速查（读其它文件前先过一遍）](#0-核心术语速查读其它文件前先过一遍)
 - [§1 OPSX 是什么](#1-opsx-是什么)
 - [§2 四条核心哲学](#2-四条核心哲学)
 - [§3 为什么要造 OPSX（legacy 的痛点）](#3-为什么要造-opsx-legacy-的痛点)
@@ -14,11 +15,58 @@
 
 ---
 
+## §0 核心术语速查（读其它文件前先过一遍）
+
+OpenSpec 自创了一组词，程序员专家也可能第一次见。读后面任何一章前，**先把这 10 个名词锚定**（后面各文档都会反复用）：
+
+| 术语 | 一句话定义 | 它**不是**什么 | 细读 |
+|------|----------|--------------|------|
+| **change** | 一次完整的「变更工作」——一个独立文件夹，包含这次改动的所有规划与实施记录。类比 git branch | 不是 git commit，也不是 PR | [03 §5](03-concepts.md#5-change-目录结构) |
+| **artifact** | change 内部的一个**产出物**，比如 `proposal.md`、`tasks.md`。OpenSpec 把一次 change 要写的文件分成若干类 artifact | 不是"附件"，是文档类型 | [03 §1](03-concepts.md#1-artifact-依赖图dag) |
+| **schema** | 一份 YAML，定义"**一次 change 应该有哪些 artifact + 依赖关系 + 每种 artifact 的模板/AI 指令**"。相当于"工作流的形状契约" | 不是数据库 schema、不是 JSON Schema | [03 §3](03-concepts.md#3-schema-是什么为什么这么叫) |
+| **spec** | 项目**当前真实规格**（`openspec/specs/<domain>/spec.md`），是 source of truth | 不是 change 里的"这次要改什么"那份文档 | [03 §2](03-concepts.md#2-delta-spec-格式) |
+| **delta spec** | change 里的 `specs/**/*.md`——描述"**这次 change 要怎么改动 spec**"，用 `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` 表达。归档时 merge 回主 spec | 不是独立新 spec，是 patch | [03 §2](03-concepts.md#2-delta-spec-格式) |
+| **workflow** | 一个 OPSX **动作/命令**，比如 `propose`、`apply`、`archive`。共 11 个，每个对应一个斜杠命令 | 不是"工作流程"这个泛指 | [05 §3](05-usage-advanced.md#3-workflow--skill--command-三对映射) |
+| **profile** | 决定**装多少个 workflow**：`core` = 4 个（propose/explore/apply/archive），`custom` ≤ 11 个 | 跟 schema 正交——profile 管"装多少命令"，schema 管"每次 change 产出什么" | [04 §1](04-usage-basic.md#1-profile-简介) |
+| **skill** | 装到 `.<tool>/skills/openspec-*/SKILL.md` 的**能力说明书**，agent 自动发现后当 LLM 上下文 | 不是斜杠命令 | [05 §3](05-usage-advanced.md#3-workflow--skill--command-三对映射) |
+| **command** | 装到 `.<tool>/commands/opsx-*.md` 的**斜杠命令模板**，用户键入 `/opsx-xxx` 触发 | 不是 skill | [05 §3](05-usage-advanced.md#3-workflow--skill--command-三对映射) |
+| **capability / domain** | 系统里的一块**能力域**（`auth`、`ui`、`payments`），在 spec 里按它分目录：`specs/<capability>/spec.md` | 两个词在 OpenSpec 里等价使用 | [03 §5](03-concepts.md#5-change-目录结构) |
+
+**一张速记图**（记住这个，后面文档 80% 的话就都能对上号）：
+
+```text
+项目根/
+├── openspec/                          ← OpenSpec 的工作区
+│   ├── specs/auth/spec.md             ← 【spec】= 当前真实规格
+│   ├── changes/
+│   │   └── add-2fa/                   ← 【change】= 一次变更工作
+│   │       ├── proposal.md            ┐
+│   │       ├── design.md              │ 每个文件 = 一个【artifact】
+│   │       ├── tasks.md               │
+│   │       └── specs/auth/spec.md     ┘ ← 【delta spec】(对主 spec 的 patch)
+│   └── config.yaml                    ← 项目级配置（schema / context / rules）
+│
+└── .claude/                           ← 某个 coding agent 的集成目录
+    ├── skills/openspec-propose/...    ← 【skill】(能力说明书)
+    └── commands/opsx/propose.md       ← 【command】(斜杠命令模板)
+
+全局（用户级）
+├── ~/.config/openspec/config.json     ← 【profile】+ delivery 等全局设置
+└── ~/.local/share/openspec/schemas/   ← 跨项目复用的自定义【schema】(可选)
+```
+
+**最容易混的两对**（专家也常搞错）：
+
+- **spec vs delta spec**：前者是"现在系统什么样"，后者是"这次 change 要改成什么样"。归档时 delta 被 merge 进 spec。
+- **schema vs workflow**：schema 是**数据**（YAML，描述 artifact 结构），workflow 是**动作**（命令，触发生成 artifact）。一个 schema 可以被任何 workflow 使用；workflow 运行时实时读 schema 决定接下来怎么干。
+
+---
+
 ## §1 OPSX 是什么
 
 **OPSX 是 OpenSpec v1 的新一代指令集和工作流模型**，从 2025 年起取代了旧的 `/openspec:*` 指令（legacy）。名字含义：**OPS（OpenSpec）+ X**（eXtended/eXperimental）。
 
-它解决的是一个具体问题：让「人类 + AI 编程助手」能在**任何时刻**就任一个 artifact（提案、规格、设计、任务）达成一致，而不必走死板的「先全部规划 → 再全部实现 → 再归档」流水线。
+它解决的是一个具体问题：让「人类 + AI 编程助手」能在**任何时刻**就任一个 artifact（提案 proposal / 规格 specs / 设计 design / 任务 tasks）达成一致，而不必走死板的「先全部规划 → 再全部实现 → 再归档」流水线。
 
 ---
 

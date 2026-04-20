@@ -317,6 +317,19 @@ OpenSpec 给每个 workflow **生成两份产物**，前缀不一样：
 - ✅ 团队既用 Trae 又有 CI 校验时，**`init` 装好后就一种用法**
 - ❌ 想要"`/opsx-` 自动补全成命令面板"的体验暂时拿不到
 
+### 进行中的设计提案：把 Trae 这种能力正名为 "skills-invocable"
+
+目前 OpenSpec 代码里把工具分成"有 command adapter 的"和"没 command adapter 的"两类，但 Trae/ForgeCode 这种"skill 就能直接被用户当命令唤"的场景其实是**第三种能力**，没被显式建模。仓库里有一个**进行中的 change** 就是在修这件事：
+
+- 位置：[`openspec/changes/add-tool-command-surface-capabilities/`](../openspec/changes/add-tool-command-surface-capabilities/)
+- 核心想法：给每个工具加一个 **`commandSurface`** 枚举字段，可选值包括：
+  - `"commands"`：有专用 commands/ 目录（Claude / Cursor / Cline / OpenCode...）
+  - `"skills-invocable"`：skill 目录里的 SKILL.md 直接能被用户当命令用（**Trae / ForgeCode** 所在类）
+  - `"skills-only"`：只有 skill，没有用户级触发入口（纯 LLM 自动发现）
+- 一旦落地，`openspec init` / `update` 的 UI 就能**按能力分类展示**工具，用户选工具时能清楚地知道自己选的是哪种触发模型
+
+**对读者的意义**：如果你把 Trae 归类为"没有命令只有 skill"会误判它的实际体验。正确心智模型是"**它的 skill 本身就是命令**"。
+
 ---
 
 ## §6 Cline 深挖

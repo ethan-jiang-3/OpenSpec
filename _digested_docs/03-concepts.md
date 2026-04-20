@@ -328,6 +328,112 @@ OpenSpec 借用了 **JSON Schema / 数据库 schema** 的语义——它定义�
 
 **结论一句话**：schema 是 OpenSpec 把"软件开发工作流"做成**数据**而不是**代码**的关键抽象，所有 OPSX 命令都是围绕"读 schema、按 schema 编排 LLM、按 schema 写文件"展开的。
 
+### 看个真东西：内置 spec-driven schema 逐行拆解
+
+下面是 [`schemas/spec-driven/schema.yaml`](../schemas/spec-driven/schema.yaml) 的核心片段加上**每一行注释**。把这段读懂，schema 的设计意图就全清了：
+
+```yaml
+name: spec-driven              # schema 名（agent 查 CLI 时要报这个名字）
+version: 1                     # schema 版本（升级 schema 而不破坏老 change 的兜底）
+description: |
+  Default OpenSpec workflow — proposal → specs → design → tasks
+
+artifacts:                     # ← 核心：一次 change 要产出哪几类文件
+  - id: proposal               # artifact 的逻辑名，agent 和 CLI 都用这个 id 互相指代
+    generates: proposal.md     # 这个 artifact 产出什么文件（支持 glob，例如 specs/**/*.md）
+    template: proposal.md      # 去 templates/proposal.md 拿初始填空模板
+    requires: []               # 依赖的前置 artifact 列表，空 = 起点
+    instruction: |             # 给 LLM 的人话指令，CLI 会塞进 instructions JSON 里
+      Write a concise 1–2 page proposal.
+      The **Capabilities** section is a contract between
+      proposal and specs — every capability listed here must
+      have a corresponding spec file.
+
+  - id: specs
+    generates: "specs/**/*.md" # glob：每个 capability 一个 spec 文件
+    template: spec.md
+    requires: [proposal]       # 必须 proposal 先 done，specs 才 ready
+    instruction: |
+      Write delta spec per capability using
+      ## ADDED / MODIFIED / REMOVED / RENAMED Requirements.
+      Each requirement uses SHALL/MUST and 4-hash scenarios.
+
+  - id: design
+    generates: design.md
+    template: design.md
+    requires: [proposal]       # 注意：design 也只依赖 proposal，所以 specs 和 design 可以并行
+    instruction: |
+      Only write design when needed (cross-module, new deps,
+      security/perf concerns, or open tech questions).
+
+  - id: tasks
+    generates: tasks.md
+    template: tasks.md
+    requires: [specs, design]  # tasks 是收束节点，specs 和 design 都 done 它才 ready
+    instruction: |
+      Use checkbox format:
+        ## 1. Setup
+        - [ ] 1.1 Create module structure
+      The apply phase parses these checkboxes to track progress.
+
+apply:                         # ← 不是 artifact，是 "写代码阶段" 的契约
+  requires: [tasks]            # 必须先有 tasks.md
+  tracks: tasks.md             # 进度靠这个文件里的 checkbox 计数
+  instruction: |
+    Read context files, work through pending tasks,
+    mark complete as you go. Pause on blockers.
+```
+
+**从这段能读出的设计哲学**：
+
+1. **artifacts 是一个有序列表**，但顺序**不决定执行顺序**（`requires` 决定）——顺序只是给人读的
+2. **`requires: []`** 的节点就是 DAG 的入口；实际项目常见多入口 schema（research + proposal）
+3. **`generates` 支持 glob**，这就是为什么 specs 可以"一个 capability 一个文件"
+4. **`apply` 是特殊节点**——它不产出文件，而是**消费** tasks.md 的 checkbox 来跟踪执行进度
+5. **`instruction` 嵌在 schema 里**——升级 schema 就等于升级"教 LLM 怎么写这类 artifact 的提示词"，而且这段是给所有用这个 schema 的项目共享的（rules/context 才是项目级覆盖层）
+
+### 一张图记住 schema
+
+```text
+┌──────────────────── schema.yaml ────────────────────┐
+│                                                      │
+│  name: spec-driven                                   │
+│  version: 1                                          │
+│                                                      │
+│  ┌── artifacts: [ ─────────────────────────────┐    │
+│  │                                              │    │
+│  │   {id: proposal, generates: proposal.md,    │    │
+│  │    template: …, requires: []}               │    │
+│  │              │                               │    │
+│  │              ▼                               │    │
+│  │   {id: specs, generates: specs/**/*.md,     │    │
+│  │    requires: [proposal]}    ┐                │    │
+│  │              │               │                │    │
+│  │              ▼               ▼                │    │
+│  │   {id: design, requires: [proposal]}          │    │
+│  │              │                                │    │
+│  │              ▼                                │    │
+│  │   {id: tasks, requires: [specs, design]}      │    │
+│  │                                              │    │
+│  └──────────────────────────────────────────────┘    │
+│                                                      │
+│  apply:                                              │
+│    requires: [tasks]     ← 不是 artifact              │
+│    tracks: tasks.md      ← 而是"写代码阶段"契约       │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+
+       schema.yaml 旁边的目录：
+
+       templates/
+       ├── proposal.md   ← schema 里 template: proposal.md 引用的
+       ├── spec.md
+       ├── design.md
+       └── tasks.md
+```
+
+**Schema 文件夹 = 一份 YAML + 若干模板**，就这么简单，没有隐藏的魔法。
+
 想管理 schema？见 [07-customization.md §4 `openspec schema`](07-customization.md)。
 
 ---
@@ -460,7 +566,14 @@ created: 2025-01-23        # 创建日期
 
 ### `specs/` 按 domain 分目录
 
-每个 delta spec 按 **capability / domain** 分子目录：
+> **先说清楚术语**：OpenSpec 里 **capability = domain** 是同一个东西的两种叫法。
+> - **capability**：从"产品能力"角度看，比如"用户登录"、"数据导出"、"暗黑模式"——一块内聚的功能
+> - **domain**：从"代码组织"角度看，是 `specs/<name>/` 这层子目录名
+> - proposal.md 的 "Capabilities" 段列哪些 capability，就会在 `specs/` 下建哪些 domain 目录
+>
+> **命名惯例**：kebab-case，且要跟代码里的模块/子系统对得上（`auth`、`user-profile`、`data-export`）。专家类比：把它当作**限界上下文**（Bounded Context）或**特性模块**（Feature Module）即可。
+
+每个 delta spec 按 capability / domain 分子目录：
 
 ```
 specs/
