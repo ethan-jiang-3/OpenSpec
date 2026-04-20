@@ -78,6 +78,7 @@ context: |
   Testing: Vitest + Playwright
   Public APIs should remain backward compatible.
 
+# 方式1：结构化 rules（按 artifact 分类）
 rules:
   proposal:
     - Include rollback plan
@@ -85,7 +86,18 @@ rules:
     - Add unhappy-path scenarios
   design:
     - Explain migration risk
+
+# 方式2：纯文本 rules（更灵活）
+# rules: |
+#   - New user-visible behavior must be reflected in OpenSpec artifacts
+#   - Approval-related changes must preserve authorization regression coverage
+#   - Do not bypass published domain interfaces
 ```
+
+**注意**：两种 rules 格式都支持：
+- **结构化**（方式1）：按 artifact 分类，适合规则很多的项目
+- **纯文本**（方式2）：更灵活，适合规则较少的项目
+- 选一种用就行，不要混用
 
 ### config.yaml vs schema：对比表
 

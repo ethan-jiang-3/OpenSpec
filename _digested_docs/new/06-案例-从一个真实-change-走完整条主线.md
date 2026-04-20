@@ -261,12 +261,33 @@ The system SHALL allow authorized staff users to view and export the order list.
 - WHEN the user opens the Orders page
 - THEN the system displays recent orders
 - AND export actions are available when the user has export permission
+
+## REMOVED Requirements
+
+### Requirement: PDF Export (deprecated)
+**原因**：PDF 导出功能使用率低（过去3个月仅2次使用），维护成本高，决定移除。
+**影响**：现有使用 PDF 导出的少数用户需要改用 CSV 或 XLSX。
+**迁移**：在 UI 上提示用户使用 CSV 替代，功能上完全覆盖。
 ```
 
 这一步的关键是：
 
 - `proposal` 讲的是变更意图
 - delta spec 讲的是行为合同
+
+### 新手最常问：REMOVED 标记什么时候用？
+
+**什么时候用 REMOVED**：
+- 删除一个已经不需要的功能
+- 废弃一个过时的 API
+- 移除一个被替代的能力
+
+**REMOVED 要写什么**：
+- **原因**：为什么要删除（使用率低、维护成本高、被更好的方案替代）
+- **影响**：删除后会影响谁（现有用户、依赖系统）
+- **迁移**：用户应该怎么办（用什么替代、如何迁移）
+
+**例子**：上面的 PDF Export 就是一个典型的 REMOVED 例子。
 
 ### 为什么这里不用只改代码
 

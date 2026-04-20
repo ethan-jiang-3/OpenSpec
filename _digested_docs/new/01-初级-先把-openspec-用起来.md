@@ -143,7 +143,7 @@ my-project/
 | **proposal.md** | 防止 scope 失控 | AI 会不断加功能，永远做不完 |
 | **specs/*.md** | 防止行为不清晰 | 做完了也不知道系统承诺了什么 |
 | **design.md** | 防止技术选型随意 | 后人不知道为什么这样做 |
-| **tasks.md** | 防止实现无序 | 不知道从哪开始，做到哪了 |
+| **tasks.md** | 防止实现无序 | AI 不知道从哪开始，容易乱改。有了 tasks.md，可以逐项推进，还能追踪进度 |
 
 **一句话**：这些文件不是为了"仪式感"，而是为了"让 AI 和人都能对齐"。
 
@@ -210,7 +210,7 @@ my-project/
 | "proposal 写完了就不能改了" | 随时可以改。Actions, not phases |
 | "archive 是删除 change" | 不是。是把 delta spec 合并回 specs/，并把 change 移到 archive/ 保留历史 |
 | "specs/ 是我手动维护的文档" | 不是。它是 archive 后自动更新的正式基线 |
-| "不用 archive 也没关系" | 不 archive 的话，specs/ 基线不会更新，下一个 change 就没有正确的基线可以参考 |
+| "不用 archive 也没关系" | 不 archive 的话，specs/ 基线不会更新，下一个 change 就没有正确的基线可以参考。**后果**：你会不知道系统现在到底是什么样的，多人协作时会乱套 |
 
 ---
 
