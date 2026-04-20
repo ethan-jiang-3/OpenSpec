@@ -74,6 +74,7 @@ openspec init
 | 知道它跟以前那套有什么不同 | [01-overview.md §5](01-overview.md#5-opsx-vs-legacy-对比)（5 分钟） |
 | 看核心几个命令是干啥的 | [04-usage-basic.md §2](04-usage-basic.md#2-core-四个斜杠命令)（5 分钟） |
 | 看一张总流程图 | [04-usage-basic.md §3](04-usage-basic.md#3-命令次序流程图)（3 分钟） |
+| 想一口气看懂 **core 四个 skill 的内部执行模型** | ⭐ [06-agent-protocol.md §0A](06-agent-protocol.md#0a-core-四个-skill-的统一执行模型)（8 分钟） |
 
 ### 安装 / 配置阶段（**新手常卡这里**）
 
@@ -100,6 +101,8 @@ openspec init
 | 我想... | 去看 |
 |---------|------|
 | 搞懂 schema 到底是什么 | [FAQ Q6](FAQ.md#q6-schema-是什么为啥-openspec-要引入这个词) + [03-concepts.md §3](03-concepts.md#3-schema-是什么为什么这么叫) |
+| 看“只装 Cline + OPSX”时项目真正长什么样 | [09-cline-opsx-project-shape.md](09-cline-opsx-project-shape.md) |
+| 搞清 `config.yaml` / `schema` / `specs` / `.openspec.yaml` 的边界 | [10-config-and-schema-boundaries.md](10-config-and-schema-boundaries.md) |
 | 自己写一份工作流 schema | [07-customization.md §2](07-customization.md#2-自定义-schema) |
 | 给团队定制项目级配置（context / rules） | [07-customization.md §1](07-customization.md#1-项目-config-openspecconfigyaml) |
 | 把 OpenSpec 接入自己的 LLM pipeline | [06-agent-protocol.md §0](06-agent-protocol.md#0-openspec-怎么借用宿主-coding-agent-的-llm) |
@@ -117,7 +120,7 @@ openspec init
 
 ---
 
-## 📚 完整文件地图（平铺结构，10 个文件）
+## 📚 完整文件地图（平铺结构，12 个文件）
 
 ⭐ = 强烈推荐先读。阅读时长按 ~60 行/分钟估算。
 
@@ -130,11 +133,13 @@ openspec init
 | **[03-concepts.md](03-concepts.md)** | artifact DAG + delta spec 格式 + schema 概念 + spec-driven + change 目录 | 12 min |
 | ⭐ **[04-usage-basic.md](04-usage-basic.md)** | core 4 命令 + 流程图 + 决策树 + 浏览/校验/archive CLI | 14 min |
 | **[05-usage-advanced.md](05-usage-advanced.md)** | expanded 7 命令 + openspec- vs opsx- + Trae/Cline/OpenCode 深挖 | 12 min |
-| ⭐ **[06-agent-protocol.md](06-agent-protocol.md)** | **§0 OpenSpec 如何借用 LLM** + agent 用的 4 个 CLI | 10 min |
+| ⭐ **[06-agent-protocol.md](06-agent-protocol.md)** | **§0 OpenSpec 如何借用 LLM** + **§0A core 四个 skill 的统一执行模型** + agent 用的 4 个 CLI | 12 min |
 | **[07-customization.md](07-customization.md)** | project config + 自定义 schema + 解析优先级 + schema/config CLI | 15 min |
 | **[08-architecture.md](08-architecture.md)** | 源码地图 + 7 个扩展点 | 8 min |
+| ⭐ **[09-cline-opsx-project-shape.md](09-cline-opsx-project-shape.md)** | 只装 Cline + OPSX 时，项目事实层、集成层、change 生命周期、真实目录树 | 12 min |
+| ⭐ **[10-config-and-schema-boundaries.md](10-config-and-schema-boundaries.md)** | `config.yaml` / `schema` / `specs` / `.openspec.yaml` 的边界、优先级、完整例子 | 14 min |
 
-**总计**：~100 分钟。**全部读完不必要**。按上面的"按意图导航"挑着读才合理。
+**总计**：~126 分钟。**全部读完不必要**。按上面的"按意图导航"挑着读才合理。
 
 ---
 
@@ -173,6 +178,9 @@ FAQ.md
   ↓
 06-agent-protocol.md §0 (协议)
 03-concepts.md §3 (schema 概念)
+  ↓
+09-cline-opsx-project-shape.md（项目全景）
+10-config-and-schema-boundaries.md（边界与机制）
   ↓
 03-concepts.md（artifact / delta / schema）
 07-customization.md（全文）
