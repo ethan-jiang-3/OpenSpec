@@ -88,6 +88,36 @@ git push
 - 各自的 change 修改不同的 spec 文件
 - archive 顺序无所谓（因为没有依赖）
 
+### 可视化：并行开发的正确姿势
+
+```mermaid
+graph TB
+    subgraph 正确做法 ✅
+    A1[main 分支] --> B1[Alice: feature/dark-mode]
+    A1 --> C1[Bob: feature/csv-export]
+    B1 --> D1[修改 specs/ui/spec.md]
+    C1 --> E1[修改 specs/orders/spec.md]
+    D1 --> F1[PR 合并]
+    E1 --> G1[PR 合并]
+    F1 --> H1[archive dark-mode]
+    G1 --> I1[archive csv-export]
+    H1 --> J1[main 分支更新]
+    I1 --> J1
+    end
+    
+    subgraph 错误做法 ❌
+    A2[main 分支] --> B2[Alice: feature/dark-mode]
+    A2 --> C2[Bob: feature/csv-export]
+    B2 --> D2[修改 specs/orders/spec.md]
+    C2 --> E2[修改 specs/orders/spec.md]
+    D2 --> F2[冲突！]
+    E2 --> F2
+    end
+    
+    style F2 fill:#ffcccc,stroke:#ff0000
+    style J1 fill:#ccffcc,stroke:#00ff00
+```
+
 ---
 
 ### 场景 2：有依赖关系的功能
@@ -166,6 +196,50 @@ git push
 - B 必须等 A archive 后再开始
 - B 的 proposal 里明确写出依赖关系
 - 这样可以避免基线不一致
+
+### 可视化：依赖关系的正确处理
+
+```mermaid
+sequenceDiagram
+    participant Main as main 分支
+    participant Alice as Alice
+    participant Bob as Bob
+    
+    Note over Alice: 开始 auth-foundation
+    Alice->>Main: PR: add-auth-foundation
+    Main->>Main: 合并 PR
+    Alice->>Main: archive auth-foundation
+    Main->>Main: specs/ 更新
+    
+    Note over Bob: 等待 Alice 完成
+    Bob->>Main: git pull（拿到最新 specs）
+    Note over Bob: 开始 authorization
+    Bob->>Main: PR: add-authorization
+    Main->>Main: 合并 PR
+    Bob->>Main: archive authorization
+    
+    Note over Main: ✅ 基线一致，没有冲突
+```
+
+**错误做法**：Bob 不等 Alice，直接开始
+
+```mermaid
+sequenceDiagram
+    participant Main as main 分支
+    participant Alice as Alice
+    participant Bob as Bob
+    
+    Note over Alice,Bob: 同时开始
+    Alice->>Main: PR: auth-foundation
+    Bob->>Main: PR: authorization（基于旧 specs）
+    Main->>Main: 合并 Alice 的 PR
+    Alice->>Main: archive auth-foundation
+    Main->>Main: specs/ 更新
+    Main->>Main: 合并 Bob 的 PR
+    Bob->>Main: archive authorization
+    
+    Note over Main: ❌ Bob 的 specs 不包含 Alice 的修改<br/>基线不一致！
+```
 
 ---
 
@@ -250,11 +324,24 @@ git commit -m "Sync with add-order-filter changes"
 
 ### 策略 1：Feature Branch + PR（推荐）
 
-```
-main (protected)
-  ├── feature/add-dark-mode  → PR → merge → archive
-  ├── feature/csv-export     → PR → merge → archive
-  └── bugfix/fix-login       → PR → merge → archive
+```mermaid
+gitGraph
+    commit id: "initial"
+    branch feature/add-dark-mode
+    checkout feature/add-dark-mode
+    commit id: "propose dark-mode"
+    commit id: "implement dark-mode"
+    checkout main
+    merge feature/add-dark-mode tag: "PR merged"
+    commit id: "archive dark-mode"
+    
+    branch feature/csv-export
+    checkout feature/csv-export
+    commit id: "propose csv-export"
+    commit id: "implement csv-export"
+    checkout main
+    merge feature/csv-export tag: "PR merged"
+    commit id: "archive csv-export"
 ```
 
 **优点**：
@@ -273,11 +360,32 @@ main (protected)
 
 适合大功能拆分成多个小 change：
 
-```
-main
-  └── feature/auth-foundation
-        └── feature/auth-permissions
-              └── feature/auth-audit
+```mermaid
+gitGraph
+    commit id: "initial"
+    branch feature/auth-foundation
+    checkout feature/auth-foundation
+    commit id: "propose foundation"
+    commit id: "implement foundation"
+    checkout main
+    merge feature/auth-foundation tag: "PR merged"
+    commit id: "archive foundation"
+    
+    branch feature/auth-permissions
+    checkout feature/auth-permissions
+    commit id: "propose permissions"
+    commit id: "implement permissions"
+    checkout main
+    merge feature/auth-permissions tag: "PR merged"
+    commit id: "archive permissions"
+    
+    branch feature/auth-audit
+    checkout feature/auth-audit
+    commit id: "propose audit"
+    commit id: "implement audit"
+    checkout main
+    merge feature/auth-audit tag: "PR merged"
+    commit id: "archive audit"
 ```
 
 **工作流**：
@@ -361,6 +469,26 @@ rm -rf openspec/changes/change-b/
 | 修改同一个 requirement | ❌ 不建议 | 肯定冲突，错开时间 |
 | 有依赖关系 | ❌ 不能 | 必须串行 |
 
+### 可视化：并行判断决策树
+
+```mermaid
+graph TD
+    A[两个 change 能并行吗？] --> B{修改同一个<br/>spec 文件？}
+    B -->|否| C[✅ 可以并行]
+    B -->|是| D{修改同一个<br/>requirement？}
+    D -->|否| E[⚠️ 谨慎并行<br/>需要 sync]
+    D -->|是| F[❌ 不建议并行<br/>错开时间]
+    
+    A --> G{有依赖关系？}
+    G -->|是| H[❌ 不能并行<br/>必须串行]
+    G -->|否| I{继续检查<br/>spec 文件}
+    
+    style C fill:#ccffcc,stroke:#00ff00
+    style E fill:#ffffcc,stroke:#ffaa00
+    style F fill:#ffcccc,stroke:#ff0000
+    style H fill:#ffcccc,stroke:#ff0000
+```
+
 **工具辅助**（未来功能）：
 ```bash
 # 查看 change 依赖图
@@ -413,6 +541,37 @@ git stash pop  # 恢复之前的工作
 ---
 
 ## 团队协作最佳实践
+
+### 可视化：团队协作的 Do's and Don'ts
+
+```mermaid
+graph LR
+    subgraph "✅ 推荐做法"
+    A1[一个 change<br/>一个分支] --> B1[PR 合并后<br/>立即 archive]
+    B1 --> C1[每天开始前<br/>git pull]
+    C1 --> D1[在 proposal 里<br/>声明依赖]
+    D1 --> E1[团队沟通<br/>谁改哪个 spec]
+    end
+    
+    subgraph "❌ 避免做法"
+    A2[多个 change<br/>共用一个分支] --> B2[PR 合并后<br/>忘记 archive]
+    B2 --> C2[从不 pull<br/>基于旧代码]
+    C2 --> D2[依赖关系<br/>不写清楚]
+    D2 --> E2[不沟通<br/>盲目并行]
+    end
+    
+    style A1 fill:#ccffcc,stroke:#00ff00
+    style B1 fill:#ccffcc,stroke:#00ff00
+    style C1 fill:#ccffcc,stroke:#00ff00
+    style D1 fill:#ccffcc,stroke:#00ff00
+    style E1 fill:#ccffcc,stroke:#00ff00
+    
+    style A2 fill:#ffcccc,stroke:#ff0000
+    style B2 fill:#ffcccc,stroke:#ff0000
+    style C2 fill:#ffcccc,stroke:#ff0000
+    style D2 fill:#ffcccc,stroke:#ff0000
+    style E2 fill:#ffcccc,stroke:#ff0000
+```
 
 ### 1. 建立 change 命名规范
 
@@ -529,6 +688,32 @@ openspec validate
 - Bob：负责支付模块
 - Carol：负责通知模块
 
+### 可视化：团队协作时间线
+
+```mermaid
+gantt
+    title 3人团队协作时间线
+    dateFormat YYYY-MM-DD
+    section Alice
+    订单列表功能    :a1, 2024-01-01, 5d
+    archive        :milestone, a2, 2024-01-06, 0d
+    订单导出功能    :a3, 2024-01-08, 5d
+    archive        :milestone, a4, 2024-01-13, 0d
+    
+    section Bob
+    支付流程       :b1, 2024-01-01, 5d
+    archive        :milestone, b2, 2024-01-06, 0d
+    等待 Alice     :crit, b3, 2024-01-06, 2d
+    退款功能       :b4, 2024-01-08, 5d
+    archive        :milestone, b5, 2024-01-13, 0d
+    
+    section Carol
+    邮件通知       :c1, 2024-01-01, 5d
+    archive        :milestone, c2, 2024-01-06, 0d
+    短信通知       :c3, 2024-01-08, 5d
+    archive        :milestone, c4, 2024-01-13, 0d
+```
+
 **第 1 周**：
 
 ```
@@ -571,6 +756,33 @@ Bob 需要等 Alice 的 change archive 后再开始。
 ---
 
 ## 总结：多人协作的黄金法则
+
+```mermaid
+mindmap
+  root((多人协作<br/>黄金法则))
+    分支管理
+      一个 change = 一个分支
+      从 main 创建分支
+      PR 合并后删除分支
+    Archive 纪律
+      PR 合并后立即 archive
+      每天结束前检查
+      archive 前先 git pull
+    冲突预防
+      避免并行修改同一 spec
+      在 proposal 里声明依赖
+      团队沟通谁改哪个 spec
+    Code Review
+      同时 review 代码和 specs
+      检查 delta spec 准确性
+      确保依赖关系清晰
+    工具使用
+      使用 PR template
+      建立命名规范
+      使用 change graph（未来）
+```
+
+### 文字版黄金法则
 
 1. **一个 change = 一个 Git 分支**
 2. **PR 合并后立即 archive**
