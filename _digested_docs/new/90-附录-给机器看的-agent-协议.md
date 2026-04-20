@@ -85,35 +85,58 @@ sequenceDiagram
 
 ```json
 {
-  "change": "add-order-csv-export",
-  "schema": "spec-driven",
+  "change": "add-order-csv-export",           // 当前 change 名称
+  "schema": "spec-driven",                    // 使用的 schema
   "artifacts": {
-    "proposal": { "status": "done", "path": "changes/add-order-csv-export/proposal.md" },
-    "specs": { "status": "done", "path": "changes/add-order-csv-export/specs/" },
-    "design": { "status": "in_progress", "path": "changes/add-order-csv-export/design.md" },
-    "tasks": { "status": "todo", "path": "changes/add-order-csv-export/tasks.md" }
+    "proposal": { 
+      "status": "done",                       // 已完成
+      "path": "changes/add-order-csv-export/proposal.md" 
+    },
+    "specs": { 
+      "status": "done",                       // 已完成
+      "path": "changes/add-order-csv-export/specs/" 
+    },
+    "design": { 
+      "status": "in_progress",                // 进行中
+      "path": "changes/add-order-csv-export/design.md" 
+    },
+    "tasks": { 
+      "status": "todo",                       // 待开始
+      "path": "changes/add-order-csv-export/tasks.md" 
+    }
   },
-  "nextRecommended": "design"
+  "nextRecommended": "design"                 // 建议下一步做什么
 }
 ```
+
+**字段说明**：
+- `status`：可能的值是 `todo`（待做）、`in_progress`（进行中）、`done`（完成）
+- `nextRecommended`：CLI 根据依赖关系推荐下一步应该生成哪个 artifact
 
 ### `openspec instructions design --json` 示例（简化）
 
 ```json
 {
-  "artifact": "design",
-  "change": "add-order-csv-export",
-  "outputPath": "openspec/changes/add-order-csv-export/design.md",
-  "template": "# Design\n\n## Approach\n## Decisions\n## Risks\n",
-  "instruction": "Describe technical approach and key tradeoffs.",
-  "context": "Stack: TypeScript, React, Node.js",
-  "rules": [
+  "artifact": "design",                       // 要生成的 artifact 类型
+  "change": "add-order-csv-export",           // 所属 change
+  "outputPath": "openspec/changes/add-order-csv-export/design.md",  // 输出路径
+  "template": "# Design\n\n## Approach\n## Decisions\n## Risks\n",  // 文本模板
+  "instruction": "Describe technical approach and key tradeoffs.",   // 生成指令
+  "context": "Stack: TypeScript, React, Node.js",                    // 项目背景（来自 config.yaml）
+  "rules": [                                                          // 写作规则（来自 config.yaml）
     "Explain migration risk when behavior changes existing flow",
     "Do not bypass domain module boundaries"
   ],
-  "dependencies": ["proposal", "specs"]
+  "dependencies": ["proposal", "specs"]       // 依赖哪些 artifact（应该先读它们）
 }
 ```
+
+**字段说明**：
+- `template`：文档的骨架结构
+- `instruction`：告诉 AI 这个 artifact 应该写什么
+- `context`：项目级背景信息，帮助 AI 生成更符合项目的内容
+- `rules`：项目级约束，确保生成的内容符合团队规范
+- `dependencies`：生成前应该先读哪些 artifact，确保内容一致
 
 机器真正依赖的是这些结构化字段，而不是人类阅读版文档。
 

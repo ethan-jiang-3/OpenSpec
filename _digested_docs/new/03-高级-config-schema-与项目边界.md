@@ -255,6 +255,29 @@ schema 管的是：
 - **profile 管入口多少**
 - **schema 管 change 长相**
 
+### 新手最常问：profile 和 schema 到底什么关系？
+
+用一个具体例子理解：
+
+**场景**：你想用 OpenSpec，但只想要最简单的工作流。
+
+1. **选 profile**：`openspec config profile` 选 `core`
+   - 结果：你只有 4 个命令（propose/apply/archive/list）
+   - 这是"入口层"的选择
+
+2. **选 schema**：在 `config.yaml` 里写 `schema: spec-driven`
+   - 结果：每个 change 都有 proposal/specs/design/tasks 四个 artifact
+   - 这是"结构层"的选择
+
+**关系**：
+- profile 决定"你能用哪些命令"
+- schema 决定"每个 change 长什么样"
+- 它们是独立的两个维度
+
+**类比**：
+- profile 像"你的工具箱有哪些工具"
+- schema 像"你用这些工具做出来的东西是什么形状"
+
 ---
 
 ## 这一层最重要的边界意识
