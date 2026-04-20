@@ -52,7 +52,10 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 1. 从用户请求中确定 change 名称。
 2. 调用 `openspec new change <name>`。
-3. 视模板设计，可能立即调用 `status` 或某个 artifact 的 `instructions`。
+3. 当前内置模板会立刻调用 `openspec status --change <name>`。
+4. 根据状态找到第一个 `ready` artifact。
+5. 调用 `openspec instructions <first-artifact> --change <name>`。
+6. 到这里先停住，把第一个 artifact 的模板和说明展示给用户，等待继续。
 
 ### 它和 `/opsx:propose` 的区别
 
@@ -93,17 +96,18 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 ### 典型调用链
 
-1. 调用 `openspec instructions apply --change <name> --json`。
-2. 读取返回的 `state`。
-3. 如果 `blocked`：
+1. 当前内置模板通常先调用 `openspec status --change <name> --json`，确认 schema 和当前 artifact 背景。
+2. 再调用 `openspec instructions apply --change <name> --json`。
+3. 读取返回的 `state`。
+4. 如果 `blocked`：
    - 告诉用户缺什么 artifact 或 task 文件。
    - 引导回 continue/change 文档阶段。
-4. 如果 `ready`：
+5. 如果 `ready`：
    - 读取 `contextFiles` 指向的 proposal/spec/design/tasks 等文档。
    - 读取 tasks 列表和完成进度。
    - 开始代码修改。
-5. 修改代码时持续更新任务状态。
-6. 当全部任务完成，`instructions apply` 进入 `all_done`。
+6. 修改代码时持续更新任务状态。
+7. 当全部任务完成，`instructions apply` 进入 `all_done`。
 
 ### CLI 在其中扮演的角色
 
@@ -140,9 +144,14 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 ### 可能调用链
 
-- 读取 change 或 spec 内容。
-- 调用 `openspec validate`。
-- 结合测试、人工规则或工具链结果给出总结。
+- 如果没有明确 change，先用 `openspec list --json` 让用户选。
+- 调用 `openspec status --change <name> --json` 理解 schema 与已有 artifacts。
+- 调用 `openspec instructions apply --change <name> --json` 拿到 `contextFiles`，再读取 proposal/spec/design/tasks。
+- 结合代码搜索、测试覆盖和实现检查生成 verification report。
+
+补充边界：
+
+- `openspec validate` 当然仍然是相关 CLI 能力，但它不是当前内置 `/opsx:verify` 模板里的主调用链。
 
 ### CLI 在其中的意义
 
@@ -158,7 +167,8 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 ### 对 CLI 的依赖程度
 
 - 相比 continue/apply，explore 对 workflow runtime API 的依赖可能更弱。
-- 但它仍可能使用 `list`、`show`、`schemas` 等命令辅助理解项目与可用模型。
+- 当前内置 explore 模板的明确起点是 `openspec list --json`，先判断项目里有没有 active change。
+- 它更像“带 OpenSpec 上下文感知的探索姿态”，而不是强依赖 `status`/`instructions` 的固定流程。
 
 ## 九、真正重要的系统分工
 
@@ -190,4 +200,3 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 - apply gate 集中化。
 
 这就是 OpenSpec 把 CLI 放在系统中心的真正原因。
-

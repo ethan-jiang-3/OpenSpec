@@ -133,6 +133,11 @@ skill / command 只是投递载体。
 - 启用哪些 workflow。
 - 这些 workflow 怎样出现在 AI 工具里。
 
+还要补一个当前实现边界：
+
+- 这里改的是全局配置。
+- 源码里已经明确限制 `--scope` 目前只支持 `global`，project-local config 还没有实现。
+
 所以 `config` 的影响路径通常是：
 
 `config` -> `init/update` -> tool artifacts -> 用户/AI 的使用入口发生变化
@@ -157,4 +162,3 @@ OpenSpec CLI 同时管理两种空间：
 - 工具侧入口空间
 
 而 profile/delivery 正是连接这两个空间的桥。
-

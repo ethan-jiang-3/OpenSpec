@@ -38,7 +38,7 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 
 - `openspec/changes/<name>/` 目录。
 - change metadata，供后续自动检测 schema。
-- 如果带描述，可能写入 `README.md`。
+- 当前命令实现里，如果传入描述参数，会额外写入 `README.md`。
 
 ### 它影响什么
 
@@ -341,4 +341,3 @@ OpenSpec workflow 不是硬编码的单一流程，而是由 schema 定义驱动
 它们一起构成了一套本地 workflow runtime API。
 
 这也是为什么在整个项目里，workflow 命令远比表面上看起来更重要。它们不是附属功能，而是 OpenSpec 能被 AI 驱动起来的核心接口层。
-
