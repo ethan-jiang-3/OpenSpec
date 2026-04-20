@@ -1,6 +1,6 @@
 # 90 · 附录：给机器看的 Agent 协议
 
-> 这一篇不是给第一次上手的人看的，而是给想研究“OpenSpec 怎么喂给宿主 agent”的人看的。
+> 这一篇不是给第一次上手的人看的，而是给想研究"OpenSpec 怎么喂给宿主 agent"的人看的。
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 对机器来说，最重要的不是页面文档，而是结构化查询
 
-宿主 agent 并不是靠“读完整本手册”来工作的。
+宿主 agent 并不是靠"读完整本手册"来工作的。
 
 它更依赖几类运行时查询，例如：
 
@@ -40,7 +40,7 @@
 | 命令 | 机器拿来做什么 | 人类可理解成 |
 |------|---------------|-------------|
 | `openspec status --json` | 判断当前 change 到哪一步了、哪些 artifact 已完成 | 看项目仪表盘 |
-| `openspec instructions <artifact> --json` | 生成某个 artifact 时拿到模板、规则、上下文、输出路径 | 拿到一份“写作任务单” |
+| `openspec instructions <artifact> --json` | 生成某个 artifact 时拿到模板、规则、上下文、输出路径 | 拿到一份"写作任务单" |
 | `openspec schemas` | 获取可用的 change 结构定义 | 看有哪几种工作流骨架 |
 | `openspec templates` | 获取每类 artifact 的文本模板 | 看每种文档的推荐写法 |
 
@@ -77,9 +77,9 @@ sequenceDiagram
 
 所以：
 
-- skill/command 负责“告诉 agent 怎么做”
-- CLI 负责“给 agent 真实上下文”
-- LLM 负责“真正写内容和做推理”
+- skill/command 负责"告诉 agent 怎么做"
+- CLI 负责"给 agent 真实上下文"
+- LLM 负责"真正写内容和做推理"
 
 ### `openspec status --json` 示例（简化）
 
@@ -154,9 +154,9 @@ sequenceDiagram
 
 所以一个更准确的理解是：
 
-- workflow 是“动作 ID”
-- skill/command 是“投递方式”
-- CLI 是“运行时事实来源”
+- workflow 是"动作 ID"
+- skill/command 是"投递方式"
+- CLI 是"运行时事实来源"
 
 ---
 
@@ -164,8 +164,8 @@ sequenceDiagram
 
 如果你不是在写宿主集成代码，可以把这篇浓缩成三句话：
 
-1. 机器并不是“自己想写什么就写什么”，而是先问 CLI 拿结构化上下文
-2. CLI 给的是“当前状态 + 本artifact任务单 + 项目规则”，不是随便一段提示词
+1. 机器并不是"自己想写什么就写什么"，而是先问 CLI 拿结构化上下文
+2. CLI 给的是"当前状态 + 本artifact任务单 + 项目规则"，不是随便一段提示词
 3. 这就是为什么 OpenSpec 的输出更稳定：它把 AI 放进了一个有状态、有边界的运行时框架
 
 ---
@@ -181,4 +181,4 @@ sequenceDiagram
 它不是人类第一次上手 OpenSpec 时最先需要的认知。
 
 人类第一步应该先会用，第二步应该先理解 `specs` 和 `changes`。
-等主线稳了，再来看机器协议，才不会把整套系统看成“几份神秘 prompt 文件”。
+等主线稳了，再来看机器协议，才不会把整套系统看成"几份神秘 prompt 文件"。

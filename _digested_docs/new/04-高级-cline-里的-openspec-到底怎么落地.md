@@ -1,6 +1,6 @@
 # 04 · 高级：Cline 里的 OpenSpec 到底怎么落地
 
-> 这一篇回答的是“放进 Cline 以后，它到底长什么样”。
+> 这一篇回答的是"放进 Cline 以后，它到底长什么样"。
 
 ---
 
@@ -90,7 +90,7 @@ openspec/
     └── opsx-archive.md
 ```
 
-这层不是项目事实层，而是“让 Cline 知道怎么触发 OpenSpec”。
+这层不是项目事实层，而是"让 Cline 知道怎么触发 OpenSpec"。
 
 所以更准确的理解是：
 
@@ -118,22 +118,22 @@ my-app/
 
 如果要一句话概括：
 
-> **OpenSpec 的”内容”在 `openspec/`，OpenSpec 的”入口”在 Cline 的目录里。**
+> **OpenSpec 的"内容"在 `openspec/`，OpenSpec 的"入口"在 Cline 的目录里。**
 
 ### 两层架构可视化
 
 ```mermaid
 graph TB
     subgraph 工具入口层
-    A[“.cline/skills/<br/>（Cline 技能定义）”]
-    B[“.clinerules/workflows/<br/>（工作流说明）”]
+    A[".cline/skills/<br/>（Cline 技能定义）"]
+    B[".clinerules/workflows/<br/>（工作流说明）"]
     end
     
     subgraph 项目事实层
-    C[“openspec/specs/<br/>（正式规格基线）”]
-    D[“openspec/changes/<br/>（变更工作区）”]
-    E[“openspec/config.yaml<br/>（项目配置）”]
-    F[“openspec/schemas/<br/>（工作流定义）”]
+    C["openspec/specs/<br/>（正式规格基线）"]
+    D["openspec/changes/<br/>（变更工作区）"]
+    E["openspec/config.yaml<br/>（项目配置）"]
+    F["openspec/schemas/<br/>（工作流定义）"]
     end
     
     A -.触发.-> G[openspec CLI]
@@ -211,7 +211,7 @@ sequenceDiagram
 - `.cline/` / `.clinerules/` 是入口层
 - Cline 只是宿主，不是 OpenSpec 本体
 
-更建议先看“OpenSpec 对软件开发生命周期到底怎么理解”，也就是：
+更建议先看"OpenSpec 对软件开发生命周期到底怎么理解"，也就是：
 
 - [05-高级-openspec-的软件开发生命周期思想.md](05-高级-openspec-的软件开发生命周期思想.md)
 

@@ -6,7 +6,7 @@
 
 ## 先记一句话
 
-**OpenSpec 是一个“先把变更讲清楚，再去写代码”的协作层。**
+**OpenSpec 是一个"先把变更讲清楚，再去写代码"的协作层。**
 
 它不是模型，不替你思考；它做的事是把一次改动拆成几份能讨论、能验证、能归档的文件。
 
@@ -26,7 +26,7 @@
 ```mermaid
 stateDiagram-v2
     [*] --> 空白: openspec init
-    空白 --> 规划中: /opsx:propose “功能名”
+    空白 --> 规划中: /opsx:propose "功能名"
     规划中 --> 规划中: 修改 proposal/specs/design/tasks
     规划中 --> 实现中: /opsx:apply
     实现中 --> 规划中: 发现问题，回头调整
@@ -49,7 +49,7 @@ stateDiagram-v2
 你可以把它理解成：
 
 - 给这次改动起名字
-- 让 AI 帮你先把”为什么改、改什么、怎么做、做哪些任务”写出来
+- 让 AI 帮你先把"为什么改、改什么、怎么做、做哪些任务"写出来
 
 典型例子：
 
@@ -77,8 +77,8 @@ openspec/changes/add-dark-mode/
 
 你可以把它理解成：
 
-- 现在不是”讨论要做什么”
-- 而是”拿着已经形成的 change 文件，开始干活”
+- 现在不是"讨论要做什么"
+- 而是"拿着已经形成的 change 文件，开始干活"
 
 ### 3. `/opsx:archive`
 
@@ -89,7 +89,7 @@ openspec/changes/add-dark-mode/
 1. 把这次 change 里的 delta spec 合并回主 `specs/`
 2. 把这次 change 挪到 `changes/archive/`，保留历史
 
-所以 archive 不是”删掉”，而是”结案归档”。
+所以 archive 不是"删掉"，而是"结案归档"。
 
 ---
 
@@ -216,7 +216,7 @@ my-project/
 
 ## 初级阶段最重要的 5 个认知
 
-### 1. OpenSpec 管的是“变更”，不是纯聊天
+### 1. OpenSpec 管的是"变更"，不是纯聊天
 
 它不是让 AI 随便聊聊需求，而是把一次改动沉淀成文件。
 
@@ -234,7 +234,7 @@ my-project/
 
 ### 5. 不要一开始就被 Cline、Claude、skills 吓住
 
-那些是“宿主工具怎么接 OpenSpec”的问题，不是“你怎么用 OpenSpec”的第一步问题。
+那些是"宿主工具怎么接 OpenSpec"的问题，不是"你怎么用 OpenSpec"的第一步问题。
 
 ---
 

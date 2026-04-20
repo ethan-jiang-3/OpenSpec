@@ -30,10 +30,10 @@
 
 但一旦回到真实项目，脑子里还是会冒出这些问题：
 
-- 一个 change 到底是从哪一步开始“成形”的？
+- 一个 change 到底是从哪一步开始"成形"的？
 - `proposal`、delta spec、`design`、`tasks` 之间，到底是先后关系，还是互相修订关系？
-- `apply` 时，到底是在“执行任务”，还是在“继续完善 change”？
-- `archive` 到底只是挪文件，还是一种“正式沉淀”？
+- `apply` 时，到底是在"执行任务"，还是在"继续完善 change"？
+- `archive` 到底只是挪文件，还是一种"正式沉淀"？
 
 这篇就是把这些问题放到一个真实感足够强的案例里，一次讲透。
 
@@ -43,7 +43,7 @@
 
 我们不用特别大的系统，就用一个非常典型、但又足够有现实感的例子：
 
-> **给一个已有 Web 应用新增“导出订单 CSV”能力。**
+> **给一个已有 Web 应用新增"导出订单 CSV"能力。**
 
 为什么选这个例子？
 
@@ -103,7 +103,7 @@ The system SHALL allow filtering by date range and status.
 
 注意这里的意思是：
 
-- 这些不是“未来想法”
+- 这些不是"未来想法"
 - 而是当前项目正式承认的行为基线
 
 这就是后面所有 change 的出发点。
@@ -119,14 +119,14 @@ The system SHALL allow filtering by date range and status.
 这时最容易犯的错误，是直接让 AI 去改代码：
 
 ```text
-“帮我给订单页加一个导出按钮，并导出 CSV。” 
+"帮我给订单页加一个导出按钮，并导出 CSV。" 
 ```
 
 OpenSpec 的思路不是这样。
 
 它会先把这件事当成一个 **change**：
 
-- 这不是“随手改一行代码”
+- 这不是"随手改一行代码"
 - 而是一次有边界的能力变更
 - 需要能被表达、被讨论、被实现、被沉淀
 
@@ -142,7 +142,7 @@ OpenSpec 的思路不是这样。
 /opsx:propose add-order-csv-export
 ```
 
-这一步的本质，不是“让 AI 瞎写四份文档”。
+这一步的本质，不是"让 AI 瞎写四份文档"。
 
 它的本质是：
 
@@ -166,7 +166,7 @@ openspec/
 
 这个时刻非常关键。
 
-因为从现在起，“导出 CSV”不再只是一个聊天里的念头，而是一个有名字、有目录、有内部结构的正式 change。
+因为从现在起，"导出 CSV"不再只是一个聊天里的念头，而是一个有名字、有目录、有内部结构的正式 change。
 
 ---
 
@@ -199,9 +199,9 @@ Generate CSV on demand from the filtered order query and return it as a file dow
 
 ### `proposal` 在这里做了什么
 
-- 把“为什么要做”讲清楚
-- 把“做到哪儿为止”讲清楚
-- 把“这次不做什么”讲清楚
+- 把"为什么要做"讲清楚
+- 把"做到哪儿为止"讲清楚
+- 把"这次不做什么"讲清楚
 
 这会直接影响后面所有东西。
 
@@ -221,7 +221,7 @@ Generate CSV on demand from the filtered order query and return it as a file dow
 
 ---
 
-## 第 3 步：看 delta spec，这一步在钉“行为变化”
+## 第 3 步：看 delta spec，这一步在钉"行为变化"
 
 接着看 change 里的：
 
@@ -270,7 +270,7 @@ The system SHALL allow authorized staff users to view and export the order list.
 
 ### 为什么这里不用只改代码
 
-因为“导出按钮出现”只是界面现象。
+因为"导出按钮出现"只是界面现象。
 
 真正的行为承诺其实是：
 
@@ -318,12 +318,12 @@ size is small for the current staff workflow.
 
 这一步和 spec 的差别一定要抓住：
 
-- spec 关心“用户和系统行为怎么变”
-- design 关心“实现方式怎么选，为什么这么选”
+- spec 关心"用户和系统行为怎么变"
+- design 关心"实现方式怎么选，为什么这么选"
 
 ### 一个很容易混淆的例子
 
-“导出使用同步方式还是异步 job” 不应该先写进 spec。
+"导出使用同步方式还是异步 job" 不应该先写进 spec。
 
 因为这不是用户行为合同，而是技术实现决策。
 
@@ -356,7 +356,7 @@ size is small for the current staff workflow.
 
 这一步的作用非常实际：
 
-- 让 change 从“说得清楚”变成“做得下去”
+- 让 change 从"说得清楚"变成"做得下去"
 - 让 `/opsx:apply` 有东西可以跟着推进
 
 如果说：
@@ -371,7 +371,7 @@ size is small for the current staff workflow.
 
 ---
 
-## 第 6 步：到这里，change 其实已经进入“可执行状态”
+## 第 6 步：到这里，change 其实已经进入"可执行状态"
 
 很多人会误以为：
 
@@ -401,7 +401,7 @@ size is small for the current staff workflow.
 
 `apply` 最容易被误解成：
 
-- “照着 tasks 打勾”
+- "照着 tasks 打勾"
 
 它当然有这一面，但不止这一面。
 
@@ -435,7 +435,7 @@ size is small for the current staff workflow.
 工程师实现到一半时发现：
 
 - 当前订单列表接口只返回分页结果
-- 财务要求导出“当前过滤条件下的全部结果”
+- 财务要求导出"当前过滤条件下的全部结果"
 - 如果直接复用现有列表接口，会只导出当前页，不符合预期
 
 这时怎么办？
@@ -451,7 +451,7 @@ OpenSpec 更鼓励你当场修正 change。
 
 #### 1. 改 `design.md`
 
-把原来“复用当前列表接口”的设计，修正成：
+把原来"复用当前列表接口"的设计，修正成：
 
 - 复用过滤模型
 - 但后端单独提供完整结果导出逻辑
@@ -460,8 +460,8 @@ OpenSpec 更鼓励你当场修正 change。
 
 比如你发现：
 
-- 导出不再是“当前页结果”
-- 而是“当前过滤条件下的全部结果”
+- 导出不再是"当前页结果"
+- 而是"当前过滤条件下的全部结果"
 
 那么 spec 必须跟着澄清。
 
@@ -530,7 +530,7 @@ openspec/changes/add-order-csv-export/
 
 ---
 
-## 第 10 步：`/opsx:archive`，不是“收起来”，而是“正式沉淀”
+## 第 10 步：`/opsx:archive`，不是"收起来"，而是"正式沉淀"
 
 现在执行：
 
@@ -582,13 +582,13 @@ openspec/
 - change 没消失
 - 它被保存成历史
 
-所以以后你不仅能看到“系统现在怎么工作”，还能回看：
+所以以后你不仅能看到"系统现在怎么工作"，还能回看：
 
 - 当时为什么加这个功能
 - 当时怎么做的技术取舍
 - 当时分了哪些任务
 
-这就是 OpenSpec 把“过程”也保留下来的价值。
+这就是 OpenSpec 把"过程"也保留下来的价值。
 
 ---
 
@@ -611,7 +611,7 @@ openspec/
 - `openspec/specs/` 是当前正式基线
 - `changes/` 是变更工作区
 - `artifact` 是 change 内部的四类工件
-- delta spec 是“增量变化”表达层
+- delta spec 是"增量变化"表达层
 
 ### 对应 `03` 高级边界篇
 
@@ -640,7 +640,7 @@ openspec/
 
 ---
 
-## 一个“反例”会更能看出 OpenSpec 的价值
+## 一个"反例"会更能看出 OpenSpec 的价值
 
 我们再看同一个需求，如果不用 OpenSpec，常见会怎么发生。
 
@@ -667,7 +667,7 @@ openspec/
 6. 把整次 change 保留为历史
 ```
 
-两者最大的差别，不是“文档多不多”。
+两者最大的差别，不是"文档多不多"。
 
 而是：
 
@@ -680,9 +680,9 @@ openspec/
 
 | 坑 | 表现 | 为什么错 | 正确做法 |
 |-----|------|---------|---------|
-| **边界不清** | proposal 里写”优化导出功能”，但没说清楚做到哪里 | 后面会不断膨胀，从 CSV 变成 XLSX、邮件、定时任务 | 明确写 Out of Scope |
+| **边界不清** | proposal 里写"优化导出功能"，但没说清楚做到哪里 | 后面会不断膨胀，从 CSV 变成 XLSX、邮件、定时任务 | 明确写 Out of Scope |
 | **delta spec 写成全量** | 把整个订单系统的所有能力都重写一遍 | 审查者看不出这次改了什么，并行开发容易冲突 | 只写 ADDED/MODIFIED/REMOVED |
-| **design 和 spec 混淆** | 把”用同步方式导出”写进 spec | 这是实现决策，不是用户行为合同 | 实现方式放 design，行为承诺放 spec |
+| **design 和 spec 混淆** | 把"用同步方式导出"写进 spec | 这是实现决策，不是用户行为合同 | 实现方式放 design，行为承诺放 spec |
 | **发现问题不回改** | 实现时发现设计有误，但只改代码不改文档 | 文档和代码脱节，后人看不懂当时的真实决策 | 回头修正 design/spec，保持一致 |
 | **忘记 archive** | 代码写完就算完成，不执行 archive | specs/ 基线没更新，下一个 change 没有正确的参考基线 | 必须 archive 才算闭环 |
 
@@ -728,10 +728,10 @@ AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和
 2. `proposal` 的核心价值是控制边界
 3. delta spec 的核心价值是表达行为变化
 4. `design` 讲的是技术选型，不是行为合同
-5. `tasks` 让 change 从”说得清楚”进入”做得下去”
+5. `tasks` 让 change 从"说得清楚"进入"做得下去"
 6. `apply` 不是机械执行，而是带反馈的实施
 7. `archive` 不是收纳动作，而是正式沉淀动作
-8. OpenSpec 真正管理的是”基线 + 增量变化 + 历史闭环”
+8. OpenSpec 真正管理的是"基线 + 增量变化 + 历史闭环"
 
 ---
 

@@ -6,7 +6,7 @@
 
 ## 这一层为什么容易乱
 
-因为到了这里，你会同时遇到几类“看起来都像约定”的东西：
+因为到了这里，你会同时遇到几类"看起来都像约定"的东西：
 
 - `openspec/specs/`
 - `openspec/config.yaml`
@@ -59,7 +59,7 @@ graph TB
 
 ## `config.yaml` 到底应该装什么
 
-最适合放进去的，是”稳定、跨 change、高价值”的项目背景。
+最适合放进去的，是"稳定、跨 change、高价值"的项目背景。
 
 比如：
 
@@ -114,7 +114,7 @@ rules:
 **❌ 太空（没有实质内容）：**
 ```yaml
 schema: spec-driven
-context: “This is a web project.”
+context: "This is a web project."
 ```
 问题：AI 无法从中获得有用信息。
 
@@ -178,8 +178,8 @@ artifacts:
     requires: [specs, design]
 ```
 
-所以 schema 说的不是“这个项目用 React 还是 Vue”。
-它说的是“这类 change 应该先有哪些产物，它们怎么关联”。
+所以 schema 说的不是"这个项目用 React 还是 Vue"。
+它说的是"这类 change 应该先有哪些产物，它们怎么关联"。
 
 ---
 
@@ -211,8 +211,8 @@ schema 决定：
 
 所以：
 
-- template 更像“单个文档的写法骨架”
-- schema 更像“整套 change 结构的定义”
+- template 更像"单个文档的写法骨架"
+- schema 更像"整套 change 结构的定义"
 
 ---
 
@@ -220,7 +220,7 @@ schema 决定：
 
 这个文件在 change 目录里，价值在于：
 
-- 它记录“这次 change 实际绑定哪套 schema”
+- 它记录"这次 change 实际绑定哪套 schema"
 - 它让单次 change 可以偏离项目默认 schema
 
 也就是说：
@@ -282,7 +282,7 @@ schema 管的是：
 
 ## 这一层最重要的边界意识
 
-到了高级阶段，你最该有的不是“记住所有字段”，而是以下判断力：
+到了高级阶段，你最该有的不是"记住所有字段"，而是以下判断力：
 
 ### 什么时候改 `config.yaml`
 
@@ -316,9 +316,9 @@ schema 管的是：
 
 如果你关心的是：
 
-- “只装 Cline + OpenSpec 时，项目长什么样？”
-- “`.cline/` 和 `openspec/` 到底谁是事实层？”
-- “skill / workflow / CLI 在 Cline 里怎么拼起来？”
+- "只装 Cline + OpenSpec 时，项目长什么样？"
+- "`.cline/` 和 `openspec/` 到底谁是事实层？"
+- "skill / workflow / CLI 在 Cline 里怎么拼起来？"
 
 下一篇看：
 
