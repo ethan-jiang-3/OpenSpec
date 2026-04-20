@@ -4,6 +4,67 @@
 
 ---
 
+## ⚠️ 重要前提：Profile 说明
+
+OpenSpec 有两种 profile（配置模式）：
+
+| Profile | 命令数量 | 适用场景 | 是否默认 |
+|---------|---------|---------|---------|
+| **core** | 4 个命令 | 快速开发，简单场景 | ✅ 是（默认） |
+| **expanded** | 10+ 个命令 | 复杂项目，需要更多控制 | ❌ 否 |
+
+### 检查你当前的 Profile
+
+```bash
+# 查看当前 profile
+openspec config profile
+
+# 输出示例
+# profile: core
+```
+
+### Core Profile 的 4 个命令
+
+```bash
+/opsx:propose <name>   # 创建 change + 生成所有 artifacts
+/opsx:explore          # 探索/调研模式
+/opsx:apply [name]     # 实现 tasks
+/opsx:archive [name]   # 归档 change
+```
+
+### Expanded Profile 的额外命令
+
+```bash
+/opsx:new <name>       # 只创建 change 目录
+/opsx:continue         # 逐个生成 artifact
+/opsx:ff               # 快速生成所有 artifacts
+/opsx:verify           # 验证实现与 specs 一致性
+/opsx:sync             # 同步 delta specs
+/opsx:bulk-archive     # 批量归档
+/opsx:onboard          # 新成员快速了解项目
+```
+
+### 如何切换到 Expanded Profile
+
+```bash
+# 步骤 1：切换 profile
+openspec config profile
+# 选择 "custom" 或输入你想启用的 workflows
+
+# 步骤 2：更新 AI 工具的 skills
+openspec update
+
+# 步骤 3：重启 Cline 或你的 AI 工具
+```
+
+### 本文档的假设
+
+**本文档中的某些示例使用 expanded profile 的命令**（如 `/opsx:continue`）。
+
+如果你使用 **core profile**（默认），请参考每个场景下的"Core Profile 替代方案"。
+
+---
+
 ## 为什么需要这一篇
 
 如果你已经读过前面的文档，会用 `/opsx:propose`、`/opsx:apply`、`/opsx:archive`，但可能还有这些困惑：
@@ -173,6 +234,14 @@ for offline reconciliation and sharing with the finance department.
 3. 导出失败时的错误提示"
 ```
 
+**完整操作步骤**：
+1. 在 Cline 的聊天框里输入上述指令
+2. AI 会读取当前的 spec 文件
+3. AI 会分析并添加新的 scenarios
+4. AI 会保持 delta spec 格式（ADDED/MODIFIED/REMOVED）
+5. 检查 AI 的修改是否符合预期
+6. 运行 `openspec validate <change-name>` 验证格式
+
 #### 方式 3：完全重新生成
 
 **什么时候用**：
@@ -189,7 +258,7 @@ for offline reconciliation and sharing with the finance department.
 - 丢失所有手动修改
 - 需要重新审查内容
 
-**示例场景**：
+**示例场景（Expanded Profile）**：
 ```bash
 # 场景：proposal 完全偏离了需求，需要重写
 
@@ -198,6 +267,17 @@ rm openspec/changes/add-csv-export/proposal.md
 
 # 步骤 2：在 Cline 里重新生成
 /opsx:continue
+```
+
+**示例场景（Core Profile 替代方案）**：
+```bash
+# 场景：proposal 完全偏离了需求，需要重写
+
+# 步骤 1：删除文件
+rm openspec/changes/add-csv-export/proposal.md
+
+# 步骤 2：在 Cline 里说：
+"请重新生成 proposal.md，需求是：[描述你的需求]"
 
 # 或者，如果想重新开始整个 change
 rm -rf openspec/changes/add-csv-export/
@@ -290,6 +370,9 @@ rules: |
 **效果**：AI 生成的 tasks.md 会包含"先写测试"的任务。
 
 **步骤 3：添加具体的 artifact 约束**
+
+**注意**：OpenSpec 的 config.yaml 支持**结构化 rules 格式**（按 artifact 分类）：
+
 ```yaml
 schema: spec-driven
 
@@ -316,6 +399,8 @@ rules:
 ```
 
 **效果**：每个 artifact 都会遵循这些约束。
+
+**验证**：查看 OpenSpec 仓库的 `openspec/config.yaml` 可以看到真实的结构化 rules 示例。
 
 #### 真实场景 1：添加新的技术栈约束
 
@@ -463,6 +548,18 @@ rules:
 openspec validate
 ```
 
+**注意**：`openspec validate` 只验证**结构**，不验证**内容质量**。
+
+**它会检查**：
+- YAML 格式是否正确
+- 必需的字段是否存在
+- 基本的语法错误
+
+**它不会检查**：
+- rules 是否合理
+- context 是否完整
+- 约束是否有效
+
 **步骤 2：检查是否生效**
 ```bash
 # 查看 AI 会收到什么指令
@@ -470,8 +567,22 @@ openspec instructions proposal --json | jq '.context, .rules'
 ```
 
 **步骤 3：创建测试 change 验证**
+
+**Expanded Profile**：
 ```bash
 # 创建一个测试 change
+/opsx:propose test-config
+
+# 检查生成的 proposal 是否符合新的 rules
+cat openspec/changes/test-config/proposal.md
+
+# 如果满意，删除测试 change
+rm -rf openspec/changes/test-config/
+```
+
+**Core Profile**：
+```bash
+# 创建一个测试 change（会生成所有 artifacts）
 /opsx:propose test-config
 
 # 检查生成的 proposal 是否符合新的 rules
@@ -547,6 +658,8 @@ which is error-prone and time-consuming (30+ minutes per report).
 ```
 
 **修改方式 2：让 AI 辅助**
+
+**Expanded Profile**：
 ```markdown
 # 在 Cline 里说：
 "请帮我扩展 proposal.md 的 Why 部分，补充以下信息：
@@ -554,6 +667,22 @@ which is error-prone and time-consuming (30+ minutes per report).
 - 用途是对账、报告、调查投诉
 - 当前痛点是手动复制粘贴，耗时 30 分钟"
 ```
+
+**Core Profile（相同）**：
+```markdown
+# 在 Cline 里说（操作相同）：
+"请帮我扩展 proposal.md 的 Why 部分，补充以下信息：
+- 用户是客服团队
+- 用途是对账、报告、调查投诉
+- 当前痛点是手动复制粘贴，耗时 30 分钟"
+```
+
+**完整操作步骤**：
+1. 在 Cline 的聊天框里输入上述指令
+2. AI 会读取当前的 proposal.md
+3. AI 会分析并扩展 Why 部分
+4. 检查 AI 的修改是否符合预期
+5. 如果不满意，继续给出更具体的指令
 
 #### 真实场景 2：Out of Scope 不够明确
 
@@ -772,20 +901,29 @@ Use streaming CSV generation with Papa Parse library.
 | 场景 | 是否重新生成 | 推荐做法 |
 |------|-------------|---------|
 | 微调措辞 | ❌ 不需要 | 手动编辑 |
-| 补充背景信息 | ❌ 不需要 | 手动编辑 |
+| 补充背景信息 | ❌ 不需要 | 手动编辑或 AI 辅助 |
 | 调整 Out of Scope | ❌ 不需要 | 手动编辑 |
-| 需求完全变了 | ✅ 需要 | 删除重新生成 |
-| 格式完全乱了 | ✅ 需要 | 删除重新生成 |
+| 需求完全变了 | ✅ 需要 | 删除后让 AI 重新生成 |
+| 格式完全乱了 | ✅ 需要 | 删除后让 AI 重新生成 |
 
-**重新生成的步骤**：
+**重新生成的步骤（Expanded Profile）**：
 ```bash
 # 1. 删除文件
 rm openspec/changes/add-csv-export/proposal.md
 
 # 2. 在 Cline 里重新生成
 /opsx:continue
+```
 
-# 3. 或者，重新开始整个 change
+**重新生成的步骤（Core Profile）**：
+```bash
+# 1. 删除文件
+rm openspec/changes/add-csv-export/proposal.md
+
+# 2. 在 Cline 里说：
+"请重新生成 proposal.md，需求是：[详细描述你的需求]"
+
+# 或者，重新开始整个 change
 rm -rf openspec/changes/add-csv-export/
 /opsx:propose add-csv-export
 ```
