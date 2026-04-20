@@ -94,18 +94,67 @@ my-app/
 
 如果要一句话概括：
 
-> **OpenSpec 的“内容”在 `openspec/`，OpenSpec 的“入口”在 Cline 的目录里。**
+> **OpenSpec 的”内容”在 `openspec/`，OpenSpec 的”入口”在 Cline 的目录里。**
+
+### 两层架构可视化
+
+```mermaid
+graph TB
+    subgraph 工具入口层
+    A[“.cline/skills/<br/>（Cline 技能定义）”]
+    B[“.clinerules/workflows/<br/>（工作流说明）”]
+    end
+    
+    subgraph 项目事实层
+    C[“openspec/specs/<br/>（正式规格基线）”]
+    D[“openspec/changes/<br/>（变更工作区）”]
+    E[“openspec/config.yaml<br/>（项目配置）”]
+    F[“openspec/schemas/<br/>（工作流定义）”]
+    end
+    
+    A -.触发.-> G[openspec CLI]
+    B -.触发.-> G
+    G -.读取/写入.-> C
+    G -.读取/写入.-> D
+    G -.读取.-> E
+    G -.读取.-> F
+    
+    style A fill:#e3f2fd,stroke:#2196f3
+    style B fill:#e3f2fd,stroke:#2196f3
+    style C fill:#e8f5e9,stroke:#4caf50
+    style D fill:#fff3e0,stroke:#ff9800
+    style E fill:#f3e5f5,stroke:#9c27b0
+    style F fill:#fce4ec,stroke:#e91e63
+```
 
 ---
 
 ## Cline 里一次命令背后发生什么
 
-以 `/opsx-propose` 为例，可以粗略理解成 4 步：
+以 `/opsx:propose` 为例，可以粗略理解成 4 步：
 
-1. Cline 读到对应 workflow/skill 的说明
-2. 它按说明去调用 `openspec` CLI
-3. CLI 返回结构化信息或指令材料
-4. Cline 再用宿主模型做生成，并把结果写回 `openspec/changes/...`
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Cline as Cline
+    participant CLI as openspec CLI
+    participant Files as openspec/
+
+    User->>Cline: /opsx:propose add-feature
+    Cline->>CLI: openspec status --json
+    CLI->>Files: 读取当前状态
+    Files-->>CLI: 返回项目状态
+    CLI-->>Cline: JSON 格式的状态信息
+    
+    Cline->>CLI: openspec instructions proposal --json
+    CLI->>Files: 读取 schema/templates
+    Files-->>CLI: 返回 artifact 指令
+    CLI-->>Cline: JSON 格式的生成指令
+    
+    Cline->>Cline: 用 LLM 生成 artifacts
+    Cline->>Files: 写入 proposal.md, specs/, design.md, tasks.md
+    Cline-->>User: change 已创建
+```
 
 所以 Cline 本身不是 OpenSpec。
 它只是 OpenSpec 被人触发、被模型消费的宿主环境之一。

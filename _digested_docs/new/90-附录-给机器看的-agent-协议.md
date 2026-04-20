@@ -35,26 +35,87 @@
 
 这些命令提供的是机器可消费的上下文，而不是给人看的长篇解释。
 
+### 这些查询分别在干什么
+
+| 命令 | 机器拿来做什么 | 人类可理解成 |
+|------|---------------|-------------|
+| `openspec status --json` | 判断当前 change 到哪一步了、哪些 artifact 已完成 | 看项目仪表盘 |
+| `openspec instructions <artifact> --json` | 生成某个 artifact 时拿到模板、规则、上下文、输出路径 | 拿到一份“写作任务单” |
+| `openspec schemas` | 获取可用的 change 结构定义 | 看有哪几种工作流骨架 |
+| `openspec templates` | 获取每类 artifact 的文本模板 | 看每种文档的推荐写法 |
+
 ---
 
 ## 一次典型执行链
 
 以 `propose` 为例：
 
-1. 宿主工具通过 skill 或 command 获得执行模板
-2. 它调用 `openspec status --change <name> --json`
-3. 它得知当前 schema 和各 artifact 状态
-4. 它再调用 `openspec instructions <artifact> --change <name> --json`
-5. 它拿到：instruction、template、context、rules、dependencies、outputPath
-6. 它把这些材料组装成 prompt 喂给自己的模型
-7. 模型输出 markdown
-8. Agent 把结果写回 change 目录
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Host as 宿主Agent
+    participant CLI as OpenSpec CLI
+    participant LLM as 宿主模型
+    participant FS as 文件系统
+
+    User->>Host: /opsx:propose add-feature
+    Host->>CLI: openspec status --change add-feature --json
+    CLI->>FS: 读取 openspec/ 状态
+    FS-->>CLI: change/schema/artifact 状态
+    CLI-->>Host: status JSON
+
+    Host->>CLI: openspec instructions proposal --change add-feature --json
+    CLI->>FS: 读取 schema + template + config
+    FS-->>CLI: instruction 材料
+    CLI-->>Host: instructions JSON
+
+    Host->>LLM: 组装 prompt（status + instructions）
+    LLM-->>Host: proposal markdown
+    Host->>FS: 写入 changes/add-feature/proposal.md
+    Host-->>User: proposal 已生成
+```
 
 所以：
 
 - skill/command 负责“告诉 agent 怎么做”
 - CLI 负责“给 agent 真实上下文”
 - LLM 负责“真正写内容和做推理”
+
+### `openspec status --json` 示例（简化）
+
+```json
+{
+  "change": "add-order-csv-export",
+  "schema": "spec-driven",
+  "artifacts": {
+    "proposal": { "status": "done", "path": "changes/add-order-csv-export/proposal.md" },
+    "specs": { "status": "done", "path": "changes/add-order-csv-export/specs/" },
+    "design": { "status": "in_progress", "path": "changes/add-order-csv-export/design.md" },
+    "tasks": { "status": "todo", "path": "changes/add-order-csv-export/tasks.md" }
+  },
+  "nextRecommended": "design"
+}
+```
+
+### `openspec instructions design --json` 示例（简化）
+
+```json
+{
+  "artifact": "design",
+  "change": "add-order-csv-export",
+  "outputPath": "openspec/changes/add-order-csv-export/design.md",
+  "template": "# Design\n\n## Approach\n## Decisions\n## Risks\n",
+  "instruction": "Describe technical approach and key tradeoffs.",
+  "context": "Stack: TypeScript, React, Node.js",
+  "rules": [
+    "Explain migration risk when behavior changes existing flow",
+    "Do not bypass domain module boundaries"
+  ],
+  "dependencies": ["proposal", "specs"]
+}
+```
+
+机器真正依赖的是这些结构化字段，而不是人类阅读版文档。
 
 ---
 
@@ -73,6 +134,16 @@
 - workflow 是“动作 ID”
 - skill/command 是“投递方式”
 - CLI 是“运行时事实来源”
+
+---
+
+## 给人的翻译：机器协议到底在服务什么
+
+如果你不是在写宿主集成代码，可以把这篇浓缩成三句话：
+
+1. 机器并不是“自己想写什么就写什么”，而是先问 CLI 拿结构化上下文
+2. CLI 给的是“当前状态 + 本artifact任务单 + 项目规则”，不是随便一段提示词
+3. 这就是为什么 OpenSpec 的输出更稳定：它把 AI 放进了一个有状态、有边界的运行时框架
 
 ---
 

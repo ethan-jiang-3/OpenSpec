@@ -21,6 +21,27 @@
 
 ## 你日常最常用的 3 个动作
 
+用一张图理解整个工作流：
+
+```mermaid
+stateDiagram-v2
+    [*] --> 空白: openspec init
+    空白 --> 规划中: /opsx:propose “功能名”
+    规划中 --> 规划中: 修改 proposal/specs/design/tasks
+    规划中 --> 实现中: /opsx:apply
+    实现中 --> 规划中: 发现问题，回头调整
+    实现中 --> 归档完成: /opsx:archive
+    归档完成 --> 空白: specs/ 已更新，准备下一个 change
+    
+    note right of 规划中
+        此时生成：
+        proposal.md（为什么做）
+        specs/*.md（改什么）
+        design.md（怎么做）
+        tasks.md（步骤）
+    end note
+```
+
 ### 1. `/opsx:propose`
 
 用来**发起一个 change**，并把规划类文件先搭起来。
@@ -28,7 +49,7 @@
 你可以把它理解成：
 
 - 给这次改动起名字
-- 让 AI 帮你先把“为什么改、改什么、怎么做、做哪些任务”写出来
+- 让 AI 帮你先把”为什么改、改什么、怎么做、做哪些任务”写出来
 
 典型例子：
 
@@ -56,8 +77,8 @@ openspec/changes/add-dark-mode/
 
 你可以把它理解成：
 
-- 现在不是“讨论要做什么”
-- 而是“拿着已经形成的 change 文件，开始干活”
+- 现在不是”讨论要做什么”
+- 而是”拿着已经形成的 change 文件，开始干活”
 
 ### 3. `/opsx:archive`
 
@@ -68,7 +89,7 @@ openspec/changes/add-dark-mode/
 1. 把这次 change 里的 delta spec 合并回主 `specs/`
 2. 把这次 change 挪到 `changes/archive/`，保留历史
 
-所以 archive 不是“删掉”，而是“结案归档”。
+所以 archive 不是”删掉”，而是”结案归档”。
 
 ---
 
@@ -113,6 +134,24 @@ my-project/
 - `design.md`：技术上怎么做
 - `tasks.md`：具体任务拆解
 
+**生成的 proposal.md 大概长这样：**
+
+```markdown
+# Proposal: Add Dark Mode
+
+## Why
+用户反馈在夜间使用时界面太亮，影响体验。
+
+## What Changes
+- 新增主题切换按钮（右上角）
+- 支持 light / dark 两种主题
+- 用户偏好持久化到 localStorage
+
+## Out of Scope
+- 系统级主题跟随（留给下一个 change）
+- 自定义颜色（不在本次范围内）
+```
+
 ### 第二步：实现
 
 ```text
@@ -128,6 +167,18 @@ my-project/
 ```
 
 这一步结束后，这次 change 的结果会变成项目正式规格的一部分。
+
+---
+
+## 第一次用 OpenSpec 的 5 个常见误区
+
+| 误区 | 实际情况 |
+|------|---------|
+| "要先把整个系统的规格都写完才能开始" | 不需要。第一个 change 只需要描述"这次要改的那一块" |
+| "proposal 写完了就不能改了" | 随时可以改。Actions, not phases |
+| "archive 是删除 change" | 不是。是把 delta spec 合并回 specs/，并把 change 移到 archive/ 保留历史 |
+| "specs/ 是我手动维护的文档" | 不是。它是 archive 后自动更新的正式基线 |
+| "不用 archive 也没关系" | 不 archive 的话，specs/ 基线不会更新，下一个 change 就没有正确的基线可以参考 |
 
 ---
 

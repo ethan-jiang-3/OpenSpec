@@ -661,16 +661,62 @@ openspec/
 
 ---
 
+## 这个场景最容易踩的 5 个坑
+
+| 坑 | 表现 | 为什么错 | 正确做法 |
+|-----|------|---------|---------|
+| **边界不清** | proposal 里写”优化导出功能”，但没说清楚做到哪里 | 后面会不断膨胀，从 CSV 变成 XLSX、邮件、定时任务 | 明确写 Out of Scope |
+| **delta spec 写成全量** | 把整个订单系统的所有能力都重写一遍 | 审查者看不出这次改了什么，并行开发容易冲突 | 只写 ADDED/MODIFIED/REMOVED |
+| **design 和 spec 混淆** | 把”用同步方式导出”写进 spec | 这是实现决策，不是用户行为合同 | 实现方式放 design，行为承诺放 spec |
+| **发现问题不回改** | 实现时发现设计有误，但只改代码不改文档 | 文档和代码脱节，后人看不懂当时的真实决策 | 回头修正 design/spec，保持一致 |
+| **忘记 archive** | 代码写完就算完成，不执行 archive | specs/ 基线没更新，下一个 change 没有正确的参考基线 | 必须 archive 才算闭环 |
+
+### 典型踩坑案例：边界失控
+
+**错误做法**：
+```text
+用户：给订单页加个导出功能
+AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和定时导出
+```
+
+结果：
+- 第一周还在纠结 PDF 格式
+- 第二周发现邮件服务没配置
+- 第三周定时任务和现有架构冲突
+- 一个月后还没上线
+
+**OpenSpec 做法**：
+```markdown
+# Proposal: Add Order CSV Export
+
+## Scope
+- CSV export only
+- On-demand download
+- Current filter results
+
+## Out of Scope
+- XLSX/PDF formats (future change)
+- Email delivery (future change)
+- Scheduled exports (future change)
+```
+
+结果：
+- 第一周完成 CSV 导出
+- archive 后立即可用
+- 后续再开新 change 加其他格式
+
+---
+
 ## 这篇案例最该带走的 8 句话
 
 1. 一个 change 的起点不是代码，而是让变更先成形
 2. `proposal` 的核心价值是控制边界
 3. delta spec 的核心价值是表达行为变化
 4. `design` 讲的是技术选型，不是行为合同
-5. `tasks` 让 change 从“说得清楚”进入“做得下去”
+5. `tasks` 让 change 从”说得清楚”进入”做得下去”
 6. `apply` 不是机械执行，而是带反馈的实施
 7. `archive` 不是收纳动作，而是正式沉淀动作
-8. OpenSpec 真正管理的是“基线 + 增量变化 + 历史闭环”
+8. OpenSpec 真正管理的是”基线 + 增量变化 + 历史闭环”
 
 ---
 

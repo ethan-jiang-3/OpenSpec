@@ -20,12 +20,36 @@
 
 ## 先一句话钉死 4 个对象
 
-| 对象 | 它真正管什么 |
-|------|--------------|
-| `openspec/specs/` | 项目当前已经成立的行为合同 |
-| `openspec/config.yaml` | 项目级提示背景、规则、默认 schema |
-| `openspec/schemas/<name>/schema.yaml` | change 的结构骨架和 artifact 依赖 |
-| `openspec/changes/<name>/.openspec.yaml` | 这次 change 最终绑定哪套 schema |
+```mermaid
+graph TB
+    subgraph 项目层
+    A["openspec/specs/<br/>（正式规格基线）"]
+    B["openspec/config.yaml<br/>（项目级提示背景）"]
+    C["openspec/schemas/<br/>（工作流骨架定义）"]
+    end
+    
+    subgraph 单次变更层
+    D["openspec/changes/&lt;name&gt;/<br/>（一次 change）"]
+    E[".openspec.yaml<br/>（绑定哪套 schema）"]
+    end
+    
+    B -.提供背景.-> D
+    C -.定义结构.-> D
+    E -.选择.-> C
+    D -.archive 后 merge.-> A
+    
+    style A fill:#e8f5e9,stroke:#4caf50
+    style B fill:#fff3e0,stroke:#ff9800
+    style C fill:#e1f5fe,stroke:#03a9f4
+    style D fill:#f3e5f5,stroke:#9c27b0
+```
+
+| 对象 | 它真正管什么 | 类比 |
+|------|--------------|------|
+| `openspec/specs/` | 项目当前已经成立的行为合同 | 代码库的"当前版本" |
+| `openspec/config.yaml` | 项目级提示背景、规则、默认 schema | 项目的"README + 编码规范" |
+| `openspec/schemas/<name>/schema.yaml` | change 的结构骨架和 artifact 依赖 | 工作流的"模板定义" |
+| `openspec/changes/<name>/.openspec.yaml` | 这次 change 最终绑定哪套 schema | 这次工作的"配置文件" |
 
 最重要的一句可以再说一遍：
 
@@ -35,7 +59,7 @@
 
 ## `config.yaml` 到底应该装什么
 
-最适合放进去的，是“稳定、跨 change、高价值”的项目背景。
+最适合放进去的，是”稳定、跨 change、高价值”的项目背景。
 
 比如：
 
@@ -63,6 +87,16 @@ rules:
     - Explain migration risk
 ```
 
+### config.yaml vs schema：对比表
+
+| 维度 | config.yaml | schema |
+|------|-------------|--------|
+| **改的是什么层** | 提示层（告诉 AI 项目背景） | 结构层（定义 change 骨架） |
+| **典型内容** | 技术栈、测试约定、编码规范 | artifact 种类、依赖关系、模板路径 |
+| **影响范围** | 所有 change 的生成质量 | change 的结构和工作流 |
+| **修改频率** | 偶尔（项目技术栈变化时） | 很少（工作流模式变化时） |
+| **类比** | 项目的 README | 项目的 Makefile 或 package.json scripts |
+
 ### 不适合往里塞什么
 
 不要把这些东西硬塞进 `config.yaml`：
@@ -74,6 +108,37 @@ rules:
 - 工具入口配置
 
 这些都不是它的职责。
+
+### 常见配置错误示例
+
+**❌ 太空（没有实质内容）：**
+```yaml
+schema: spec-driven
+context: “This is a web project.”
+```
+问题：AI 无法从中获得有用信息。
+
+**❌ 太少（该写的没写）：**
+```yaml
+schema: spec-driven
+```
+问题：AI 不知道技术栈、测试约定、兼容性要求。
+
+**✅ 恰到好处：**
+```yaml
+schema: spec-driven
+context: |
+  Tech: TypeScript + React + tRPC
+  Testing: Vitest (unit) + Playwright (e2e)
+  DB: Prisma + PostgreSQL
+  Deployment: Vercel
+  Compatibility: Support last 2 major versions
+rules:
+  specs:
+    - Include error scenarios
+  design:
+    - Explain DB migration strategy if schema changes
+```
 
 ---
 
