@@ -296,8 +296,11 @@ git checkout -b feature/add-order-sort
 git checkout feature/add-order-sort
 git pull origin main  # 拉取 A 的更新
 
-# 运行 sync 命令（未来功能，当前需要手动处理）
-# openspec change sync add-order-sort
+# 运行 sync 命令（需要 custom profile）
+/opsx:sync add-order-sort
+
+# 注意：sync 命令在 custom profile 中可用
+# 使用 `openspec config profile` 切换到 custom 并启用 sync workflow
 
 # 手动处理冲突（当前做法）
 # 1. 查看 A 的 delta spec
@@ -315,8 +318,8 @@ git commit -m "Sync with add-order-filter changes"
 
 **关键点**：
 - 尽量错开时间，避免并行修改同一个 spec
-- 如果必须并行，后 archive 的人要手动 sync
-- 未来 OpenSpec 会提供自动 sync 命令
+- 如果必须并行，后 archive 的人要用 `/opsx:sync` 同步（需要 custom profile）
+- `/opsx:sync` 已经可用，只需在 custom profile 中启用
 
 ---
 
@@ -633,7 +636,9 @@ graph LR
 
 ---
 
-## 高级话题：Change Stacking（未来功能）
+## 高级话题：Change Stacking
+
+**注意**：Change Stacking 是一个高级工作流模式，目前需要手动管理依赖关系。
 
 OpenSpec 正在开发更强大的 change 依赖管理功能：
 

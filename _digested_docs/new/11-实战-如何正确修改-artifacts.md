@@ -361,10 +361,13 @@ context: |
   Deployment: Vercel
   Compatibility: Support last 2 major versions
 
-rules: |
-  - New user-visible behavior must be reflected in specs before implementation
-  - Core business logic should be developed test-first
-  - Do not bypass domain module boundaries
+rules:
+  specs:
+    - New user-visible behavior must be reflected in specs before implementation
+  tasks:
+    - Core business logic should be developed test-first
+  design:
+    - Do not bypass domain module boundaries
 ```
 
 **效果**：AI 生成的 tasks.md 会包含"先写测试"的任务。
@@ -445,16 +448,18 @@ openspec validate
 
 **修改前**：
 ```yaml
-rules: |
-  - Write tests for new features
+rules:
+  tasks:
+    - Write tests for new features
 ```
 
 **修改后**：
 ```yaml
-rules: |
-  - Write tests for new features
-  - Changes touching order domain must preserve order creation regression tests
-  - Changes touching payment flow must preserve payment authorization tests
+rules:
+  tasks:
+    - Write tests for new features
+    - Changes touching order domain must preserve order creation regression tests
+    - Changes touching payment flow must preserve payment authorization tests
 ```
 
 **效果**：AI 生成的 tasks.md 会包含"运行回归测试"的任务。

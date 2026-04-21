@@ -26,11 +26,14 @@ schema: spec-driven
 比如写一堆看起来很高级的话：
 
 ```yaml
-rules: |
-  - Keep code clean
-  - Follow best practices
-  - Write good tests
-  - Maintain code quality
+rules:
+  proposal:
+    - Keep code clean
+    - Follow best practices
+  specs:
+    - Write good tests
+  design:
+    - Maintain code quality
 ```
 
 这种写法的问题是：
@@ -122,8 +125,13 @@ schema: spec-driven
 context: |
   ...
 
-rules: |
-  ...
+rules:
+  proposal:
+    - ...
+  specs:
+    - ...
+  design:
+    - ...
 ```
 
 这里的重点不在字段多少，而在于分工清晰：
@@ -225,10 +233,13 @@ context: |
 ### 一个很弱的规则
 
 ```yaml
-rules: |
-  - Write clean code
-  - Test carefully
-  - Avoid bugs
+rules:
+  proposal:
+    - Write clean code
+  specs:
+    - Test carefully
+  tasks:
+    - Avoid bugs
 ```
 
 它的问题是：
@@ -241,12 +252,15 @@ rules: |
 ### 一个更强的规则
 
 ```yaml
-rules: |
-  - Keep code organized by domain capability first, not by technical layer only
-  - Reflect new user-visible behavior in OpenSpec artifacts before or during implementation
-  - Core approval logic should be developed test-first when feasible
-  - Approval-related changes must preserve authorization regression coverage
-  - Do not bypass published domain interfaces with cross-module internal imports
+rules:
+  design:
+    - Keep code organized by domain capability first, not by technical layer only
+    - Do not bypass published domain interfaces with cross-module internal imports
+  specs:
+    - Reflect new user-visible behavior in OpenSpec artifacts before or during implementation
+  tasks:
+    - Core approval logic should be developed test-first when feasible
+    - Approval-related changes must preserve authorization regression coverage
 ```
 
 这组规则更强，是因为它们更像真实项目里的判断器。
@@ -429,10 +443,13 @@ schema: spec-driven
 context: |
   TypeScript project
 
-rules: |
-  - Keep code clean
-  - Write tests
-  - Follow best practices
+rules:
+  proposal:
+    - Keep code clean
+  specs:
+    - Write tests
+  design:
+    - Follow best practices
 ```
 
 ### 为什么弱
@@ -459,26 +476,24 @@ context: |
   - auditability of critical actions
   - maintainable domain boundaries
 
-rules: |
-  Structure:
-  - Keep code organized by domain capability first
-  - Shared UI belongs in src/ui/
-  - Avoid cross-module imports that bypass published interfaces
-
-  Artifacts:
-  - New user-visible behavior should be reflected in OpenSpec artifacts before or during implementation
-  - Changes affecting role-sensitive behavior should include explicit scenarios in specs
-  - Design documents should explain migration or rollout risks when behavior changes existing flows
-
-  Testing:
-  - Core approval logic should be developed test-first when feasible
-  - Approval-related changes must preserve authorization regression coverage
-  - Notification-related changes must verify decision-triggered notification flow
-
-  Risk:
-  - Do not merge changes with incomplete authorization checks
-  - Keep audit records append-only
-  - Avoid silent behavioral rewrites of existing user-visible flows
+rules:
+  design:
+    - Keep code organized by domain capability first
+    - Shared UI belongs in src/ui/
+    - Avoid cross-module imports that bypass published interfaces
+  specs:
+    - New user-visible behavior should be reflected in OpenSpec artifacts before or during implementation
+    - Changes affecting role-sensitive behavior should include explicit scenarios in specs
+  design:
+    - Design documents should explain migration or rollout risks when behavior changes existing flows
+  tasks:
+    - Core approval logic should be developed test-first when feasible
+    - Approval-related changes must preserve authorization regression coverage
+    - Notification-related changes must verify decision-triggered notification flow
+  risk:
+    - Do not merge changes with incomplete authorization checks
+    - Keep audit records append-only
+    - Avoid silent behavioral rewrites of existing user-visible flows
 ```
 
 ### 为什么强
@@ -670,23 +685,21 @@ context: |
   - auditability
   - stable domain boundaries
 
-rules: |
-  Structure:
-  - Organize code by domain capability
-  - Avoid cross-module imports that bypass published interfaces
-
-  Artifacts:
-  - Role-sensitive behavior changes should include explicit scenarios in specs
-  - Existing workflow changes should document rollout or migration risk in design
-
-  Testing:
-  - Approval logic should be developed test-first when feasible
-  - Approval-related changes must preserve authorization regression coverage
-  - Audit-related changes must verify lifecycle events are still recorded
-
-  Risk:
-  - Do not merge changes with incomplete authorization checks
-  - Keep audit records append-only
+rules:
+  design:
+    - Organize code by domain capability
+    - Avoid cross-module imports that bypass published interfaces
+  specs:
+    - Role-sensitive behavior changes should include explicit scenarios in specs
+  design:
+    - Existing workflow changes should document rollout or migration risk in design
+  tasks:
+    - Approval logic should be developed test-first when feasible
+    - Approval-related changes must preserve authorization regression coverage
+    - Audit-related changes must verify lifecycle events are still recorded
+  risk:
+    - Do not merge changes with incomplete authorization checks
+    - Keep audit records append-only
 ```
 
 ### 适合什么项目
@@ -711,19 +724,18 @@ context: |
   - observability
   - safe schema evolution
 
-rules: |
-  Artifacts:
-  - Public API behavior changes should include happy-path and error-path scenarios in specs
-  - Breaking API updates must be explicitly documented and approved
-  - Database migration risk should be explained in design
-
-  Testing:
-  - Published endpoints must preserve integration coverage
-  - Authorization and rate-limit behavior must remain covered for public APIs
-
-  Risk:
-  - Avoid silent contract changes
-  - Keep logging and metrics available for critical endpoints
+rules:
+  specs:
+    - Public API behavior changes should include happy-path and error-path scenarios in specs
+    - Breaking API updates must be explicitly documented and approved
+  design:
+    - Database migration risk should be explained in design
+  tasks:
+    - Published endpoints must preserve integration coverage
+    - Authorization and rate-limit behavior must remain covered for public APIs
+  risk:
+    - Avoid silent contract changes
+    - Keep logging and metrics available for critical endpoints
 ```
 
 ### 适合什么项目
@@ -747,22 +759,20 @@ context: |
   - accessible UI flows
   - maintainable feature boundaries
 
-rules: |
-  Structure:
-  - Shared UI belongs in src/ui/
-  - Feature screens belong in src/features/<feature>/
-
-  Artifacts:
-  - New user-visible flows should include happy-path and unhappy-path scenarios in specs
-  - Changes to critical UI flows should explain state and error handling in design
-
-  Testing:
-  - Critical admin flows should preserve regression coverage
-  - Accessibility-impacting changes should verify keyboard and focus behavior
-
-  Risk:
-  - Avoid hidden coupling across features
-  - Avoid silent changes to established interaction patterns
+rules:
+  design:
+    - Shared UI belongs in src/ui/
+    - Feature screens belong in src/features/<feature>/
+  specs:
+    - New user-visible flows should include happy-path and unhappy-path scenarios in specs
+  design:
+    - Changes to critical UI flows should explain state and error handling in design
+  tasks:
+    - Critical admin flows should preserve regression coverage
+    - Accessibility-impacting changes should verify keyboard and focus behavior
+  risk:
+    - Avoid hidden coupling across features
+    - Avoid silent changes to established interaction patterns
 ```
 
 ### 适合什么项目
@@ -786,18 +796,17 @@ context: |
   - retry safety
   - operational observability
 
-rules: |
-  Artifacts:
-  - Changes to job behavior should document failure and retry scenarios in specs
-  - Design should explain retry strategy and idempotency considerations
-
-  Testing:
-  - Job state transitions should be verified with focused tests
-  - Changes affecting scheduling or retries must preserve regression coverage for duplicate execution risks
-
-  Risk:
-  - Avoid non-idempotent side effects without explicit safeguards
-  - Critical background workflows should remain observable through logs or metrics
+rules:
+  specs:
+    - Changes to job behavior should document failure and retry scenarios in specs
+  design:
+    - Design should explain retry strategy and idempotency considerations
+  tasks:
+    - Job state transitions should be verified with focused tests
+    - Changes affecting scheduling or retries must preserve regression coverage for duplicate execution risks
+  risk:
+    - Avoid non-idempotent side effects without explicit safeguards
+    - Critical background workflows should remain observable through logs or metrics
 ```
 
 ### 适合什么项目
@@ -844,10 +853,13 @@ context: |
   - fast iteration
   - predictable user-visible behavior
 
-rules: |
-  - New user-visible behavior should be reflected in OpenSpec artifacts
-  - Shared UI belongs in src/ui/
-  - Critical user flows should keep regression coverage green
+rules:
+  specs:
+    - New user-visible behavior should be reflected in OpenSpec artifacts
+  design:
+    - Shared UI belongs in src/ui/
+  tasks:
+    - Critical user flows should keep regression coverage green
 ```
 
 这已经比"Write good code"强很多了。
@@ -869,24 +881,22 @@ context: |
   - auditability
   - safe rollout of workflow changes
 
-rules: |
-  Structure:
-  - Organize code by domain capability first
-  - Avoid cross-module imports that bypass published interfaces
-
-  Artifacts:
-  - Role-sensitive behavior changes should include explicit scenarios in specs
-  - Design should explain rollout or migration risk for existing workflow changes
-
-  Testing:
-  - Approval logic should be developed test-first when feasible
-  - Approval-related changes must preserve authorization regression coverage
-  - Audit-related changes must verify lifecycle events are still recorded
-
-  Risk:
-  - Do not merge changes with incomplete authorization checks
-  - Keep audit records append-only
-  - Avoid silent behavior changes in established workflows
+rules:
+  design:
+    - Organize code by domain capability first
+    - Avoid cross-module imports that bypass published interfaces
+  specs:
+    - Role-sensitive behavior changes should include explicit scenarios in specs
+  design:
+    - Design should explain rollout or migration risk for existing workflow changes
+  tasks:
+    - Approval logic should be developed test-first when feasible
+    - Approval-related changes must preserve authorization regression coverage
+    - Audit-related changes must verify lifecycle events are still recorded
+  risk:
+    - Do not merge changes with incomplete authorization checks
+    - Keep audit records append-only
+    - Avoid silent behavior changes in established workflows
 ```
 
 重点不是字多，而是：
