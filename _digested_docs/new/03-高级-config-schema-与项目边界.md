@@ -265,10 +265,13 @@ schema 管的是：
 
 1. **选 profile**：`openspec config profile` 选 `core` 或 `custom`
    - core：你只有 4 个命令（propose/explore/apply/archive）
-   - custom：自选命令（可以启用 new/continue/ff/verify/sync 等）
+   - custom：自选命令（可以启用 new/continue/ff/verify/sync/bulk-archive/onboard 等）
    - 这是"入口层"的选择
 
-**⚠️ 警告**：切换 profile 可能会删除或添加 workflow 文件。切换前确保你理解影响。
+**⚠️ 警告**：
+- 切换 profile 可能会删除或添加 workflow 文件
+- 从 custom 切换回 core 会删除额外的 workflow 文件
+- 切换前确保你理解影响，建议先提交当前更改
 
 2. **选 schema**：在 `config.yaml` 里写 `schema: spec-driven`
    - 结果：每个 change 都有 proposal/specs/design/tasks 四个 artifact

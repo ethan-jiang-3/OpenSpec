@@ -114,7 +114,7 @@ graph LR
 | `/opsx:ff` | 快进到下一个 artifact |
 | `/opsx:verify` | 验证实现与 specs 一致性 |
 | `/opsx:sync` | 同步 specs 状态 |
-| `/opsx:explore` | 探索现有代码库，生成初始 specs |
+| `/opsx:bulk-archive` | 批量归档多个 changes |
 | `/opsx:onboard` | 新成员快速了解项目 |
 
 ### CLI 命令（终端直接运行）

@@ -122,7 +122,7 @@
 ### Q18: profile 和 schema 有什么区别？
 **A**:
 - **profile**：你能用哪些命令（core/custom）
-- **schema**：每个 change 长什么样（spec-driven/task-driven）
+- **schema**：每个 change 长什么样（默认是 spec-driven）
 
 ### Q19: `.openspec.yaml` 是什么？
 **A**: change 目录里的配置文件，记录这次 change 用哪套 schema。大多数情况下自动生成，不需要手动改。

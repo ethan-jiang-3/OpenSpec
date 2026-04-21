@@ -473,15 +473,10 @@ rules:
 schema: spec-driven
 ```
 
-**修改后**：
-```yaml
-schema: task-driven
-```
-
 **注意**：
-- 这会影响**所有新创建的 change**
-- 已存在的 change 不受影响
-- 确保你理解新 schema 的结构
+- OpenSpec 目前只支持 `spec-driven` schema
+- 如果你需要不同的 artifact 结构，可以通过自定义 schema 实现
+- 运行 `openspec schemas` 查看可用的 schema
 
 **如何验证修改是否生效**：
 ```bash
