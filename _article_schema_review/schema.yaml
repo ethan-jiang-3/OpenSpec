@@ -1,0 +1,126 @@
+name: article-driven
+version: 1
+description: Article production workflow - brief -> outline -> research -> draft -> edit -> publish
+artifacts:
+  - id: brief
+    generates: brief.md
+    description: Article brief with audience, goal, scope, and constraints
+    template: brief.md
+    instruction: |
+      Create a concise article brief that defines:
+      - who the article is for
+      - what business/content goal it serves
+      - what scope and constraints must be respected
+
+      Be concrete. Avoid implementation details, writing style debates, or long prose.
+      The brief should be short enough to align writers/editors in under 5 minutes.
+    requires: []
+
+  - id: outline
+    generates: outline.md
+    description: Structured article outline and narrative arc
+    template: outline.md
+    instruction: |
+      Build the article structure from the brief:
+      - one core claim
+      - section flow that logically builds the claim
+      - expected evidence/examples per section
+      - explicit call to action
+
+      Keep it skimmable and execution-friendly for drafting.
+    requires:
+      - brief
+
+  - id: research
+    generates: research.md
+    description: Source pack and evidence notes for drafting
+    template: research.md
+    instruction: |
+      Collect and summarize evidence needed by the outline:
+      - trustworthy primary/official sources first
+      - key facts with timestamps and source links
+      - short "how this supports the article" note per source
+      - open gaps that still need validation
+
+      Avoid copying long quotes. Store only what is needed for accurate drafting.
+    requires:
+      - brief
+
+  - id: tasks
+    generates: tasks.md
+    description: Trackable checklist for drafting, editing, and publishing
+    template: tasks.md
+    instruction: |
+      Turn the plan into an executable checklist.
+      Use markdown checkboxes exactly as in the template:
+      - [ ] for pending
+      - [x] for done
+
+      Tasks should be specific and verifiable, not vague ("improve quality").
+      Keep each task atomic enough to complete in one focused work session.
+    requires:
+      - outline
+      - research
+
+  - id: draft
+    generates: draft.md
+    description: Full first draft based on outline and research
+    template: draft.md
+    instruction: |
+      Write the full article draft:
+      - follow the outline sequence
+      - use research sources for claims
+      - mark uncertain facts clearly in a review note
+      - optimize for clarity over polish
+
+      The draft should be complete enough for editorial pass, not perfect.
+    requires:
+      - outline
+      - research
+
+  - id: edit
+    generates: edit.md
+    description: Editorial review pass and applied changes summary
+    template: edit.md
+    instruction: |
+      Run an editorial pass against the draft:
+      - clarity and readability
+      - logic and argument consistency
+      - tone/style consistency for target audience
+      - factual and citation checks
+
+      Record major edits and unresolved risks.
+    requires:
+      - draft
+
+  - id: publish
+    generates: publish.md
+    description: Publish-ready final package (title, summary, final body, SEO/distribution)
+    template: publish.md
+    instruction: |
+      Produce the final publish package:
+      - final title + subtitle
+      - final article body
+      - metadata for distribution (slug, summary, SEO fields)
+      - channel-specific publish checklist
+
+      This should be directly usable by your CMS or content ops process.
+    requires:
+      - edit
+
+apply:
+  requires:
+    - draft
+    - tasks
+  tracks: tasks.md
+  instruction: |
+    Execute the writing workflow using the checklist:
+    1) read brief/outline/research before making edits
+    2) complete tasks in priority order
+    3) update tasks.md as work progresses
+    4) stop and clarify if critical facts are uncertain
+
+    Definition of done:
+    - draft is complete
+    - edit pass completed
+    - publish package is ready
