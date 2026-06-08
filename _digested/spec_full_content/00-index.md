@@ -74,6 +74,13 @@ graph LR
     I[09-高级<br/>config实战] --> J[90-附录<br/>机器协议]
 ```
 
+### 路径 4：我要管理多仓库（v1.4.0 新增）
+
+```mermaid
+graph LR
+    A[01-初级] --> B[02-中级] --> C[12-workspace<br/>跨仓库规划]
+```
+
 ---
 
 ## 核心术语速查
@@ -86,7 +93,8 @@ graph LR
 | **specs/** | 项目当前正式规格基线 | `openspec/specs/auth/spec.md` |
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
-| **profile** | 选择安装哪些工作流命令 | core（4个命令）vs custom（自选命令） |
+| **profile** | 选择安装哪些工作流命令 | core（5个命令，v1.4.0 起）vs custom（自选命令） |
+| **workspace**（v1.4.0） | 跨仓库规划的本地协调视图 | 管理多个关联 repo 的 change 在 workspace 层协调 |
 | **brownfield** | 已有代码库，在上面继续改 | 接手一个跑了 3 年的系统 |
 | **greenfield** | 从零开始的新项目 | 白纸一张，全新设计 |
 
@@ -94,13 +102,14 @@ graph LR
 
 ## 命令速查
 
-### 日常最常用（core profile，默认包含 4 个命令）
+### 日常最常用（core profile，v1.4.0 起默认包含 5 个命令）
 
 | 命令 | 作用 | 典型场景 |
 |------|------|---------|
 | `/opsx:propose <name>` | 发起一个 change，生成 artifacts | 开始一个新功能或修复 |
 | `/opsx:explore` | 探索/调研模式，不生成 artifacts | 了解现有代码、调研技术方案 |
 | `/opsx:apply [name]` | 按 tasks.md 实现代码 | 开始写代码 |
+| `/opsx:sync` | 同步 delta spec 到主 spec（v1.4.0 新增纳入 core） | 多人协作时合并 spec 变更 |
 | `/opsx:archive [name]` | 收尾，合并 delta spec 回基线 | 功能完成后归档 |
 
 ### 扩展工作流（custom profile）
@@ -128,6 +137,11 @@ graph LR
 | `openspec archive <name>` | 归档 change |
 | `openspec config profile` | 切换工作流 profile |
 | `openspec update` | 更新 AI 工具的 skills/commands |
+| `openspec workspace setup` | 创建跨仓库 workspace（v1.4.0） |
+| `openspec workspace open` | 在 agent/editor 中打开 workspace（v1.4.0） |
+| `openspec workspace list` | 列出已知 workspace（v1.4.0） |
+| `openspec workspace update` | 同步 workspace 级 skills（v1.4.0） |
+| `openspec workspace doctor` | 诊断 workspace 配置（v1.4.0） |
 
 ---
 
@@ -145,6 +159,7 @@ graph LR
 | [08-高级-项目级全局约束到底放哪.md](08-高级-项目级全局约束到底放哪.md) | 专门判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和能力规格彻底分开的人 |
 | [09-高级-config-yaml-怎么写到真正好用.md](09-高级-config-yaml-怎么写到真正好用.md) | 专门讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
 | [10-实战-多人协作与Git工作流.md](10-实战-多人协作与Git工作流.md) | 多人团队使用 OpenSpec + Git 的最佳实践 | 团队协作、并行开发、冲突处理 |
+| [12-workspace-跨仓库规划-v1.4.0.md](12-workspace-跨仓库规划-v1.4.0.md) | workspace 跨仓库规划（v1.4.0 新增） | 需要管理多个关联仓库的人 |
 | [90-附录-给机器看的-agent-协议.md](90-附录-给机器看的-agent-协议.md) | 看机器执行机制 | 想研究底层 protocol 的人 |
 
 ---

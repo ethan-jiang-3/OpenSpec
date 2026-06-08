@@ -140,6 +140,10 @@ sequenceDiagram
 
 机器真正依赖的是这些结构化字段，而不是人类阅读版文档。
 
+**v1.3.1 重要修复**：此前 `--json` 模式下 spinner 的进度文本会泄漏到 stderr，agent 合并 stdout+stderr 时 JSON 解析被污染。v1.3.1 修复了此问题——`--json` 时 spinner 完全静默，agent 可安全合并两个输出流。
+
+**v1.4.0 补充**：在 workspace 上下文中，`status` 和 `instructions` 会使用 `workspace-planning` schema 而非 `spec-driven`。agent 不需要感知上下文切换——`PlanningHome` 抽象自动路由到正确的 schema。Workspace 生成的 skill 模板内置 guardrail，阻止 agent 在 workspace 上下文中执行 repo-local 操作（如 sync specs、archive）。
+
 ---
 
 ## skill、command、workflow 的关系

@@ -105,7 +105,61 @@
 - 核心对象：schema.yaml、template 文件、来源优先级、shadowing。
 - 影响：workflow 运行时如何解释 artifact 与 apply phase。
 
-## 六、旧命令与兼容层
+## 六、workspace 命令族（v1.4.0 新增）
+
+Workspace 命令族是 OpenSpec 从单仓库扩展到多仓库的核心接口。设计原则：**规划在 workspace 层，实现在 linked repo 层**。
+
+### `workspace setup`
+
+- 角色：workspace 创建器。
+- 核心对象：workspace 名称、link 列表、preferred opener、tool 选择。
+- 边界：创建 `.openspec-workspace/view.yaml`，注册到本地 registry，不修改任何 linked repo 内容。
+
+### `workspace list` / `ls`
+
+- 角色：workspace 发现接口。
+- 边界：列出已知 workspace 及其 links，纯查询，不改状态。
+
+### `workspace link`
+
+- 角色：仓库关联器。
+- 边界：将现有目录关联到 workspace（按 basename 推断或 `name=path` 显式命名），不创建、不初始化被链接目录。
+
+### `workspace relink`
+
+- 角色：链接路径修改器。
+- 边界：修改已有 link 的本地路径（例如在另一台机器上 checkout 到了不同位置）。
+
+### `workspace open`
+
+- 角色：workspace 启动器。
+- 核心对象：workspace、agent/editor 选择、initiative 绑定。
+- 产出：生成或刷新 `AGENTS.md`（workspace 级 agent 指导）和 `.code-workspace`（VS Code 多根工作区）。
+- 支持 opener：VS Code（`code`）、Codex CLI（`codex`）、Claude（`claude`）、GitHub Copilot（VS Code + copilot）。
+
+### `workspace update`
+
+- 角色：workspace 级 skill 同步器。
+- 边界：与 repo-local `update` 不同——此命令在 workspace root 生成 skills（skills-only），并通过 `workspace_skills` 状态跟踪 profile drift。
+
+### `workspace doctor`
+
+- 角色：workspace 诊断器。
+- 边界：检查当前机器的 link 路径是否存在、报告缺失、建议修复。
+
+### `context-store setup`
+
+- 角色：团队共享上下文初始化器。
+- 核心对象：context store 目录、Git 初始化。
+- 边界：创建团队协调数据目录，不绑定到具体 workspace。
+
+### `initiative create`
+
+- 角色：跨仓库使命创建器。
+- 核心对象：initiative（含 requirements、design、decisions 等协调文件）。
+- 边界：在 context store 中创建协调单元，workspace 可通过 `--initiative` 绑定。
+
+## 七、旧命令与兼容层
 
 ### `change ...`
 
@@ -118,7 +172,7 @@
 - 它说明 CLI 在演进中，正在从“名词对象入口”转向“动词优先入口”。
 - 这也意味着 OpenSpec 更强调任务流而不是对象菜单。
 
-## 七、命令之间的边界关系
+## 八、命令之间的边界关系
 
 ### `list` vs `status`
 
@@ -140,15 +194,16 @@
 - 前者定义工作流系统的配置和模型。
 - 后者运行这些模型并暴露当前实例状态。
 
-## 八、从“命令百科”到“系统理解”
+## 九、从”命令百科”到”系统理解”
 
 如果只逐条看命令，你会得到很多零散功能。如果按角色来看，会更清楚：
 
-- `init` / `update` 负责装配系统。
+- `init` / `update` / `workspace update` 负责装配系统。
 - `config` / `schema` 负责定义系统。
-- `list` / `show` / `view` 负责观察系统。
+- `list` / `show` / `view` / `workspace list` / `workspace doctor` 负责观察系统。
 - `validate` / `archive` 负责治理系统。
 - `new change` / `status` / `instructions` 负责驱动系统。
+- `workspace setup` / `workspace open` / `context-store setup` / `initiative create` 负责跨仓库协调系统（v1.4.0）。
 
 这才是 OpenSpec CLI 的整体结构。
 

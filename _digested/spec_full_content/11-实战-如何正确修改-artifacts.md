@@ -10,8 +10,8 @@ OpenSpec 有两种 profile（配置模式）：
 
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
-| **core** | 4 个命令 | 快速开发，简单场景 | ✅ 是（默认） |
-| **custom** | 10+ 个命令 | 复杂项目，需要更多控制 | ❌ 否 |
+| **core** | 5 个命令（v1.4.0 起） | 快速开发，简单场景 | ✅ 是（默认） |
+| **custom** | 11 个命令 | 复杂项目，需要更多控制 | ❌ 否 |
 
 ### 检查你当前的 Profile
 
@@ -23,12 +23,13 @@ openspec config profile
 # profile: core
 ```
 
-### Core Profile 的 4 个命令
+### Core Profile 的 5 个命令
 
 ```bash
 /opsx:propose <name>   # 创建 change + 生成所有 artifacts
 /opsx:explore          # 探索/调研模式
 /opsx:apply [name]     # 实现 tasks
+/opsx:sync             # 同步 delta specs（v1.4.0 从 custom 移入 core）
 /opsx:archive [name]   # 归档 change
 ```
 
@@ -39,7 +40,6 @@ openspec config profile
 /opsx:continue         # 逐个生成 artifact
 /opsx:ff               # 快速生成所有 artifacts
 /opsx:verify           # 验证实现与 specs 一致性
-/opsx:sync             # 同步 delta specs
 /opsx:bulk-archive     # 批量归档
 /opsx:onboard          # 新成员快速了解项目
 ```

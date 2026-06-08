@@ -264,8 +264,8 @@ schema 管的是：
 **场景**：你想用 OpenSpec，但只想要最简单的工作流。
 
 1. **选 profile**：`openspec config profile` 选 `core` 或 `custom`
-   - core：你只有 4 个命令（propose/explore/apply/archive）
-   - custom：自选命令（可以启用 new/continue/ff/verify/sync/bulk-archive/onboard 等）
+   - core：你只有 5 个命令（propose/explore/apply/sync/archive）
+   - custom：自选命令（可以额外启用 new/continue/ff/verify/bulk-archive/onboard 等）
    - 这是"入口层"的选择
 
 **⚠️ 警告**：
@@ -331,3 +331,31 @@ schema 管的是：
 下一篇看：
 
 - [04-高级-cline-里的-openspec-到底怎么落地.md](04-高级-cline-里的-openspec-到底怎么落地.md)
+
+---
+
+## v1.4.0 补充：第四层 — workspace 层
+
+本文讨论的三层结构（project、user、package）是 repo-local 视角。v1.4.0 引入了第四个作用域：
+
+```mermaid
+graph TB
+    subgraph workspace层
+    W[".openspec-workspace/view.yaml<br/>（workspace 级配置）"]
+    WC["workspace changes/<br/>（跨仓库 change）"]
+    end
+    subgraph 项目层
+    A["openspec/specs/"]
+    B["openspec/config.yaml"]
+    C["openspec/schemas/"]
+    end
+```
+
+**Workspace 层改变了边界讨论**：
+
+- Workspace change 使用 `workspace-planning` schema（不是 `spec-driven`）
+- Workspace 没有主 `specs/` 基线（spec 在各 linked repo 中）
+- Workspace 的配置（profile/delivery/tools）来自 global config，不走 repo-local `config.yaml`
+- `PlanningHome` 抽象在运行时判断当前属于 workspace 还是 repo
+
+这意味着「项目级全局约束放哪」这个问题现在有四种可能的答案：**workspace 层、project 层、user 层、package 层**。具体怎么选，取决于你的团队结构和仓库数量。详见 [12-workspace-跨仓库规划-v1.4.0.md](12-workspace-跨仓库规划-v1.4.0.md)。

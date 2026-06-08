@@ -31,6 +31,15 @@
 | `instructions apply` | OPSX + 高级用户 | apply config、context files、tasks | apply instruction 包 | 决定是否进入代码实施阶段 | 否 |
 | `templates` | 高级用户/工具 | schema 解析路径、artifact templates | 模板路径与来源 | 帮助调试模板覆盖与解析 | 否 |
 | `schemas` | 高级用户/工具 | project/user/package schemas | schema 列表与来源 | 帮助发现可用 workflow 模型 | 否 |
+| `workspace setup` | 人类 | workspace 名称、link 路径、opener 选择、工具选择 | `.openspec-workspace/view.yaml`、registry 注册 | 创建跨仓库规划 home | 是 |
+| `workspace list` | 人类 + 机器 | registry + view.yaml | workspace 列表及 links | 帮助发现和选择 workspace | 否 |
+| `workspace link` | 人类 | 目标目录路径 | 更新 view.yaml 的 links | 扩展 workspace 可规划的仓库范围 | 是 |
+| `workspace relink` | 人类 | link name + 新路径 | 更新 link 的本地路径 | 适配不同机器的 checkout 布局 | 是 |
+| `workspace open` | 人类 + agent | workspace、opener 选择、initiative 绑定 | AGENTS.md（刷新）、.code-workspace | 启动 agent/editor 并注入 workspace 上下文 | 是 |
+| `workspace update` | 人类 | workspace root、profile、delivery、tool 选择 | workspace 级 skill 文件 | 同步 workspace 的 workflow skills | 是 |
+| `workspace doctor` | 人类 | view.yaml、link 路径 | 诊断报告（缺失路径、建议） | 排查 workspace 配置问题 | 否 |
+| `context-store setup` | 人类 | store 名称、路径 | context store 目录（含 Git repo） | 创建团队共享协调数据空间 | 是 |
+| `initiative create` | 人类 + agent | initiative 名称、store | initiative 协调文件（requirements、design 等） | 创建跨仓库使命的协调单元 | 是 |
 
 ## workflow 命令简表
 
@@ -53,6 +62,7 @@
 - `schemas --json`
 - `templates --json`
 - `list --json`
+- `workspace list --json`
 
 共同特征：
 
@@ -68,11 +78,13 @@
 - `update`
 - `new change`
 - `archive`
+- `workspace setup` / `workspace update`（v1.4.0）
 - 部分 `config` / `schema` 子命令
 
 其中：
 
-- `init/update` 更偏改变工具接入层。
+- `init/update/workspace update` 更偏改变工具接入层。
 - `new change/archive` 更偏改变业务工作流状态。
+- `workspace setup` 更偏改变跨仓库规划基础设施。
 - `config/schema` 更偏改变系统配置与模型定义层。
 

@@ -19,6 +19,7 @@
 - 可选 `--tools`，用于非交互指定配置哪些 AI 工具。
 - 可选 `--profile`，覆盖全局配置中的 profile。
 - 全局配置中的 `profile`、`delivery`、`workflows`。
+- （v1.2.0+）自动检测项目目录中已存在的 AI 工具目录（如 `.claude/`、`.cursor/`），预选检测到的工具。
 
 输出：
 
@@ -318,4 +319,45 @@
 7. `openspec archive <name>`
 
 从这个顺序看，CLI 实际上在协助人完成一整条从提出变更到归档规范的生命周期。它不是一堆孤立命令，而是一条工作流轨道。
+
+## 8. Workspace 命令（v1.4.0 新增）
+
+Workspace 命令面向的场景是：你同时维护多个关联仓库（如 API + Web + Mobile），需要在规划层协调它们。
+
+### `openspec workspace setup`
+
+创建跨仓库规划 home。交互式流程会引导你：
+- 给 workspace 命名（kebab-case）
+- link 至少一个本地目录
+- 选择 preferred opener（VS Code / Codex / Claude / Copilot）
+- 选择要为 workspace 生成的 AI 工具 skills
+
+也支持非交互：`openspec workspace setup --no-interactive --name platform --link /path/to/api --link web=/path/to/web`
+
+### `openspec workspace list` / `ls`
+
+列出本地所有已知 workspace 及其 links。
+
+### `openspec workspace link <path>`
+
+将另一个仓库加到已有 workspace 中。link name 默认从目录 basename 推断，可以用 `name=path` 显式命名。
+
+### `openspec workspace open`
+
+在 agent 或 editor 中打开 workspace：
+- 生成/刷新 `AGENTS.md`（workspace 级 agent 指导）
+- 生成 `.code-workspace`（VS Code 多根工作区文件）
+- 可绑定 initiative：`--initiative team-context/billing-launch`
+
+### `openspec workspace update`
+
+刷新 workspace 级的 skill 文件（与 repo-local `openspec update` 不同：workspace 的投递是 skills-only）。
+
+### `openspec workspace doctor`
+
+诊断：哪些 link 的路径在当前机器上不存在、是否需要 relink。
+
+### 与其他命令的关系
+
+Workspace 不替代 repo 级工作流，而是提供一个上一层级的规划层。设计规则：**规划在 workspace，实现在 linked repo**。在 workspace 内创建 change 用的是 `workspace-planning` schema，在各 repo 内创建 change 用的还是 `spec-driven`。
 

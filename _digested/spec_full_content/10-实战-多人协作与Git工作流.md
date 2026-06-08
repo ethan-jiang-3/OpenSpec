@@ -809,3 +809,27 @@ mindmap
 - **团队规范**：根据团队情况定制 PR template 和命名规范
 
 如果遇到具体问题，参考 [99-FAQ-常见问题.md](99-FAQ-常见问题.md)。
+
+---
+
+## v1.4.0 补充：Workspace 协作
+
+本文讨论的协作模式是基于「单个仓库内多个 change」的场景。v1.4.0 引入了跨仓库 workspace，协作模式在此基础上增加了一个层级：
+
+### Workspace 级协作
+
+当使用 workspace 时，协作分为两层：
+
+| 层 | 内容 | 谁参与 |
+|----|------|--------|
+| **Workspace 层** | 跨仓库变更的意图、范围、架构方案 | 所有相关 repo 的开发者 |
+| **Repo 层** | 单个仓库的具体实现 | 该 repo 的开发者 |
+
+Workspace 层的协作原则与 repo 层类似但有区别：
+
+- **Workspace change 是对「要做什么」的共识**，不包含具体代码实现计划
+- **各 repo 各自创建 change 来实现自己的部分**，使用 repo-local 的 `spec-driven` schema
+- **Workspace 不 archive** — 实现完成后，各 repo 各自 archive 自己的 change
+- **context store 提供团队共享的 initiative 文件**（requirements、design、decisions），作为 workspace 规划的输入
+
+详细见 [12-workspace-跨仓库规划-v1.4.0.md](12-workspace-跨仓库规划-v1.4.0.md)。

@@ -13,7 +13,7 @@
 **A**: 传统文档是"写完就不改"，OpenSpec 是"边做边改"。而且 OpenSpec 用 delta spec 表达增量变化，不是每次重写整份文档。
 
 ### Q3: 我必须用 AI 工具吗？
-**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具（Cline/Claude）会更高效。
+**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、Windsurf、GitHub Copilot、Kimi CLI、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode 等。
 
 ---
 
@@ -33,8 +33,8 @@
 
 ### Q6: 什么时候该用 core profile，什么时候用 custom？
 **A**:
-- **core**（默认）：只有 4 个命令（propose/explore/apply/archive），适合大多数场景
-- **custom**：自选命令（可以启用 verify/sync/continue 等），适合复杂项目
+- **core**（默认，v1.4.0 起）：5 个命令（propose/explore/apply/sync/archive），适合大多数场景。sync 在 v1.4.0 从 custom 移入了 core。
+- **custom**：自选所有 11 个命令（可以额外启用 verify/continue/ff 等），适合复杂项目
 - **切换**：`openspec config profile`
 
 ---
@@ -173,24 +173,24 @@ specs/
 
 ## 工具集成
 
-### Q25: OpenSpec 只能用 Cline 吗？
-**A**: 不是。OpenSpec 支持：
-- Cline
-- Claude Code
-- Cursor（通过插件）
-- 或者直接用 CLI（不用 AI 工具）
+### Q25: OpenSpec 支持哪些 AI 工具？
+**A**: v1.4.1 支持的工具包括：
+- **主要**：Claude Code、Cline、Cursor、Codex、Windsurf、GitHub Copilot
+- **v1.3.0 新增**：Junie（JetBrains）、Lingma、ForgeCode、IBM Bob、Pi（pi.dev）、Kiro（AWS）
+- **v1.4.0 新增**：Kimi CLI、Mistral Vibe
+- 也可以直接用 CLI（不用任何 AI 工具）
 
-### Q26: 怎么在 Cline 里安装 OpenSpec？
+### Q26: 怎么安装 OpenSpec 到我的 AI 工具？
 **A**: 
-1. 在项目里运行 `openspec init`
-2. 运行 `openspec update` 安装 skills
-3. 重启 Cline
-4. 就可以用 `/opsx:propose` 等命令了
+1. 在项目里运行 `openspec init`（v1.2.0+ 会自动检测已安装的工具并预选）
+2. 也可以手动指定：`openspec init --tools claude,cursor`
+3. 运行 `openspec update` 确保 skills/commands 是最新的
+4. 重启 AI 工具，就可以用 `/opsx:propose` 等命令了
 
 ### Q27: 为什么有 `.cline/` 和 `openspec/` 两个目录？
 **A**: 
 - `openspec/`：项目事实层（specs/changes/config）
-- `.cline/`：工具入口层（skills/workflows）
+- `.cline/`（或其他工具目录）：工具入口层（skills/workflows）
 - 这样设计是为了让 OpenSpec 不被绑死在某个工具上
 
 ---
@@ -216,6 +216,31 @@ specs/
 - 但 specs 和 tasks 通常都需要
 
 ---
+
+## Workspace（v1.4.0 新增）
+
+### Q31: workspace 是什么？和 repo 里的 OpenSpec 有什么关系？
+**A**: Workspace 是跨仓库规划的本地视图（v1.4.0）。它不替代 repo 级 OpenSpec，而是在其之上加了一层。设计规则：**规划在 workspace，实现在 linked repo**。Workspace 级 change 用 `workspace-planning` schema，repo 级 change 用 `spec-driven` schema，两者互不干扰。
+
+### Q32: 我什么时候需要 workspace？
+**A**: 当你同时维护多个关联仓库（如 API + Web + Mobile），需要在规划层协调它们时。单个仓库项目不需要 workspace。
+
+### Q33: workspace 会修改我 linked 的仓库吗？
+**A**: 不会。link 只记录关系（目录路径），不会创建、复制、初始化或修改 linked 目录中的任何文件。Workspace 的规划内容（changes、view.yaml）全部在 workspace 自己的目录中。
+
+### Q34: workspace 和 context store 什么关系？
+**A**: 
+- **context store**：团队共享的协调数据目录（可以 Git 管理），包含多个 initiative
+- **initiative**：context store 中的跨仓库使命（含 requirements、design、decisions 等）
+- **workspace**：本地规划视图，可以绑定到一个 initiative
+- 关系：context store → initiative → workspace → linked repos
+
+### Q35: 怎么开始使用 workspace？
+**A**: 
+1. `openspec context-store setup team-context --path /path/to/store`（可选，团队共享）
+2. `openspec workspace setup`（交互式，link 你的各个仓库）
+3. `openspec workspace open`（在 agent 中打开 workspace 上下文）
+4. 在 workspace 中创建 change：`openspec new change <name>`
 
 ## 下一步
 
