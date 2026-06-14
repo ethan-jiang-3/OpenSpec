@@ -2,15 +2,6 @@
 
 这个目录是 `_digested/` 的"内核层"之一，**专门聚焦 spec-driven 这一条 schema 下的四条核心命令**（explore、propose、apply、archive）。`_digested/` 的其他子目录（`schema/`、`spec_cli/`）侧重**概念解释和架构解读**，而项目根目录的 `_openspec_handbook/` 是按认知层次的学习手册，这里聚焦于**从 TypeScript 源码出发的精确机制剖析**。
 
-## 与 `_digested/` 其他部分的关系
-
-| 目录 | 视角 | 受众 |
-|------|------|------|
-| `_openspec_handbook/` | 按认知层次教你怎么用 OpenSpec（项目根目录） | 想用好 OpenSpec 的开发者 |
-| `schema/` | schema 系统的专题概念深挖 | 想自定义工作流的人 |
-| `spec_cli/` | CLI 作为"本地运行时 API"的架构解读 | 想理解 CLI 设计意图的人 |
-| **`internal-spec-driven/`** | **从 TypeScript 源码出发，聚焦 spec-driven 下四条命令的精确机制剖析** | **想彻底搞懂每条命令背后到底发生了什么的人** |
-
 ## 文件导航
 
 按推荐阅读顺序：
