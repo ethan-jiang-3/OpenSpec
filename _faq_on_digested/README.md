@@ -37,6 +37,8 @@ _faq_on_digested/
 ## 已有问题
 
 - [`explore-to-propose-change/`](explore-to-propose-change/question.md) — Explore 如何基于用户意图、OpenSpec 状态和真实代码判断是否应该 propose change，以及应该 propose 一个还是多个。
+- [`propose-to-apply-ready/`](propose-to-apply-ready/question.md) — Propose 动作出现后，OpenSpec 如何创建 change、生成 artifacts，并走到 `/opsx:apply` 可以开始。
+- [`apply-ready-to-archive-ready/`](apply-ready-to-archive-ready/question.md) — `/opsx:apply` 开始后，agent 如何读取上下文、实施 tasks、更新 checkbox，并走到可以 archive。
 - [`openspec-executable/`](openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的。
 
 ## 引用规范
