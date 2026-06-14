@@ -6,6 +6,8 @@ archive 是整个 change 生命周期的终点。它做三件事：验证 change
 
 ## 1. 三阶段总览
 
+![archive 三方架构实例化](figures/04-archive-flow.svg)
+
 来自 `src/core/archive.ts:51-288`（`ArchiveCommand.execute()`）。逻辑上可分为三大阶段（validate → merge → move），但代码内部实际是**四步**顺序执行：① 结构/delta 验证（96-151）→ ② tasks 完成检查（174-194）→ ③ delta spec 合并写入（196-265，调用 `buildUpdatedSpec`/`writeUpdatedSpec`）→ ④ 归档移动（267-285）。下面的图示把 ② 归入 Validate 的范畴，按逻辑阶段呈现：
 
 ```

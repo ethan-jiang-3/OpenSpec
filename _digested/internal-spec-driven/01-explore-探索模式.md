@@ -59,6 +59,36 @@ Read: <changeRoot>/design.md    → 了解技术决策
 Read: <changeRoot>/specs/*/spec.md → 了解已有 spec
 ```
 
+### 2.1 三方架构实例化：explore 的四方交互
+
+explore 是四条命令中最轻量的——CLI 只做信息输出，agent 只读不写（除非用户要求"捕捉"）：
+
+```
+User（人类）
+  │  "我想做实时协作"  /  "/opsx:explore add-auth-system"
+  ▼
+Host Agent（Claude Code / Cursor / Cline）
+  │  openspec list --json                       → 感知项目中有哪些活跃 change
+  │  openspec status --change X --json          →（可选）获取某个 change 的 artifact DAG 状态
+  │  Read: <changeDir>/proposal.md              → 了解 scope
+  │  Read: <changeDir>/design.md                → 了解技术决策
+  │  Read: <changeDir>/specs/**/spec.md         → 了解已有 spec
+  │  讨论、画 ASCII 图、探索方案                  → 对话
+  │  （可选）写 artifact 文件                     → "捕捉而非实施"
+  ▼
+OpenSpec CLI（只读信息源）
+  │  openspec list     → 扫描 openspec/changes/ → 返回活跃 change 列表
+  │  openspec status   → 读 schema.yaml → 构建 DAG → 返回 artifact 状态 / 路径
+  │  CLI 不写任何文件，不生成任何内容
+  ▼
+文件系统（探索的上下文）
+  openspec/changes/<name>/  — 已有 change 的 artifact 文件
+  openspec/specs/           — 主 spec 基线（了解现有能力）
+  src/                      — 应用代码（agent 必须基于真实代码讨论）
+```
+
+**explore 的核心约束**：CLI 不做推理，agent 不写代码。CLI 只是"信息开关"，agent 在 guardrails 框架内自由探索。
+
 ---
 
 ## 3. 零活跃 change 场景

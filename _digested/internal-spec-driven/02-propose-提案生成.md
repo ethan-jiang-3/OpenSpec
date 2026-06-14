@@ -6,6 +6,8 @@ propose 是四条命令中最核心的一条。它执行完整的"从零到可�
 
 ## 1. 完整流程（5 步）
 
+![propose 三方架构实例化](figures/02-propose-flow.svg)
+
 来自 `src/core/templates/workflows/propose.ts:13-112`。
 
 ### Step 1：理解用户意图，导出 change name

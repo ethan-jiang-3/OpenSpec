@@ -6,6 +6,8 @@ apply 是 propose 的自然延续 —— 当所有规划 artifact 就绪，agent
 
 ## 1. Apply Gate：为什么需要"准入检查"
 
+![apply 三方架构实例化](figures/03-apply-flow.svg)
+
 apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** —— `openspec instructions apply --change X --json` 会根据前提条件是否满足返回不同状态，agent 根据状态决定是否允许实施。
 
 这个设计的意义：**防止 AI 在没有充分规划的情况下写代码**。apply 拒绝在 specs/design/tasks 缺失时执行。
