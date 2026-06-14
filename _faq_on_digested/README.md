@@ -39,6 +39,7 @@ _faq_on_digested/
 - [`explore-to-propose-change/`](explore-to-propose-change/question.md) — Explore 如何基于用户意图、OpenSpec 状态和真实代码判断是否应该 propose change，以及应该 propose 一个还是多个。
 - [`propose-to-apply-ready/`](propose-to-apply-ready/question.md) — Propose 动作出现后，OpenSpec 如何创建 change、生成 artifacts，并走到 `/opsx:apply` 可以开始。
 - [`apply-ready-to-archive-ready/`](apply-ready-to-archive-ready/question.md) — `/opsx:apply` 开始后，agent 如何读取上下文、实施 tasks、更新 checkbox，并走到可以 archive。
+- [`archive-ready-to-archived/`](archive-ready-to-archived/question.md) — Implementation 已完成后，`openspec archive` 如何验证、合并 specs、移动 change，并收束到 archived。
 - [`article-driven-schema/`](article-driven-schema/question.md) — OpenSpec 的 schema 系统能不能脱离代码实现，用来管理文章内容生产流水线？概念验证：定义一个 article-driven schema，不改源码。
 - [`openspec-executable/`](openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的。
 
