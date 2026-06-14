@@ -2,7 +2,7 @@
 
 ## 一句话
 
-这条是给**能人**的——你懂自己的项目、会指挥 agent，但不是 SDD 专家。你让 **agent 当作者**（它读项目、起草、写 YAML），你给判断信息和拍板。和 [`answer-by-hand.md`](answer-by-hand.md) 的区别：那里 agent 是助手、你是作者；这里**反过来**。
+这条是给**能人**的——你懂自己的项目、会指挥 agent，但不是 SDD 专家。你让 **agent 当作者**（它读项目、起草、写 YAML），你给判断信息和拍板。和 [`answer-expert.md`](answer-expert.md) 的区别：那里 agent 是助手、你是作者；这里**反过来**。
 
 为什么这是当下可行的路径：OpenSpec 没有 config 编辑工具（见 [`answer.md`](answer.md)），但 agent 能读项目、能看到 stub 注释和 `customization.md` 的格式、还能在 `openspec instructions` 的输出里看到当前 context/rules。OpenSpec 没引导它做这事，所以**引导它的任务落到你的话术上**。
 
@@ -14,11 +14,31 @@
 - **agent 能看到 config 的格式**——`openspec init` 写的 stub（`src/core/config-prompts.ts:9-39`）里，`context` 和 `rules` 虽是注释，但格式例子就在那；`docs/customization.md:29-46` 也有完整例子。agent 照着填不会跑偏。
 - **agent 能看到当前 config 的状态**——它跑 `openspec instructions <artifact> --json` 时，返回里带 `context` 和 `rules` 字段（`src/core/artifact-graph/instruction-loader.ts:335-336`）。空的就是 `undefined`，agent 能据此判断"项目还没配背景"。
 
-缺的只有一样：**OpenSpec 没有 skill 提示 agent "context 空就去问用户、然后改 config.yaml"**（`onboard` skill 全文不提 config）。所以这个引导得你给。
+缺的只有一样：**OpenSpec 没有 skill 提示 agent "context 空就去问用户、然后改 config.yaml"**（`onboard` skill 全文不提 config）。所以这个引导得你给——但最佳引导时机其实是 Explore（见下）。
+
+## 最佳入口：在 Explore 里谈项目全局，顺带长 config
+
+最顺的做法不是单独坐下来"配 config"——而是**借 Explore 谈项目全局时，让它自然冒出来**。Explore 时问 agent：
+
+```text
+你（Explore 场景）：我们这个项目，全局上有哪些东西要固定到项目层级？
+  - 技术栈 / 领域 / 质量优先级           → 该进 context
+  - 反复要遵守的约束（每次都漏的、每次都要提醒的）→ 该进 rules
+  哪些是这次 change 的局部事，哪些是跨所有 change 的全局事？
+```
+
+**为什么这条路通——四个结构原因（源码落地）：**
+
+1. **Explore 的工作就是建项目级理解。** `explore.ts:42-46` 让 agent "Map existing architecture / Find integration points / Identify patterns already in use"。这正是 `context` 该装的（稳定的项目背景，`project-config.ts:28-32` + digested 06:244-249："context 放技术栈/领域/质量优先级"）。propose 忙着生成 artifact、apply 在实施、archive 在合并——只有 Explore 在专门建这个项目模型。
+2. **Explore 会冒出反复的模式和坑。** `explore.ts:72-73` "Identify what could go wrong"。这种"反复出错、每次都要提醒"的沉淀，正是 `rules` 该装的（digested 06:258："看 agent 反复犯什么错误，再针对性地加 rules"）。
+3. **时序闭合（最关键）。** Explore 在 propose 之前；而 `config.yaml` 每次 `openspec instructions` 都重读（`instruction-loader.ts:290-298` + digested 06:107："最新修改立即生效"）。所以你在 Explore 期间改了 config，紧接着 propose 生成 artifact 时，context/rules 已经生效（`propose.ts:64-72` 把它们当约束消费）。不用重启、不用 re-init。
+4. **Explore 无脚本、对话式——你的问题补上 skill 没写的那条路由。** `explore.ts:17` "stance, not a workflow"、`:23` "Curious, not prescriptive"。你问"什么是全局的"，就是把 global 发现路由到 `config.yaml`。
+
+**诚实说明：这是 emergent，不是 Explore 明示的功能。** Explore 的 capture 表（`explore.ts:117-124`）和 hand-off（`:250-273`）只列 change 级 artifact（specs/design/proposal/tasks），**没有 config.yaml 这一行**。所以 agent 不会主动把全局发现写进 config——是**你的问题**激活了它。这也正是"能人"路径的价值：你知道在 Explore 里问对的问题，agent 就有足够上下文帮你落地到 config，而不必等一个还不存在的 config 编辑命令。
 
 ## 通用补录循环
 
-不管补哪一部分，都是这五步：
+Explore 谈清楚"该改什么"之后，落地写进 config 就是这几步（不管补哪一部分）：
 
 ```text
 1. 让 agent 读当前 openspec/config.yaml   → 看哪些字段是空的
@@ -103,20 +123,21 @@ agent 写 config 时容易发明新词或用泛义词（把 `capability` 写成 
     别用 feature/need 这种泛义词。先读 schemas/spec-driven/schema.yaml 确认措辞。
 ```
 
-完整术语表（哪些该进 `context`、哪些该进各 artifact 的 `rules`）见 [`answer-by-hand.md`](answer-by-hand.md) 的"回响 schema 的术语"。
+完整术语表（哪些该进 `context`、哪些该进各 artifact 的 `rules`）见 [`answer-expert.md`](answer-expert.md) 的"回响 schema 的术语"。
 
 ## 补录的节奏：什么时候做
 
-绑在 change 生命周期上，**不要一次写满**：
+绑在 change 生命周期上，**不要一次写满**。而每个 change 本来就从 Explore 开始——所以 **Explore 就是天然的 review 时刻**：
 
 ```text
 openspec init                → 不动 config（schema 一行够用）
-第一个 change 之前            → 补 context（4 行背景）
-每 archive 一个 change 之后   → review：我这次反复纠正了 agent 什么？
-                              把最痛的 1 条补进对应 artifact 的 rules
+每个 change 的 Explore 阶段   → 顺带问："全局上这次该固定/补什么？"
+                              → 技术栈/领域/优先级补进 context；
+                                反复的坑补进 rules
+                              （不必等 archive——Explore 就是最好的 review 时机）
 ```
 
-为什么这样可行：`config.yaml` 每次 `openspec instructions` 都重读、即时生效、写错不崩（fail-open）。所以你能靠真实使用一点点收敛，不用开局就写对。这和专家手写的纪律是同一条（见 [`answer-by-hand.md`](answer-by-hand.md)），只是这里把"写"这步交给了 agent。
+为什么这样可行：`config.yaml` 每次 `openspec instructions` 都重读、即时生效、写错不崩（fail-open）。所以你能靠真实使用一点点收敛，不用开局就写对。这和专家手写的纪律是同一条（见 [`answer-expert.md`](answer-expert.md)），只是这里把"写"这步交给了 agent。
 
 ## 守则
 
@@ -126,18 +147,4 @@ openspec init                → 不动 config（schema 一行够用）
 - **`rules` 的 key 对齐 schema**（`proposal` / `specs` / `design` / `tasks`）。
 - **reactive 优先于 proactive**——用真实犯错的反馈补，不凭空规划。
 
-## 参考来源
-
-源码引用基于 commit `b1523ea`：
-
-| 来源 | 用到的结论 |
-|---|---|
-| `src/core/config-prompts.ts:9-39` | init stub 里 context/rules 的注释格式——agent 照此填 |
-| `src/core/artifact-graph/instruction-loader.ts:335-336` | `openspec instructions` 返回带 context/rules 字段——agent 能看到当前状态 |
-| `src/core/project-config.ts:103-107` | context 50KB 硬上限，超了忽略 + warning |
-| `src/core/project-config.ts:173-191` | `validateConfigRules`：rules 用未知 artifact ID 会 warning 且不注入 |
-| [`../../docs/customization.md`](../../docs/customization.md) | context/rules 的完整格式例子（`:29-46`） |
-| [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md) | 强规则公式、4 类规则、各 artifact 该约束什么 |
-| [`../../_openspec_handbook/04-高级-config-schema-与项目边界.md`](../../_openspec_handbook/04-高级-config-schema-与项目边界.md) | config（提示层）vs schema（结构层） |
-| [`answer.md`](answer.md) | 现状盘点与缺口（为什么需要这条 agent 路径） |
-| [`answer-by-hand.md`](answer-by-hand.md) | 另一条路：专家自己写，agent 只当 spot 助手 |
+> 全部源码与文档引用集中在一个文件：[`sources.md`](sources.md)。

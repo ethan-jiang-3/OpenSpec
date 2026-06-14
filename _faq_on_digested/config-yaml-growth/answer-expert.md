@@ -8,7 +8,7 @@
 三条路里最专业的一条
   人 = 作者（你写每一条 context / rules）
   agent = 助手（你点一下，它出意见 / 草稿 / 校验，你拍板）
-  ↑ 和 answer-with-agent.md 的区别：那里 agent 是作者，这里你是作者
+  ↑ 和 answer-intermediate.md 的区别：那里 agent 是作者，这里你是作者
 ```
 
 ## 为什么专家选择手写
@@ -19,7 +19,7 @@
 
 ## 手写的节奏
 
-和 [`answer-with-agent.md`](answer-with-agent.md) 是同一个节奏，区别在**谁来写**：
+和 [`answer-intermediate.md`](answer-intermediate.md) 是同一个节奏，区别在**谁来写**：
 
 ```text
 openspec init                → 不动 config（schema: spec-driven 一行够跑）
@@ -151,6 +151,23 @@ config 没有 `validate` 命令（`openspec schema validate` 只管 schema.yaml�
     我看完决定加哪几条。
 ```
 
+## 缺口怎么补（如果你愿意改 OpenSpec）
+
+[`answer-beginner.md`](answer-beginner.md) 的现状盘点讲过：config.yaml 没有编辑工具是个真实缺口。专家/贡献者如果想从源头补，两个方向都建立在已有源码上，代价不大：
+
+**方向 A：让 agent 帮——给 workflow 加一句引导。** 在 `onboard` 或 `explore` skill 里加一条："如果 `openspec/config.yaml` 的 `context` 为空，用 AskUserQuestion 问用户技术栈、领域、质量优先级，然后提议（不是替用户决定）一份 `context` 和初始 `rules`，让用户确认后写入。" 复用已有的 `readProjectConfig()` 读 + 文件写入，不改 CLI。
+
+**方向 B：给 CLI 加项目级命令。** 实现 `config.ts:273-279` 那个 preAction 钩子已经在等的 `--scope project`：
+
+```bash
+openspec config context set "Tech stack: ..."
+openspec config rule add proposal "Include rollback plan"
+```
+
+复用已有的 `readProjectConfig()`（`src/core/project-config.ts`，目前纯只读，需加一个 write）+ `stringifyYaml`（`schema.ts:878` 已有先例：parse-modify-restringify）。门槛低，且正好堵上那个 "not yet implemented"。
+
+方向 A 让普通用户不用碰 YAML（靠对话），方向 B 给愿意用命令行的人结构化入口。两者互补。
+
 ## 守则
 
 - **你拍板每一条。** agent 提议 ≠ 采纳；review 出的毛病、起草的草稿、扫描的提议，都过你的判断。
@@ -159,19 +176,4 @@ config 没有 `validate` 命令（`openspec schema validate` 只管 schema.yaml�
 - **`context` < 50KB**，只放不变背景。
 - **reactive 优先**——用真实犯错的反馈补，不凭空规划一组。
 
-## 参考来源
-
-源码引用基于 commit `b1523ea`：
-
-| 来源 | 用到的结论 |
-|---|---|
-| `src/core/project-config.ts:103-107` | context 50KB 硬上限，超了忽略 + warning |
-| `src/core/project-config.ts:173-191` | `validateConfigRules`：rules 用未知 artifact ID 会 warning 且不注入 |
-| `src/core/artifact-graph/instruction-loader.ts` | 每次重读 config、即时生效、注入 context/rules |
-| `openspec/config.yaml` | 真实范例：OpenSpec 团队 dogfood 的手写成品 |
-| `schemas/spec-driven/schema.yaml` | spec-driven 各 artifact 的 instruction 与关键术语（capability / requirement / scenario / SHALL / Non-Goals / Risk→Mitigation 等） |
-| [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md) | 强规则公式、4 类规则、6 bad smell、context 三特质 |
-| [`../../_openspec_handbook/04-高级-config-schema-与项目边界.md`](../../_openspec_handbook/04-高级-config-schema-与项目边界.md) | config（提示层）vs schema（结构层） |
-| [`../../_digested/internal-spec-driven/06-config-yaml-机制与约束.md`](../../_digested/internal-spec-driven/06-config-yaml-机制与约束.md) | 完整机制（Zod、注入、fail-open、误用） |
-| [`answer.md`](answer.md) | 现状盘点与缺口 |
-| [`answer-with-agent.md`](answer-with-agent.md) | 另一条路：能人让 agent 当作者 |
+> 全部源码与文档引用集中在一个文件：[`sources.md`](sources.md)。
