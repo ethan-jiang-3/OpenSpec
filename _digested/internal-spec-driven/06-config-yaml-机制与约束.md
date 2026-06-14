@@ -110,9 +110,11 @@ if (effectiveProjectRoot) {
 
 `change-utils.ts:132-147`：读取 `config.schema` 来决定新 change 的默认 schema。
 
-### 时机 3：`openspec status` 显示 nextSteps 时
+### status 的边界
 
-`src/core/change-status-policy.ts:86` 中 `buildActionContext()` 使用 config 信息构造机器可读约束。
+`openspec status` 会通过 change metadata / schema / planning home 构造 artifact 状态、`nextSteps` 和 `actionContext`。
+
+其中 `actionContext` 来自 planning home、project root 和 artifact IDs（`src/core/change-status-policy.ts` 的 `buildActionContext()`），**不是**从 project context 或 artifact rules 注入。
 
 ### resilience 设计
 
@@ -189,7 +191,7 @@ schema: spec-driven     # 选择用哪个 schema
 这个字段决定了：
 - `openspec new change` 创建 change 时用哪个 schema
 - `openspec instructions` 加载哪个 DAG 的 artifact 定义
-- `openspec status` 按哪个 DAG 判断 artifact 状态
+- `openspec status` 在 metadata 缺失时可通过 schema 解析回退链确定用哪个 DAG 判断 artifact 状态；正常新 change 会优先使用 `.openspec.yaml` 中已写入的 schema
 
 ### 5.2 rules key 校验依赖 schema
 

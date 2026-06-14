@@ -3,11 +3,11 @@
     <marker id="arrowR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
       <path d="M0,0 L8,3 L0,6 Z" fill="#555"/>
     </marker>
-    <marker id="arrowL" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
-      <path d="M8,0 L0,3 L8,6 Z" fill="#999"/>
+    <marker id="arrowL" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#999"/>
     </marker>
-    <marker id="arrowLoop" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
-      <path d="M8,0 L0,3 L8,6 Z" fill="#f59e0b"/>
+    <marker id="arrowLoop" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#f59e0b"/>
     </marker>
     <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/>
@@ -73,7 +73,7 @@
   <rect x="10" y="155" width="980" height="420" rx="6" fill="none" stroke="#93c5fd" stroke-width="1.2" stroke-dasharray="6,3"/>
   <text x="22" y="172" font-size="10" fill="#2563eb" font-weight="bold">Phase B · 按 DAG 顺序逐一创建 artifact（核心循环）</text>
 
-  <!-- --- Iteration flow (vertical within loop) --- -->
+  <!-- Iteration flow (vertical within loop) -->
 
   <!-- Step B1: status call -->
   <text x="22" y="195" font-size="8" fill="#94a3b8">每次迭代开始</text>
@@ -183,13 +183,11 @@
   <path d="M505,671 L540,671" stroke="#f59e0b" stroke-dasharray="5,2" stroke-width="1.2"/>
   <text x="557" y="675" font-size="8" fill="#666">循环（沿左侧回线）</text>
 
-  <line x1="640" y1="671" x2="670" y2="671" stroke="#555"/>
-  <polygon points="670,668 678,671 670,674" fill="#555"/>
+  <line x1="640" y1="671" x2="678" y2="671" stroke="#555" marker-end="url(#arrowR)"/>
   <text x="683" y="675" font-size="8" fill="#666">请求/调用（实线 →）</text>
 
-  <line x1="770" y1="671" x2="800" y2="671" stroke="#999" stroke-dasharray="3,2"/>
-  <polygon points="800,668 808,671 800,674" fill="#999"/>
-  <text x="813" y="675" font-size="8" fill="#666">返回（虚线 ←）</text>
+  <line x1="810" y1="671" x2="770" y2="671" stroke="#999" stroke-dasharray="3,2" marker-end="url(#arrowL)"/>
+  <text x="820" y="675" font-size="8" fill="#666">返回（虚线 ←）</text>
 
   <text x="25" y="698" font-size="8" fill="#999">
     CLI = 确定性计算引擎：读文件、算 DAG 状态、组装 instruction 上下文。Agent = 智能体：理解用户意图、决定创建顺序、写内容。

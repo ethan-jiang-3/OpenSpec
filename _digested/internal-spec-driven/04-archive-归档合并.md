@@ -2,13 +2,20 @@
 
 archive 是整个 change 生命周期的终点。它做三件事：验证 change、将 delta spec 合并到主 spec 基线、然后把 change 目录移到归档区。
 
+这里需要先区分两条相关但不同的路径：
+
+- **`openspec archive` CLI**：由 `ArchiveCommand.execute()` 执行，程序化完成验证、delta spec 合并和目录移动。
+- **`/opsx:archive` skill/command 模板**：由 host agent 按 `archive-change.ts` 的指令执行，会先做 delta spec sync 状态评估，再按模板移动目录。它不是 `ArchiveCommand.execute()` 的逐字封装。
+
+本篇主体讲 `openspec archive` CLI 的内部机制；第 5 节单独说明 `/opsx:archive` 模板层面的 sync 检查。
+
 ---
 
 ## 1. 三阶段总览
 
 ![archive 三方架构实例化](figures/04-archive-flow.svg)
 
-来自 `src/core/archive.ts:51-288`（`ArchiveCommand.execute()`）。逻辑上可分为三大阶段（validate → merge → move），但代码内部实际是**四步**顺序执行：① 结构/delta 验证（96-151）→ ② tasks 完成检查（174-194）→ ③ delta spec 合并写入（196-265，调用 `buildUpdatedSpec`/`writeUpdatedSpec`）→ ④ 归档移动（267-285）。下面的图示把 ② 归入 Validate 的范畴，按逻辑阶段呈现：
+`openspec archive` 来自 `src/core/archive.ts` 的 `ArchiveCommand.execute()`。逻辑上可分为三大阶段（validate → merge → move），但代码内部实际是**四步**顺序执行：① 结构/delta 验证 → ② tasks 完成检查 → ③ delta spec 合并写入（调用 `buildUpdatedSpec` / `writeUpdatedSpec`）→ ④ 归档移动。下面的图示把 ② 归入 Validate 的范畴，按逻辑阶段呈现：
 
 ```
 Phase 1: Validate
@@ -201,7 +208,11 @@ const rebuilt = [parts.before, parts.headerLine, reqBody, parts.after]
 
 ### 3.7 写前验证
 
-在写入每个重建后的 spec 之前，用 `Validator.validateSpecContent()`（`src/core/validation/validator.ts`）验证。如果有 ERROR，**整个归档中断**，所有已写入的 spec 不会被回滚（但归档移动还没发生，change 目录还在原地）。
+CLI 会先对所有 `SpecUpdate` 调用 `buildUpdatedSpec()`，把 rebuilt 内容准备好；如果这一步任何一个 spec 失败，会在写入前中止并提示 "No files were changed."。
+
+随后在实际写入每个重建后的 spec 之前，用 `Validator.validateSpecContent()`（`src/core/validation/validator.ts`）验证。如果有 ERROR，**整个归档在写入前中断**，change 目录仍在原地。
+
+需要注意的是：一旦进入实际 `writeUpdatedSpec()` 写入阶段，CLI 没有事务式回滚。如果写入过程中发生 I/O 异常，已经写入的文件不会自动恢复。
 
 ---
 
@@ -255,7 +266,7 @@ openspec/specs/theme/spec.md    ← 已更新（如果有 delta spec）
 
 ## 5. Sync 检查（OPSX 模板层面）
 
-OPSX archive skill 模板 (`archive-change.ts:57-70`) 在移动之前会做一个额外检查：delta spec 是否已经合并到主 spec。
+`/opsx:archive` skill 模板 (`archive-change.ts`) 在移动之前会做一个额外检查：delta spec 是否已经合并到主 spec。这个检查属于 **agent 模板层**，不是 `ArchiveCommand.execute()` 的内部步骤。
 
 ```
 if delta specs exist:

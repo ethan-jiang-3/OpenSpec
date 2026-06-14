@@ -21,15 +21,15 @@
   </defs>
 
   <rect width="1000" height="780" fill="#fafafa" rx="4"/>
-  <text x="500" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">archive 的三方架构实例化</text>
+  <text x="500" y="20" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">openspec archive CLI 内部流程</text>
 
   <!-- Column headers -->
   <rect x="20" y="30" width="155" height="22" rx="4" fill="url(#userGrad)" stroke="#d1d5db"/>
   <text x="97" y="45" text-anchor="middle" font-size="9" fill="#666">User</text>
   <rect x="200" y="30" width="290" height="22" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
-  <text x="345" y="45" text-anchor="middle" font-size="9" fill="#2563eb">Host Agent / ArchiveCommand</text>
+  <text x="345" y="45" text-anchor="middle" font-size="9" fill="#2563eb">ArchiveCommand</text>
   <rect x="515" y="30" width="185" height="22" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="45" text-anchor="middle" font-size="9" fill="#16a34a">OpenSpec CLI 内部函数</text>
+  <text x="607" y="45" text-anchor="middle" font-size="9" fill="#16a34a">内部函数</text>
   <rect x="725" y="30" width="255" height="22" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
   <text x="852" y="45" text-anchor="middle" font-size="9" fill="#ea580c">文件系统</text>
 
@@ -39,7 +39,7 @@
 
   <!-- User trigger -->
   <rect x="25" y="82" width="140" height="28" rx="4" fill="url(#userGrad)" stroke="#d1d5db"/>
-  <text x="95" y="100" text-anchor="middle" font-size="8" fill="#666">/opsx:archive add-dark-mode</text>
+  <text x="95" y="100" text-anchor="middle" font-size="8" fill="#666">openspec archive add-dark-mode</text>
   <line x1="165" y1="96" x2="200" y2="96" stroke="#555" marker-end="url(#arrow)"/>
 
   <!-- 1a: proposal validation -->
@@ -170,7 +170,7 @@
   <line x1="475" y1="626" x2="735" y2="626" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="745" y="612" width="230" height="28" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
-  <text x="860" y="630" text-anchor="middle" font-size="8" fill="#ea580c">openspec/specs/<capability>/spec.md 写入</text>
+  <text x="860" y="630" text-anchor="middle" font-size="8" fill="#ea580c">openspec/specs/&lt;capability&gt;/spec.md 写入</text>
 
   <!-- ===== PHASE 3: MOVE ===== -->
   <rect x="15" y="695" width="970" height="55" rx="4" fill="none" stroke="#e5e7eb" stroke-dasharray="4,2"/>
@@ -189,8 +189,9 @@
 
   <!-- Legend -->
   <rect x="20" y="755" width="965" height="20" rx="4" fill="#f9fafb" stroke="#e5e7eb"/>
-  <rect x="30" y="758" width="30" height="12" rx="2" fill="url(#cliGrad)" stroke="#86efac"/><text x="64" y="768" font-size="7" fill="#666">CLI</text>
-  <rect x="95" y="758" width="30" height="12" rx="2" fill="url(#fsGrad)" stroke="#fdba74"/><text x="129" y="768" font-size="7" fill="#666">文件系统</text>
-  <rect x="165" y="758" width="80" height="12" rx="2" fill="none" stroke="#16a34a" stroke-dasharray="6,3"/><text x="208" y="768" text-anchor="middle" font-size="7" fill="#666">Merge</text>
-  <text x="270" y="768" font-size="7" fill="#999">ArchiveCommand.execute() 全程在一个 async 方法内执行（archive.ts:51-288）；spec 合并才是 archive 最精密的逻辑</text>
+  <rect x="30" y="758" width="30" height="12" rx="2" fill="url(#agentGrad)" stroke="#93c5fd"/><text x="64" y="768" font-size="7" fill="#666">ArchiveCommand</text>
+  <rect x="150" y="758" width="30" height="12" rx="2" fill="url(#cliGrad)" stroke="#86efac"/><text x="184" y="768" font-size="7" fill="#666">内部函数</text>
+  <rect x="250" y="758" width="30" height="12" rx="2" fill="url(#fsGrad)" stroke="#fdba74"/><text x="284" y="768" font-size="7" fill="#666">文件系统</text>
+  <rect x="355" y="758" width="80" height="12" rx="2" fill="none" stroke="#16a34a" stroke-dasharray="6,3"/><text x="398" y="768" text-anchor="middle" font-size="7" fill="#666">Merge</text>
+  <text x="460" y="768" font-size="7" fill="#999">本图是 CLI 路径；/opsx:archive 的 sync 检查属于 agent 模板层</text>
 </svg>

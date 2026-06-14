@@ -22,7 +22,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 
 1. 解析 change name（与 propose 同款 `validateChangeExists`）
 2. 调用 `loadChangeContext()` 加载 schema、构建 DAG、检测 completion
-3. 从 schema 获取 `apply.requires` 和 `apply.tracks`。对于 spec-driven，`apply.requires: [tasks]`，`apply.tracks: tasks.md`。如果 schema 没有定义 `apply.requires`，代码级回退为 schema 的全部 artifact ID（`src/core/artifact-graph/instruction-loader.ts:386`：`schema.apply?.requires ?? schema.artifacts.map(a => a.id)`）
+3. 从 schema 获取 `apply.requires` 和 `apply.tracks`。对于 spec-driven，`apply.requires: [tasks]`，`apply.tracks: tasks.md`。如果 schema 没有定义 `apply.requires`，`generateApplyInstructions()` 会回退为 schema 的全部 artifact ID（`schema.apply?.requires ?? schema.artifacts.map(a => a.id)`）
 4. 调用 `generateApplyInstructions()`
 
 ### 2.2 generateApplyInstructions 的核心逻辑
@@ -32,7 +32,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 3. **解析 checkbox**：逐行扫描 tasks.md，用正则匹配 checkbox 格式
 4. **计算进度**：total / complete / remaining
 5. **判断状态**：
-   - `blocked`：缺少必需 artifact 或 tasks.md
+   - `blocked`：缺少必需 artifact、缺少 tracks 文件，或 tracks 文件存在但没有任何 checkbox task
    - `all_done`：所有 checkbox 已标记
    - `ready`：tasks.md 存在且有未完成任务
 
@@ -66,7 +66,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 - **`contextFiles`**：artifact ID → 文件路径数组。**agent 必须在开始实施前读完所有这些文件**。这个列表是 schema 驱动的，不是硬编码的 —— 不同 schema 可能包含不同的 artifact
 - **`progress`**：total/complete/remaining 计数
 - **`tasks`**：解析后的 checkbox 列表，每个带 label 和 done 状态
-- **`missingArtifacts`**（仅 blocked 时）：哪些 artifact 还没创建
+- **`missingArtifacts`**（仅缺少 required artifact 时）：哪些 artifact 还没创建。注意：tracks 文件缺失或 tasks.md 没有 checkbox 也会 `blocked`，但不一定有 `missingArtifacts`
 
 ---
 
@@ -74,7 +74,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 
 ### 3.1 正则
 
-`src/commands/workflow/instructions.ts:233`：
+`parseTasksFile()`（`src/commands/workflow/instructions.ts`）：
 
 ```typescript
 const checkboxMatch = line.match(/^[-*]\s*\[([ xX])\]\s*(.+)\s*$/);
@@ -106,7 +106,7 @@ if (checkboxMatch) {
 
 ## 4. 完整实施流程（7 步）
 
-> **机制 vs 行为**：下面描述的 7 步流程来自 skill 模板（`src/core/templates/workflows/apply-change.ts:13-160`）——它告诉 AI agent "应该怎么做"，而非 CLI 硬编码的执行逻辑。CLI 负责的是第 2 节的 apply gate（状态判定、checkbox 解析），agent 负责的是执行这些步骤。agent 理论上可以不按这 7 步走，但模板的设计意图就是引导 agent 遵循这个流程。
+> **机制 vs 行为**：下面描述的 7 步流程来自 skill 模板（`src/core/templates/workflows/apply-change.ts`）——它告诉 AI agent "应该怎么做"，而非 CLI 硬编码的执行逻辑。CLI 负责的是第 2 节的 apply gate（状态判定、checkbox 解析），agent 负责的是执行这些步骤。agent 理论上可以不按这 7 步走，但模板的设计意图就是引导 agent 遵循这个流程。
 
 来自 skill 模板 `apply-change.ts`（`instructions` 字段；编号步骤实际位于 `:19 / :28 / :37 / :56 / :63 / :71 / :86`）。
 
@@ -138,7 +138,7 @@ openspec instructions apply --change "<name>" --json
 
 | state | agent 行为 |
 |-------|----------|
-| `"blocked"` | 显示哪些 artifact 缺失，建议用 `/opsx:propose` 回去补全缺失的 artifact（`/opsx:continue` 是另一类辅助 workflow，用于"继续上次未完成的 change"，不负责补全 artifact） |
+| `"blocked"` | 显示阻塞原因；缺 artifact、缺 tracks 文件或 tasks.md 没有 checkbox 时，建议用 `openspec-continue-change` / `/opsx:continue` 补全或修复 planning artifact |
 | `"all_done"` | 祝贺，建议 `/opsx:archive` |
 | `"ready"` | 继续到 Step 4 |
 
@@ -180,7 +180,7 @@ for each pending task:
 
 ## 5. 实施中的流体工作流理念
 
-apply 的 skill 模板 (`apply-change.ts:155-160`) 末尾有一段关键声明：
+apply 的 skill 模板 (`apply-change.ts`) 末尾有一段关键声明：
 
 > "This skill supports the 'actions on a change' model:
 > - Can be invoked anytime: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions

@@ -102,7 +102,7 @@ getBlocked(completed: CompletedSet): Record<string, string[]> {
 
 ## 3. Completion Detection 的精确机制
 
-`src/core/artifact-graph/state.ts:14-29`：
+`detectCompleted()`（`src/core/artifact-graph/state.ts`）：
 
 ```typescript
 export function detectCompleted(graph: ArtifactGraph, changeDir: string): CompletedSet {
@@ -116,19 +116,19 @@ export function detectCompleted(graph: ArtifactGraph, changeDir: string): Comple
 }
 ```
 
-`artifactOutputExists()` (`outputs.ts:40-42`)：
+`artifactOutputExists()`（`src/core/artifact-graph/outputs.ts`）本身只是委托 `resolveArtifactOutputs()`：
 
 ```typescript
 export function artifactOutputExists(changeDir: string, generates: string): boolean {
-  const resolvedPath = path.join(changeDir, generates);
-  if (generates.includes('*')) {
-    // glob 模式：用 fast-glob，至少一个匹配就算存在
-    const matches = fg.sync(resolvedPath);
-    return matches.length > 0;
-  }
-  return fs.existsSync(resolvedPath);
+  return resolveArtifactOutputs(changeDir, generates).length > 0;
 }
 ```
+
+`resolveArtifactOutputs()` 的关键语义：
+
+- 非 glob 输出：拼出 `changeDir + generates`，要求目标存在且 `statSync(...).isFile()` 为真；目录不会让 artifact 变成 done。
+- glob 输出：把 pattern 转为 POSIX 路径后交给 `fast-glob`，以 `cwd: changeDir`、`onlyFiles: true` 匹配现有文件；匹配结果 canonicalize 后去重排序。
+- `artifactOutputExists()` 只关心是否有至少一个 resolved output。
 
 **这意味着**：
 - `proposal` done = `proposal.md` 文件存在
