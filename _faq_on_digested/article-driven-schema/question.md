@@ -13,4 +13,4 @@ OpenSpec 的 schema 系统能不能脱离代码实现，用来管理内容/文�
 - **7 个 artifact**：brief → outline → research → tasks → draft → edit → publish
 - **兼容策略**：保留 `tasks.md` 文件名（因为 OpenSpec 的 archive 逻辑对它有硬编码检查），不做源码改动
 
-详见 `schema.yaml`（schema 定义）和 `templates/`（各阶段模板）。
+详见 `answer.md`（综合回答）、`schema.yaml`（schema 定义）和 `templates/`（各阶段模板）。
