@@ -34,6 +34,11 @@ _faq_on_digested/
 
 不建议加数字前缀（没有固定阅读顺序）。
 
+## 已有问题
+
+- [`explore-to-propose-change/`](explore-to-propose-change/question.md) — Explore 如何基于用户意图、OpenSpec 状态和真实代码判断是否应该 propose change，以及应该 propose 一个还是多个。
+- [`openspec-executable/`](openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的。
+
 ## 引用规范
 
 引用 `_digested/` 中的材料时使用相对路径：

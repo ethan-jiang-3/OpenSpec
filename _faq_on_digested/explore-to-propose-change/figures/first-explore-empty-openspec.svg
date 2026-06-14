@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 760" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#475569"/>
+    </marker>
+    <linearGradient id="empty" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="code" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7ed"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <linearGradient id="map" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="choice" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef9c3"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <style>
+      .box { stroke-width: 1.2; rx: 8; }
+      .label { fill: #0f172a; font-weight: 700; }
+      .small { fill: #475569; font-size: 12px; }
+      .tiny { fill: #64748b; font-size: 11px; }
+      .arrow { stroke: #475569; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+      .muted { fill: #64748b; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="760" fill="#ffffff"/>
+  <text x="560" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">首次 Explore：active changes 为空，specs 也为空</text>
+  <text x="560" y="58" text-anchor="middle" class="small">空 OpenSpec 状态不是没有事实，而是没有 formalized spec baseline</text>
+
+  <rect x="70" y="96" width="250" height="96" class="box" fill="url(#empty)" stroke="#cbd5e1"/>
+  <text x="195" y="126" text-anchor="middle" class="label">OpenSpec 状态</text>
+  <text x="195" y="154" text-anchor="middle" class="small">openspec list --json = []</text>
+  <text x="195" y="176" text-anchor="middle" class="small">openspec/specs/ = 空</text>
+
+  <rect x="435" y="96" width="250" height="96" class="box" fill="url(#choice)" stroke="#facc15"/>
+  <text x="560" y="126" text-anchor="middle" class="label">正确解释</text>
+  <text x="560" y="154" text-anchor="middle" class="small">没有 formalized baseline</text>
+  <text x="560" y="176" text-anchor="middle" class="tiny">不是“无法判断”，也不是“直接 propose”</text>
+
+  <rect x="800" y="96" width="250" height="96" class="box" fill="#fee2e2" stroke="#fca5a5"/>
+  <text x="925" y="126" text-anchor="middle" class="label">错误捷径</text>
+  <text x="925" y="154" text-anchor="middle" class="small">只凭用户一句话建 change</text>
+  <text x="925" y="176" text-anchor="middle" class="tiny">会生成空泛或错位 artifacts</text>
+
+  <path d="M320,144 L435,144" class="arrow"/>
+  <path d="M685,144 L800,144" class="arrow"/>
+
+  <rect x="110" y="270" width="900" height="146" class="box" fill="url(#code)" stroke="#fdba74"/>
+  <text x="560" y="300" text-anchor="middle" class="label">此时事实源转向真实项目</text>
+  <text x="150" y="334" class="small">读取 README/docs/API/CLI help/config examples，确认用户可见能力</text>
+  <text x="150" y="362" class="small">读取入口、路由、命令注册、服务模块、数据模型、外部集成点</text>
+  <text x="150" y="390" class="small">读取测试，确认哪些行为已经被断言；找既有 patterns 和隐含耦合</text>
+
+  <path d="M560,192 L560,270" class="arrow"/>
+
+  <rect x="110" y="470" width="410" height="112" class="box" fill="url(#map)" stroke="#93c5fd"/>
+  <text x="315" y="500" text-anchor="middle" class="label">事实 baseline</text>
+  <text x="140" y="532" class="small">代码现在实际支持什么</text>
+  <text x="140" y="556" class="small">哪些行为已有测试或文档</text>
+  <text x="140" y="574" class="tiny">这是探索时可用的当前状态</text>
+
+  <rect x="600" y="470" width="410" height="112" class="box" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="805" y="500" text-anchor="middle" class="label">spec baseline</text>
+  <text x="630" y="532" class="small">OpenSpec 尚未记录这些能力</text>
+  <text x="630" y="556" class="small">不能假装 specs 已经存在</text>
+  <text x="630" y="574" class="tiny">这是需要 formalize 的空白</text>
+
+  <path d="M420,416 L315,470" class="arrow"/>
+  <path d="M700,416 L805,470" class="arrow"/>
+
+  <rect x="70" y="650" width="190" height="56" class="box" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="165" y="674" text-anchor="middle" class="label">不 propose</text>
+  <text x="165" y="694" text-anchor="middle" class="tiny">只需理解现状</text>
+
+  <rect x="290" y="650" width="190" height="56" class="box" fill="#e0f2fe" stroke="#7dd3fc"/>
+  <text x="385" y="674" text-anchor="middle" class="label">先补 baseline</text>
+  <text x="385" y="694" text-anchor="middle" class="tiny">规格化现有能力</text>
+
+  <rect x="510" y="650" width="190" height="56" class="box" fill="#fef3c7" stroke="#fbbf24"/>
+  <text x="605" y="674" text-anchor="middle" class="label">具体功能 change</text>
+  <text x="605" y="694" text-anchor="middle" class="tiny">代码事实足够清楚</text>
+
+  <rect x="730" y="650" width="190" height="56" class="box" fill="#ffedd5" stroke="#fb923c"/>
+  <text x="825" y="674" text-anchor="middle" class="label">拆成两个阶段</text>
+  <text x="825" y="694" text-anchor="middle" class="tiny">baseline + 新能力</text>
+
+  <rect x="950" y="650" width="120" height="56" class="box" fill="#dbeafe" stroke="#93c5fd"/>
+  <text x="1010" y="674" text-anchor="middle" class="label">继续探索</text>
+  <text x="1010" y="694" text-anchor="middle" class="tiny">事实不足</text>
+
+  <path d="M560,582 C560,622 165,622 165,650" class="arrow"/>
+  <path d="M560,582 C560,622 385,622 385,650" class="arrow"/>
+  <path d="M560,582 C560,622 605,622 605,650" class="arrow"/>
+  <path d="M560,582 C560,622 825,622 825,650" class="arrow"/>
+  <path d="M560,582 C560,622 1010,622 1010,650" class="arrow"/>
+
+  <text x="560" y="625" text-anchor="middle" class="tiny">首次 Explore 的判断点：先从代码得到事实 baseline，再决定是否把它 formalize</text>
+</svg>
