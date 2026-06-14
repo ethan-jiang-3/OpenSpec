@@ -75,7 +75,7 @@ spec-driven 的 apply gate 通常是 design + tasks（技术方案 + 实现清�
 
 ## 使用方式
 
-1. 把 `schema.yaml` 和 `templates/` 复制到项目的 `openspec/schemas/article-driven/`。
+1. 把 `schema-package/` 下的 `schema.yaml` 和 `templates/` 复制到项目的 `openspec/schemas/article-driven/`。
 2. 创建 change：`openspec new change write-<topic> --schema article-driven`
 3. 走标准流程：`openspec status` → `openspec instructions brief` → `openspec instructions apply`
 
