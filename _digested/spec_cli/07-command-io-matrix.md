@@ -78,7 +78,7 @@
 - `update`
 - `new change`
 - `archive`
-- `workspace setup` / `workspace update`（v1.4.0）
+- `workspace setup` / `workspace update`
 - 部分 `config` / `schema` 子命令
 
 其中：
@@ -87,4 +87,3 @@
 - `new change/archive` 更偏改变业务工作流状态。
 - `workspace setup` 更偏改变跨仓库规划基础设施。
 - `config/schema` 更偏改变系统配置与模型定义层。
-

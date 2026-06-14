@@ -21,7 +21,7 @@
 
 ## 2. Zod Schema：精确的类型约束
 
-定义在 `src/core/project-config.ts:19-41`：
+定义在 `src/core/project-config.ts`：
 
 ```typescript
 const ProjectConfigSchema = z.object({
@@ -70,7 +70,7 @@ const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
 Warning: config.yaml rules contains unknown artifact ID "review" for schema "spec-driven"
 ```
 
-验证逻辑在 `src/core/artifact-graph/instruction-loader.ts:301-316`：
+验证逻辑在 `validateConfigRules()` / `generateInstructions()` in `src/core/artifact-graph/instruction-loader.ts`：
 ```typescript
 if (projectConfig?.rules) {
   const validArtifactIds = new Set(context.graph.getAllArtifacts().map(a => a.id));
@@ -92,7 +92,7 @@ config.yaml 不是在启动时一次性全局读取的，而是**在需要时才
 
 ### 时机 1：`openspec instructions <artifact>` 被调用时
 
-`src/core/artifact-graph/instruction-loader.ts:290-298`：
+`src/core/artifact-graph/instruction-loader.ts`：
 ```typescript
 let projectConfig = null;
 if (effectiveProjectRoot) {
@@ -126,7 +126,7 @@ config 读取失败（文件不存在、YAML 解析错误、字段类型不匹�
 
 ### 4.1 context 的注入
 
-来自 `config.context`。在 `generateInstructions()` (`src/core/artifact-graph/instruction-loader.ts:319`)：
+来自 `config.context`。在 `generateInstructions()` (`src/core/artifact-graph/instruction-loader.ts`)：
 
 ```typescript
 const configContext = projectConfig?.context?.trim() || undefined;
@@ -148,7 +148,7 @@ Stack: TypeScript, React, Node.js, PostgreSQL
 
 ### 4.2 rules 的注入
 
-来自 `config.rules[artifactId]`。在 `generateInstructions()` (`src/core/artifact-graph/instruction-loader.ts:320-321`)：
+来自 `config.rules[artifactId]`。在 `generateInstructions()` (`src/core/artifact-graph/instruction-loader.ts`)：
 
 ```typescript
 const rulesForArtifact = projectConfig?.rules?.[artifactId];

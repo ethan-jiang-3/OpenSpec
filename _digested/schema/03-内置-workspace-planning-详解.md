@@ -2,7 +2,7 @@
 
 > 回 [导读](00-map.md)
 
-`workspace-planning` 是 OpenSpec v1.4.0 引入的第二套内置 schema，专门为**跨仓库/跨区域规划**场景设计。
+`workspace-planning` 是 OpenSpec v1.4.x 引入的第二套内置 schema，专门为**跨仓库/跨区域规划**场景设计。
 
 ---
 

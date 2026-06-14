@@ -192,7 +192,7 @@ apply 的 skill 模板 (`apply-change.ts`) 末尾有一段关键声明：
 
 ## 6. Apply Phase 的 schema 配置
 
-`schemas/spec-driven/schema.yaml:148-153`：
+`schemas/spec-driven/schema.yaml`：
 
 ```yaml
 apply:

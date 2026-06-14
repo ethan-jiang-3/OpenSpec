@@ -9,7 +9,7 @@
 - 对人类来说，它是一个用来初始化、查看、校验、归档 change/spec 的工具。
 - 对 OPSX 来说，它是一组稳定的本地协议端点，用来读取状态、获取模板、获取下一步说明、判断能否进入 apply、以及感知 schema。
 - 对 IDE / AI 工具集成来说，它还是一个“投递目标”，`init` / `update` 会把工作流模板安装成 skills 或 commands。
-- 对 workspace（v1.4.0）来说，它还是跨仓库规划的协调接口，`workspace setup/open/update` 负责管理多仓库协作上下文。
+- 对 workspace 来说，它还是跨仓库规划的协调接口，`workspace setup/open/update` 负责管理多仓库协作上下文。
 
 ## 三类受众 + workspace operator
 
@@ -23,7 +23,7 @@
 - proposal / spec / design / tasks 是什么内容。
 - 这个 change 合不合法，什么时候能 archive。
 - 我该如何定制 schema、workflow、profile。
-- （v1.4.0）我有哪些 workspace，它们关联了哪些仓库。
+- 我有哪些 workspace，它们关联了哪些仓库。
 
 对应常用命令：
 
@@ -58,7 +58,7 @@ OPSX 关心的是：
 - `list --json`
 - `new change`
 
-### 3. Workspace operator（v1.4.0 新增）
+### 3. Workspace operator
 
 Workspace operator 关心的是：
 
@@ -77,7 +77,7 @@ Workspace operator 关心的是：
 - `context-store setup`
 - `initiative create`
 
-## 四层结构（v1.4.0 视角）
+## 四层结构
 
 ### 1. 项目状态层
 
@@ -96,7 +96,7 @@ Workspace operator 关心的是：
 - schema 定义
 - 应用阶段跟踪文件
 
-### 2. Workspace 层（v1.4.0 新增）
+### 2. Workspace 层
 
 在项目状态层之上，workspace 引入了跨仓库的规划状态：
 
@@ -193,4 +193,3 @@ Workspace 的核心设计规则：**规划在 workspace 层，实现在 linked r
 - `08-glossary-and-models.md`
 
 当作长期参考页。
-

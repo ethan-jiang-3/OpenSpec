@@ -24,7 +24,7 @@
 
 ### 2.1 数据结构
 
-`src/core/artifact-graph/types.ts:4-31`，用 Zod 定义：
+`src/core/artifact-graph/types.ts` 用 Zod 定义：
 
 ```typescript
 const ArtifactSchema = z.object({
@@ -55,7 +55,7 @@ const SchemaYamlSchema = z.object({
 
 1. 从解析后的 SchemaYaml 创建 `Map<id, Artifact>`
 2. 验证所有 `requires` 引用指向存在的 artifact ID
-3. DFS 检测循环依赖 (`schema.ts:81-124`)
+3. DFS 检测循环依赖（`schema.ts`）
 
 ### 2.3 拓扑排序 —— Kahn's Algorithm
 
@@ -142,7 +142,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
 
 ## 4. 四层注入的精确代码路径
 
-### 4.1 loadChangeContext (`src/core/artifact-graph/instruction-loader.ts:227-257`)
+### 4.1 loadChangeContext (`src/core/artifact-graph/instruction-loader.ts`)
 
 ```
 1. 计算 changeDir
@@ -156,7 +156,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
 7. 返回 ChangeContext { graph, completed, schemaName, changeDir, ... }
 ```
 
-### 4.2 generateInstructions (`src/core/artifact-graph/instruction-loader.ts:273-341`)
+### 4.2 generateInstructions (`src/core/artifact-graph/instruction-loader.ts`)
 
 ```
 1. graph.getArtifact(artifactId)
@@ -172,7 +172,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
      template = 模板文件内容
 ```
 
-### 4.3 printInstructionsText (`src/commands/workflow/instructions.ts:107-224`)
+### 4.3 printInstructionsText (`src/commands/workflow/instructions.ts`)
 
 将 `ArtifactInstructions` 格式化为人类可读（和 agent 可解析）的 XML-tagged 文本。
 
@@ -182,7 +182,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
 
 ### 5.1 Schema 目录解析（哪里找 schema 文件）
 
-`src/core/artifact-graph/resolver.ts:63-91`：
+`src/core/artifact-graph/resolver.ts`：
 
 ```
 1. <projectRoot>/openspec/schemas/<name>/schema.yaml   ← 项目本地
@@ -194,7 +194,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
 
 ### 5.2 Change 的 Schema 名称解析（用哪个 schema）
 
-`src/utils/change-metadata.ts:166-198`：
+`src/utils/change-metadata.ts`：
 
 ```
 1. 显式 --schema <name> CLI 参数
@@ -237,8 +237,8 @@ rules:                     # 按 artifact ID 注入特定约束
 **关键交互**：
 
 1. `config.schema` 决定了加载哪个 schema 的 artifact DAG
-2. `config.context` 被注入到**所有** artifact 指令中（50KB 上限，`project-config.ts:45`）
-3. `config.rules` 的 key 会被验证是否对应 schema 中真实存在的 artifact ID（未知 ID 产生 warning，每个 session 只警告一次，`src/core/artifact-graph/instruction-loader.ts:301-316`）
+2. `config.context` 被注入到**所有** artifact 指令中（50KB 上限，见 `src/core/project-config.ts`）
+3. `config.rules` 的 key 会被验证是否对应 schema 中真实存在的 artifact ID（未知 ID 产生 warning，每个 session 只警告一次，见 `validateConfigRules()` / `generateInstructions()` in `src/core/artifact-graph/instruction-loader.ts`）
 4. config 读取失败不会阻止指令生成 —— resilient 设计
 
 ---

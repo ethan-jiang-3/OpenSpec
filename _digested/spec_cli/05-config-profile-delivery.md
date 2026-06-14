@@ -21,12 +21,12 @@
 - `core` profile 会启用默认核心 workflows。
 - `custom` profile 允许用户自定义启用哪些 workflows。
 
-在源码里，**v1.4.0 起 `core` 默认工作流是 5 个**（之前是 4 个，v1.4.0 把 `sync` 纳入了 core）：
+在当前源码里，`core` 默认工作流是 5 个：
 
 - `propose`
 - `explore`
 - `apply`
-- `sync`（v1.4.0 新增纳入 core）
+- `sync`
 - `archive`
 
 系统里可用的全部 workflows 则更广（11 个），包括：
@@ -157,7 +157,7 @@ skill / command 只是投递载体。
 
 但一旦理解了这一层，你就会明白：
 
-OpenSpec CLI 同时管理三种空间（v1.4.0 视角）：
+OpenSpec CLI 同时管理三种空间：
 
 - 项目内状态空间（repo-local `openspec/`）
 - 工具侧入口空间（skills/commands）
@@ -165,4 +165,4 @@ OpenSpec CLI 同时管理三种空间（v1.4.0 视角）：
 
 而 profile/delivery 正是连接这些空间的桥。
 
-**v1.4.0 一个重要变化**：workspace 的 skill 投递是 **skills-only**（不做 command 生成）。这意味着 workspace 级的工作流目前只以 skill 形式出现，command 形式的 workspace 工作流预留到后续版本。此外，workspace 通过 `workspace_skills` 状态字段实现独立的 profile drift 跟踪——与 repo-local 的 profile drift 检测机制相同，但数据存储在 workspace 自己的 `view.yaml` 中。
+当前实现里，workspace 的 skill 投递是 **skills-only**（不做 command 生成）。这意味着 workspace 级的工作流目前只以 skill 形式出现，command 形式的 workspace 工作流预留到后续版本。此外，workspace 通过 `workspace_skills` 状态字段实现独立的 profile drift 跟踪——与 repo-local 的 profile drift 检测机制相同，但数据存储在 workspace 自己的 `view.yaml` 中。

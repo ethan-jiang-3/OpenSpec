@@ -320,7 +320,7 @@
 
 从这个顺序看，CLI 实际上在协助人完成一整条从提出变更到归档规范的生命周期。它不是一堆孤立命令，而是一条工作流轨道。
 
-## 8. Workspace 命令（v1.4.0 新增）
+## 8. Workspace 命令
 
 Workspace 命令面向的场景是：你同时维护多个关联仓库（如 API + Web + Mobile），需要在规划层协调它们。
 
@@ -360,4 +360,3 @@ Workspace 命令面向的场景是：你同时维护多个关联仓库（如 API
 ### 与其他命令的关系
 
 Workspace 不替代 repo 级工作流，而是提供一个上一层级的规划层。设计规则：**规划在 workspace，实现在 linked repo**。在 workspace 内创建 change 用的是 `workspace-planning` schema，在各 repo 内创建 change 用的还是 `spec-driven`。
-

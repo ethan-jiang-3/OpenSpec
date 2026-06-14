@@ -17,7 +17,9 @@ workflow template
   → 推理、写文件、跑测试、报告结果
 ```
 
-## 当前 workflow
+## 当前 profile workflows
+
+下面这些 workflow id 来自 `src/core/profiles.ts` 的 `ALL_WORKFLOWS`，会被 profile/delivery 机制选择并投递成 skill/command。
 
 | workflow | 模板文件 | 角色 |
 |----------|----------|------|
@@ -32,7 +34,6 @@ workflow template
 | `archive` | `archive-change.ts` | 收尾归档 |
 | `bulk-archive` | `bulk-archive-change.ts` | 批量归档 |
 | `onboard` | `onboard.ts` | 引导式端到端体验 |
-| `feedback` | `feedback.ts` | 提交 OpenSpec 反馈 |
 
 `profile` 只决定安装哪些 workflow；模板本身定义 agent 的动作顺序和 guardrails。
 
@@ -71,7 +72,7 @@ workflow template
 
 `onboard.ts` 不是普通业务命令，而是引导式端到端体验。它同时包含教学叙述和实际 workflow 操作，目标是带用户走完一次真实工作流，并解释 proposal/spec/design/tasks 的角色。维护它时要把它当 prompt 和产品 onboarding 文案的组合体。
 
-`feedback.ts` 定义 agent 如何帮助用户提交反馈。它和 `src/commands/feedback.ts` 的 CLI 实现不同：workflow template 指导 agent 收集、整理、匿名化反馈；CLI feedback command 用 GitHub CLI 或 manual URL 提交 issue。
+`feedback.ts` 是特殊的 workflow template module，但它当前不在 `ALL_WORKFLOWS` / profile selection 里，不随 core/custom workflow profile 一起安装。它和 `src/commands/feedback.ts` 的 CLI 实现不同：template 指导 agent 收集、整理、匿名化反馈；CLI feedback command 用 GitHub CLI 或 manual URL 提交 issue。它更适合和 `../mechanisms/05-cli-infra.md` 一起理解。
 
 ## 工程洞察
 

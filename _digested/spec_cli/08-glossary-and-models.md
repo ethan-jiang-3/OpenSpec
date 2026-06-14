@@ -55,7 +55,7 @@ artifact 是 change 生命周期中的一个产物节点。
 - `description`
 - `template`
 - `generates`
-- `dependsOn`
+- `requires`
 - 可选 `instruction`
 
 artifact 不是抽象步骤，而是有明确输出路径的产物节点。
@@ -176,7 +176,7 @@ skill 和 command 通常表达的是同一 workflow 语义，只是外壳不同�
 
 这些状态不是人工标记，而是 CLI 根据 schema 和文件系统推导出的运行时语义。
 
-## workspace（v1.4.0）
+## workspace
 
 workspace 是跨仓库规划的本地视图。它是一个目录，包含：
 
@@ -193,36 +193,35 @@ workspace 不是临时 feature——它设计为持久存在的协调 home，可
 
 ## context store
 
-context store 是团队共享的协调数据目录（v1.4.0）。可以放在任意路径，通常用 Git 管理。它包含一个或多个 **initiative**。
+context store 是团队共享的协调数据目录。可以放在任意路径，通常用 Git 管理。它包含一个或多个 **initiative**。
 
 - `openspec context-store setup <name> --path <path>` 创建
 - 内部结构：`initiatives/<name>/requirements.md`、`design.md`、`decisions.md` 等
 
 ## initiative
 
-initiative 是 context store 中的一个协调单元（v1.4.0）。它代表一个跨仓库或跨团队的使命，包含需求、设计、决策、提问、任务等协调文件。workspace 可以绑定到某个 initiative。
+initiative 是 context store 中的一个协调单元。它代表一个跨仓库或跨团队的使命，包含需求、设计、决策、提问、任务等协调文件。workspace 可以绑定到某个 initiative。
 
-## PlanningHome（v1.4.0）
+## PlanningHome
 
 `PlanningHome` 是运行时抽象，判断当前工作目录属于 workspace 还是 repo。它从 cwd 向上搜索 `.openspec-workspace/view.yaml`（workspace root）或 `openspec/` 目录（repo root），决定使用 `workspace-planning` schema 还是 repo-local schema。
 
-## workspace-planning schema（v1.4.0）
+## workspace-planning schema
 
 与 repo-local 的 `spec-driven` schema 不同，`workspace-planning` 是 workspace 级 change 使用的内置 schema。它针对跨仓库规划场景定义了不同的 artifact 依赖和 apply 条件。
 
-## community schema（v1.4.0）
+## community schema
 
 社区贡献的 schema 定义，可以通过 schema 搜索路径被发现和复用。README 中已新增 Community Schemas 章节。
 
-## auto-detection（v1.2.0，延续到 v1.4.0）
+## auto-detection
 
 `openspec init` 现在会自动扫描项目目录中已有的 AI 工具目录（`.claude/`、`.cursor/` 等），预选检测到的工具，而不是要求用户手动指定 `--tools`。这降低了首次配置的摩擦。
 
 ## 本项目里最重要的模型关系
 
-如果用一句话串起来（v1.4.0 版本）：
+如果用一句话串起来：
 
 用户/AI 通过 workflow 选择一个 change，`PlanningHome` 判断是 workspace 级还是 repo 级，change 使用对应的 schema（`workspace-planning` 或 `spec-driven`），schema 定义 artifact graph，CLI 根据 graph 和文件状态推导 completed/readiness，再通过 instructions 把 template/context/rules 编译成下一步执行包。
 
 这就是 OpenSpec CLI 的核心模型闭环。
-

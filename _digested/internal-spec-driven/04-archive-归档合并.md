@@ -70,11 +70,11 @@ Phase 3: Move
 
 ## 3. 合并阶段：核心算法
 
-这是整个 OpenSpec 中最精密的单段算法。位于 `src/core/specs-apply.ts:102-348`（`buildUpdatedSpec()`）。
+这是整个 OpenSpec 中最精密的单段算法。核心入口是 `buildUpdatedSpec()` in `src/core/specs-apply.ts`。
 
 ### 3.1 找 delta spec
 
-`findSpecUpdates()` (`specs-apply.ts:57-96`)：扫描 `<changeDir>/specs/` 下每个子目录。对于每个包含 `spec.md` 的子目录，查找对应的主 spec 文件：
+`findSpecUpdates()` (`src/core/specs-apply.ts`)：扫描 `<changeDir>/specs/` 下每个子目录。对于每个包含 `spec.md` 的子目录，查找对应的主 spec 文件：
 
 ```
 change/specs/data-export/spec.md  →  openspec/specs/data-export/spec.md
@@ -85,7 +85,7 @@ change/specs/user-auth/spec.md    →  openspec/specs/user-auth/spec.md
 
 ### 3.2 解析 delta plan
 
-`parseDeltaSpec()` (`src/core/parsers/requirement-blocks.ts:99-234`)：将 delta 格式的 spec 文件解析成 `DeltaPlan`：
+`parseDeltaSpec()` (`src/core/parsers/requirement-blocks.ts`)：将 delta 格式的 spec 文件解析成 `DeltaPlan`：
 
 ```typescript
 interface DeltaPlan {
@@ -135,7 +135,7 @@ body:     [RequirementBlock, RequirementBlock, ...]
 after:    ""（Requirements section 之后的文字）
 ```
 
-然后构建 `nameToBlock` map：key 是 normalized requirement name（`name.trim()`，`src/core/parsers/requirement-blocks.ts:15-17`），value 是完整的 `RequirementBlock`。
+然后构建 `nameToBlock` map：key 是 normalized requirement name（当前 `normalizeRequirementName()` 只做 `name.trim()`），value 是完整的 `RequirementBlock`。
 
 注意：`normalizeRequirementName` 只做 trim，**不做 toLowerCase**。header 匹配用的 regex 是大小写不敏感的（`/^###\s*Requirement:\s*(.+)\s*$/i`），但 map key 保留原始大小写。这意味着 `### Requirement: User Auth` 和 `### Requirement: user auth` 的 header 能被同一个 regex 匹配，但它们在 map 中是不同的 key。
 

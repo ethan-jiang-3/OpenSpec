@@ -16,7 +16,8 @@
 | `workspace-foundation`、`workspace-links`、`workspace-open`、`workspace-change-planning` | `../mechanisms/01-workspace-coordination.md`、`../schema/03-内置-workspace-planning-详解.md` |
 | `command-generation`、`ai-tool-paths`、`cli-init`、`cli-update`、`global-config` | `../mechanisms/02-tool-delivery.md`、`../spec_cli/05-config-profile-delivery.md` |
 | `cli-completion` | `../mechanisms/05-cli-infra.md` |
-| `telemetry`、`cli-feedback` | `../mechanisms/05-cli-infra.md`、`../mechanisms/04-workflow-templates.md` |
+| `telemetry` | `../mechanisms/05-cli-infra.md` |
+| `cli-feedback` | `../mechanisms/05-cli-infra.md`、`../mechanisms/04-workflow-templates.md` |
 
 ## 部分覆盖
 

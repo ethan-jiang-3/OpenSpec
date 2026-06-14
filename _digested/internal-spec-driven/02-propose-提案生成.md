@@ -8,7 +8,7 @@ propose 是四条命令中最核心的一条。它执行完整的"从零到可�
 
 ![propose 三方架构实例化](figures/02-propose-flow.svg)
 
-来自 `src/core/templates/workflows/propose.ts:13-112`。
+来自 `src/core/templates/workflows/propose.ts`。
 
 ### Step 1：理解用户意图，导出 change name
 
@@ -18,7 +18,7 @@ agent 从用户输入中导出 kebab-case name。如果用户只描述了想做�
 User: "add user authentication"  →  change name: "add-user-auth"
 ```
 
-**name 验证规则** (`src/utils/change-utils.ts:57-97`)：
+**name 验证规则**（`validateChangeName()` in `src/utils/change-utils.ts`）：
 - 正则：`/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/`
 - 拒绝：大写字母、空格、下划线、首尾连字符、连续连字符、数字开头
 
@@ -28,7 +28,7 @@ User: "add user authentication"  →  change name: "add-user-auth"
 openspec new change "<name>"
 ```
 
-**实际行为** (`src/utils/change-utils.ts:121-172`)：
+**实际行为**（`createChange()` in `src/utils/change-utils.ts`）：
 
 1. 创建目录：`openspec/changes/<name>/`
 2. 创建 `.openspec.yaml` 元数据文件：
@@ -260,7 +260,7 @@ TO: ### Requirement: <new-name>
 
 ## 3. DAG 顺序保证
 
-agent 不是随意创建 artifact 的。顺序由 `ArtifactGraph.getBuildOrder()` (`src/core/artifact-graph/graph.ts:72-113`) 保证 —— 用 **Kahn 算法**（拓扑排序）：
+agent 不是随意创建 artifact 的。顺序由 `ArtifactGraph.getBuildOrder()` (`src/core/artifact-graph/graph.ts`) 保证 —— 用 **Kahn 算法**（拓扑排序）：
 
 1. 计算每个节点的初始入度 = **`requires` 数组的完整长度**（不考虑完成状态；这是静态 DAG 的拓扑排序，与运行时哪些 artifact 已完成无关）
 2. 入度为 0 的节点进入 ready 队列（排序以保证确定性输出）
@@ -270,7 +270,7 @@ agent 不是随意创建 artifact 的。顺序由 `ArtifactGraph.getBuildOrder()
 
 > **注意区分两个概念**：
 > - `getBuildOrder()`（这里描述的 Kahn 算法）计算的是**静态拓扑序**，入度 = `requires.length`，与任何 `completed` 集合无关。它用于决定"理想创建顺序"。
-> - 运行时判断"现在哪些 artifact 可以创建"的是 `getNextArtifacts(completed)`（`graph.ts:118-134`），它检查的是 `requires` 中**未完成**的依赖是否为空。`getBlocked()`（`graph.ts:151-166`）返回每个 blocked artifact 的未满足依赖列表，用的才是 `requires.filter(req => !completed.has(req))`。不要把这三者混淆。
+> - 运行时判断"现在哪些 artifact 可以创建"的是 `getNextArtifacts(completed)`（`src/core/artifact-graph/graph.ts`），它检查的是 `requires` 中**未完成**的依赖是否为空。`getBlocked()` 返回每个 blocked artifact 的未满足依赖列表，用的才是 `requires.filter(req => !completed.has(req))`。不要把这三者混淆。
 
 对于 spec-driven：
 ```
@@ -279,7 +279,7 @@ proposal done → specs 入度 0，design 入度 0
 specs done + design done → tasks 入度 0
 ```
 
-循环检测在 schema 解析时做 (`schema.ts:81-124`，DFS)，有环直接报错拒绝加载。
+循环检测在 schema 解析时做（`src/core/artifact-graph/schema.ts`，DFS），有环直接报错拒绝加载。
 
 ---
 

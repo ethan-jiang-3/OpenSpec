@@ -6,7 +6,7 @@ explore 是四条命令中最特殊的一个 —— 它不是工作流，不产�
 
 ## 1. 定位："姿态，而非工作流"
 
-explore 的关键设计理念，来自其 skill 模板 (`src/core/templates/workflows/explore.ts:17`)：
+explore 的关键设计理念，来自其 skill 模板 `src/core/templates/workflows/explore.ts`：
 
 > "This is a stance, not a workflow. There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore."
 

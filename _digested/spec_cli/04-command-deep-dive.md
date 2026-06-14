@@ -105,7 +105,7 @@
 - 核心对象：schema.yaml、template 文件、来源优先级、shadowing。
 - 影响：workflow 运行时如何解释 artifact 与 apply phase。
 
-## 六、workspace 命令族（v1.4.0 新增）
+## 六、workspace 命令族
 
 Workspace 命令族是 OpenSpec 从单仓库扩展到多仓库的核心接口。设计原则：**规划在 workspace 层，实现在 linked repo 层**。
 
@@ -203,7 +203,6 @@ Workspace 命令族是 OpenSpec 从单仓库扩展到多仓库的核心接口。
 - `list` / `show` / `view` / `workspace list` / `workspace doctor` 负责观察系统。
 - `validate` / `archive` 负责治理系统。
 - `new change` / `status` / `instructions` 负责驱动系统。
-- `workspace setup` / `workspace open` / `context-store setup` / `initiative create` 负责跨仓库协调系统（v1.4.0）。
+- `workspace setup` / `workspace open` / `context-store setup` / `initiative create` 负责跨仓库协调系统。
 
 这才是 OpenSpec CLI 的整体结构。
-

@@ -198,7 +198,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 所以理解 OpenSpec CLI 时，不该只把它当“终端工具”，还要把它当“工作流内核暴露出的本地协议”。
 
-## workspace 级机器接口（v1.4.0 新增）
+## workspace 级机器接口
 
 Workspace 命令在机器消费场景下提供了新的协议端点：
 
@@ -228,4 +228,3 @@ Workspace 命令在机器消费场景下提供了新的协议端点：
 machine-facing 的一个重要安全机制：workspace 生成的 skill 模板中内置了 guardrail。当 agent 检测到 `actionContext.mode: "workspace-planning"` 时，某些 repo-local 操作（sync specs、archive）会被阻止，agent 会被告知这些操作尚未对 workspace 级 change 开放。
 
 这确保了 AI agent 不会在 workspace 上下文中误执行 repo-local 语义的操作。
-
