@@ -34,19 +34,27 @@
 
 ## 这套手册怎么读
 
-这套目录分成两大块：
+这套目录分成三块：
 
-### A. 面向人的主线
+### A. 面向人的理解主线
 
 按认知层级来排：
 
 1. **初级**：先把 OpenSpec 用起来，知道日常怎么走
 2. **中级**：把 `specs`、`changes`、artifact、delta spec 这些概念真正连起来
-3. **高级**：再理解 `config.yaml`、`schema`、`.openspec.yaml`、profile、工具集成
-4. **专题**：最后看 Claude Code 这种具体宿主里到底发生了什么
-5. **生命周期思想**：再把 OpenSpec 对软件开发生命周期的整体理解讲透
+3. **高级**：理解生命周期思想、config/schema、全局约束、workspace
 
-### B. 面向机器的附录
+### B. 面向落地的实战场景
+
+这部分把前面的概念放进真实使用场景：
+
+- brownfield change 怎么走完整条主线
+- greenfield 复杂系统怎么建立第一版基线
+- 多人 Git 协作怎么配合 OpenSpec
+- Claude Code 里 `openspec/` 和 `.claude/` 怎么分层
+- artifacts 应该怎么改、怎么验证
+
+### C. 面向机器的附录
 
 这部分讲：
 
@@ -71,25 +79,35 @@ graph LR
 
 ```mermaid
 graph LR
-    A[01-初级] --> B[02-中级] --> C[03-高级<br/>config/schema] --> D[04-高级<br/>Claude Code集成]
-    D --> E[05-高级<br/>SDLC思想] --> F[06-案例<br/>brownfield]
-    F --> G[07-案例<br/>greenfield] --> H[08-高级<br/>全局约束] --> I[09-高级<br/>config实战]
+    A[01-初级] --> B[02-中级] --> C[03-高级<br/>SDLC思想]
+    C --> D[04-高级<br/>config/schema] --> E[05-高级<br/>全局约束]
+    E --> F[06-高级<br/>config写法]
 ```
 
-### 路径 3：我要研究它背后的机制
-
-在路径 2 的基础上，最后加：
+### 路径 3：我要看实战落地
 
 ```mermaid
 graph LR
-    I[09-高级<br/>config实战] --> J[90-附录<br/>机器协议]
+    A[10-实战<br/>brownfield] --> B[11-实战<br/>greenfield]
+    B --> C[12-实战<br/>多人Git] --> D[13-实战<br/>Claude Code]
+    D --> E[14-实战<br/>artifact修改]
 ```
 
-### 路径 4：我要管理多仓库（v1.4.0 新增）
+### 路径 4：我要研究它背后的机制
+
+在路径 2 或路径 3 的基础上，最后加：
 
 ```mermaid
 graph LR
-    A[01-初级] --> B[02-中级] --> C[12-workspace<br/>跨仓库规划]
+    A[主线] --> B[90-附录<br/>机器协议]
+```
+
+### 路径 5：我要管理多仓库（v1.4.0 新增）
+
+```mermaid
+graph LR
+    A[01-初级] --> B[02-中级] --> C[04-高级<br/>config/schema]
+    C --> D[07-高级<br/>workspace]
 ```
 
 ---
@@ -162,15 +180,16 @@ graph LR
 |------|------|--------|
 | [01-初级-先把-openspec-用起来.md](01-初级-先把-openspec-用起来.md) | 先会用 | 第一次接触 OpenSpec 的人 |
 | [02-中级-把核心概念真正串起来.md](02-中级-把核心概念真正串起来.md) | 建立正确心智模型 | 已经知道命令，但理解还发散的人 |
-| [03-高级-config-schema-与项目边界.md](03-高级-config-schema-与项目边界.md) | 看清配置和结构边界 | 想定制或深入理解的人 |
-| [04-高级-claude-code-里的-openspec-到底怎么落地.md](04-高级-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
-| [05-高级-openspec-的软件开发生命周期思想.md](05-高级-openspec-的软件开发生命周期思想.md) | 理解 OpenSpec 怎样看待软件开发生命周期 | 想真正吃透这套方法论的人 |
-| [06-案例-从一个真实-change-走完整条主线.md](06-案例-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
-| [07-案例-从零开始设计一个较复杂系统.md](07-案例-从零开始设计一个较复杂系统.md) | 看 greenfield 复杂系统怎样建立第一版正式基线 | 想理解从零构建时 OpenSpec 怎么切系统的人 |
-| [08-高级-项目级全局约束到底放哪.md](08-高级-项目级全局约束到底放哪.md) | 专门判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和能力规格彻底分开的人 |
-| [09-高级-config-yaml-怎么写到真正好用.md](09-高级-config-yaml-怎么写到真正好用.md) | 专门讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
-| [10-实战-多人协作与Git工作流.md](10-实战-多人协作与Git工作流.md) | 多人团队使用 OpenSpec + Git 的最佳实践 | 团队协作、并行开发、冲突处理 |
-| [12-workspace-跨仓库规划-v1.4.0.md](12-workspace-跨仓库规划-v1.4.0.md) | workspace 跨仓库规划（v1.4.0 新增） | 需要管理多个关联仓库的人 |
+| [03-高级-openspec-的软件开发生命周期思想.md](03-高级-openspec-的软件开发生命周期思想.md) | 理解 OpenSpec 怎样看待软件开发生命周期 | 想真正吃透这套方法论的人 |
+| [04-高级-config-schema-与项目边界.md](04-高级-config-schema-与项目边界.md) | 看清配置和结构边界 | 想定制或深入理解的人 |
+| [05-高级-项目级全局约束到底放哪.md](05-高级-项目级全局约束到底放哪.md) | 判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和能力规格彻底分开的人 |
+| [06-高级-config-yaml-怎么写到真正好用.md](06-高级-config-yaml-怎么写到真正好用.md) | 讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
+| [07-高级-workspace-跨仓库规划-v1.4.0.md](07-高级-workspace-跨仓库规划-v1.4.0.md) | workspace 跨仓库规划（v1.4.0 新增） | 需要管理多个关联仓库的人 |
+| [10-实战-从一个真实-change-走完整条主线.md](10-实战-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
+| [11-实战-从零开始设计一个较复杂系统.md](11-实战-从零开始设计一个较复杂系统.md) | 看 greenfield 复杂系统怎样建立第一版正式基线 | 想理解从零构建时 OpenSpec 怎么切系统的人 |
+| [12-实战-多人协作与Git工作流.md](12-实战-多人协作与Git工作流.md) | 多人团队使用 OpenSpec + Git 的最佳实践 | 团队协作、并行开发、冲突处理 |
+| [13-实战-claude-code-里的-openspec-到底怎么落地.md](13-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
+| [14-实战-如何正确修改-artifacts.md](14-实战-如何正确修改-artifacts.md) | artifact 修改指南 | 想知道 artifacts 该怎么改、怎么验证的人 |
 | [90-附录-给机器看的-agent-协议.md](90-附录-给机器看的-agent-协议.md) | 看机器执行机制 | 想研究底层 protocol 的人 |
 
 ---
@@ -195,6 +214,6 @@ graph LR
 
 ### 3. 最后才讲"为什么会这样设计"
 
-所以 `schema`、`config.yaml`、Claude Code 集成、生命周期思想、agent protocol，都被压到后面。
+所以生命周期思想、`schema`、`config.yaml`、workspace、Claude Code 集成、agent protocol，都被压到后面。
 
 这是故意的，不是遗漏。

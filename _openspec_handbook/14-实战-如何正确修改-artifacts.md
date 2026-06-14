@@ -1,4 +1,4 @@
-# 11 · 实战：如何正确修改 Artifacts
+# 14 · 实战：如何正确修改 Artifacts
 
 > 这一篇专门解决新手最困惑的问题：**OpenSpec 的 artifacts 到底该怎么改？**
 

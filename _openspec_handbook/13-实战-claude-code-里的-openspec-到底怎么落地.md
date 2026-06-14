@@ -1,4 +1,4 @@
-# 04 · 高级：Claude Code 里的 OpenSpec 到底怎么落地
+# 13 · 实战：Claude Code 里的 OpenSpec 到底怎么落地
 
 > 这一篇回答的是"放进 Claude Code 以后，它到底长什么样"。
 
@@ -83,6 +83,8 @@ openspec/
 │   │   └── SKILL.md
 │   ├── openspec-apply-change/
 │   │   └── SKILL.md
+│   ├── openspec-sync-specs/
+│   │   └── SKILL.md
 │   └── openspec-archive-change/
 │       └── SKILL.md
 └── commands/
@@ -141,26 +143,25 @@ Claude Code 能识别的模型映射
 执行上可以理解成这条链：
 
 ```text
-清掉可能冲突的 ANTHROPIC_* / Claude Code 环境变量
+确认 Claude Code 当前支持的模型配置入口
   -> 设置新的 endpoint、token 和模型名
-  -> 让 Claude Code 启动时读到这些 env
+  -> 让 Claude Code 启动时读到会话级 env 或 settings
   -> 启动 claude
   -> 会话结束后恢复原 settings/env
 ```
 
-如果要把 Claude Code 临时切到 DeepSeek、OpenRouter 或其他兼容 Anthropic 接口的服务，通常会涉及这几类变量：
+如果要把 Claude Code 临时切到 DeepSeek、OpenRouter 或其他兼容 Anthropic 接口的服务，通常要关心的是这几类配置面，而不是某个固定脚本：
 
 ```text
-ANTHROPIC_BASE_URL
-ANTHROPIC_AUTH_TOKEN
-ANTHROPIC_MODEL
-ANTHROPIC_DEFAULT_OPUS_MODEL
-ANTHROPIC_DEFAULT_SONNET_MODEL
-ANTHROPIC_DEFAULT_HAIKU_MODEL
-CLAUDE_CODE_SUBAGENT_MODEL
+provider base URL / API endpoint
+API key 或 token
+默认模型名
+不同模型档位的映射（如果 provider 需要）
+会话级 env 或 Claude Code settings
+恢复原配置的备份方案
 ```
 
-不要把 API key 写进 handbook、仓库，或任何会被提交、同步、共享的文件。更稳妥的做法是从环境变量读取 key，让你自己的启动方式只负责会话级切换和恢复。
+具体变量名要以你当前 Claude Code 版本和 provider 文档为准。不要把 API key 写进 handbook、仓库，或任何会被提交、同步、共享的文件。更稳妥的做法是从环境变量读取 key，让你自己的启动方式只负责会话级切换和恢复。
 
 ---
 
@@ -297,7 +298,7 @@ Claude Code 下通常会同时投递 skills 和 commands。
 
 更建议先看"OpenSpec 对软件开发生命周期到底怎么理解"，也就是：
 
-- [05-高级-openspec-的软件开发生命周期思想.md](05-高级-openspec-的软件开发生命周期思想.md)
+- [03-高级-openspec-的软件开发生命周期思想.md](03-高级-openspec-的软件开发生命周期思想.md)
 
 ---
 

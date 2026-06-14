@@ -1,4 +1,4 @@
-# 03 · 高级：Config、Schema 与项目边界
+# 04 · 高级：Config、Schema 与项目边界
 
 > 这一篇默认你已经理解了 `specs`、`changes`、artifact 和 delta spec。
 
@@ -309,14 +309,15 @@ schema 管的是：
 - apply 的前置条件
 - 模板和 instruction 的组织方式
 
-### 什么时候看工具集成
+### 什么时候看 workspace
 
-当你已经知道项目事实层是什么，只是想研究：
+当你遇到的是：
 
-- Claude Code 等宿主 agent 到底怎么调用它
-- skills 和 commands 各扮演什么角色
+- 一个需求跨多个仓库
+- 单仓库 `openspec/` 已经不足以表达系统级计划
+- 你需要本地 coordination view，而不是把多个 repo 硬塞进一个 spec
 
-这时才该进入下一篇。
+这时才需要看 workspace。
 
 ---
 
@@ -324,13 +325,14 @@ schema 管的是：
 
 如果你关心的是：
 
-- "只装 Claude Code + OpenSpec 时，项目长什么样？"
-- "`.claude/` 和 `openspec/` 到底谁是事实层？"
-- "skill / command / CLI 在 Claude Code 里怎么拼起来？"
+- 长期项目规则到底该放在哪
+- 哪些信息该进 `config.yaml`
+- 哪些信息该进 `specs/` 或 change artifacts
+- 什么时候应该改 schema，而不是继续堆 rules
 
 下一篇看：
 
-- [04-高级-claude-code-里的-openspec-到底怎么落地.md](04-高级-claude-code-里的-openspec-到底怎么落地.md)
+- [05-高级-项目级全局约束到底放哪.md](05-高级-项目级全局约束到底放哪.md)
 
 ---
 
@@ -358,4 +360,4 @@ graph TB
 - Workspace 的配置（profile/delivery/tools）来自 global config，不走 repo-local `config.yaml`
 - `PlanningHome` 抽象在运行时判断当前属于 workspace 还是 repo
 
-这意味着「项目级全局约束放哪」这个问题现在有四种可能的答案：**workspace 层、project 层、user 层、package 层**。具体怎么选，取决于你的团队结构和仓库数量。详见 [12-workspace-跨仓库规划-v1.4.0.md](12-workspace-跨仓库规划-v1.4.0.md)。
+这意味着「项目级全局约束放哪」这个问题现在有四种可能的答案：**workspace 层、project 层、user 层、package 层**。具体怎么选，取决于你的团队结构和仓库数量。详见 [07-高级-workspace-跨仓库规划-v1.4.0.md](07-高级-workspace-跨仓库规划-v1.4.0.md)。

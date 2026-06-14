@@ -1,4 +1,4 @@
-# 12 · Workspace：跨仓库规划（v1.4.0）
+# 07 · 高级：Workspace 跨仓库规划（v1.4.0）
 
 > 这章是 v1.4.0 最大的架构变化。OpenSpec 从「单仓库 spec-driven」扩展到「多仓库 workspace 协调」。
 > 如果你目前只维护单个仓库，这章可以跳过。但如果你想理解 OpenSpec 的未来方向，这是必读。

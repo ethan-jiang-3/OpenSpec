@@ -1,4 +1,4 @@
-# 10 · 实战：多人协作与 Git 工作流
+# 12 · 实战：多人协作与 Git 工作流
 
 > 这一篇专门讲多人团队使用 OpenSpec + Git 时的最佳实践和协作流程。
 
@@ -832,4 +832,4 @@ Workspace 层的协作原则与 repo 层类似但有区别：
 - **Workspace 不 archive** — 实现完成后，各 repo 各自 archive 自己的 change
 - **context store 提供团队共享的 initiative 文件**（requirements、design、decisions），作为 workspace 规划的输入
 
-详细见 [12-workspace-跨仓库规划-v1.4.0.md](12-workspace-跨仓库规划-v1.4.0.md)。
+详细见 [07-高级-workspace-跨仓库规划-v1.4.0.md](07-高级-workspace-跨仓库规划-v1.4.0.md)。
