@@ -26,10 +26,13 @@
 | 4 | `04-agent-contract-与工具投递.md` | init/update/profile/delivery/skills/commands/adapter 的整体契约 |
 | 5 | `05-lifecycle-总览.md` | OPSX workflow 生命周期总览，以及和现有专题的链接 |
 | 6 | `06-源码地图与扩展点.md` | 当前源码模块职责和扩展点，使用路径 + 函数/类名作为锚点 |
+| 7 | `07-OpenSpec-工程思想.md` | 给熟悉 SDD/AI Coding 的读者提炼 OpenSpec 的工程取舍 |
+| 8 | `08-对照常见-SDD-与-AI-Coding.md` | 对照 PRD-first、task-first、prompt-template、agent memory、IDE/workspace 等常见框架 |
 
 ## 推荐阅读路径
 
-- **第一次建立整体模型**：`00` → `01` → `02`
+- **熟悉 SDD/AI Coding，但不熟 OpenSpec**：`00` → `07` → `08` → `01` → `02`
+- **第一次建立整体模型**：`00` → `07` → `01` → `02`
 - **想理解 workspace/context-store**：`01` → `03`，再去看 `../schema/03-内置-workspace-planning-详解.md`
 - **想理解 agent 为什么会自动知道怎么做**：`04` → `../spec_cli/03-workflow-runtime-api.md`
 - **想从系统图进入命令细节**：`05` → `../internal-spec-driven/00-四条命令的共有机制.md`

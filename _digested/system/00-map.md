@@ -12,6 +12,8 @@ OpenSpec 当前不是单一的“spec 文件夹工具”，而是一套本地协
 
 这个专题只讲这些层之间怎么拼起来。具体命令 IO、schema 字段、默认四类 artifact 的细节，分别去 `spec_cli/`、`schema/`、`internal-spec-driven/`。
 
+如果你已经熟悉 SDD、AI Coding、agent workflow，但还没建立 OpenSpec 的概念体系，建议先读 `07-OpenSpec-工程思想.md` 和 `08-对照常见-SDD-与-AI-Coding.md`。这两篇不是新机制，而是把下面五层模型翻译成更容易迁移的工程直觉。
+
 ## 五层系统模型
 
 ```text
@@ -72,6 +74,17 @@ schema/
 
 internal-spec-driven/
   最后回答：默认 spec-driven 下 explore/propose/apply/archive 的源码机制。
+```
+
+推荐阅读顺序：
+
+```text
+00-map
+  → 07-OpenSpec-工程思想
+  → 08-对照常见-SDD-与-AI-Coding
+  → 01-系统心智模型
+  → 02-目录与状态边界
+  → 按问题进入 spec_cli/schema/internal-spec-driven/mechanisms
 ```
 
 ## 当前版本里最重要的变化

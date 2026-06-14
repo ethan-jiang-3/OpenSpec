@@ -27,6 +27,7 @@
 
 ## 阅读路径
 
+- **熟悉 SDD/AI Coding，但不熟 OpenSpec** → `system/00-map.md` → `system/07-OpenSpec-工程思想.md` → `system/08-对照常见-SDD-与-AI-Coding.md`
 - **想先建立整体系统模型** → `system/`，从 `00-map.md` 开始
 - **只想理解 CLI 设计** → `spec_cli/`，从 `00-map.md` 开始
 - **想自定义工作流** → `schema/`，从 `00-map.md` 开始
@@ -39,6 +40,7 @@
 
 ```text
 system/
+  → system/07 + system/08（概念桥梁）
   → schema/ 或 spec_cli/
   → internal-spec-driven/
   → mechanisms/（按问题跳读）
