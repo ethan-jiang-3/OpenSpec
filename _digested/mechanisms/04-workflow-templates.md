@@ -1,0 +1,98 @@
+# Workflow Templates
+
+## 模板是 agent 操作手册源码
+
+OpenSpec CLI 负责保存和解释状态，但真正执行“读用户意图、调用命令、写 artifact、修改代码”的是宿主 coding agent。workflow templates 就是 agent 的操作手册源码。
+
+这点很容易误解。`apply`、`sync`、`verify` 等模板不是 TypeScript 里的硬编码执行流程；它们是被 init/update 投递到不同 agent 的指令文本。agent 读到这些指令后，调用 `openspec status --json`、`openspec instructions ... --json`、`openspec validate` 等 runtime API，再由模型和工具执行实际写入。
+
+所以 workflow templates 位于两层之间：
+
+```text
+OpenSpec CLI runtime API
+  → status/instructions/validate/new change
+workflow template
+  → 告诉 agent 如何串这些 API
+宿主 coding agent
+  → 推理、写文件、跑测试、报告结果
+```
+
+## 当前 workflow
+
+| workflow | 模板文件 | 角色 |
+|----------|----------|------|
+| `explore` | `explore.ts` | 探索和澄清 |
+| `propose` | `propose.ts` | 一次性创建 change 并生成规划 artifact |
+| `new` | `new-change.ts` | 只创建 change scaffold |
+| `continue` | `continue-change.ts` | 创建下一个 ready artifact |
+| `ff` | `ff-change.ts` | fast-forward 生成剩余 artifact |
+| `apply` | `apply-change.ts` | 按 tasks 实施 |
+| `sync` | `sync-specs.ts` | agent-driven 同步 delta specs 到主 specs |
+| `verify` | `verify-change.ts` | 验证实现与 artifacts 一致 |
+| `archive` | `archive-change.ts` | 收尾归档 |
+| `bulk-archive` | `bulk-archive-change.ts` | 批量归档 |
+| `onboard` | `onboard.ts` | 引导式端到端体验 |
+| `feedback` | `feedback.ts` | 提交 OpenSpec 反馈 |
+
+`profile` 只决定安装哪些 workflow；模板本身定义 agent 的动作顺序和 guardrails。
+
+## planning 模板：动作而非阶段
+
+`propose` 是默认 quick path：创建 change，并持续生成 artifact，直到 schema 的 apply requirements 满足。它适合用户已经有比较明确意图，想快速得到完整规划。
+
+`new` 只创建 change scaffold，不生成 artifact 内容。它把“创建实例”和“生成内容”拆开，适合先占位、手动推进、显式选择 schema 或 initiative linkage。
+
+`continue` 是 incremental path：每次只推进一个 ready artifact。它体现 artifact DAG 的增量工作流：先 `status --json` 找 ready artifact，再 `instructions <artifact> --json` 获取执行包。
+
+`ff` 是 fast-forward path：批量生成剩余 artifact。它和 `propose` 相似，但语义更偏“已有 change，快速补齐剩余规划”。
+
+| workflow | 创建 change | 生成 artifact | 粒度 |
+|----------|-------------|---------------|------|
+| `propose` | 会 | 会，直到可 apply | 快速完整 |
+| `new` | 会 | 不会 | scaffold |
+| `continue` | 不一定 | 一次一个 | 增量 |
+| `ff` | 可用于已有 change | 多个 | 批量推进 |
+
+这四个模板共同解释了 OPSX “动作而非阶段”的体验：用户可以从不同粒度切入同一条 artifact DAG。
+
+## implementation 与 closeout 模板
+
+`apply` 模板消费 `openspec instructions apply` 的结果。它关注 apply gate 是否 blocked、tasks 是否存在、是否有 checkbox、未完成 tasks 列表、implementation 时是否需要更新 artifacts、workspace actionContext 是否允许编辑。具体 apply gate 源码机制见 `../internal-spec-driven/03-apply-实施执行.md`。
+
+`sync` 是 agent-driven spec merge，不是 CLI archive。模板要求 agent 选择 change、用 `status` 获取 delta spec path、读取 delta spec 和主 spec、智能应用 ADDED/MODIFIED/REMOVED/RENAMED，并保留 change active。重要 guardrail：如果 `actionContext.mode` 是 `workspace-planning`，当前 sync 不支持 workspace spec sync，必须停止。
+
+`verify` 用来检查实现是否与 proposal/specs/design/tasks 一致。它不是 `validate` 的替代：`validate` 检查 OpenSpec 文档结构，`verify` 让 agent 审查代码实现、测试、任务完成度和 artifact coherence。
+
+`archive` 模板是 agent 层的收尾操作手册。它会引导 agent 检查是否需要 sync、是否完成 tasks、是否适合调用 CLI archive。CLI archive 源码机制见 `../internal-spec-driven/04-archive-归档合并.md`。
+
+`bulk-archive` 面向多个 completed changes。它的风险不在单个 merge 算法，而在选择和确认：哪些 changes 完成、哪些跳过、是否逐个验证、失败时如何报告 partial results。
+
+## onboard 与 feedback 的特殊性
+
+`onboard.ts` 不是普通业务命令，而是引导式端到端体验。它同时包含教学叙述和实际 workflow 操作，目标是带用户走完一次真实工作流，并解释 proposal/spec/design/tasks 的角色。维护它时要把它当 prompt 和产品 onboarding 文案的组合体。
+
+`feedback.ts` 定义 agent 如何帮助用户提交反馈。它和 `src/commands/feedback.ts` 的 CLI 实现不同：workflow template 指导 agent 收集、整理、匿名化反馈；CLI feedback command 用 GitHub CLI 或 manual URL 提交 issue。
+
+## 工程洞察
+
+- CLI 提供 deterministic runtime API，template 提供 agent 操作策略，两者分层让行为可解释但不完全硬编码。
+- expanded workflows 不是新状态机，而是围绕同一套 status/instructions API 的不同操作粒度。
+- template 是跨工具复用的 workflow 语义；tool delivery 再把它投递成不同 agent 的 skill/command 外壳。
+- 修改 template 会改变 agent 行为，即使 TypeScript 源码没有变化，也应当视为产品行为变更。
+
+## 源码锚点
+
+| 机制 | 路径 |
+|------|------|
+| workflow 模板 | `src/core/templates/workflows/` |
+| skill/command template facade | `src/core/templates/skill-templates.ts` |
+| template 类型 | `src/core/templates/types.ts` |
+| template 到 skill/command content | `src/core/shared/skill-generation.ts` |
+| workflow profile | `src/core/profiles.ts` |
+| runtime API | `src/commands/workflow/` |
+
+## 测试锚点
+
+- `test/core/templates/`
+- `test/core/shared/`
+- `test/commands/artifact-workflow.test.ts`

@@ -1,0 +1,167 @@
+# Tool Delivery
+
+## 它解决的是 agent 生态差异
+
+OpenSpec 的核心 workflow 语义不应该绑死在某个 AI Coding 工具上。Claude、Codex、Cursor、OpenCode、Gemini 等工具对“如何发现指令”的约定不同：有的看 skills，有的看 slash commands，有的用全局 prompt 目录，有的用项目内 command 文件。
+
+Tool delivery 这一层的核心判断是：**稳定资产是 workflow 语义；skills 和 commands 只是投递外壳。**
+
+```text
+profile/workflows
+  → workflow templates
+  → skill / command content
+  → per-tool skillsDir / command adapter path
+  → agent 可发现的入口文件
+```
+
+这解释了为什么 OpenSpec 不把“Claude command 文件”或“Codex prompt 文件”当成项目事实。它们是生成物，可以随 profile、delivery、版本和工具支持变化而同步。
+
+## 三层对象
+
+| 层 | 源码 | 作用 |
+|----|------|------|
+| tool registry | `AI_TOOLS` in `src/core/config.ts` | 工具 id、skillsDir、检测路径 |
+| workflow content | `src/core/templates/workflows/`、`src/core/shared/skill-generation.ts` | 工具无关的 workflow 指令 |
+| tool-specific shell | `src/core/command-generation/adapters/` | command 文件路径和 frontmatter 格式 |
+
+这三层分开后，新增 workflow 和新增 agent 工具就不是同一个问题。新增 workflow 主要改模板和 profile；新增工具主要改 registry、adapter 和测试。
+
+## skill 与 command 的生成链
+
+workflow 文本来自 `src/core/templates/workflows/`。每个 workflow 通常同时导出：
+
+- skill template：给 agent 自动发现。
+- command template：给 slash/prompt command 文件。
+
+`src/core/shared/skill-generation.ts` 把这些模板映射成：
+
+- `getSkillTemplates(workflowFilter?)`
+- `getCommandTemplates(workflowFilter?)`
+
+filter 来自 profile resolved workflow ids。
+
+skill 生成链：
+
+```text
+SkillTemplate
+  → generateSkillContent(template, version, transform?)
+  → YAML frontmatter + instructions
+  → <tool skillsDir>/skills/<dirName>/SKILL.md
+```
+
+command 生成链：
+
+```text
+CommandTemplate
+  → CommandContent
+  → CommandAdapterRegistry.get(toolId)
+  → generateCommands()
+  → adapter.getFilePath(id)
+  → adapter.formatFile(content)
+```
+
+`CommandContent` 是工具无关结构：`id`、`name`、`description`、`category`、`tags`、`body`。adapter 只处理“放在哪里”和“外壳怎么写”，不改 workflow 语义。
+
+## profile 与 delivery
+
+repo-local init/update 根据 global config 的 `delivery` 分流：
+
+| delivery | 行为 |
+|----------|------|
+| `skills` | 只生成 skills，并删除 managed commands |
+| `commands` | 只生成 commands，并删除 managed skills |
+| `both` | 两者都生成 |
+
+profile 决定安装哪些 workflow，delivery 决定以什么形态投递。两者组合起来回答两个不同问题：
+
+- 这套 OpenSpec 要给 agent 哪些动作？
+- 这些动作在当前工具里以什么入口出现？
+
+workspace update 是例外：当前只生成 skills，即使 global delivery 是 `both` 或 `commands`，也会给出 skills-only notice。这是 workspace 作为本机协调视图的限制，不应误读成所有投递路径都支持 workspace command。
+
+## init/update 的系统职责
+
+`InitCommand.execute()` 做的不是单纯 mkdir，而是一次投递初始化：
+
+1. 校验目标路径。
+2. 检测 legacy artifacts。
+3. 检测 available tools。
+4. 必要时迁移旧安装。
+5. 选择工具。
+6. 创建 `openspec/` 基础结构。
+7. 根据 profile/delivery 生成 skills/commands。
+8. 创建或保留 `openspec/config.yaml`。
+
+`UpdateCommand.execute()` 是声明式同步器：
+
+1. 确认 `openspec/` 存在。
+2. 根据现有工具目录迁移。
+3. 读取 global profile/delivery。
+4. 处理 legacy cleanup。
+5. 检测 configured tools。
+6. 比较 version drift 和 profile/delivery drift。
+7. 只更新需要同步的工具，或在 `--force` 下全量更新。
+8. 删除取消选择的 skill/command 产物。
+
+所以 update 可能删除 OpenSpec 管理的工具侧文件，但不应删除用户业务文件。
+
+## drift 为什么重要
+
+`src/core/profile-sync-drift.ts` 负责判断工具侧安装状态是否和当前配置一致。drift 来源包括：
+
+- global profile 从 `core` 改成 `custom`。
+- custom workflows 列表变化。
+- delivery 从 `both` 改成 `skills` 或 `commands`。
+- 某个工具目录里还留有不再选择的 workflow。
+
+这解释了为什么版本没变时也可能需要 update。OpenSpec 管理的是声明式投递状态，不只是“当前 CLI 版本是否更新”。
+
+## command adapters 的边界
+
+`ToolCommandAdapter` 只有两个核心方法：
+
+```ts
+getFilePath(commandId: string): string
+formatFile(content: CommandContent): string
+```
+
+这说明 adapter 不参与 workflow 推理，也不参与 artifact 状态判断。它只负责 tool-specific command surface。
+
+典型差异：
+
+| 工具 | command 位置 | 说明 |
+|------|--------------|------|
+| Claude | `.claude/commands/opsx/<id>.md` | 项目内 command 文件，带 frontmatter |
+| Codex | `<CODEX_HOME>/prompts/opsx-<id>.md` | 全局 prompt 位置，不是项目内文件 |
+
+这个差异很重要：不是所有 command artifacts 都在 repo root 下。delivery 层要尊重每个工具的发现机制。
+
+## 工程洞察
+
+- OpenSpec 把 workflow 语义和工具外壳解耦，避免核心机制被某个 agent 平台锁死。
+- profile/delivery 是投递声明，init/update 是把声明同步到工具侧文件系统。
+- adapter 是格式化边界，不应该承载 workflow 判断。
+- legacy cleanup 只应清理 OpenSpec 管理过的投递 artifacts 和 marker，不能成为任意文件删除器。
+
+## 源码锚点
+
+| 机制 | 路径 |
+|------|------|
+| tool registry | `AI_TOOLS` in `src/core/config.ts` |
+| tool detection | `src/core/available-tools.ts`、`src/core/shared/tool-detection.ts` |
+| skill/command content | `src/core/shared/skill-generation.ts` |
+| workflow templates | `src/core/templates/workflows/` |
+| command adapters | `src/core/command-generation/` |
+| init/update | `src/core/init.ts`、`src/core/update.ts` |
+| profile drift | `src/core/profile-sync-drift.ts` |
+| migration / cleanup | `src/core/migration.ts`、`src/core/legacy-cleanup.ts` |
+
+## 测试锚点
+
+- `test/core/init.test.ts`
+- `test/core/update.test.ts`
+- `test/core/command-generation/`
+- `test/core/shared/`
+- `test/core/profile-sync-drift.test.ts`
+- `test/core/migration.test.ts`
+- `test/core/legacy-cleanup.test.ts`

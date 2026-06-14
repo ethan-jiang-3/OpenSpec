@@ -11,25 +11,25 @@
 | `src/core/archive.ts`、`src/core/specs-apply.ts` | `../internal-spec-driven/04-archive-归档合并.md` |
 | `src/core/project-config.ts` | `../schema/05-四层注入机制.md`、`../internal-spec-driven/06-config-yaml-机制与约束.md` |
 | `src/core/planning-home.ts` | `../system/03-planning-home-与-workspace.md` |
-| `src/core/config.ts`、`src/core/global-config.ts`、`src/core/profiles.ts`、`src/core/config-schema.ts` | `../spec_cli/05-config-profile-delivery.md`、`../tool-delivery/02-init-update-drift.md` |
-| `src/core/workspace/` | `../workspace/` |
-| `src/commands/workspace.ts`、`src/commands/workspace/` | `../workspace/` |
-| `src/core/context-store/` | `../workspace/03-context-store-and-initiative.md` |
-| `src/core/collections/initiatives/` | `../workspace/03-context-store-and-initiative.md` |
-| `src/core/collections/runtime.ts` | `../workspace/03-context-store-and-initiative.md` |
-| `src/commands/context-store.ts`、`src/commands/initiative.ts` | `../workspace/03-context-store-and-initiative.md` |
-| `src/core/command-generation/` | `../tool-delivery/` |
-| `src/core/shared/skill-generation.ts` | `../tool-delivery/01-skill-command-pipeline.md` |
-| `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../tool-delivery/01-skill-command-pipeline.md` |
-| `src/core/init.ts`、`src/core/update.ts` | `../tool-delivery/02-init-update-drift.md` |
-| `src/core/migration.ts`、`src/core/legacy-cleanup.ts`、`src/core/profile-sync-drift.ts` | `../tool-delivery/02-init-update-drift.md` |
-| `src/core/parsers/`、`src/core/validation/`、`src/core/schemas/` | `../spec-model/` |
-| `src/core/list.ts`、`src/core/view.ts`、`src/core/converters/json-converter.ts` | `../spec-model/03-read-commands.md` |
-| `src/core/templates/workflows/` | `../workflow-templates/` |
-| `src/core/templates/skill-templates.ts`、`src/core/templates/types.ts`、`src/core/templates/index.ts` | `../workflow-templates/`、`../tool-delivery/01-skill-command-pipeline.md` |
-| `src/core/completions/` | `../cli-infra/01-shell-completion.md` |
-| `src/commands/completion.ts` | `../cli-infra/01-shell-completion.md` |
-| `src/telemetry/`、`src/commands/feedback.ts` | `../cli-infra/02-telemetry-feedback-utils.md` |
+| `src/core/config.ts`、`src/core/global-config.ts`、`src/core/profiles.ts`、`src/core/config-schema.ts` | `../spec_cli/05-config-profile-delivery.md`、`../mechanisms/02-tool-delivery.md` |
+| `src/core/workspace/` | `../mechanisms/01-workspace-coordination.md` |
+| `src/commands/workspace.ts`、`src/commands/workspace/` | `../mechanisms/01-workspace-coordination.md` |
+| `src/core/context-store/` | `../mechanisms/01-workspace-coordination.md` |
+| `src/core/collections/initiatives/` | `../mechanisms/01-workspace-coordination.md` |
+| `src/core/collections/runtime.ts` | `../mechanisms/01-workspace-coordination.md` |
+| `src/commands/context-store.ts`、`src/commands/initiative.ts` | `../mechanisms/01-workspace-coordination.md` |
+| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/shared/skill-generation.ts` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/init.ts`、`src/core/update.ts` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/migration.ts`、`src/core/legacy-cleanup.ts`、`src/core/profile-sync-drift.ts` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/parsers/`、`src/core/validation/`、`src/core/schemas/` | `../mechanisms/03-spec-model.md` |
+| `src/core/list.ts`、`src/core/view.ts`、`src/core/converters/json-converter.ts` | `../mechanisms/03-spec-model.md` |
+| `src/core/templates/workflows/` | `../mechanisms/04-workflow-templates.md` |
+| `src/core/templates/skill-templates.ts`、`src/core/templates/types.ts`、`src/core/templates/index.ts` | `../mechanisms/04-workflow-templates.md`、`../mechanisms/02-tool-delivery.md` |
+| `src/core/completions/` | `../mechanisms/05-cli-infra.md` |
+| `src/commands/completion.ts` | `../mechanisms/05-cli-infra.md` |
+| `src/telemetry/`、`src/commands/feedback.ts` | `../mechanisms/05-cli-infra.md` |
 | `src/core/change-metadata/`、`src/utils/change-metadata.ts`、`src/core/change-status-policy.ts` | `../internal-spec-driven/03-apply-实施执行.md`、`../spec_cli/03-workflow-runtime-api.md` |
 
 ## 部分覆盖
@@ -37,11 +37,11 @@
 | 源码 | 当前覆盖 | 后续建议 |
 |------|----------|----------|
 | `src/commands/schema.ts` | `../schema/06-自定义-schema-实战.md`、`../spec_cli/04-command-deep-dive.md` | 后续可补 schema CLI 子命令逐实现 |
-| `src/commands/config.ts` | `../spec_cli/05-config-profile-delivery.md`、`../tool-delivery/` | 后续可补 config key-path 操作细节 |
-| `src/commands/show.ts`、`src/commands/validate.ts`、`src/commands/change.ts`、`src/commands/spec.ts` | `../spec-model/03-read-commands.md`、`../spec_cli/04-command-deep-dive.md` | 后续可补人类浏览 UX 细节 |
-| `src/core/config-prompts.ts`、`src/core/styles/palette.ts` | `../cli-infra/02-telemetry-feedback-utils.md` | CLI 展示/配置模板支撑层，不单独开专题 |
-| `src/utils/` | `../cli-infra/02-telemetry-feedback-utils.md` | 仅归档级覆盖，不逐函数消化 |
-| `src/prompts/`、`src/ui/` | `../cli-infra/02-telemetry-feedback-utils.md` | 仅归档级覆盖 |
+| `src/commands/config.ts` | `../spec_cli/05-config-profile-delivery.md`、`../mechanisms/02-tool-delivery.md` | 后续可补 config key-path 操作细节 |
+| `src/commands/show.ts`、`src/commands/validate.ts`、`src/commands/change.ts`、`src/commands/spec.ts` | `../mechanisms/03-spec-model.md`、`../spec_cli/04-command-deep-dive.md` | 后续可补人类浏览 UX 细节 |
+| `src/core/config-prompts.ts`、`src/core/styles/palette.ts` | `../mechanisms/05-cli-infra.md` | CLI 展示/配置模板支撑层，不单独开专题 |
+| `src/utils/` | `../mechanisms/05-cli-infra.md` | 仅归档级覆盖，不逐函数消化 |
+| `src/prompts/`、`src/ui/` | `../mechanisms/05-cli-infra.md` | 仅归档级覆盖 |
 
 ## 地图级覆盖
 
