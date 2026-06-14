@@ -17,6 +17,9 @@
 | `src/core/artifact-graph/instruction-loader.ts:319-321,335-336` | context/rules 缺失时静默 `undefined`；`openspec instructions` 返回带这两个字段（agent 能看到当前状态）；每次重读、即时生效 |
 | `src/core/project-config.ts:103-107,173-191` | context 50KB 硬上限（超了忽略+warning）；`validateConfigRules`：rules 用未知 artifact ID 会 warning 且不注入 |
 | `src/core/templates/workflows/explore.ts` | Explore 是 stance（无脚本）、建项目理解（`:42-46`）；capture 表（`:117-124`）和 hand-off（`:250-273`）无 config 行 → "在 Explore 里长 config"是 emergent |
+| `src/core/artifact-graph/types.ts:4-31` | schema 结构权威：`ArtifactSchema`(id/generates/template/instruction/requires) + `ApplyPhaseSchema`(requires/tracks/instruction) + `SchemaYamlSchema`——expert 升到结构层能改的 5 件事 |
+| `src/commands/schema.ts` | schema 工具命令：`init` / `fork` / `validate` / `which`（fork 优先：落 `openspec/schemas/` 版本控制、覆盖 package 默认） |
+| `src/utils/change-metadata.ts:155-198` | per-change schema 解析序：CLI flag > change metadata（`.openspec.yaml`）> config.yaml > default |
 
 ## 范例与配置
 
@@ -24,6 +27,7 @@
 |---|---|
 | `openspec/config.yaml` | 真实范例：OpenSpec 团队 dogfood 的手写 config（context 分两块、rules 跨 specs/tasks/design，已 echo 部分 schema 术语） |
 | `schemas/spec-driven/schema.yaml` | spec-driven 各 artifact 的 instruction 与关键术语（capability / requirement / scenario / SHALL / Non-Goals / Risk→Mitigation 等） |
+| `schemas/workspace-planning/schema.yaml` | schema 层范例：同样 artifact ID 但不同 instruction + `apply` 块强制 linked repos 只读——config 表达不了的结构护栏 |
 
 ## 官方文档
 
