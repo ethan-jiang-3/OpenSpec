@@ -1,0 +1,314 @@
+# 04 · 高级：Claude Code 里的 OpenSpec 到底怎么落地
+
+> 这一篇回答的是"放进 Claude Code 以后，它到底长什么样"。
+
+---
+
+## 先把最容易想错的地方说透
+
+很多人第一次看，会误以为：
+
+- `.claude/skills/` 里的 skill 文件就是 OpenSpec 本体
+- `.claude/commands/` 里的 slash command 才是核心
+- `config.yaml` 是能控制一切的总控中心
+
+其实都不对。
+
+放进 Claude Code 后，OpenSpec 仍然有两层：
+
+1. **项目事实层**
+2. **Claude Code 入口层**
+
+### 新手最常问：为什么需要两层？直接一层不行吗？
+
+**答案：为了让 OpenSpec 不被绑死在某个 agent 工具上。**
+
+如果只有一层（比如全放 `.claude/`），会有什么问题：
+
+| 问题 | 后果 |
+|------|------|
+| 换工具就要重写所有项目事实 | 从 Claude Code 换到 Codex 或 Cursor，specs/ 也要迁移 |
+| 项目事实和工具入口混在一起 | 看不清哪些是项目长期资产，哪些只是给 agent 看的入口 |
+| 多个工具无法共存 | Claude Code、Cursor、Codex 不能共享同一套 OpenSpec 状态 |
+
+**两层设计的好处**：
+
+```text
+项目事实层（openspec/）
+  ↓ 被多个工具共享
+工具入口层（.claude/ 或 .codex/ 或 .cursor/）
+```
+
+- 项目事实（specs/changes/config.yaml/schemas）只写一次
+- 不同工具各自有自己的入口层
+- 换工具时，重新投递 skills/commands 即可，项目事实不变
+
+---
+
+## 第一层：项目事实层
+
+这层在项目自己的 `openspec/` 目录里。
+
+```text
+openspec/
+├── specs/
+├── changes/
+├── config.yaml
+└── schemas/
+```
+
+这层管的是：
+
+- 项目当前正式规格基线
+- 进行中的 change 和它的 artifacts
+- 项目级背景与规则
+- change 结构定义，也就是 schema
+
+这层才是 OpenSpec 的核心数据层。
+
+---
+
+## 第二层：Claude Code 入口层
+
+这层在 `.claude/` 目录里。
+
+典型地你会看到：
+
+```text
+.claude/
+├── skills/
+│   ├── openspec-propose/
+│   │   └── SKILL.md
+│   ├── openspec-explore/
+│   │   └── SKILL.md
+│   ├── openspec-apply-change/
+│   │   └── SKILL.md
+│   └── openspec-archive-change/
+│       └── SKILL.md
+└── commands/
+    └── opsx/
+        ├── propose.md
+        ├── explore.md
+        ├── apply.md
+        ├── sync.md
+        └── archive.md
+```
+
+这层不是项目事实层，而是"让 Claude Code 知道怎么触发 OpenSpec workflow"。
+
+所以更准确的理解是：
+
+- `openspec/` 保存事实
+- `.claude/skills/` 保存 agent 可发现的 workflow 说明
+- `.claude/commands/opsx/` 保存用户可触发的 slash command 入口
+
+### 这层怎么生成
+
+初始化时可以显式选择 Claude Code：
+
+```bash
+openspec init --tools claude
+```
+
+之后如果 OpenSpec 的 workflow 模板、profile 或 delivery 选择变化，用：
+
+```bash
+openspec update
+```
+
+刷新 Claude Code 入口层。
+
+### 小结：Claude Code 怎么临时换模型
+
+这件事和 OpenSpec 本身没有直接关系。OpenSpec 只负责 `openspec/` 状态和 `.claude/` 入口投递；Claude Code 用哪个模型，是 Claude Code 启动环境的问题。
+
+要临时切到另一个兼容 Claude Code 的模型服务，通常需要准备这些东西：
+
+```text
+claude 命令可用
+目标 provider 的 API endpoint
+目标 provider 的 API key
+Claude Code 能识别的模型映射
+一套会话级环境变量或 settings 注入方式
+退出后恢复原配置的办法
+```
+
+这里最关键的不是某个具体 provider，而是两个原则：
+
+1. **模型切换在 Claude Code 层完成**：OpenSpec 的 `status`、`instructions`、schema、artifacts 都不需要变。
+2. **临时接管要可恢复**：启动前备份 settings，退出时恢复，避免把某次模型实验污染成项目长期配置。
+
+执行上可以理解成这条链：
+
+```text
+清掉可能冲突的 ANTHROPIC_* / Claude Code 环境变量
+  -> 设置新的 endpoint、token 和模型名
+  -> 让 Claude Code 启动时读到这些 env
+  -> 启动 claude
+  -> 会话结束后恢复原 settings/env
+```
+
+如果要把 Claude Code 临时切到 DeepSeek、OpenRouter 或其他兼容 Anthropic 接口的服务，通常会涉及这几类变量：
+
+```text
+ANTHROPIC_BASE_URL
+ANTHROPIC_AUTH_TOKEN
+ANTHROPIC_MODEL
+ANTHROPIC_DEFAULT_OPUS_MODEL
+ANTHROPIC_DEFAULT_SONNET_MODEL
+ANTHROPIC_DEFAULT_HAIKU_MODEL
+CLAUDE_CODE_SUBAGENT_MODEL
+```
+
+不要把 API key 写进 handbook、仓库，或任何会被提交、同步、共享的文件。更稳妥的做法是从环境变量读取 key，让你自己的启动方式只负责会话级切换和恢复。
+
+---
+
+## 一个典型项目长什么样
+
+```text
+my-app/
+├── src/
+├── tests/
+├── openspec/
+│   ├── specs/
+│   ├── changes/
+│   ├── config.yaml
+│   └── schemas/
+└── .claude/
+    ├── skills/
+    └── commands/
+        └── opsx/
+```
+
+如果要一句话概括：
+
+> **OpenSpec 的"内容"在 `openspec/`，OpenSpec 的"入口"在 `.claude/`。**
+
+### 两层架构可视化
+
+```mermaid
+graph TB
+    subgraph Claude_Code_入口层
+    A[".claude/skills/<br/>（OpenSpec skills）"]
+    B[".claude/commands/opsx/<br/>（/opsx:* slash commands）"]
+    end
+
+    subgraph 项目事实层
+    C["openspec/specs/<br/>（正式规格基线）"]
+    D["openspec/changes/<br/>（变更工作区）"]
+    E["openspec/config.yaml<br/>（项目配置）"]
+    F["openspec/schemas/<br/>（工作流定义）"]
+    end
+
+    A -.指导 agent.-> G[openspec CLI]
+    B -.触发 workflow.-> G
+    G -.读取/写入.-> C
+    G -.读取/写入.-> D
+    G -.读取.-> E
+    G -.读取.-> F
+
+    style A fill:#e3f2fd,stroke:#2196f3
+    style B fill:#e3f2fd,stroke:#2196f3
+    style C fill:#e8f5e9,stroke:#4caf50
+    style D fill:#fff3e0,stroke:#ff9800
+    style E fill:#f3e5f5,stroke:#9c27b0
+    style F fill:#fce4ec,stroke:#e91e63
+```
+
+---
+
+## Claude Code 里一次命令背后发生什么
+
+以 `/opsx:propose` 为例，可以粗略理解成 4 步：
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant Claude as Claude Code
+    participant CLI as openspec CLI
+    participant Files as openspec/
+
+    User->>Claude: /opsx:propose add-feature
+    Claude->>CLI: openspec new change add-feature
+    CLI->>Files: 创建 change 目录和 .openspec.yaml
+    CLI-->>Claude: change 已创建
+
+    Claude->>CLI: openspec status --change add-feature --json
+    CLI->>Files: 读取 schema 和 artifact 状态
+    Files-->>CLI: 返回项目状态
+    CLI-->>Claude: JSON 状态
+
+    Claude->>CLI: openspec instructions proposal --change add-feature --json
+    CLI->>Files: 读取 schema/templates/config
+    Files-->>CLI: 返回 artifact 指令
+    CLI-->>Claude: JSON 操作包
+
+    Claude->>Claude: 用模型生成 artifact 内容
+    Claude->>Files: 写入 proposal.md / specs / design.md / tasks.md
+    Claude-->>User: change 进入 apply-ready 前的规划循环
+```
+
+所以 Claude Code 本身不是 OpenSpec。
+它只是 OpenSpec 被人触发、被模型消费的宿主环境之一。
+
+---
+
+## skill 和 command 在 Claude Code 里分别做什么
+
+Claude Code 下通常会同时投递 skills 和 commands。
+
+| 层 | 例子 | 作用 |
+|---|---|---|
+| skill | `.claude/skills/openspec-propose/SKILL.md` | 告诉 Claude Code：什么时候该使用这个 OpenSpec workflow，以及执行步骤是什么 |
+| command | `.claude/commands/opsx/propose.md` | 给用户一个 `/opsx:propose` 入口 |
+| CLI | `openspec status --json`、`openspec instructions ... --json` | 返回真实状态、路径、依赖、模板、context/rules |
+| 文件系统 | `openspec/specs/`、`openspec/changes/` | 保存项目事实和 change 状态 |
+
+一个容易混的点是：skill/command 里确实有很多说明文字，但它们不是事实源。真正的状态来自 `openspec/`，真正的运行时解释来自 CLI。
+
+---
+
+## 人类最该关心的，不是机器细节，而是层次别搞混
+
+如果你是人类使用者，最值得记住的只有三点：
+
+### 1. Claude Code 是入口，不是事实来源
+
+不要把 `.claude/skills/...` 或 `.claude/commands/...` 当成项目能力定义。
+
+### 2. `openspec/specs/` 才是长期基线
+
+项目当前能力的正式表述，最终沉淀在这里。
+
+### 3. `openspec/changes/` 是变更工作区
+
+平时迭代都发生在这里，archive 后再合并回基线。
+
+---
+
+## 下一步更适合先看什么
+
+如果你现在已经分清了：
+
+- `openspec/` 是事实层
+- `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
+- Claude Code 只是宿主，不是 OpenSpec 本体
+
+更建议先看"OpenSpec 对软件开发生命周期到底怎么理解"，也就是：
+
+- [05-高级-openspec-的软件开发生命周期思想.md](05-高级-openspec-的软件开发生命周期思想.md)
+
+---
+
+## 什么时候才需要继续看机器视角
+
+只有当你想研究这些问题时，才需要再往下看：
+
+- Claude Code 具体调用了哪些 CLI
+- `instructions --json` 里有什么
+- skill、command、workflow 三者如何对应
+
+这时再去看附录：
+
+- [90-附录-给机器看的-agent-协议.md](90-附录-给机器看的-agent-协议.md)

@@ -54,7 +54,7 @@ openspec config profile
 # 步骤 2：更新 AI 工具的 skills
 openspec update
 
-# 步骤 3：重启 Cline 或你的 AI 工具
+# 步骤 3：重启 Claude Code 或你的 AI 工具
 ```
 
 ### 本文档的假设
@@ -154,7 +154,7 @@ graph TD
     F -->|是| G[直接编辑]
     F -->|否| H[先看示例<br/>再编辑]
     
-    D --> I[在 Cline 里说明<br/>具体要改什么]
+    D --> I[在 Claude Code 里说明<br/>具体要改什么]
     
     E --> J[删除文件<br/>重新生成]
     
@@ -226,7 +226,7 @@ for offline reconciliation and sharing with the finance department.
 ```markdown
 # 场景：specs 里的 scenarios 不够完整
 
-# 在 Cline 里说：
+# 在 Claude Code 里说：
 "请帮我在 specs/orders/spec.md 的 'Order CSV Export' requirement 里，
 添加以下 scenarios：
 1. 导出空列表时的处理
@@ -235,7 +235,7 @@ for offline reconciliation and sharing with the finance department.
 ```
 
 **完整操作步骤**：
-1. 在 Cline 的聊天框里输入上述指令
+1. 在 Claude Code 的聊天框里输入上述指令
 2. AI 会读取当前的 spec 文件
 3. AI 会分析并添加新的 scenarios
 4. AI 会保持 delta spec 格式（ADDED/MODIFIED/REMOVED）
@@ -265,7 +265,7 @@ for offline reconciliation and sharing with the finance department.
 # 步骤 1：删除文件
 rm openspec/changes/add-csv-export/proposal.md
 
-# 步骤 2：在 Cline 里重新生成
+# 步骤 2：在 Claude Code 里重新生成
 /opsx:continue
 ```
 
@@ -276,7 +276,7 @@ rm openspec/changes/add-csv-export/proposal.md
 # 步骤 1：删除文件
 rm openspec/changes/add-csv-export/proposal.md
 
-# 步骤 2：在 Cline 里说：
+# 步骤 2：在 Claude Code 里说：
 "请重新生成 proposal.md，需求是：[描述你的需求]"
 
 # 或者，如果想重新开始整个 change
@@ -436,7 +436,7 @@ openspec validate
 
 **方式 2：让 AI 帮你改**
 ```markdown
-# 在 Cline 里说：
+# 在 Claude Code 里说：
 "请帮我更新 openspec/config.yaml，在 context 里添加：
 - API: tRPC (type-safe RPC)
 - Rules: All API calls must use tRPC procedures, no direct fetch"
@@ -474,9 +474,9 @@ schema: spec-driven
 ```
 
 **注意**：
-- OpenSpec 目前只支持 `spec-driven` schema
-- 如果你需要不同的 artifact 结构，可以通过自定义 schema 实现
-- 运行 `openspec schemas` 查看可用的 schema
+- OpenSpec 支持 package、user、project 三层 schema 来源
+- 如果你需要不同的 artifact 结构，优先在项目内创建 `openspec/schemas/<name>/`
+- 运行 `openspec schemas` 查看可用 schema，运行 `openspec schema which <name>` 查看解析来源
 
 **如何验证修改是否生效**：
 ```bash
@@ -661,7 +661,7 @@ which is error-prone and time-consuming (30+ minutes per report).
 
 **Custom Profile**：
 ```markdown
-# 在 Cline 里说：
+# 在 Claude Code 里说：
 "请帮我扩展 proposal.md 的 Why 部分，补充以下信息：
 - 用户是客服团队
 - 用途是对账、报告、调查投诉
@@ -670,7 +670,7 @@ which is error-prone and time-consuming (30+ minutes per report).
 
 **Core Profile（相同）**：
 ```markdown
-# 在 Cline 里说（操作相同）：
+# 在 Claude Code 里说（操作相同）：
 "请帮我扩展 proposal.md 的 Why 部分，补充以下信息：
 - 用户是客服团队
 - 用途是对账、报告、调查投诉
@@ -678,7 +678,7 @@ which is error-prone and time-consuming (30+ minutes per report).
 ```
 
 **完整操作步骤**：
-1. 在 Cline 的聊天框里输入上述指令
+1. 在 Claude Code 的聊天框里输入上述指令
 2. AI 会读取当前的 proposal.md
 3. AI 会分析并扩展 Why 部分
 4. 检查 AI 的修改是否符合预期
@@ -787,7 +787,7 @@ vim openspec/changes/add-csv-export/proposal.md
 
 **方式 2：让 AI 帮你更新**
 ```markdown
-# 在 Cline 里说：
+# 在 Claude Code 里说：
 "我发现同步导出会阻塞 UI，请帮我更新 proposal.md 的 Approach，
 改成异步后台任务，包括：
 - 后台任务生成 CSV
@@ -911,7 +911,7 @@ Use streaming CSV generation with Papa Parse library.
 # 1. 删除文件
 rm openspec/changes/add-csv-export/proposal.md
 
-# 2. 在 Cline 里重新生成
+# 2. 在 Claude Code 里重新生成
 /opsx:continue
 ```
 
@@ -920,11 +920,10 @@ rm openspec/changes/add-csv-export/proposal.md
 # 1. 删除文件
 rm openspec/changes/add-csv-export/proposal.md
 
-# 2. 在 Cline 里说：
+# 2. 在 Claude Code 里说：
 "请重新生成 proposal.md，需求是：[详细描述你的需求]"
 
 # 或者，重新开始整个 change
 rm -rf openspec/changes/add-csv-export/
 /opsx:propose add-csv-export
 ```
-

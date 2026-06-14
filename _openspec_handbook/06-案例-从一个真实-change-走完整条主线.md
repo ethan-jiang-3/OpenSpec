@@ -642,11 +642,11 @@ openspec/
 - schema 在决定这次 change 的 artifact 结构
 - `.openspec.yaml` 可能记录 change 绑定的 schema
 
-### 对应 `04` Cline 专章
+### 对应 `04` Claude Code 专章
 
-如果你是在 Cline 中敲命令，那么：
+如果你是在 Claude Code 中敲命令，那么：
 
-- `.cline/` 和 `.clinerules/` 是入口层
+- `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
 - 真正的项目事实仍然沉淀在 `openspec/`
 
 ### 对应 `05` 生命周期思想篇
@@ -773,7 +773,7 @@ AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和
 
 - 宿主 agent 到底怎么知道该生成哪个 artifact
 - `openspec instructions --json` 究竟提供什么
-- Cline/Claude 为什么既有 skill 又有 command
+- Claude Code 为什么既有 skill 又有 command
 
 再看：
 

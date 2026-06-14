@@ -52,7 +52,7 @@ feature/csv-export     ←→  changes/add-csv-export/
 # 1. 创建 Git 分支
 git checkout -b feature/add-dark-mode
 
-# 2. 在 Cline 里发起 change
+# 2. 在 Claude Code 里发起 change
 /opsx:propose add-dark-mode
 
 # 3. 实现功能

@@ -10,7 +10,7 @@
 | 01 | `01-初级-先把-openspec-用起来.md` | 先会用 |
 | 02 | `02-中级-把核心概念真正串起来.md` | 建立心智模型 |
 | 03 | `03-高级-config-schema-与项目边界.md` | 配置和结构边界 |
-| 04 | `04-高级-cline-里的-openspec-到底怎么落地.md` | 看工具落地 |
+| 04 | `04-高级-claude-code-里的-openspec-到底怎么落地.md` | 看 Claude Code 落地 |
 | 05 | `05-高级-openspec-的软件开发生命周期思想.md` | SDLC 思想 |
 | 06 | `06-案例-从一个真实-change-走完整条主线.md` | brownfield 案例 |
 | 07 | `07-案例-从零开始设计一个较复杂系统.md` | greenfield 案例 |

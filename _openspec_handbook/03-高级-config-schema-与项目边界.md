@@ -243,7 +243,7 @@ profile 和 schema 不是一回事。
 profile 管的是：
 
 - 你装哪些 workflow 命令
-- 默认是 core 4 个，还是更多扩展动作
+- 默认是 core 5 个，还是更多扩展动作
 
 ### schema 管什么
 
@@ -313,7 +313,7 @@ schema 管的是：
 
 当你已经知道项目事实层是什么，只是想研究：
 
-- Cline/Claude 到底怎么调用它
+- Claude Code 等宿主 agent 到底怎么调用它
 - skills 和 commands 各扮演什么角色
 
 这时才该进入下一篇。
@@ -324,13 +324,13 @@ schema 管的是：
 
 如果你关心的是：
 
-- "只装 Cline + OpenSpec 时，项目长什么样？"
-- "`.cline/` 和 `openspec/` 到底谁是事实层？"
-- "skill / workflow / CLI 在 Cline 里怎么拼起来？"
+- "只装 Claude Code + OpenSpec 时，项目长什么样？"
+- "`.claude/` 和 `openspec/` 到底谁是事实层？"
+- "skill / command / CLI 在 Claude Code 里怎么拼起来？"
 
 下一篇看：
 
-- [04-高级-cline-里的-openspec-到底怎么落地.md](04-高级-cline-里的-openspec-到底怎么落地.md)
+- [04-高级-claude-code-里的-openspec-到底怎么落地.md](04-高级-claude-code-里的-openspec-到底怎么落地.md)
 
 ---
 

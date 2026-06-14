@@ -187,10 +187,10 @@ specs/
 3. 运行 `openspec update` 确保 skills/commands 是最新的
 4. 重启 AI 工具，就可以用 `/opsx:propose` 等命令了
 
-### Q27: 为什么有 `.cline/` 和 `openspec/` 两个目录？
+### Q27: 为什么有 `.claude/` 和 `openspec/` 两个目录？
 **A**: 
 - `openspec/`：项目事实层（specs/changes/config）
-- `.cline/`（或其他工具目录）：工具入口层（skills/workflows）
+- `.claude/`（或其他工具目录）：工具入口层（skills/commands）
 - 这样设计是为了让 OpenSpec 不被绑死在某个工具上
 
 ---

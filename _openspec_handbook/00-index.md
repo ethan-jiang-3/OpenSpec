@@ -43,7 +43,7 @@
 1. **初级**：先把 OpenSpec 用起来，知道日常怎么走
 2. **中级**：把 `specs`、`changes`、artifact、delta spec 这些概念真正连起来
 3. **高级**：再理解 `config.yaml`、`schema`、`.openspec.yaml`、profile、工具集成
-4. **专题**：最后看 Cline 这种具体宿主里到底发生了什么
+4. **专题**：最后看 Claude Code 这种具体宿主里到底发生了什么
 5. **生命周期思想**：再把 OpenSpec 对软件开发生命周期的整体理解讲透
 
 ### B. 面向机器的附录
@@ -71,7 +71,7 @@ graph LR
 
 ```mermaid
 graph LR
-    A[01-初级] --> B[02-中级] --> C[03-高级<br/>config/schema] --> D[04-高级<br/>cline集成]
+    A[01-初级] --> B[02-中级] --> C[03-高级<br/>config/schema] --> D[04-高级<br/>Claude Code集成]
     D --> E[05-高级<br/>SDLC思想] --> F[06-案例<br/>brownfield]
     F --> G[07-案例<br/>greenfield] --> H[08-高级<br/>全局约束] --> I[09-高级<br/>config实战]
 ```
@@ -119,7 +119,7 @@ graph LR
 |------|------|---------|
 | `/opsx:propose <name>` | 发起一个 change，生成 artifacts | 开始一个新功能或修复 |
 | `/opsx:explore` | 探索/调研模式，不生成 artifacts | 了解现有代码、调研技术方案 |
-| `/opsx:apply [name]` | 按 tasks.md 实现代码 | 开始写代码 |
+| `/opsx:apply [name]` | 按 tasks 执行实现；也可用于 Markdown/skill/command 等非代码产物 | 开始实施 change |
 | `/opsx:sync` | 同步 delta spec 到主 spec（v1.4.0 新增纳入 core） | 多人协作时合并 spec 变更 |
 | `/opsx:archive [name]` | 收尾，合并 delta spec 回基线 | 功能完成后归档 |
 
@@ -163,7 +163,7 @@ graph LR
 | [01-初级-先把-openspec-用起来.md](01-初级-先把-openspec-用起来.md) | 先会用 | 第一次接触 OpenSpec 的人 |
 | [02-中级-把核心概念真正串起来.md](02-中级-把核心概念真正串起来.md) | 建立正确心智模型 | 已经知道命令，但理解还发散的人 |
 | [03-高级-config-schema-与项目边界.md](03-高级-config-schema-与项目边界.md) | 看清配置和结构边界 | 想定制或深入理解的人 |
-| [04-高级-cline-里的-openspec-到底怎么落地.md](04-高级-cline-里的-openspec-到底怎么落地.md) | 看工具落地 | 想把 OpenSpec 放进 Cline 工作流的人 |
+| [04-高级-claude-code-里的-openspec-到底怎么落地.md](04-高级-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
 | [05-高级-openspec-的软件开发生命周期思想.md](05-高级-openspec-的软件开发生命周期思想.md) | 理解 OpenSpec 怎样看待软件开发生命周期 | 想真正吃透这套方法论的人 |
 | [06-案例-从一个真实-change-走完整条主线.md](06-案例-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
 | [07-案例-从零开始设计一个较复杂系统.md](07-案例-从零开始设计一个较复杂系统.md) | 看 greenfield 复杂系统怎样建立第一版正式基线 | 想理解从零构建时 OpenSpec 怎么切系统的人 |
@@ -195,6 +195,6 @@ graph LR
 
 ### 3. 最后才讲"为什么会这样设计"
 
-所以 `schema`、`config.yaml`、Cline 集成、生命周期思想、agent protocol，都被压到后面。
+所以 `schema`、`config.yaml`、Claude Code 集成、生命周期思想、agent protocol，都被压到后面。
 
 这是故意的，不是遗漏。
