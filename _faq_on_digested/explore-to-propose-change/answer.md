@@ -53,7 +53,12 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 | EXP-10 | propose 多个 | 当能力边界、风险类型、交付节奏或 owning repo 不同，先拆成多个 changes。 |
 | EXP-11 | 不创建 change | 如果只是理解现状、一次性调查或变化太小，就不给 OpenSpec 制造新 change。 |
 
-EXP-04 的细节单独展开在 [`answer-exp04.md`](answer-exp04.md)：它解释 skill prompt、`openspec list/status/instructions`、`artifactPaths`、`dependencies`、`actionContext` 和 coding agent 读文件工具之间怎么配合。
+关键节点的细节单独展开在：
+
+- [`answer-exp04.md`](answer-exp04.md) — OpenSpec 状态调查怎么让 agent 知道要读哪些 planning artifacts。
+- [`answer-exp05.md`](answer-exp05.md) — 真实项目调查怎么从用户词汇、artifacts、代码入口、测试和 patterns 找到 implementation context。
+- [`answer-exp06.md`](answer-exp06.md) — OpenSpec 状态和代码事实怎么合成 pre-proposal 问题地图。
+- [`answer-exp07-11.md`](answer-exp07-11.md) — 最终怎么分流到继续 Explore、更新已有 change、propose 一个、propose 多个或不创建 change。
 
 ## Step 1：先接住用户意图，但不要立刻命名 change
 
@@ -230,6 +235,8 @@ openspec/changes/     -> 没有 active change
 
 Explore 模板明确要求：相关时要探索真实代码库，不要只理论化。
 
+这一节点的细节见 [`answer-exp05.md`](answer-exp05.md)：它专门解释 agent 怎么从用户词汇、OpenSpec artifacts、README/docs、入口文件、测试、数据模型和 `rg` 搜索找到真实项目事实。
+
 这一步通常要查：
 
 | 要查的事实 | 为什么影响 change 边界 |
@@ -256,6 +263,8 @@ C. permission check 分散在多个 route
 ## Step 6：建立问题地图
 
 经过 OpenSpec 状态、specs 和代码调查后，Explore 应该把材料收敛成一个问题地图：
+
+这一节点的细节见 [`answer-exp06.md`](answer-exp06.md)：它把 current state、target state、gap、impact surface、risks、unknowns 和 candidate boundaries 组织成 pre-proposal boundary map。
 
 ```text
 当前状态：
@@ -284,6 +293,8 @@ C. permission check 分散在多个 route
 ## Step 7：做分流判断
 
 Explore 结束时不一定进入 propose。更准确的分流如下：
+
+EXP-07 到 EXP-11 的细节见 [`answer-exp07-11.md`](answer-exp07-11.md)：它专门解释继续 Explore、更新已有 change、propose 一个、propose 多个、不创建 change 的判断标准和推荐输出格式。
 
 | 结论 | 什么时候成立 | 下一步 |
 |---|---|---|
@@ -451,7 +462,7 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 
 ## 参考来源
 
-源码引用基于 commit `2fd20d8`：
+源码引用基于 commit `970cb44`：
 
 | 来源 | 用到的结论 |
 |---|---|
