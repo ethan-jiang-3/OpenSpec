@@ -6,7 +6,7 @@
 
 ## 1. schema.yaml 即源码
 
-`schemas/spec-driven/schema.yaml` —— 154 行 —— 定义了 spec-driven 工作流的全部行为。它是 OpenSpec "meta" 本质的集中体现：
+`schemas/spec-driven/schema.yaml` —— 153 行 —— 定义了 spec-driven 工作流的全部行为。它是 OpenSpec "meta" 本质的集中体现：
 
 - **artifact 是什么、先后顺序谁说了算** → schema
 - **每个 artifact 应该包含什么内容** → schema 的 `instruction` 字段
@@ -14,7 +14,7 @@
 - **什么时候允许实施** → schema 的 `apply.requires`
 - **实施进度怎么跟踪** → schema 的 `apply.tracks`
 
-改变这 154 行 YAML（以及 4 个模板文件），就能改变整套工作流的行为。**TypeScript 代码一行都不需要动**。
+改变这 153 行 YAML（以及 4 个模板文件），就能改变整套工作流的行为。**TypeScript 代码一行都不需要动**。
 
 这就是 schema 系统的设计目标 —— 它被描述为 "artifact DAG definition file"（`_digested/schema/01-schema-到底是什么.md`）。它不定义"怎么实现"（那是 AI agent 的事），只定义"什么的什么东西在什么条件下产生"。
 
@@ -142,7 +142,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
 
 ## 4. 四层注入的精确代码路径
 
-### 4.1 loadChangeContext (`instruction-loader.ts:227-256`)
+### 4.1 loadChangeContext (`instruction-loader.ts:227-257`)
 
 ```
 1. 计算 changeDir

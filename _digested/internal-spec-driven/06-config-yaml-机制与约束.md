@@ -25,31 +25,42 @@
 
 ```typescript
 const ProjectConfigSchema = z.object({
-  schema: z.string().min(1),                    // 必填：默认使用的 schema 名
-  context: z.string().max(51200).optional(),     // 可选：项目背景，最大 50KB
-  rules: z.record(                              // 可选：按 artifact ID 的规则
-    z.string(),
-    z.array(z.string())
-  ).optional(),
+  schema: z
+    .string()
+    .min(1)
+    .describe('The workflow schema to use (e.g., "spec-driven")'),
+  context: z
+    .string()
+    .optional()
+    .describe('Project context injected into all artifact instructions'),
+  rules: z
+    .record(
+      z.string(),
+      z.array(z.string())
+    )
+    .optional()
+    .describe('Per-artifact rules, keyed by artifact ID'),
 });
 ```
+
+> **注意**：Zod schema 中 `context` 字段**只有 `z.string().optional()`，没有 `.max(...)` 约束**。50KB 的长度上限是**在 `readProjectConfig()` 运行时手动检查**的（`project-config.ts:102-103`，用 `Buffer.byteLength` 比对 `MAX_CONTEXT_SIZE`），不在 Zod 类型定义里。Zod schema 在这里主要起"类型推导 + 文档"作用；真正的逐字段容错解析逻辑写在 `readProjectConfig()` 函数体中，而非依赖 `ProjectConfigSchema.safeParse()` 整体校验。
 
 ### 字段约束表
 
 | 字段 | 必填 | 类型 | 约束 | 默认值 |
 |------|------|------|------|--------|
 | `schema` | 是 | `string` | 非空 | 无（`openspec init` 自动写入 `spec-driven`） |
-| `context` | 否 | `string` | 最大 **50KB**（51,200 字节） | 无 |
+| `context` | 否 | `string` | 最大 **50KB**（51,200 字节，运行时检查） | 无 |
 | `rules` | 否 | `Record<string, string[]>` | key 应为合法的 artifact ID | 无 |
 
 ### 50KB 限制
 
 `project-config.ts:45`：
 ```typescript
-export const MAX_CONTEXT_LENGTH = 50 * 1024; // 50KB
+const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
 ```
 
-如果 `context` 字段超过 50KB，**整个 context 被静默忽略**（产生一个 warning）。不会截断 —— 全有或全无。
+如果 `context` 字段超过 50KB，**该 context 字段被忽略并打印 warning**（不截断，全有或全无）。注意：只是忽略 `context` 字段，**不影响 config 的其他字段** —— `schema` 和 `rules` 照常生效（`project-config.ts:101-110`）。
 
 ### rules key 验证
 
@@ -305,18 +316,18 @@ rules:
 
 ### 误用 4：context 超过 50KB
 
-超过后**静默忽略**（全有或全无）。如果你发现 agent 好像看不到你的 context，检查文件大小。
+超过后**该字段被忽略并 warning**（全有或全无）。如果你发现 agent 好像看不到你的 context，检查文件大小。
 
 ---
 
 ## 8. config.yaml 的解析容错策略
 
-`readProjectConfig()` (`project-config.ts`) 的设计是 **fail-open**：
+`readProjectConfig()` (`project-config.ts`) 的设计是 **逐字段 fail-open**（field-by-field resilient parsing），而非用 `ProjectConfigSchema.safeParse()` 做整体校验：
 
-1. 文件不存在 → 返回空 `{}`
-2. YAML 解析失败 → 报错但不阻断（调用方 catch）
-3. `schema` 字段缺失 → 使用默认值 `'spec-driven'`
-4. `context` 超过 50KB → 忽略并 warning
+1. 文件不存在 → 返回 `null`（`project-config.ts:72`）
+2. YAML 解析失败 → warn 并返回 `null`（catch 块，`:157-160`）
+3. `schema` 字段缺失或无效 → warn，返回的 config 中**不含 `schema` 字段**。**默认值 `'spec-driven'` 的回退发生在消费端** `resolveSchemaForChange`（`change-metadata.ts`），不在 `readProjectConfig` 内部
+4. `context` 超过 50KB → 忽略 `context` 字段并 warning（其他字段不受影响）
 5. `context` 不是 string → 忽略
 6. `rules` 不是合法 record → 忽略
 7. `rules` 中有未知 artifact ID → warning，不阻断

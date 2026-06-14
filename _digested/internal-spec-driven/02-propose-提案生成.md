@@ -259,11 +259,15 @@ TO: ### Requirement: <new-name>
 
 agent 不是随意创建 artifact 的。顺序由 `ArtifactGraph.getBuildOrder()` (`src/core/artifact-graph/graph.ts:72-113`) 保证 —— 用 **Kahn 算法**（拓扑排序）：
 
-1. 计算每个节点的入度（= `requires` 数组中未完成依赖的数量）
-2. 入度为 0 的节点进入 ready 队列（排序以保证确定性）
-3. 逐一弹出 ready 节点，将其后继节点的入度减 1
-4. 入度变为 0 的后继节点进入 ready 队列
-5. 重复直到所有节点排序完成
+1. 计算每个节点的初始入度 = **`requires` 数组的完整长度**（不考虑完成状态；这是静态 DAG 的拓扑排序，与运行时哪些 artifact 已完成无关）
+2. 入度为 0 的节点进入 ready 队列（排序以保证确定性输出）
+3. 弹出 ready 队列中第一个节点，加入 `buildOrder`
+4. 遍历所有"requires 中包含该节点"的后继，后继入度减 1；若后继入度变为 0，加入 ready 队列
+5. 重复直到 ready 队列为空
+
+> **注意区分两个概念**：
+> - `getBuildOrder()`（这里描述的 Kahn 算法）计算的是**静态拓扑序**，入度 = `requires.length`，与任何 `completed` 集合无关。它用于决定"理想创建顺序"。
+> - 运行时判断"现在哪些 artifact 可以创建"的是 `getNextArtifacts(completed)`（`graph.ts:118-134`），它检查的是 `requires` 中**未完成**的依赖是否为空。`getBlocked()`（`graph.ts:151-166`）返回每个 blocked artifact 的未满足依赖列表，用的才是 `requires.filter(req => !completed.has(req))`。不要把这三者混淆。
 
 对于 spec-driven：
 ```

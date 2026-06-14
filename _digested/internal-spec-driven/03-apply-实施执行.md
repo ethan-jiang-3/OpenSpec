@@ -104,7 +104,7 @@ if (checkboxMatch) {
 
 ## 4. 完整实施流程（7 步）
 
-来自 `src/core/templates/workflows/apply-change.ts:13-160`。
+来自 `src/core/templates/workflows/apply-change.ts:13-161`（skill 模板 `instructions` 字段；编号步骤实际位于 `:19 / :28 / :37 / :56 / :63 / :71 / :86`）。
 
 ### Step 1：选定 change
 
@@ -134,7 +134,7 @@ openspec instructions apply --change "<name>" --json
 
 | state | agent 行为 |
 |-------|----------|
-| `"blocked"` | 显示哪些 artifact 缺失，建议用 `/opsx:continue` 补全 |
+| `"blocked"` | 显示哪些 artifact 缺失，建议用 `/opsx:propose` 回去补全缺失的 artifact（`/opsx:continue` 是另一类辅助 workflow，用于"继续上次未完成的 change"，不负责补全 artifact） |
 | `"all_done"` | 祝贺，建议 `/opsx:archive` |
 | `"ready"` | 继续到 Step 4 |
 
@@ -176,7 +176,7 @@ for each pending task:
 
 ## 5. 实施中的流体工作流理念
 
-apply 的 skill 模板 (`apply-change.ts:157-160`) 末尾有一段关键声明：
+apply 的 skill 模板 (`apply-change.ts:155-160`) 末尾有一段关键声明：
 
 > "This skill supports the 'actions on a change' model:
 > - Can be invoked anytime: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions

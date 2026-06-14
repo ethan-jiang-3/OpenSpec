@@ -6,7 +6,7 @@ archive 是整个 change 生命周期的终点。它做三件事：验证 change
 
 ## 1. 三阶段总览
 
-来自 `src/core/archive.ts:50-288`（`ArchiveCommand.execute()`）：
+来自 `src/core/archive.ts:51-288`（`ArchiveCommand.execute()`）。逻辑上可分为三大阶段（validate → merge → move），但代码内部实际是**四步**顺序执行：① 结构/delta 验证（96-151）→ ② tasks 完成检查（174-194）→ ③ delta spec 合并写入（196-265，调用 `buildUpdatedSpec`/`writeUpdatedSpec`）→ ④ 归档移动（267-285）。下面的图示把 ② 归入 Validate 的范畴，按逻辑阶段呈现：
 
 ```
 Phase 1: Validate
@@ -102,7 +102,7 @@ interface DeltaPlan {
 
 ### 3.3 预验证（合并前）
 
-`specs-apply.ts:113-200`，在修改任何文件之前先做五重检查：
+`specs-apply.ts:113-200`，在修改任何文件之前先做六重检查（前五项是"重复/冲突"类，最后一项是"空 delta"防护）：
 
 1. **section 内重复**：同一个 ADDED section 内不能有两个同名 requirement；MODIFIED/REMOVED/RENAMED 同理
 2. **跨 section 冲突**：同一个 requirement 名不能同时出现在 ADDED 和 MODIFIED 中（或任何其他组合）
