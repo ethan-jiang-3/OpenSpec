@@ -40,7 +40,7 @@ _faq_on_digested/
 
 ```markdown
 ../_digested/spec_cli/01-human-facing-cli.md
-../_spec_full_content/02-中级-把核心概念真正串起来.md
+../_openspec_handbook/02-中级-把核心概念真正串起来.md
 ```
 
 引用源码时标注 commit hash，避免链接随时间失效。

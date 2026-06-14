@@ -1,4 +1,4 @@
-# _spec_full_content — OpenSpec 应用指南
+# _openspec_handbook — OpenSpec 学习手册
 
 这个目录是对 `_digested/` 源码消化产物的**应用层输出**：按认知层次教你如何用好 OpenSpec，而不是剖析源码机制。
 

@@ -1,13 +1,13 @@
 # _digested — OpenSpec 源码消化
 
-这个目录是对 OpenSpec 源码的**消化分析**：从 TypeScript 源码出发，精确理解机制、架构和设计意图。它不是用户指南——想学怎么用 OpenSpec 去 `_spec_full_content/`。
+这个目录是对 OpenSpec 源码的**消化分析**：从 TypeScript 源码出发，精确理解机制、架构和设计意图。它不是用户指南——想学怎么用 OpenSpec 去 `_openspec_handbook/`。
 
 ## 与同级目录的关系
 
 | 目录 | 本质 | 受众 |
 |------|------|------|
 | **`_digested/`** | 源码消化，机制剖析 | 想彻底搞懂背后发生了什么的人 |
-| `_spec_full_content/` | 应用指南，按认知层次教你怎么用 | 想用好 OpenSpec 的开发者 |
+| `_openspec_handbook/` | 按认知层次组织的学习手册 | 想用好 OpenSpec 的开发者 |
 | `_faq_on_digested/` | 跨消化材料的二次研究 | 我自己（产出者） |
 | `_digested_v1.3/` | v1.3.0 时代的初代消化材料（已归档） | 历史参考 |
 
