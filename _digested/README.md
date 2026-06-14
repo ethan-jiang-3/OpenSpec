@@ -15,6 +15,7 @@
 
 | 目录 | 聚焦 | 一句话 |
 |------|------|--------|
+| `system/` | 总体系统专题 | repo-local planning、workspace、context store、tool delivery、agent runtime API 的整体模型 |
 | `spec_cli/` | CLI 架构解读 | CLI 作为"本地运行时 API"的设计意图和命令 IO 模型 |
 | `schema/` | schema 系统专题 | schema 概念、内置 schema 详解、自定义实战 |
 | `internal-spec-driven/` | 核心命令源码剖析 | spec-driven 下 explore/propose/apply/archive 的精确机制 |
@@ -22,7 +23,10 @@
 
 ## 阅读路径
 
+- **想先建立整体系统模型** → `system/`，从 `00-map.md` 开始
 - **只想理解 CLI 设计** → `spec_cli/`，从 `00-map.md` 开始
 - **想自定义工作流** → `schema/`，从 `00-map.md` 开始
 - **想彻底搞懂每条命令** → `internal-spec-driven/`，从 `00-四条命令的共有机制.md` 开始
 - **想跟踪上游变更** → `_change_log/`
+
+`_digested_v1.3/` 只作为历史覆盖清单和旧版思路参考；当前机制结论以 `_digested/` 内这些专题和当前源码为准。
