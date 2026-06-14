@@ -1,4 +1,4 @@
-# 12 · 实战：多人协作与 Git 工作流
+# 15 · 实战：多人协作与 Git 工作流
 
 > 这一篇专门讲多人团队使用 OpenSpec + Git 时的最佳实践和协作流程。
 
@@ -92,8 +92,8 @@ git push
 
 ```mermaid
 graph TB
-    subgraph 正确做法 ✅
-    A1[main 分支] --> B1[Alice: feature/dark-mode]
+    subgraph 正确做法
+    A1["main 分支"] --> B1[Alice: feature/dark-mode]
     A1 --> C1[Bob: feature/csv-export]
     B1 --> D1[修改 specs/ui/spec.md]
     C1 --> E1[修改 specs/orders/spec.md]
@@ -104,9 +104,13 @@ graph TB
     H1 --> J1[main 分支更新]
     I1 --> J1
     end
-    
-    subgraph 错误做法 ❌
-    A2[main 分支] --> B2[Alice: feature/dark-mode]
+    style J1 fill:#ccffcc,stroke:#00ff00
+```
+
+```mermaid
+graph TB    
+    subgraph 错误做法
+    A2["main 分支"] --> B2[Alice: feature/dark-mode]
     A2 --> C2[Bob: feature/csv-export]
     B2 --> D2[修改 specs/orders/spec.md]
     C2 --> E2[修改 specs/orders/spec.md]
@@ -115,7 +119,6 @@ graph TB
     end
     
     style F2 fill:#ffcccc,stroke:#ff0000
-    style J1 fill:#ccffcc,stroke:#00ff00
 ```
 
 ---
@@ -492,14 +495,7 @@ graph TD
     style H fill:#ffcccc,stroke:#ff0000
 ```
 
-**工具辅助**（未来功能）：
-```bash
-# 查看 change 依赖图
-openspec change graph
-
-# 查看哪些 change 可以并行
-openspec change next
-```
+**当前做法**：OpenSpec 目前不会自动计算 change 依赖图。团队要把依赖关系写进 `proposal.md`、PR 描述或项目看板里，并在每天同步时确认谁在改哪个 spec。
 
 ### Q4: 怎么处理紧急 bugfix？
 
@@ -640,49 +636,34 @@ graph LR
 
 **注意**：Change Stacking 是一个高级工作流模式，目前需要手动管理依赖关系。
 
-OpenSpec 正在开发更强大的 change 依赖管理功能：
+当前更稳妥的做法，是把依赖关系写在人能看到、review 能检查的位置。
 
-### 声明式依赖
+### 在 proposal 里声明依赖
 
-在 change 的 metadata 里声明依赖：
+```markdown
+## Dependencies
+- `add-auth-foundation` must be archived first.
+- This change assumes `specs/auth/spec.md` already contains authentication requirements.
 
-```yaml
-# openspec/changes/add-authorization/.openspec.yaml
-schema: spec-driven
-dependsOn:
-  - add-auth-foundation
-provides:
-  - authorization-check
-requires:
-  - authentication-service
+## Conflicts
+- Coordinate with `add-oauth-support` if both changes modify login or session behavior.
 ```
 
-### 自动依赖检查
+### 在 PR 或看板里维护顺序
 
-```bash
-# 检查依赖关系
-openspec change graph
+```markdown
+Change order:
+1. add-auth-foundation
+2. add-authorization
+3. add-role-management
 
-# 输出：
-# add-auth-foundation (archived)
-#   └── add-authorization (in progress)
-#         └── add-role-management (not started)
-
-# 建议下一步
-openspec change next
-# 输出：Ready to work on: add-authorization
+Blocking rule:
+- Do not start `add-authorization` until `add-auth-foundation` is archived on main.
 ```
 
-### 自动冲突检测
+### 用 review 检查冲突
 
-```bash
-# 验证 change
-openspec validate
-
-# 输出：
-# ⚠️  Warning: add-authorization and add-oauth-support both touch specs/auth/spec.md
-# ℹ️  Consider coordinating with the other change owner
-```
+`openspec validate` 能检查结构和格式，但它不会替你判断两个并行 change 是否语义冲突。review 时要显式看两件事：这次 delta spec 改了哪些 requirement，以及这些 requirement 是否正被另一个 active change 修改。
 
 ---
 
@@ -784,7 +765,7 @@ mindmap
     工具使用
       使用 PR template
       建立命名规范
-      使用 change graph（未来）
+      用看板维护依赖顺序
 ```
 
 ### 文字版黄金法则
@@ -805,10 +786,10 @@ mindmap
 
 如果你想深入了解：
 - **Git 冲突解决**：参考 Git 官方文档
-- **Change 依赖管理**：关注 OpenSpec 的 change-stacking 功能
+- **Change 依赖管理**：在 proposal、PR 和看板里维护显式依赖
 - **团队规范**：根据团队情况定制 PR template 和命名规范
 
-如果遇到具体问题，参考 [99-FAQ-常见问题.md](99-FAQ-常见问题.md)。
+如果遇到具体问题，回到 `99` FAQ 查常见问法。
 
 ---
 
@@ -832,4 +813,4 @@ Workspace 层的协作原则与 repo 层类似但有区别：
 - **Workspace 不 archive** — 实现完成后，各 repo 各自 archive 自己的 change
 - **context store 提供团队共享的 initiative 文件**（requirements、design、decisions），作为 workspace 规划的输入
 
-详细见 [07-高级-workspace-跨仓库规划-v1.4.0.md](07-高级-workspace-跨仓库规划-v1.4.0.md)。
+详细机制可以回到 `07` workspace 篇统一看。

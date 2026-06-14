@@ -7,7 +7,7 @@
 ## 先明确三方角色
 
 ```text
-用户  ←→  宿主 Agent（Cline / Claude / Cursor）  ←→  OpenSpec CLI
+用户  ←→  宿主 Agent（Claude Code / Cursor / Codex 等）  ←→  OpenSpec CLI
 ```
 
 三者分工是：

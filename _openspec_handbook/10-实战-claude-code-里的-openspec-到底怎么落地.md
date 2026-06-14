@@ -1,4 +1,4 @@
-# 13 · 实战：Claude Code 里的 OpenSpec 到底怎么落地
+# 10 · 实战：Claude Code 里的 OpenSpec 到底怎么落地
 
 > 这一篇回答的是"放进 Claude Code 以后，它到底长什么样"。
 
@@ -288,7 +288,7 @@ Claude Code 下通常会同时投递 skills 和 commands。
 
 ---
 
-## 下一步更适合先看什么
+## 下一步更适合看什么
 
 如果你现在已经分清了：
 
@@ -296,9 +296,11 @@ Claude Code 下通常会同时投递 skills 和 commands。
 - `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
 - Claude Code 只是宿主，不是 OpenSpec 本体
 
-更建议先看"OpenSpec 对软件开发生命周期到底怎么理解"，也就是：
+如果你还没有读过高级主线，可以回看 `03` 和 `04`，把方法论和边界补厚。
 
-- [03-高级-openspec-的软件开发生命周期思想.md](03-高级-openspec-的软件开发生命周期思想.md)
+如果你已经在实战区继续往后读，下一篇更适合看一个完整 change 怎样从 propose 走到 archive：
+
+接着读 `11` 即可。
 
 ---
 
@@ -310,6 +312,4 @@ Claude Code 下通常会同时投递 skills 和 commands。
 - `instructions --json` 里有什么
 - skill、command、workflow 三者如何对应
 
-这时再去看附录：
-
-- [90-附录-给机器看的-agent-协议.md](90-附录-给机器看的-agent-协议.md)
+这时再去看 `90` 附录。

@@ -885,10 +885,9 @@ rules:
   design:
     - Organize code by domain capability first
     - Avoid cross-module imports that bypass published interfaces
+    - Design should explain rollout or migration risk for existing workflow changes
   specs:
     - Role-sensitive behavior changes should include explicit scenarios in specs
-  design:
-    - Design should explain rollout or migration risk for existing workflow changes
   tasks:
     - Approval logic should be developed test-first when feasible
     - Approval-related changes must preserve authorization regression coverage
@@ -946,10 +945,4 @@ rules:
 - 多仓库场景下，单个 repo 的 `config.yaml` 为什么还不够
 - workspace 怎样在 repo-local OpenSpec 之上提供本地协调视图
 
-下一篇看：
-
-- [07-高级-workspace-跨仓库规划-v1.4.0.md](07-高级-workspace-跨仓库规划-v1.4.0.md)
-
-如果你准备进入实战区，再看：
-
-- [10-实战-从一个真实-change-走完整条主线.md](10-实战-从一个真实-change-走完整条主线.md)
+下一篇看 `07`，进入 workspace 跨仓库规划。

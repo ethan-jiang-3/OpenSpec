@@ -1,4 +1,4 @@
-# 10 · 实战：从一个真实 change 走完整条主线
+# 11 · 实战：从一个真实 change 走完整条主线
 
 > 前面的几篇已经把概念一层层拆开了。
 > 这一篇不再单独讲概念，而是用一个完整案例，把 `propose → apply → archive` 整条线真正走一遍。
@@ -8,8 +8,8 @@
 ## 开始前的准备：这个案例假设你已经...
 
 **必须先读过的**：
-- [01-初级-先把-openspec-用起来.md](01-初级-先把-openspec-用起来.md) - 知道三个基本命令
-- [02-中级-把核心概念真正串起来.md](02-中级-把核心概念真正串起来.md) - 理解 specs/changes/artifact/delta spec
+- `01` 初级篇 - 知道几个基本命令
+- `02` 中级篇 - 理解 specs/changes/artifact/delta spec
 
 **如果没读过上面两篇**：
 - 你会不理解"为什么要有这么多文件"
@@ -634,22 +634,7 @@ openspec/
 - `artifact` 是 change 内部的四类工件
 - delta spec 是"增量变化"表达层
 
-### 对应 `03` 高级边界篇
-
-虽然这次案例没重点展开，但它背后默认已经在工作：
-
-- `config.yaml` 可能在注入项目 context
-- schema 在决定这次 change 的 artifact 结构
-- `.openspec.yaml` 可能记录 change 绑定的 schema
-
-### 对应 `04` Claude Code 专章
-
-如果你是在 Claude Code 中敲命令，那么：
-
-- `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
-- 真正的项目事实仍然沉淀在 `openspec/`
-
-### 对应 `05` 生命周期思想篇
+### 对应 `03` 生命周期思想篇
 
 这整个案例本身就在体现那套思想：
 
@@ -658,6 +643,21 @@ openspec/
 - 用多层工件拆开不同类型的信息
 - 在实现过程中允许回改前面的工件
 - 最后通过 archive 把变化沉淀回正式基线
+
+### 对应 `04` config/schema 边界篇
+
+虽然这次案例没重点展开，但它背后默认已经在工作：
+
+- `config.yaml` 可能在注入项目 context
+- schema 在决定这次 change 的 artifact 结构
+- `.openspec.yaml` 可能记录 change 绑定的 schema
+
+### 对应 `10` Claude Code 实战篇
+
+如果你是在 Claude Code 中敲命令，那么：
+
+- `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
+- 真正的项目事实仍然沉淀在 `openspec/`
 
 ---
 
@@ -760,14 +760,19 @@ AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和
 
 如果你读完这篇之后，感觉整条主线终于立住了，那么接下来有两种方向：
 
-### 方向 A：回去补厚理解
+### 方向 A：马上补 artifacts 修改能力
+
+真实使用时，跑完一次主线后最常遇到的问题是：AI 生成得不准，或者实现过程中发现规划要改。下一篇专门讲这个：
+
+接着读 `12` artifact 修改篇。
+
+### 方向 B：回去补厚理解
 
 回看这些篇章会顺很多：
 
-- [02-中级-把核心概念真正串起来.md](02-中级-把核心概念真正串起来.md)
-- [03-高级-openspec-的软件开发生命周期思想.md](03-高级-openspec-的软件开发生命周期思想.md)
+`02` 和 `03` 会更容易读懂。
 
-### 方向 B：继续往机器层走
+### 方向 C：继续往机器层走
 
 如果你已经想研究：
 
@@ -775,6 +780,4 @@ AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和
 - `openspec instructions --json` 究竟提供什么
 - Claude Code 为什么既有 skill 又有 command
 
-再看：
-
-- [90-附录-给机器看的-agent-协议.md](90-附录-给机器看的-agent-协议.md)
+再看 `90` 附录。

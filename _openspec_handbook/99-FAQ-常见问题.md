@@ -21,7 +21,7 @@
 
 ### Q4: `/opsx:propose` 和 `openspec propose` 有什么区别？
 **A**: 
-- `/opsx:propose`：在 Cline/Claude 等宿主工具里用（冒号）
+- `/opsx:propose`：在 Claude Code、Cursor、Codex 等宿主工具里用（冒号）
 - `openspec propose`：在终端 CLI 里用（空格）
 - 功能是一样的，只是调用方式不同
 
@@ -245,7 +245,7 @@ specs/
 ## 下一步
 
 如果这个 FAQ 没有回答你的问题：
-1. 回看对应的主题文档（01-09）
+1. 回看对应的主题文档（01-07 或 10-15）
 2. 在 GitHub 提 issue
 3. 查看 OpenSpec 官方文档
 

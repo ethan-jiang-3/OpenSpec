@@ -1,4 +1,4 @@
-# 14 · 实战：如何正确修改 Artifacts
+# 12 · 实战：如何正确修改 Artifacts
 
 > 这一篇专门解决新手最困惑的问题：**OpenSpec 的 artifacts 到底该怎么改？**
 
@@ -927,3 +927,9 @@ rm openspec/changes/add-csv-export/proposal.md
 rm -rf openspec/changes/add-csv-export/
 /opsx:propose add-csv-export
 ```
+
+---
+
+## 下一步怎么读
+
+如果你已经理解 artifacts 可以怎样安全修改，接下来可以读 `13`，看复杂系统从零开始时如何用多个 spec 和 design 决策建立第一版基线。

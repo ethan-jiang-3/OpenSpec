@@ -330,9 +330,7 @@ schema 管的是：
 - 哪些信息该进 `specs/` 或 change artifacts
 - 什么时候应该改 schema，而不是继续堆 rules
 
-下一篇看：
-
-- [05-高级-项目级全局约束到底放哪.md](05-高级-项目级全局约束到底放哪.md)
+下一篇看 `05`，它专门讲项目级全局约束到底该放在哪。
 
 ---
 
@@ -360,4 +358,4 @@ graph TB
 - Workspace 的配置（profile/delivery/tools）来自 global config，不走 repo-local `config.yaml`
 - `PlanningHome` 抽象在运行时判断当前属于 workspace 还是 repo
 
-这意味着「项目级全局约束放哪」这个问题现在有四种可能的答案：**workspace 层、project 层、user 层、package 层**。具体怎么选，取决于你的团队结构和仓库数量。详见 [07-高级-workspace-跨仓库规划-v1.4.0.md](07-高级-workspace-跨仓库规划-v1.4.0.md)。
+这意味着「项目级全局约束放哪」这个问题现在有四种可能的答案：**workspace 层、project 层、user 层、package 层**。具体怎么选，取决于你的团队结构和仓库数量；跨仓库场景可以回到 `07` workspace 篇统一看。

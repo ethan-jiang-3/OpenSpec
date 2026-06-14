@@ -48,11 +48,12 @@
 
 这部分把前面的概念放进真实使用场景：
 
-- brownfield change 怎么走完整条主线
-- greenfield 复杂系统怎么建立第一版基线
-- 多人 Git 协作怎么配合 OpenSpec
 - Claude Code 里 `openspec/` 和 `.claude/` 怎么分层
+- brownfield change 怎么走完整条主线
 - artifacts 应该怎么改、怎么验证
+- greenfield 复杂系统怎么建立第一版基线
+- 部署、验证和回滚怎么纳入 change 闭环
+- 多人 Git 协作怎么配合 OpenSpec
 
 ### C. 面向机器的附录
 
@@ -88,9 +89,11 @@ graph LR
 
 ```mermaid
 graph LR
-    A[10-实战<br/>brownfield] --> B[11-实战<br/>greenfield]
-    B --> C[12-实战<br/>多人Git] --> D[13-实战<br/>Claude Code]
-    D --> E[14-实战<br/>artifact修改]
+    A[10-实战<br/>Claude Code] --> B[11-实战<br/>brownfield]
+    B --> C[12-实战<br/>artifact修改]
+    C --> D[13-实战<br/>greenfield]
+    D --> E[14-实战<br/>DevOps]
+    E --> F[15-实战<br/>多人Git]
 ```
 
 ### 路径 4：我要研究它背后的机制
@@ -162,7 +165,7 @@ graph LR
 | `openspec init` | 初始化项目 |
 | `openspec list` | 列出所有 changes |
 | `openspec show <name>` | 查看某个 change 详情 |
-| `openspec validate` | 验证 artifacts 结构 | **只验证格式和结构**，不验证内容质量 |
+| `openspec validate` | 验证 artifacts 结构；只验证格式和结构，不验证内容质量 |
 | `openspec archive <name>` | 归档 change |
 | `openspec config profile` | 切换工作流 profile |
 | `openspec update` | 更新 AI 工具的 skills/commands |
@@ -185,11 +188,12 @@ graph LR
 | [05-高级-项目级全局约束到底放哪.md](05-高级-项目级全局约束到底放哪.md) | 判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和能力规格彻底分开的人 |
 | [06-高级-config-yaml-怎么写到真正好用.md](06-高级-config-yaml-怎么写到真正好用.md) | 讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
 | [07-高级-workspace-跨仓库规划-v1.4.0.md](07-高级-workspace-跨仓库规划-v1.4.0.md) | workspace 跨仓库规划（v1.4.0 新增） | 需要管理多个关联仓库的人 |
-| [10-实战-从一个真实-change-走完整条主线.md](10-实战-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
-| [11-实战-从零开始设计一个较复杂系统.md](11-实战-从零开始设计一个较复杂系统.md) | 看 greenfield 复杂系统怎样建立第一版正式基线 | 想理解从零构建时 OpenSpec 怎么切系统的人 |
-| [12-实战-多人协作与Git工作流.md](12-实战-多人协作与Git工作流.md) | 多人团队使用 OpenSpec + Git 的最佳实践 | 团队协作、并行开发、冲突处理 |
-| [13-实战-claude-code-里的-openspec-到底怎么落地.md](13-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
-| [14-实战-如何正确修改-artifacts.md](14-实战-如何正确修改-artifacts.md) | artifact 修改指南 | 想知道 artifacts 该怎么改、怎么验证的人 |
+| [10-实战-claude-code-里的-openspec-到底怎么落地.md](10-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
+| [11-实战-从一个真实-change-走完整条主线.md](11-实战-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
+| [12-实战-如何正确修改-artifacts.md](12-实战-如何正确修改-artifacts.md) | artifact 修改指南 | 想知道 artifacts 该怎么改、怎么验证的人 |
+| [13-实战-从零开始设计一个较复杂系统.md](13-实战-从零开始设计一个较复杂系统.md) | 看 greenfield 复杂系统怎样建立第一版正式基线 | 想理解从零构建时 OpenSpec 怎么切系统的人 |
+| [14-实战-用-openspec-管理-devops-部署与验证.md](14-实战-用-openspec-管理-devops-部署与验证.md) | 把部署、验证、回滚纳入 change 闭环 | 想让 OpenSpec 和 CI/CD、监控、发布流程配合的人 |
+| [15-实战-多人协作与Git工作流.md](15-实战-多人协作与Git工作流.md) | 多人团队使用 OpenSpec + Git 的最佳实践 | 团队协作、并行开发、冲突处理 |
 | [90-附录-给机器看的-agent-协议.md](90-附录-给机器看的-agent-协议.md) | 看机器执行机制 | 想研究底层 protocol 的人 |
 
 ---
