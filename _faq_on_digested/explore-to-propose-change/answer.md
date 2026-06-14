@@ -37,6 +37,24 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 
 这张图的重点是：`openspec list/status` 只提供 OpenSpec 状态；真实代码调查提供工程事实；agent 把两者合成问题地图后，才进入分流判断。
 
+图中编号说明：
+
+| 编号 | 名称 | 在流程里做什么 |
+|---|---|---|
+| EXP-01 | 用户意图 | 用户给出想法、痛点或方向；它只是探索入口，还不是 change 边界。 |
+| EXP-02 | Explore stance | agent 进入只读探索姿态，把用户输入当作 hypothesis，不实施代码。 |
+| EXP-03 | 不直接 propose | 阻止把一句自然语言直接变成 change，先要求补齐状态、代码事实和影响面。 |
+| EXP-04 | OpenSpec 状态调查 | 通过 `openspec list --json` 和必要时的 `status --change X --json` 理解 active changes、artifact 路径和已有上下文。 |
+| EXP-05 | 真实项目调查 | 读取 specs、源码、文档、测试、数据模型和既有 patterns，把想法落到工程事实上。 |
+| EXP-06 | 合成问题地图 | 汇总当前状态、目标状态、差距、影响面、风险和未知数，形成可判断的 scope。 |
+| EXP-07 | 继续 Explore | 目标或事实仍不清楚时，不 formalize，继续调查、提问或比较方案。 |
+| EXP-08 | 更新已有 change | 新发现属于已有 active change 的 scope 时，优先延续或更新它，而不是新开 change。 |
+| EXP-09 | propose 一个 | 当目标是一个清晰、可命名、可验证的增量时，进入一个新 change。 |
+| EXP-10 | propose 多个 | 当能力边界、风险类型、交付节奏或 owning repo 不同，先拆成多个 changes。 |
+| EXP-11 | 不创建 change | 如果只是理解现状、一次性调查或变化太小，就不给 OpenSpec 制造新 change。 |
+
+EXP-04 的细节单独展开在 [`answer-exp04.md`](answer-exp04.md)：它解释 skill prompt、`openspec list/status/instructions`、`artifactPaths`、`dependencies`、`actionContext` 和 coding agent 读文件工具之间怎么配合。
+
 ## Step 1：先接住用户意图，但不要立刻命名 change
 
 用户给出的通常是一个入口，不是完整边界：
@@ -163,6 +181,22 @@ openspec/changes/     -> 没有 active change
 ![空 OpenSpec 首次探索路径](figures/first-explore-empty-openspec.svg)
 
 所以首次 Explore 的重心会反过来：不是从 `openspec/specs/` 读已有能力，而是先从代码和现有材料反推出“事实上的当前能力”。
+
+空项目图中编号说明：
+
+| 编号 | 名称 | 在流程里做什么 |
+|---|---|---|
+| EXP-12 | OpenSpec 空状态 | `openspec list --json` 返回空，`openspec/specs/` 也为空；说明没有 active change 和 formalized specs。 |
+| EXP-13 | 正确解释 | 把空状态理解为“尚无 formalized baseline”，而不是“没有事实”或“无法探索”。 |
+| EXP-14 | 错误捷径 | 只凭用户一句话直接建 change，会产生空泛、错位或重复的 artifacts。 |
+| EXP-15 | 事实源转向真实项目 | 读取 README/docs、代码入口、命令/API/UI、数据模型、测试和现有行为描述。 |
+| EXP-16 | 事实 baseline | 从真实代码和材料中反推出系统现在实际支持什么，这是首次 Explore 可用的当前状态。 |
+| EXP-17 | spec baseline | 承认 `openspec/specs/` 尚未记录这些能力，不能假装已经有规格基线。 |
+| EXP-18 | 不 propose | 用户只是想理解现状时，输出结构图或现状总结即可。 |
+| EXP-19 | 先补 baseline | 用户关心把现有能力规格化时，先 propose 一个记录当前能力的 baseline change。 |
+| EXP-20 | 具体功能 change | 代码事实足够清楚且用户目标是明确增量时，直接 propose 具体功能 change。 |
+| EXP-21 | 拆成两个阶段 | 旧行为未规格化而新需求又依赖旧行为时，先补 baseline，再做新能力。 |
+| EXP-22 | 继续探索 | 代码事实不足、项目结构不清或关键行为无法确认时，继续 Explore，不急着 propose。 |
 
 通常要读：
 
@@ -423,6 +457,10 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 |---|---|
 | `src/core/templates/workflows/explore.ts` | Explore 是 stance；可以读代码但不实施；启动时检查 `openspec list --json`；相关 change 用 `status --json` 读取 artifacts |
 | `src/core/templates/workflows/propose.ts` | Propose 从 change name/description 开始，创建 change，并按 `status` / `instructions` 循环生成 artifacts |
+| `src/commands/workflow/status.ts` | `status --json` 解析 planning home、change、schema 后输出结构化 status JSON |
+| `src/commands/workflow/instructions.ts` | `instructions <artifact> --json` 输出依赖文件、输出路径、template、rules、instruction 等 agent 操作包 |
+| `src/core/artifact-graph/instruction-loader.ts` | `formatChangeStatus()` 组装 `artifactPaths`、`actionContext`、`nextSteps`；`generateInstructions()` 组装 artifact instructions |
+| `src/core/change-status-policy.ts` | `actionContext` 和 `nextSteps` 的语义，包括 repo-local / workspace-planning 边界 |
 | [`../../_digested/internal-spec-driven/01-explore-探索模式.md`](../../_digested/internal-spec-driven/01-explore-探索模式.md) | Explore 的 guardrails、OpenSpec awareness、已有 change 场景 |
 | [`../../_digested/internal-spec-driven/02-propose-提案生成.md`](../../_digested/internal-spec-driven/02-propose-提案生成.md) | Propose 的 change 创建和 artifact DAG 生成过程 |
 | [`../../_digested/system/07-OpenSpec-工程思想.md`](../../_digested/system/07-OpenSpec-工程思想.md) | 文件状态优先、CLI 解释状态、agent 负责推理 |
