@@ -45,6 +45,8 @@ PRP-04、PRP-06、PRP-10 的细节分别展开在：
 - [`answer-prp06.md`](answer-prp06.md)
 - [`answer-prp10.md`](answer-prp10.md)
 
+如果关心 `apply` 能否低改造用于 agent、Markdown、skill、command 等非代码产物，见三种借用路径总览：[`answer-agent-md-apply.md`](answer-agent-md-apply.md)。
+
 ## Step 1：从已收敛目标得到 change name
 
 `propose` 的输入必须是：
