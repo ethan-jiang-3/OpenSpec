@@ -104,6 +104,8 @@ openspec/
 - `.claude/skills/` 保存 agent 可发现的 workflow 说明
 - `.claude/commands/opsx/` 保存用户可触发的 slash command 入口
 
+这里的 `opsx` 只是 OpenSpec 在 Claude Code 里的命令命名空间。它不是一套独立于 OpenSpec 的系统，也不是另一个 CLI；`/opsx:propose` 这样的入口最终仍然围绕 `openspec` CLI 和 `openspec/` 文件状态工作。
+
 ### 这层怎么生成
 
 初始化时可以显式选择 Claude Code：
@@ -253,6 +255,8 @@ sequenceDiagram
 所以 Claude Code 本身不是 OpenSpec。
 它只是 OpenSpec 被人触发、被模型消费的宿主环境之一。
 
+同样，`/opsx:propose` 也不是 `openspec propose` 的别名。OpenSpec CLI 里没有一个单独的 `propose` 子命令；Claude Code 触发 `/opsx:propose` 后，会按照 skill/command 里的 workflow 说明调用 `openspec new change`、`openspec status`、`openspec instructions` 等 CLI 能力，再由 Claude Code 读项目代码、生成 Markdown artifacts、写回 `openspec/changes/`。
+
 ---
 
 ## skill 和 command 在 Claude Code 里分别做什么
@@ -267,6 +271,18 @@ Claude Code 下通常会同时投递 skills 和 commands。
 | 文件系统 | `openspec/specs/`、`openspec/changes/` | 保存项目事实和 change 状态 |
 
 一个容易混的点是：skill/command 里确实有很多说明文字，但它们不是事实源。真正的状态来自 `openspec/`，真正的运行时解释来自 CLI。
+
+因此看到 `.claude/commands/opsx/` 时，应该读成：
+
+```text
+Claude Code 里的 OpenSpec 命令入口
+```
+
+而不是：
+
+```text
+一个叫 OPSX 的独立工具
+```
 
 ---
 

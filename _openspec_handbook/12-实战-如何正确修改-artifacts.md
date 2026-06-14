@@ -8,6 +8,8 @@
 
 OpenSpec 有两种 profile（配置模式）：
 
+这里列出的 `/opsx:*` 是 OpenSpec workflow 投递到 agent 工具里的命令入口，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`。
+
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
 | **core** | 5 个命令（v1.4.0 起） | 快速开发，简单场景 | ✅ 是（默认） |
@@ -78,7 +80,7 @@ openspec update
 | **tasks.md 怎么调整？** | 任务拆分不合理，怎么改？ |
 | **.openspec.yaml 怎么调整？** | 这个文件是干什么的？能改吗？ |
 
-**这一篇会给你详细的答案**，包含大量真实场景和完整示例。
+这一篇重点展开最常改、也最容易改坏的两类文件：`config.yaml` 和 `proposal.md`。后面的 specs/design/tasks/.openspec.yaml 会给出安全修改原则，避免把本文变成逐字段手册。
 
 ---
 
@@ -543,27 +545,40 @@ rules:
 
 #### 验证 config.yaml 的修改
 
-**步骤 1：检查 YAML 格式**
+**步骤 1：检查 schema 解析**
+
+`openspec validate` 不是 `config.yaml` 专用校验器，它主要验证 change/spec。改完 `config.yaml` 后，如果你改过 `schema:`，先确认 schema 能被解析：
+
 ```bash
-openspec validate
+openspec schemas
+openspec schema which <schema-name>
 ```
 
-**注意**：`openspec validate` 只验证**结构**，不验证**内容质量**。
+如果 YAML 解析失败、schema 名不存在，后续创建 change 或读取 instructions 时会暴露问题。
 
-**它会检查**：
-- YAML 格式是否正确
-- 必需的字段是否存在
-- 基本的语法错误
+**注意**：这只能证明配置能被读取、schema 能被解析，不等于证明配置内容质量高。
+
+**它能帮你发现**：
+- YAML 无法解析
+- `schema` 指向不存在的 schema
+- schema 解析来源不是你以为的 project/user/package 层
 
 **它不会检查**：
 - rules 是否合理
 - context 是否完整
 - 约束是否有效
 
-**步骤 2：检查是否生效**
+**步骤 2：检查 context/rules 是否生效**
+
+先创建一个临时 change，再查看 artifact instructions：
+
 ```bash
 # 查看 AI 会收到什么指令
-openspec instructions proposal --json | jq '.context, .rules'
+openspec new change test-config-runtime
+openspec instructions proposal --change test-config-runtime --json | jq '.context, .rules'
+
+# 检查完后删除临时 change
+rm -rf openspec/changes/test-config-runtime/
 ```
 
 **步骤 3：创建测试 change 验证**
@@ -571,29 +586,27 @@ openspec instructions proposal --json | jq '.context, .rules'
 **Custom Profile**：
 ```bash
 # 创建一个测试 change
-/opsx:propose test-config
+/opsx:propose test-config-output
 
 # 检查生成的 proposal 是否符合新的 rules
-cat openspec/changes/test-config/proposal.md
+cat openspec/changes/test-config-output/proposal.md
 
 # 如果满意，删除测试 change
-rm -rf openspec/changes/test-config/
+rm -rf openspec/changes/test-config-output/
 ```
 
 **Core Profile**：
 ```bash
 # 创建一个测试 change（会生成所有 artifacts）
-/opsx:propose test-config
+/opsx:propose test-config-output
 
 # 检查生成的 proposal 是否符合新的 rules
-cat openspec/changes/test-config/proposal.md
+cat openspec/changes/test-config-output/proposal.md
 
 # 如果满意，删除测试 change
-rm -rf openspec/changes/test-config/
+rm -rf openspec/changes/test-config-output/
 ```
 
-
----
 
 ### 2. proposal.md — 变更提案
 
@@ -927,6 +940,35 @@ rm openspec/changes/add-csv-export/proposal.md
 rm -rf openspec/changes/add-csv-export/
 /opsx:propose add-csv-export
 ```
+
+---
+
+### 3. specs/design/tasks/.openspec.yaml — 其他文件怎么改
+
+这几类文件也能改，但修改原则不一样：
+
+| 文件 | 推荐修改方式 | 关键风险 |
+|------|--------------|----------|
+| `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把增量规格写成全量重写 |
+| `design.md` | 实现发现方案变化时及时回改，说明原因和风险 | 只改代码不改设计，后人看不到真实取舍 |
+| `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节 |
+| `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析 |
+
+一个实用判断：
+
+- 行为承诺变了，优先改 delta spec
+- 技术路径变了，优先改 design
+- 执行拆解变了，优先改 tasks
+- change 的 schema/元数据变了，才考虑 `.openspec.yaml`
+
+改完这些文件后，再运行：
+
+```bash
+openspec validate <change-name>
+openspec status --change <change-name> --json
+```
+
+前者检查 change/spec 结构，后者检查当前 artifact 状态和下一步运行时上下文。
 
 ---
 

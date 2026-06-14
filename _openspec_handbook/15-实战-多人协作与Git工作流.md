@@ -299,15 +299,12 @@ git checkout -b feature/add-order-sort
 git checkout feature/add-order-sort
 git pull origin main  # 拉取 A 的更新
 
-# 运行 sync 命令（需要 custom profile）
+# 运行 sync 命令（core profile 默认可用）
 /opsx:sync add-order-sort
-
-# 注意：sync 命令在 custom profile 中可用
-# 使用 `openspec config profile` 切换到 custom 并启用 sync workflow
 
 # 手动处理冲突（当前做法）
 # 1. 查看 A 的 delta spec
-cat openspec/changes/archive/*/add-order-filter/specs/orders/spec.md
+cat openspec/changes/archive/*-add-order-filter/specs/orders/spec.md
 
 # 2. 合并到自己的 delta spec
 # 编辑 openspec/changes/add-order-sort/specs/orders/spec.md
@@ -321,8 +318,8 @@ git commit -m "Sync with add-order-filter changes"
 
 **关键点**：
 - 尽量错开时间，避免并行修改同一个 spec
-- 如果必须并行，后 archive 的人要用 `/opsx:sync` 同步（需要 custom profile）
-- `/opsx:sync` 已经可用，只需在 custom profile 中启用
+- 如果必须并行，后 archive 的人要用 `/opsx:sync` 同步，并手动审查 delta spec 是否仍然准确
+- `/opsx:sync` 在当前 core profile 中默认可用
 
 ---
 

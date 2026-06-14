@@ -32,6 +32,26 @@
 
 ---
 
+## 先把 OpenSpec 和 OPSX 的关系说清楚
+
+手册里会同时出现 `openspec` 和 `/opsx:*`，它们不是两个并列产品。
+
+```text
+OpenSpec = 整套机制
+  ├── openspec/        项目里的文件事实层
+  ├── openspec CLI     终端里的运行时 API
+  └── /opsx:*          投递到 agent 工具里的 workflow 入口
+```
+
+- `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --json`、`openspec archive <name>`。
+- `/opsx:*` 是 Claude Code、Cursor、Codex 等宿主 agent 里的用户入口，比如 `/opsx:propose`、`/opsx:apply`。
+- `opsx` 这个名字只是 slash command 的命名空间或文件前缀，不是另一套独立系统。
+- 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有这个单一等价命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
+
+所以更准确的说法是：**`/opsx:*` 是 OpenSpec workflow 在 agent 工具里的入口，`openspec` CLI 是这些 workflow 读取状态和拿指令的运行时。**
+
+---
+
 ## 这套手册怎么读
 
 这套目录分成三块：
@@ -134,6 +154,8 @@ graph LR
 
 ## 命令速查
 
+这里的 `/opsx:*` 都是 agent 工具里的 slash command 入口。它们属于 OpenSpec 工作流，但不是终端 CLI 命令。需要直接在终端里运行时，看下面的 `openspec ...` CLI 表。
+
 ### 日常最常用（core profile，v1.4.0 起默认包含 5 个命令）
 
 | 命令 | 作用 | 典型场景 |
@@ -154,7 +176,6 @@ graph LR
 | `/opsx:continue` | 继续当前 change |
 | `/opsx:ff` | 快进到下一个 artifact |
 | `/opsx:verify` | 验证实现与 specs 一致性 |
-| `/opsx:sync` | 同步 specs 状态 |
 | `/opsx:bulk-archive` | 批量归档多个 changes |
 | `/opsx:onboard` | 新成员快速了解项目 |
 

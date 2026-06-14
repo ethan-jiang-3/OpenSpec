@@ -17,6 +17,8 @@
 /opsx:propose  →  /opsx:apply  →  /opsx:archive
 ```
 
+这里的 `/opsx:*` 不是另一套叫 OPSX 的工具，而是 OpenSpec 投递到 Claude Code、Cursor、Codex 等 agent 工具里的命令入口。你在终端里直接运行的是 `openspec ...` CLI；在 agent 对话里触发工作流，通常用 `/opsx:*`。
+
 ---
 
 ## 你日常最常用的 3 个动作

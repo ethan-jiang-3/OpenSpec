@@ -20,6 +20,8 @@
 
 > **OpenSpec 自己不是 LLM，它是 prompt 编排器和状态引擎。**
 
+这里也要避免一个术语误会：`/opsx:*` 是 OpenSpec workflow 投递到宿主 agent 后的命令命名空间，不是另一套运行时。机器协议里的事实来源仍然是 `openspec` CLI 和 `openspec/` 文件状态。
+
 ---
 
 ## 对机器来说，最重要的不是页面文档，而是结构化查询
@@ -161,6 +163,8 @@ sequenceDiagram
 - workflow 是"动作 ID"
 - skill/command 是"投递方式"
 - CLI 是"运行时事实来源"
+
+`OPSX: Propose`、`OPSX: Apply` 这类名字只是 workflow 在 agent 工具里的显示标签。它们帮助用户用 `/opsx:propose` 触发动作，但动作执行过程中仍然要回到 `openspec status --json`、`openspec instructions ... --json` 这些 CLI API。
 
 ---
 
