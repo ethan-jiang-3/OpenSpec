@@ -70,7 +70,7 @@ const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
 Warning: config.yaml rules contains unknown artifact ID "review" for schema "spec-driven"
 ```
 
-验证逻辑在 `instruction-loader.ts:301-316`：
+验证逻辑在 `src/core/artifact-graph/instruction-loader.ts:301-316`：
 ```typescript
 if (projectConfig?.rules) {
   const validArtifactIds = new Set(context.graph.getAllArtifacts().map(a => a.id));
@@ -92,7 +92,7 @@ config.yaml 不是在启动时一次性全局读取的，而是**在需要时才
 
 ### 时机 1：`openspec instructions <artifact>` 被调用时
 
-`instruction-loader.ts:290-298`：
+`src/core/artifact-graph/instruction-loader.ts:290-298`：
 ```typescript
 let projectConfig = null;
 if (effectiveProjectRoot) {
@@ -112,7 +112,7 @@ if (effectiveProjectRoot) {
 
 ### 时机 3：`openspec status` 显示 nextSteps 时
 
-`change-status-policy.ts` 中 `buildActionContext()` 使用 config 信息构造机器可读约束。
+`src/core/change-status-policy.ts:86` 中 `buildActionContext()` 使用 config 信息构造机器可读约束。
 
 ### resilience 设计
 
@@ -124,7 +124,7 @@ config 读取失败（文件不存在、YAML 解析错误、字段类型不匹�
 
 ### 4.1 context 的注入
 
-来自 `config.context`。在 `generateInstructions()` (`instruction-loader.ts:319`)：
+来自 `config.context`。在 `generateInstructions()` (`src/core/artifact-graph/instruction-loader.ts:319`)：
 
 ```typescript
 const configContext = projectConfig?.context?.trim() || undefined;
@@ -146,7 +146,7 @@ Stack: TypeScript, React, Node.js, PostgreSQL
 
 ### 4.2 rules 的注入
 
-来自 `config.rules[artifactId]`。在 `generateInstructions()` (`instruction-loader.ts:320-321`)：
+来自 `config.rules[artifactId]`。在 `generateInstructions()` (`src/core/artifact-graph/instruction-loader.ts:320-321`)：
 
 ```typescript
 const rulesForArtifact = projectConfig?.rules?.[artifactId];
@@ -210,7 +210,7 @@ rules:
 
 ---
 
-## 6. 技术层面的推荐
+## 6. 实践建议
 
 ### 6.1 rules 应该按 artifact 角色写
 

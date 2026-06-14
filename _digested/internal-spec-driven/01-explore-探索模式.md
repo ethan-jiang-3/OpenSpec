@@ -61,7 +61,13 @@ Read: <changeRoot>/specs/*/spec.md → 了解已有 spec
 
 ---
 
-## 3. 四种入口场景
+## 3. 零活跃 change 场景
+
+当 `openspec list --json` 返回 `[]`（项目中没有活跃 change）时，explore 不需要任何 OpenSpec 上下文就能工作。agent 直接从用户的问题出发，读代码、画图、讨论方案——这和 classic 模式下的通用代码讨论没有本质区别，但 explore 的 guardrails（第 8 节）仍然适用。
+
+只有在用户明确表示"值得做一个 change"时，agent 才会建议 `/opsx:propose`，从而进入有状态的工作流轨道。
+
+## 4. 四种入口场景（有活跃 change 时）
 
 explore 的 skill 模板 (`explore.ts`) 为四种典型场景分别提供了行为范例：
 
@@ -111,7 +117,7 @@ Agent: 那就不一样了。
 
 ---
 
-## 4. 不生成 artifact —— 但可以"捕捉"
+## 5. 不生成 artifact —— 但可以"捕捉"
 
 explore 明确禁止写应用代码（"Never write code or implement features"），但**可以创建 OpenSpec artifact** —— 如果用户要求。
 
@@ -136,7 +142,7 @@ explore 明确禁止写应用代码（"Never write code or implement features"�
 
 ---
 
-## 5. 与 propose 的衔接
+## 6. 与 propose 的衔接
 
 explore 结束时没有强制要求。可能的出路：
 
@@ -147,7 +153,7 @@ explore 结束时没有强制要求。可能的出路：
 
 ---
 
-## 6. 与另外三条命令的本质差异
+## 7. 与另外三条命令的本质差异
 
 | | explore | propose | apply | archive |
 |------|------|------|------|------|
@@ -158,7 +164,7 @@ explore 结束时没有强制要求。可能的出路：
 
 ---
 
-## 7. Guardrails
+## 8. Guardrails
 
 来自 `explore.ts` 的 8 条护栏：
 

@@ -6,7 +6,7 @@
 
 ## 1. schema.yaml 即源码
 
-`schemas/spec-driven/schema.yaml` —— 153 行 —— 定义了 spec-driven 工作流的全部行为。它是 OpenSpec "meta" 本质的集中体现：
+`schemas/spec-driven/schema.yaml` —— 约 153 行 —— 定义了 spec-driven 工作流的全部行为。它是 OpenSpec "meta" 本质的集中体现：
 
 - **artifact 是什么、先后顺序谁说了算** → schema
 - **每个 artifact 应该包含什么内容** → schema 的 `instruction` 字段
@@ -14,7 +14,7 @@
 - **什么时候允许实施** → schema 的 `apply.requires`
 - **实施进度怎么跟踪** → schema 的 `apply.tracks`
 
-改变这 153 行 YAML（以及 4 个模板文件），就能改变整套工作流的行为。**TypeScript 代码一行都不需要动**。
+改变这约 153 行 YAML（以及 4 个模板文件），就能改变整套工作流的行为。
 
 这就是 schema 系统的设计目标 —— 它被描述为 "artifact DAG definition file"（`_digested/schema/01-schema-到底是什么.md`）。它不定义"怎么实现"（那是 AI agent 的事），只定义"什么的什么东西在什么条件下产生"。
 
@@ -142,7 +142,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
 
 ## 4. 四层注入的精确代码路径
 
-### 4.1 loadChangeContext (`instruction-loader.ts:227-257`)
+### 4.1 loadChangeContext (`src/core/artifact-graph/instruction-loader.ts:227-257`)
 
 ```
 1. 计算 changeDir
@@ -156,7 +156,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
 7. 返回 ChangeContext { graph, completed, schemaName, changeDir, ... }
 ```
 
-### 4.2 generateInstructions (`instruction-loader.ts:273-341`)
+### 4.2 generateInstructions (`src/core/artifact-graph/instruction-loader.ts:273-341`)
 
 ```
 1. graph.getArtifact(artifactId)
@@ -200,8 +200,7 @@ export function artifactOutputExists(changeDir: string, generates: string): bool
 1. 显式 --schema <name> CLI 参数
 2. .openspec.yaml 中的 schema 字段
 3. openspec/config.yaml 中的 schema 字段
-4. planningHome.defaultSchema（repo='spec-driven', workspace='workspace-planning'）
-5. 硬编码 'spec-driven'
+4. 硬编码 'spec-driven'
 ```
 
 ### 5.3 两级解析的区别
@@ -239,7 +238,7 @@ rules:                     # 按 artifact ID 注入特定约束
 
 1. `config.schema` 决定了加载哪个 schema 的 artifact DAG
 2. `config.context` 被注入到**所有** artifact 指令中（50KB 上限，`project-config.ts:45`）
-3. `config.rules` 的 key 会被验证是否对应 schema 中真实存在的 artifact ID（未知 ID 产生 warning，每个 session 只警告一次，`instruction-loader.ts:301-316`）
+3. `config.rules` 的 key 会被验证是否对应 schema 中真实存在的 artifact ID（未知 ID 产生 warning，每个 session 只警告一次，`src/core/artifact-graph/instruction-loader.ts:301-316`）
 4. config 读取失败不会阻止指令生成 —— resilient 设计
 
 ---

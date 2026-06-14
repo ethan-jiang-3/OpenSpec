@@ -20,7 +20,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 
 1. 解析 change name（与 propose 同款 `validateChangeExists`）
 2. 调用 `loadChangeContext()` 加载 schema、构建 DAG、检测 completion
-3. 从 schema 获取 `apply.requires` 和 `apply.tracks`。对于 spec-driven，`apply.requires: [tasks]`，`apply.tracks: tasks.md`。如果 schema 没有定义 `apply.requires`，代码级回退为 schema 的全部 artifact ID（`instruction-loader.ts:386`：`schema.apply?.requires ?? schema.artifacts.map(a => a.id)`）
+3. 从 schema 获取 `apply.requires` 和 `apply.tracks`。对于 spec-driven，`apply.requires: [tasks]`，`apply.tracks: tasks.md`。如果 schema 没有定义 `apply.requires`，代码级回退为 schema 的全部 artifact ID（`src/core/artifact-graph/instruction-loader.ts:386`：`schema.apply?.requires ?? schema.artifacts.map(a => a.id)`）
 4. 调用 `generateApplyInstructions()`
 
 ### 2.2 generateApplyInstructions 的核心逻辑
@@ -104,7 +104,9 @@ if (checkboxMatch) {
 
 ## 4. 完整实施流程（7 步）
 
-来自 `src/core/templates/workflows/apply-change.ts:13-161`（skill 模板 `instructions` 字段；编号步骤实际位于 `:19 / :28 / :37 / :56 / :63 / :71 / :86`）。
+> **机制 vs 行为**：下面描述的 7 步流程来自 skill 模板（`src/core/templates/workflows/apply-change.ts:13-160`）——它告诉 AI agent "应该怎么做"，而非 CLI 硬编码的执行逻辑。CLI 负责的是第 2 节的 apply gate（状态判定、checkbox 解析），agent 负责的是执行这些步骤。agent 理论上可以不按这 7 步走，但模板的设计意图就是引导 agent 遵循这个流程。
+
+来自 skill 模板 `apply-change.ts`（`instructions` 字段；编号步骤实际位于 `:19 / :28 / :37 / :56 / :63 / :71 / :86`）。
 
 ### Step 1：选定 change
 

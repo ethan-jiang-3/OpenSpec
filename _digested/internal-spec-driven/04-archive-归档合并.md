@@ -31,13 +31,13 @@ Phase 3: Move
 
 ### 2.1 proposal 验证（非阻塞）
 
-`archive.ts:96-111`：用 `Validator.validateChange()` 验证 proposal.md 的结构（Why/What Changes 等 section 是否存在、长度是否合理）。但**验证失败不会阻止归档**——proposal 验证是信息性的。
+`archive.ts:96-111`：用 `Validator.validateChange()`（`src/core/validation/validator.ts`）验证 proposal.md 的结构（Why/What Changes 等 section 是否存在、长度是否合理）。但**验证失败不会阻止归档**——proposal 验证是信息性的。
 
 ### 2.2 delta spec 验证（阻塞）
 
 `archive.ts:113-151`：扫描 `<changeDir>/specs/` 下每个子目录中带 delta header 的文件（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）。
 
-如果发现 delta spec，用 `Validator.validateChangeDeltaSpecs()` 进行严格验证：
+如果发现 delta spec，用 `Validator.validateChangeDeltaSpecs()`（`src/core/validation/validator.ts`）进行严格验证：
 
 | 检查项 | 级别 |
 |--------|------|
@@ -199,7 +199,7 @@ const rebuilt = [parts.before, parts.headerLine, reqBody, parts.after]
 
 ### 3.7 写前验证
 
-在写入每个重建后的 spec 之前，用 `Validator.validateSpecContent()` 验证。如果有 ERROR，**整个归档中断**，所有已写入的 spec 不会被回滚（但归档移动还没发生，change 目录还在原地）。
+在写入每个重建后的 spec 之前，用 `Validator.validateSpecContent()`（`src/core/validation/validator.ts`）验证。如果有 ERROR，**整个归档中断**，所有已写入的 spec 不会被回滚（但归档移动还没发生，change 目录还在原地）。
 
 ---
 

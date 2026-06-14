@@ -44,8 +44,9 @@ openspec new change "<name>"
 
 1. 显式 `--schema` flag
 2. `openspec/config.yaml` 中的 `schema` 字段
-3. `options.defaultSchema`（repo 为 `'spec-driven'`，workspace 为 `'workspace-planning'`）
-4. 硬编码回退 `'spec-driven'`
+3. `options.defaultSchema`（repo 模式下为 `'spec-driven'`，workspace 模式下为 `'workspace-planning'`），其自身回退到硬编码 `DEFAULT_SCHEMA = 'spec-driven'`。`workspace-planning` 是 OpenSpec 的另一种内置 schema，用于多仓库/workspace 级规划，不在本目录讨论范围
+
+> **注意**：代码中第 3 级是 `const defaultSchema = options.defaultSchema ?? DEFAULT_SCHEMA;`，即 `options.defaultSchema` 和硬编码 `'spec-driven'` 合并为一级。上面拆成两级是为了可读性——实际代码是 3 级而非 4 级。
 
 解析结果写入 `.openspec.yaml` 的 `schema` 字段。
 

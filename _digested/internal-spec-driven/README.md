@@ -19,7 +19,7 @@
 |---|------|------|
 | 0 | `00-四条命令的共有机制.md` | 三方架构、schema 即控制器、文件系统即状态、四层注入机制、status+instructions 核心配合模式、双重交付机制 |
 | 1 | `01-explore-探索模式.md` | 姿态定位（非工作流）、CLI 调用链、四种入口场景、与 propose 的衔接、guardrails |
-| 2 | `02-propose-提案生成.md` | 完整 5 步流程、每个 artifact 的模板与 instruction 详解、DAG 拓扑排序保证、config.yaml 在其中的作用 |
+| 2 | `02-propose-提案生成.md` | 完整 5 步流程、每个 artifact 的模板与 instruction 详解、DAG 拓扑排序保证、schema 解析优先级 |
 | 3 | `03-apply-实施执行.md` | Apply gate 三种状态、checkbox 解析正则、实施循环、流体工作流理念、与 archive 的衔接 |
 | 4 | `04-archive-归档合并.md` | 三阶段流程（验证→合并→移动）、RENAMED→REMOVED→MODIFIED→ADDED 合并算法的精确步骤与操作顺序原理、不可逆性 |
 | 5 | `05-schema-driven-控制面.md` | schema.yaml 即源码、图算法的完整细节、completion detection 机制、核心数据结构总览、关键源文件速查表 |
