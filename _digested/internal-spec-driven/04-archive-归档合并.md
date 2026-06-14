@@ -126,7 +126,9 @@ body:     [RequirementBlock, RequirementBlock, ...]
 after:    ""（Requirements section 之后的文字）
 ```
 
-然后构建 `nameToBlock` map：key 是 normalized requirement name（trim 后的小写），value 是完整的 `RequirementBlock`。
+然后构建 `nameToBlock` map：key 是 normalized requirement name（`name.trim()`，`src/core/parsers/requirement-blocks.ts:15-17`），value 是完整的 `RequirementBlock`。
+
+注意：`normalizeRequirementName` 只做 trim，**不做 toLowerCase**。header 匹配用的 regex 是大小写不敏感的（`/^###\s*Requirement:\s*(.+)\s*$/i`），但 map key 保留原始大小写。这意味着 `### Requirement: User Auth` 和 `### Requirement: user auth` 的 header 能被同一个 regex 匹配，但它们在 map 中是不同的 key。
 
 ### 3.5 按序应用操作
 

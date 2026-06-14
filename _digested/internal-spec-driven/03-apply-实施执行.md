@@ -20,7 +20,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 
 1. 解析 change name（与 propose 同款 `validateChangeExists`）
 2. 调用 `loadChangeContext()` 加载 schema、构建 DAG、检测 completion
-3. 从 schema 获取 `apply.requires`（默认：`["tasks"]`）和 `apply.tracks`（默认：`"tasks.md"`）
+3. 从 schema 获取 `apply.requires` 和 `apply.tracks`。对于 spec-driven，`apply.requires: [tasks]`，`apply.tracks: tasks.md`。如果 schema 没有定义 `apply.requires`，代码级回退为 schema 的全部 artifact ID（`instruction-loader.ts:386`：`schema.apply?.requires ?? schema.artifacts.map(a => a.id)`）
 4. 调用 `generateApplyInstructions()`
 
 ### 2.2 generateApplyInstructions 的核心逻辑
