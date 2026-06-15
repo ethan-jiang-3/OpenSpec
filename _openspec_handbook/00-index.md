@@ -62,7 +62,7 @@ OpenSpec = 整套机制
 
 1. **初级**：先把 OpenSpec 用起来，知道日常怎么走
 2. **中级**：把 `specs`、`changes`、artifact、delta spec 这些概念真正连起来
-3. **高级**：理解生命周期思想、config/schema、全局约束、workspace
+3. **高级**：理解生命周期思想、config/schema、全局约束、workspace、自定义 schema
 
 ### B. 面向落地的实战场景
 
@@ -103,6 +103,7 @@ graph LR
     A[01-初级] --> B[02-中级] --> C[03-高级<br/>SDLC思想]
     C --> D[04-高级<br/>config/schema] --> E[05-高级<br/>全局约束]
     E --> F[06-高级<br/>config写法]
+    F --> G[08-高级<br/>自定义schema]
 ```
 
 ### 路径 3：我要看实战落地
@@ -131,6 +132,14 @@ graph LR
 graph LR
     A[01-初级] --> B[02-中级] --> C[04-高级<br/>config/schema]
     C --> D[07-高级<br/>workspace]
+```
+
+### 路径 6：我要自定义工作流（创建自己的 schema）
+
+```mermaid
+graph LR
+    A[04-高级<br/>config/schema] --> B[06-高级<br/>config写法]
+    B --> C[08-高级<br/>自定义schema]
 ```
 
 ---
@@ -209,6 +218,7 @@ graph LR
 | [05-高级-项目级全局约束到底放哪.md](05-高级-项目级全局约束到底放哪.md) | 判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和能力规格彻底分开的人 |
 | [06-高级-config-yaml-怎么写到真正好用.md](06-高级-config-yaml-怎么写到真正好用.md) | 讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
 | [07-高级-workspace-跨仓库规划-v1.4.0.md](07-高级-workspace-跨仓库规划-v1.4.0.md) | workspace 跨仓库规划（v1.4.0 新增） | 需要管理多个关联仓库的人 |
+| [08-高级-自定义-schema-创建自己的工作流.md](08-高级-自定义-schema-创建自己的工作流.md) | 自定义 schema——从 fork 到完全自定义 DAG | config.yaml 不够用、想创建自己工作流的人 |
 | [10-实战-claude-code-里的-openspec-到底怎么落地.md](10-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
 | [11-实战-从一个真实-change-走完整条主线.md](11-实战-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
 | [12-实战-如何正确修改-artifacts.md](12-实战-如何正确修改-artifacts.md) | artifact 修改指南 | 想知道 artifacts 该怎么改、怎么验证的人 |
