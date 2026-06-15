@@ -41,7 +41,7 @@ _faq_on_digested/
 - [`apply-ready-to-archive-ready/`](apply-ready-to-archive-ready/question.md) — `/opsx:apply` 开始后，agent 如何读取上下文、实施 tasks、更新 checkbox，并走到可以 archive。
 - [`archive-ready-to-archived/`](archive-ready-to-archived/question.md) — Implementation 已完成后，`openspec archive` 如何验证、合并 specs、移动 change，并收束到 archived。
 - [`schema-article-driven/`](schema-article-driven/question.md) — OpenSpec 的 schema 系统能不能脱离代码实现，用来管理文章内容生产流水线？概念验证：定义一个 article-driven schema，不改源码。
-- [`schema-agent-dev-driven/`](schema-agent-dev-driven/question.md) — OpenSpec 的 schema 能不能用来开发 AI Agent 本身（charter/skills/commands/tools/evals/cli）？概念验证：定义一个 agent-dev-driven schema，不改源码。
+- [`schema-agent-dev-driven/`](schema-agent-dev-driven/question.md) — OpenSpec 的 schema 能不能用来开发 AI Agent 本身？概念验证：和 spec-driven 同框架（proposal/specs/design/tasks），只改 instruction 内容，不改源码。
 - [`openspec-executable/`](openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的。
 - [`config-yaml-growth/`](config-yaml-growth/question.md) — 熟悉 SDD 的人能手动调 config.yaml，但普通程序员怎么搞？有没有交互式工具或 agent 辅助——还是现状就是个缺口？
 

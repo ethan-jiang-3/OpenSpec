@@ -1,31 +1,36 @@
-# 接入与发布清单
+## 1. Skills
 
-<!-- 用 - [x] 标记完成；OpenSpec CLI 解析 - [ ] / - [x] 为进度 -->
+- [ ] 1.1 Write `skills/<name>.md` per design Skill definitions
+- [ ] 1.2 Write `skills/<name>.md` per design Skill definitions
 
-## Persona 就绪
-- [ ] charter.md 填写完成、各项非占位符
+## 2. Commands
 
-## Skills 接入 harness
-- [ ] `skills/[skill-1].md` → 渲染/拷贝到目标 harness 约定目录
-- [ ] `skills/[skill-2].md` → 渲染/拷贝到目标 harness 约定目录
+<!-- Skip this group if design has no Commands section -->
+- [ ] 2.1 Write `commands/<name>.md` per design Command definitions
 
-## Commands 注册
-- [ ] `commands/[command-1].md` → 在目标 harness 中注册、用户可调用
-- [ ] `commands/[command-2].md` → 在目标 harness 中注册、用户可调用
+## 3. Tools
 
-## Tools 可执行
-- [ ] `tools/[tool-1]` → 入口可执行、dry-run 通过
-- [ ] `tools/[tool-2]` → 入口可执行、dry-run 通过
+<!-- Skip this group if design has no Tools section -->
+- [ ] 3.1 Write tool script per design Tool definitions (with executable entry)
 
-## Evals 通过
-- [ ] `evals/[skill-1].md` → 正常路径用例通过
-- [ ] `evals/[skill-1].md` → 边界情况用例通过
-- [ ] `evals/[skill-1].md` → 拒绝场景用例通过
-- [ ] `evals/[skill-2].md` → 全部用例通过
+## 4. Evals
 
-## CLI 就绪
-- [ ] `[my-agent] --help` 正常输出
-- [ ] `[my-agent] status --json` 返回合法 JSON
+<!-- Skip this group if design has no Evals section -->
+- [ ] 4.1 Write eval case file per design Eval plan
+- [ ] 4.2 Run eval cases and verify all pass
 
-## 端到端验证
-- [ ] 选一个真实用户意图，从输入到输出全链路走通（charter → skill → command → tool → eval → cli）
+## 5. CLI
+
+<!-- Skip this group if design has no CLI section -->
+- [ ] 5.1 Implement CLI entry point per design CLI section
+- [ ] 5.2 Verify `<name> --help` works and `<name> status --json` returns valid JSON
+
+## 6. Harness Integration
+
+- [ ] 6.1 Copy skill files to target harness skill directory (e.g., `.claude/skills/<name>/SKILL.md`)
+- [ ] 6.2 Copy command files to target harness command directory (e.g., `.claude/commands/opsx/<name>.md`)
+- [ ] 6.3 Run all eval cases, confirm all pass
+
+## 7. End-to-End
+
+- [ ] 7.1 Walk one real user intent through the full agent chain (proposal → spec → skill → command → tool → eval → CLI)

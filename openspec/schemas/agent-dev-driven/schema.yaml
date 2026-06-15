@@ -1,150 +1,151 @@
 name: agent-dev-driven
 version: 1
-description: AI Agent 开发工作流——交付 charter/skills/commands/tools/evals/cli 这组 harness 可消费的组件
+description: Agent 开发工作流——proposal → specs → design → tasks。和 spec-driven 同框架，交付物从代码换成 agent 组件
 
 artifacts:
-  - id: charter
-    generates: charter.md
-    description: Agent 授权与护栏——授权范围、硬约束、输出契约、基线 prompt
-    template: charter.md
+  - id: proposal
+    generates: proposal.md
+    description: Agent 提案——Why（为什么建这个 agent）、What Changes（能力与约束）、Capabilities（capability 清单）、Baseline Prompt
+    template: proposal.md
     instruction: |
-      定义 Agent 的授权范围与硬约束——这是 agent 的「宪章」，是所有下游 artifact 的身份与边界来源。
+      Create the proposal that establishes WHY this agent is needed, WHAT it will do, and what it MUST NOT do.
 
-      **授权**（Agent 在 harness 中的注册身份）：
-      - 名字（在 harness 中的注册名）、角色（一句话——它做什么、为谁服务）
-      - 运行身份（以什么权限/账号运行；依赖哪些外部服务）
+      Sections:
+      - **Why**: 1-2 sentences on the problem or opportunity. Who is this agent for? What gap does it fill?
+      - **What Changes**: Bullet list. New agent capabilities, modifications to existing behavior, or removals.
+      - **Capabilities**: Identify which agent capabilities will be created or modified:
+        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names.
+        - **Modified Capabilities**: Existing capabilities being changed. Each needs a delta spec.
+      - **Constraints**: Hard boundaries the agent MUST NOT cross. What inputs or requests it must refuse (compliance, safety, out-of-scope). For each: trigger condition + refusal response template. Use a table.
+      - **Baseline Prompt**: A "You are..." system-prompt paragraph distilled from Why, Capabilities, and Constraints. Downstream harnesses inject this directly as the agent's system prompt.
+      - **Impact**: Affected harnesses, tools, existing skills, dependencies.
 
-      **能力范围（Grant）**——Agent 被允许做什么：
-      - 逐条列出能力及边界条件
-      - 可调用的内部能力（指向 skills/ 目录）和外部工具（指向 tools/ 目录）
-
-      **硬约束（Constraints）**——Agent 绝对不能做什么：
-      - 逐条列出约束及原因（合规/安全/业务规则）
-      - 用表格列出必须拒绝的输入类型、判定条件、拒绝话术模板（对齐模板「硬约束」段）
-
-      **输出契约**——Agent 产出的格式约定：
-      - 默认输出格式（先说结论再解释 / 结构化分点 / 只给动作不给解释）
-      - 详细度、追问策略、目标受众（给开发者看 / 给终端用户看 / 给另一个 agent 看）
-
-      **基线 Prompt**——从本 charter 渲染出的 system-prompt 等价物：
-      - 以「你是…」开头的一段完整立场陈述，覆盖授权、约束、输出契约的摘要
-      - 下游 harness/adapter 取这一段直接注入目标运行时（Claude Code system prompt / OpenSpec skill frontmatter / 自建 runtime）
+      IMPORTANT: The Capabilities section creates the contract between proposal and specs.
+      Each capability listed here needs a corresponding spec file.
+      Keep it concise (1-2 pages). Focus on "why" and "what" not "how"——implementation belongs in design.md.
     requires: []
 
-  - id: skills
-    generates: skills/**/*.md
-    description: Skill 定义（Markdown 格式，harness 自动发现）
-    template: skill.md
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Agent 能力规格——delta ops（ADDED/MODIFIED/REMOVED/RENAMED）Requirement+Scenario。和 spec-driven specs 完全同构
+    template: spec.md
     instruction: |
-      基于 charter.md，为 Agent 定义技能。每个 skill 一个 Markdown 文件，放在 skills/ 目录下。
+      Create specification files that define WHAT the agent should do. Same delta-ops format as spec-driven specs——agent capabilities are spec-able.
 
-      - frontmatter：name（skill 名）、description（一句话用途）、when-to-use（触发语义）
-      - 正文：触发条件（什么情况下 Agent 应激活这个 skill）
-      - 分步执行步骤（Step 1/2/3…，每步做什么、产出什么）
-      - 输入输出格式（输入参数 schema、输出格式 schema）
-      - 错误处理与边界情况（输入残缺、工具失败、权限不足时怎么做）
-      - 与其他 skill 的协作方式（显式声明依赖或调用关系，用 skill 文件名引用）
+      Create one spec file per capability listed in the proposal's Capabilities section.
+      - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
+      - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
+
+      Delta operations (## headers):
+      - **ADDED Requirements**: New agent capabilities
+      - **MODIFIED Requirements**: Changed agent behavior - MUST include full updated content
+      - **REMOVED Requirements**: Deprecated capabilities - MUST include **Reason** and **Migration**
+      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+
+      Format requirements:
+      - Each requirement: `### Requirement: <name>` followed by description
+      - Use SHALL/MUST for normative requirements (avoid should/may)
+      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
+      - Every requirement MUST have at least one scenario.
+
+      MODIFIED requirements workflow:
+      1. Locate the existing requirement in openspec/specs/<capability>/spec.md
+      2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios)
+      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
+      4. Ensure header text matches exactly (whitespace-insensitive)
+
+      Common pitfall: Using MODIFIED with partial content loses detail at archive time.
+      If adding new concerns without changing existing behavior, use ADDED instead.
+
+      Agent scenarios use the same WHEN/THEN format——replace system events with user inputs:
+      ```
+      #### Scenario: User asks for data export
+      - **WHEN** user says "export my data"
+      - **THEN** agent calls export tool and responds with a CSV download link
+      ```
+
+      Specs should be testable——each scenario is a potential eval case.
     requires:
-      - charter
+      - proposal
 
-  - id: commands
-    generates: commands/**/*.md
-    description: Slash-command 定义（Markdown 格式，用户可调用）
-    template: command.md
+  - id: design
+    generates: design.md
+    description: Agent 实现方案——Skills/Commands/Tools/Evals/CLI 的完整设计。必写（不同于 spec-driven 的 optional）
+    template: design.md
     instruction: |
-      基于 skills/ 下的 skill，为 Agent 定义用户可调用的 slash-command。每个 command 一个 Markdown 文件，放在 commands/ 目录下。
+      Create the design document that explains HOW to build the agent. Unlike spec-driven design (which is "create only if any apply"), this is **required** for every agent change——the agent IS its design.
 
-      - frontmatter：命令名（如 /my-agent:do-x）、一句话用途、参数说明（$ARGUMENTS 或结构化入参）
-      - 正文：命令体——把若干 skill 串成一条用户意图工作流
-      - 显式标注调用了哪些 skill（引用 skills/ 下的文件名）
-      - 预检：命令启动前需满足的条件（前置 artifact、环境依赖）
-      - 成功/失败的预期输出形态（用户会看到什么、下一步是什么）
+      Sections:
+      - **Context**: Background, target harness, constraints, existing agent state (check openspec/specs/ for current capabilities)
+      - **Goals / Non-Goals**: What this design achieves and explicitly excludes
+      - **Skills**: For each capability in specs, define the agent skill that implements it:
+        - Skill name (maps to `skills/<name>.md`), trigger conditions, step-by-step plan
+        - Input/output format, error handling per scenario, inter-skill collaboration
+      - **Commands**: Slash-command design——if this change needs user-facing commands, define: command name (/agent:do-x), which skills it orchestrates and in what order, argument prelude, expected output. Skip if not needed.
+      - **Tools**: Runtime tool/script design——if this change needs tools, define: tool name, input schema, return format, side effects, harness adapter notes (same tool may need different wrappers for OpenSpec vs Claude Code vs Cursor). Skip if not needed.
+      - **Evals**: Behavior test plan——for each skill, define: normal path case, boundary case, refusal case. Each with concrete assertion method (grep/jq/file existence/exit code). Skip if not needed.
+      - **CLI**: CLI surface design——if this agent is a CLI tool, define: binary name, subcommands mapped to skills, flags, status API (analogous to `openspec status --json`). Skip if not needed.
+      - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered.
+      - **Risks / Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
+      - **Migration Plan**: Steps to deploy, rollback strategy
+
+      Reference specs for what the agent must do, proposal for why and constraints.
+      Not every section needs to be filled——only include sections for components this change actually needs.
     requires:
-      - skills
-
-  - id: tools
-    generates: tools/**/*
-    description: 运行时工具/脚本——agent 调用的执行层
-    template: tool.md
-    instruction: |
-      定义 Agent 在运行时调用的工具和脚本。每个工具一个文件，放在 tools/ 目录下（Python/Shell/JS/JSON tool-schema 均可）。
-
-      - 工具名称、入参 schema（JSON Schema 或结构化自然语言描述）
-      - 返回格式（JSON 结构、exit code、stdout/stderr 语义）
-      - 副作用说明（读写文件、网络调用、状态变更）
-      - 运行时契约：如果该 agent 依赖 OpenSpec CLI，列出会调用的 openspec 命令（如 `openspec status --json`、`openspec instructions --json`），给出调用顺序与失败处理
-      - 反向索引：标注被哪个 skill/command 使用（引用文件路径）
-      - 适配说明：同一工具在不同 harness（OpenSpec / Claude Code / Cursor）下的交付差异（文件位置、frontmatter 格式等）
-    requires:
-      - skills
-
-  - id: evals
-    generates: evals/**/*.md
-    description: 行为测试用例（形状断言，非模型 eval）
-    template: eval.md
-    instruction: |
-      为每个 skill 编写行为测试用例。每个 eval 文件对应一个 skill 文件，放在 evals/ 目录下。
-
-      - 三类用例（每个用例：输入 + 期望断言）：
-        1. 正常路径：给定标准输入 → 期望输出（断言产物形状/字段/关键值）
-        2. 边界情况：残缺输入/超长输入/歧义输入 → 期望行为（降级/追问/拒绝）
-        3. 拒绝场景：越界输入 → 期望拒绝理由（匹配 charter 里定义的拒绝话术）
-      - 断言方式：针对 Agent 产物的形状和字段（文件存在性、JSON 字段、关键词匹配、exit code）——不依赖 LLM as-judge，可重复执行
-      - 标注每条用例验证的是哪个 skill/command
-      - 可重复判定：给出具体判定命令（grep、jq、diff、test -f 等）
-    requires:
-      - skills
-
-  - id: cli
-    generates: cli.md
-    description: Agent 的命令行界面——入口、子命令、状态 API
-    template: cli.md
-    instruction: |
-      定义 Agent 自己的命令行界面——用户如何调用它、它对外暴露什么接口。
-
-      - 二进制/入口名（如 `my-agent`），安装方式（npm link、pip install -e .、直接脚本）
-      - 子命令列表：每个子命令对应一个 skill，参数映射到 skill 的输入
-      - flags / options（全局和子命令级）
-      - 状态读取 API：Agent 对外暴露的结构化状态接口（类比 `openspec status --json`、`openspec instructions --json`），供其他工具或上层 orchestrator 查询
-      - 退出码约定（0=成功、非 0 的语义）
-      - 安装/打包说明（目标平台、依赖）
-    requires:
-      - skills
+      - proposal
 
   - id: tasks
     generates: tasks.md
-    description: 接入与发布清单——可勾选的进度跟踪
+    description: Agent 构建清单——可跟踪的 checkbox 任务
     template: tasks.md
     instruction: |
-      把 Agent 的上线准备拆成可勾选的清单。用 `- [ ]` / `- [x]` 格式，OpenSpec CLI 会解析为进度。
+      Create the task list that breaks down the agent build. Same checkbox format as spec-driven tasks——the apply phase parses `- [ ]` to track progress.
 
-      - 每个 skill 至少一条「已接入 harness」（skills/ 下的文件渲染/拷贝到目标 harness 的约定目录）
-      - 每个 command 至少一条「已注册并可被用户调用」（commands/ 下的文件就位）
-      - 每个 tool 至少一条「已可执行」（脚本有正确入口、dry-run 通过）
-      - 每条 eval 至少一条「已运行并通过」
-      - cli（如果本 agent 是 CLI 工具）：「入口可调用、--help 正常输出、状态 API 返回有效 JSON」
-      - 末尾一条端到端任务：从一个真实用户意图出发，走完 charter → skill → command → tool → eval → cli 全链路
+      **IMPORTANT: Follow the template format exactly.** Tasks not using `- [ ]` won't be tracked.
+
+      Guidelines:
+      - Group related tasks under ## numbered headings
+      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
+      - Tasks should be small enough to complete in one session
+      - Order tasks by dependency
+
+      Task groups (adapt to what design.md actually includes——skip groups not needed):
+      1. **Skills**: Write skill MD files per design's Skill definitions
+      2. **Commands**: Write slash-command MD files per design's Command definitions
+      3. **Tools**: Write tool scripts per design's Tool definitions
+      4. **Evals**: Write eval case files per design's Eval plan
+      5. **CLI**: Implement CLI entry point, subcommands, status API per design's CLI section
+      6. **Harness Integration**: Copy skills/ and commands/ to target harness directories, register commands, run evals
+      7. **End-to-End**: One real user intent walked end-to-end through the full agent
+
+      Reference specs for what must be built, design for how to build it.
+      Each task should be verifiable——you know when it's done.
     requires:
-      - skills
-      - commands
-      - tools
-      - evals
+      - specs
+      - design
 
 apply:
-  requires:
-    - tasks
+  requires: [tasks]
   tracks: tasks.md
   instruction: |
-    就绪检查（readiness gate）：
-    1) 每个 skill 都有对应的 command 和 eval（skill↔command↔eval 三者齐全，不漏不重）
-    2) 每个 tool 都可执行（脚本有正确入口、dry-run 不出错）
-    3) 如果 cli.md 存在：cli 入口可调用、--help 正常、状态 API 返回合法 JSON
-    4) 所有 evals 通过
+    Read design.md and tasks.md. Build each agent component per the design, checking off tasks as you go.
 
-    集成（integration）：
-    5) 把 skills/ 和 commands/ 下的文件渲染/拷贝到目标 harness 的约定目录（如 .claude/skills/、.claude/commands/）
-    6) 跑一遍 evals，记录通过/失败
+    Readiness check before starting:
+    1) Every component in design.md (skills/commands/tools/evals/CLI) has a corresponding task group in tasks.md
+    2) Any component not included in design.md is intentionally absent——don't build it
 
-    完成定义（Definition of done）：
-    - tasks.md 全部勾选完成
-    - 至少一条端到端用例从用户输入到预期输出跑通
+    Build components:
+    3) Skill MD files with YAML frontmatter (name, description, when-to-use)
+    4) Slash-command MD files with proper frontmatter and argument prelude
+    5) Tool scripts with executable entry (shebang for scripts, proper exports for JS)
+    6) Eval case files with concrete, repeatable assertion commands
+    7) CLI entry point and subcommands if design calls for it
+
+    Harness integration:
+    8) Copy skill files to target harness skill directory (e.g., .claude/skills/<name>/SKILL.md)
+    9) Copy command files to target harness command directory (e.g., .claude/commands/opsx/<name>.md)
+    10) Run all eval cases, record pass/fail——fix failures before continuing
+    11) Walk one end-to-end path: a real user intent from input to expected output
+
+    Definition of done: tasks.md all checked off, all evals pass, end-to-end path confirmed.
