@@ -5,24 +5,28 @@ description: Agent 开发工作流——proposal → specs → design → tasks�
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: Agent 提案——Why（为什么建这个 agent）、What Changes（能力与约束）、Capabilities（capability 清单）、Baseline Prompt
+    description: Agent 提案——Why（为什么做这个 change）、What Changes、Capabilities、Impact。和 spec-driven proposal 同构
     template: proposal.md
     instruction: |
-      Create the proposal that establishes WHY this agent is needed, WHAT it will do, and what it MUST NOT do.
+      Create the proposal that establishes WHY this change is needed.
 
       Sections:
-      - **Why**: 1-2 sentences on the problem or opportunity. Who is this agent for? What gap does it fill?
+      - **Why**: 1-2 sentences on the problem or opportunity. What does this change enable the agent to do?
       - **What Changes**: Bullet list. New agent capabilities, modifications to existing behavior, or removals.
       - **Capabilities**: Identify which agent capabilities will be created or modified:
-        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names.
-        - **Modified Capabilities**: Existing capabilities being changed. Each needs a delta spec.
-      - **Constraints**: Hard boundaries the agent MUST NOT cross. What inputs or requests it must refuse (compliance, safety, out-of-scope). For each: trigger condition + refusal response template. Use a table.
-      - **Baseline Prompt**: A "You are..." system-prompt paragraph distilled from Why, Capabilities, and Constraints. Downstream harnesses inject this directly as the agent's system prompt.
-      - **Impact**: Affected harnesses, tools, existing skills, dependencies.
+        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `data-export`, `refund-handling`).
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Each needs a delta spec file. Check `openspec/specs/` for existing spec names.
+      - **Impact**: Affected skills, commands, tools, harnesses, dependencies.
 
       IMPORTANT: The Capabilities section creates the contract between proposal and specs.
       Each capability listed here needs a corresponding spec file.
-      Keep it concise (1-2 pages). Focus on "why" and "what" not "how"——implementation belongs in design.md.
+
+      Agent identity, hard constraints, refusal templates, and the baseline system prompt are
+      project-level concerns——put them in openspec/config.yaml context, not in every proposal.
+      This proposal focuses on THIS change only.
+
+      Keep it concise (1-2 pages). Focus on "why" and "what" not "how"——
+      implementation belongs in design.md.
     requires: []
 
   - id: specs

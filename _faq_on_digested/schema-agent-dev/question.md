@@ -8,7 +8,7 @@ OpenSpec 的 schema 系统能不能脱离传统软件开发的 `spec-driven`，�
 
 已有过一个 4-artifact 雏形（persona → skills → {scripts, tests}），证明了 OpenSpec 可以管理 agent 开发。但它的问题是自建了一套 artifact 名和 DAG，和 spec-driven 不通用——每个用过 spec-driven 的人都要重新学。
 
-本 FAQ 的设计选择：**不发明新 artifact。** agent-dev-driven 和 spec-driven 使用完全相同的 4-artifact 框架（proposal → specs → design → tasks → apply），只改每个 artifact 的 instruction 和 template **内容**。proposal 多写 Constraints（硬约束+拒绝话术）和 Baseline Prompt（system-prompt 等价物），design 多写 Skills/Commands/Tools/Evals/CLI 段，tasks 跟踪的是 agent 组件构建而非代码实现。
+本 FAQ 的设计选择：**不发明新 artifact。** agent-dev-driven 和 spec-driven 使用完全相同的 4-artifact 框架（proposal → specs → design → tasks → apply），只改每个 artifact 的 instruction 和 template **内容**。proposal 和 specs 不改——和 spec-driven 同构。design 加重（Skills/Commands/Tools/Evals/CLI 段，agent 的完整实现方案），tasks 跟踪的是 agent 组件构建而非代码实现。agent 的身份、硬约束、system prompt 是项目全局配置——放 `openspec/config.yaml` 的 `context`，不在每个 proposal 里重复。
 
 # 答案摘要
 
