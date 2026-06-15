@@ -2,7 +2,7 @@
 
 ## 直接回答
 
-可以。`agent-dev-driven` schema 把 OpenSpec 的「交付物」从代码（`spec-driven`）或文章（`article-driven`）换成**一个 AI agent**——即 charter、skills、slash-commands、tools、evals、cli 这组一个智能体 harness 可消费的组件。不改一行 OpenSpec 源码，复用同一套 artifact DAG + 模板 + CLI 解释器。
+可以。`agent-dev-driven` schema 把 OpenSpec 的「交付物」从代码（`spec-driven`）或文章（`article-driven`）换成**一个 AI agent**——即 charter、skills、commands、tools、evals、cli 这组一个智能体 harness 可消费的组件。不改一行 OpenSpec 源码，复用同一套 artifact DAG + 模板 + CLI 解释器。
 
 ```text
 spec-driven       交付 = 软件（代码）
@@ -12,15 +12,26 @@ agent-dev-driven  交付 = agent（它的 anatomy：charter/skills/commands/tool
 
 ## 为什么会想到这个
 
-`_digested/schema/07-超越-spec-driven-的应用场景.md` 的场景 3「Agent/Skill 内容开发」（`:178-244`）已经给了这个概念一个雏形——`agent-development` schema，4 artifact：charter → skills → {scripts, tests}。它证明了 OpenSpec 可以管理 agent 开发工作流，但有三个明显缺口：
+`_digested/schema/07-超越-spec-driven-的应用场景.md` 的场景 3「Agent/Skill 内容开发」给过一个 4-artifact 雏形——`agent-development` schema：
 
-1. **没有 commands**。场景 3 定义了 skills 和 scripts，但 agent 真正的用户界面是 **slash-command**——用户键入 `/agent:do-x`，agent 把若干 skill 串成一个工作流。OpenSpec 自己的 `/opsx:apply`、`/opsx:explore` 就是这种命令（`src/core/templates/workflows/` 里每个 workflow `.ts` 导出 skill + command 一对）。这是 agent 区别于传统软件的最明显一层——`spec-driven` 没有「用户可调用的命令」这个概念。
+```text
+persona → skills → {scripts, tests}
+```
 
-2. **没有 CLI**。如果目标 agent 是一个 CLI 工具（就像 Claude Code 本身），它需要一个自己的命令行界面——入口、子命令、flags、状态读取 API。场景 3 只有 `scripts`（执行脚本），不是 CLI 表面。
+- **`persona`**（即本 schema `charter` 的前身）：只定义名字、能力范围、沟通风格——没有硬约束表格（什么输入→什么拒绝话术），也没有显式的基线 prompt 段落。本 schema 的 charter 在这基础上补了「授权/Grant/Constraints/输出契约/基线 Prompt」五段框架。
+- **`skills`**：每个 skill 一个 MD，结构和本 schema 基本一致。
+- **`scripts`**（本 schema `tools` 的前身）：定义为 Python/Shell/JS 脚本——没有 harness 适配说明，也没有反向索引（哪个 skill/command 调用了这个工具）。
+- **`tests`**（本 schema `evals` 的前身）：行为测试用例，但没有区分「正常/边界/拒绝」三类，也没有要求给出可重复执行的判定命令。
 
-3. **charter 过于轻量**。场景 3 的 charter 没有显式的 **system-prompt 段落**和**拒绝话术模板**。一个生产可用的 agent 需要单一身份来源（尤其是行为边界和拒绝条件），而 OpenSpec 自己的 charter 是 per-skill 的（`src/core/templates/workflows/explore.ts:13-288` 里 explore 的「stance」只属于 explore 那一个 skill——没有全局 system-prompt）。专用 agent 需要一个顶层 charter artifact 作为「身份宪章」。
+这个雏形证明了 OpenSpec 可以管理 agent 开发工作流，但缺三样 agent harness 真正需要的东西：
 
-本 schema 把这三点补上，从 4 artifact 精化到 7。
+1. **没有 commands**。场景 3 有 skills 和 scripts，但没有 **slash-command**——用户可调用的命令（MD，如 `/opsx:apply`）才是 agent 的「用户界面」。OpenSpec 自己的设计已经体现了这一点：同一个 workflow 导出**两个交付形式**——skill（agent 自动发现的 MD）和 command（用户敲的 MD），内容同源、外壳不同。这个「author once, render to N harnesses」的原则是本 schema 的核心依据：charter 和 skills 是语义源（semantic source），commands、tools、cli 是交付外壳（delivery shell）——同一套语义通过 adapter 渲染进 Claude Code、Cursor、自建 runtime 等不同 harness 的约定目录和格式。
+
+2. **没有 CLI**。如果目标 agent 是一个 CLI 工具（就像 Claude Code 本身），它需要自己的命令行界面——入口、子命令映射到 skills、flags、状态读取 API（类比 `openspec status --json`）。
+
+3. **没有接入流水线**。场景 3 的 apply 直接 requires `[skills, scripts, tests]`，没有 `tasks`（可勾选的接入清单）和 `tracks`（进度跟踪）。本 schema 补了 `tasks` artifact + `apply.tracks: tasks.md`，让 `openspec change --long` 显示进度计数。
+
+本 schema 把这三样补上，从 4 artifact 精化到 7。
 
 ## 核心设计：7 个 artifact 的 DAG
 
@@ -32,13 +43,14 @@ skills
   │
   ├─→ commands ──┐
   ├─→ tools ─────┤
-  ├─→ evals ─────┤
-  └─→ cli ───────┤
+  └─→ evals ─────┤
                   ▼
                 tasks
                   │
                   ▼
                 apply
+
+  cli（独立：requires [skills]，不阻塞 tasks——非 CLI agent 可跳过）
 ```
 
 **每个 artifact 做什么——和 `spec-driven` 的对应**：
@@ -50,19 +62,19 @@ skills
 | `commands` | 用户可调用的 slash-command（MD）——把 skill 串成用户意图工作流 | 没有对应——agent 独有的「用户界面」层 |
 | `tools` | 运行时工具/脚本（入参 schema、返回格式、副作用、harness 适配说明） | `tasks` 的可执行对应 + 部分 `design` |
 | `evals` | 行为测试用例（正常/边界/拒绝，形状断言，不依赖模型 eval） | 没有直接对应——spec-driven 靠 CI/tests，agent 靠 evals |
-| `cli` | agent 自己的命令行界面（入口、子命令、flags、状态读取 API、安装/打包说明） | 没有对应——spec-driven 产出的不是 CLI 工具 |
+| `cli` | agent 自己的命令行界面（入口、子命令、flags、状态读取 API、安装/打包说明）——独立 artifact，不阻塞 tasks | 没有对应——spec-driven 产出的不是 CLI 工具 |
 | `tasks` | 接入与发布清单（可勾选 checkbox，OpenSpec CLI 解析为进度） | `tasks`——同名，职责一致：可追踪进度 |
 
 **requires 关系**：
 
 ```text
 charter  requires: []
-skills   requires: [charter]                        # 能力必须先知道「是谁的能力」
+skills   requires: [charter]                        # 能力必须先知道「是谁的能力、被允许做什么」
 commands requires: [skills]                         # 命令编排的是 skill
 tools    requires: [skills]                         # 工具被 skill 调用
 evals    requires: [skills]                         # 验证的是 skill 行为
-cli      requires: [skills]                         # CLI 子命令映射到 skill
-tasks    requires: [skills, commands, tools, evals, cli]  # 全部就绪才能列接入清单
+cli      requires: [skills]                         # CLI 子命令映射到 skill（不阻塞 tasks——非 CLI agent 可跳过）
+tasks    requires: [skills, commands, tools, evals]  # 核心交付物就绪才能列接入清单
 apply    requires: [tasks], tracks: tasks.md
 ```
 
@@ -86,11 +98,11 @@ apply    requires: [tasks], tracks: tasks.md
 
 ### 决策 3：为什么保留顶层 charter artifact（尽管 OpenSpec 自己没有全局 system-prompt）
 
-**约束**：OpenSpec 的 charter 是 per-skill 的——每个 workflow 模板各自的 `instructions` 里定义了该 skill 的 stance（如 `explore.ts:13-288` 的「Curious, Patient, Grounded, Don't-implement」），没有统一的 system-prompt 文件。但一个专用 agent（不是通才 coding agent）需要**单一**身份来源——尤其是「什么不能做、什么时候必须拒绝」这一条不能在多个 skill 里各自表述。
+**约束**：OpenSpec 没有顶层授权文件——它的「agent 应该怎么做」是 per-skill 定义的：每个 workflow 模板（如 `explore.ts`）各自的 `instructions` 里写了该 skill 的 stance——explore 是「Curious, Patient, Grounded, Don't-implement」，apply 是另一种。没有一个统一的文件说「这个 agent 整体上不能做什么、对什么输入必须拒绝」。但一个专用 agent（不是通才 coding agent）需要**单一**身份来源——尤其是硬约束和拒绝话术不能在多个 skill 里各自表述。
 
-**决策**：charter 作为语义源，内部包含一个显式的「系统立场（system-prompt）」段落。下游 tools/commands 的 adapter 层从这个单一源渲染成不同 harness 需要的外壳（Claude Code 的 system prompt、OpenSpec skill 的 frontmatter、自建 runtime 的角色 prompt）。这正是 OpenSpec「author once, render to N harnesses via adapters」（`_digested/mechanisms/02-tool-delivery.md:7`）的落地——charter 是 semantic source，adapter 是 delivery shell。
+**决策**：charter 作为语义源，内部用五段框架（授权/Grant/Constraints/输出契约/基线 Prompt）把 agent 的身份、边界、拒绝条件集中在一处。下游 commands/tools/cli 的 adapter 层从这个单一源渲染成不同 harness 需要的外壳（Claude Code 的 system prompt、OpenSpec skill 的 frontmatter、自建 runtime 的角色 prompt）。这正是「author once, render to N harnesses」原则——charter 是 semantic source，adapter 是 delivery shell。
 
-**移除条件**：OpenSpec v1.4+ 的 workspace schema 已埋了「workspace 级 system-prompt」的伏笔（`schemas/workspace-planning/schema.yaml` 的 apply 块有可能扩展到 charter 注入）。如果这一能力落地，charter 可降级为 workspace 配置而非 schema artifact。
+**移除条件**：OpenSpec v1.4+ 的 workspace schema 已埋了「workspace 级 system-prompt」的伏笔。如果这一能力落地，charter 可降级为 workspace 配置而非 schema artifact。
 
 ## 这验证了什么
 
@@ -117,10 +129,11 @@ apply    requires: [tasks], tracks: tasks.md
 3. 检查 DAG 状态：
    ```bash
    openspec status --change build-my-agent --json
-   # charter=blocked（没有 requires，但没有生成文件）→ ready 等你写
+   # charter=ready（没有 requires——你写 charter.md 即开始）
    # 写完 charter.md 后：skills=ready
-   # 写完 skills/ 后：commands/tools/evals/cli 同时 ready（它们都只 require skills）
-   # 全部写完后：tasks=ready
+   # 写完 skills/ 后：commands/tools/evals 同时 ready（它们都只 require skills）
+   # cli=ready（独立——需要 CLI 就写，不需要就跳过）
+   # 核心交付物全部写完后：tasks=ready
    # tasks.md 交卷后：apply=ready
    ```
 

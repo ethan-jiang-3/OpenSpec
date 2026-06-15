@@ -3,7 +3,7 @@
 <!-- 用 - [x] 标记完成；OpenSpec CLI 解析 - [ ] / - [x] 为进度 -->
 
 ## Persona 就绪
-- [ ] persona.md 填写完成、各项非占位符
+- [ ] charter.md 填写完成、各项非占位符
 
 ## Skills 接入 harness
 - [ ] `skills/[skill-1].md` → 渲染/拷贝到目标 harness 约定目录
@@ -28,4 +28,4 @@
 - [ ] `[my-agent] status --json` 返回合法 JSON
 
 ## 端到端验证
-- [ ] 选一个真实用户意图，从输入到输出全链路走通（persona → skill → command → tool → eval → cli）
+- [ ] 选一个真实用户意图，从输入到输出全链路走通（charter → skill → command → tool → eval → cli）

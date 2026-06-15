@@ -1,6 +1,6 @@
 # 问题
 
-OpenSpec 的 schema 系统能不能脱离传统软件开发的 `spec-driven`，用来**开发 AI Agent 本身**——产出 charter（系统立场）、skills（可被 harness 自动发现的 MD 能力单元）、slash-commands（MD 格式）、tools（工具/运行时契约）、evals（行为测试用例）、CLI（命令行界面/状态 API），即一个智能体 harness 要消费的那组组件，而不是代码？
+OpenSpec 的 schema 系统能不能脱离传统软件开发的 `spec-driven`，用来**开发 AI Agent 本身**——产出 charter（授权与护栏）、skills（可被 harness 自动发现的 MD 能力单元）、slash-commands（MD 格式）、tools（工具/运行时契约）、evals（行为测试用例）、CLI（命令行界面/状态 API），即一个智能体 harness 要消费的那组组件，而不是代码？
 
 如果可以，一个 `agent-dev-driven` schema 长什么样？需要避开哪些坑？和已有的 `spec-driven`、`article-driven` 是什么关系？
 

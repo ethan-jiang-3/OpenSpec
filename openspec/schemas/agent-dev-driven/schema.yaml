@@ -1,21 +1,34 @@
 name: agent-dev-driven
 version: 1
-description: AI Agent 开发工作流——交付 persona/skills/commands/tools/evals/cli 这组 harness 可消费的组件
+description: AI Agent 开发工作流——交付 charter/skills/commands/tools/evals/cli 这组 harness 可消费的组件
 
 artifacts:
-  - id: persona
-    generates: persona.md
-    description: Agent 角色定义——身份、能力、边界、系统立场
-    template: persona.md
+  - id: charter
+    generates: charter.md
+    description: Agent 授权与护栏——授权范围、硬约束、输出契约、基线 prompt
+    template: charter.md
     instruction: |
-      定义 Agent 的角色和行为边界：
+      定义 Agent 的授权范围与硬约束——这是 agent 的「宪章」，是所有下游 artifact 的身份与边界来源。
 
-      - Agent 的名字、身份、专业领域（一句话能说清「它是谁、为谁服务」）
-      - 核心能力范围：能做什么——列出可调用的 skill 与外部工具清单
-      - 行为边界：不能做什么——什么输入必须拒绝（合规、安全、越界请求），并给出拒绝话术模板
-      - 沟通风格与语气：默认回复结构、详细度、何时主动追问、何时保持沉默
-      - 系统立场（system-prompt）：以「你是…」开头的整段立场陈述，供下游 harness 直接消费或 adapter 渲染
-      - 用户画像：服务对象是谁、典型任务的上下文假设
+      **授权**（Agent 在 harness 中的注册身份）：
+      - 名字（在 harness 中的注册名）、角色（一句话——它做什么、为谁服务）
+      - 运行身份（以什么权限/账号运行；依赖哪些外部服务）
+
+      **能力范围（Grant）**——Agent 被允许做什么：
+      - 逐条列出能力及边界条件
+      - 可调用的内部能力（指向 skills/ 目录）和外部工具（指向 tools/ 目录）
+
+      **硬约束（Constraints）**——Agent 绝对不能做什么：
+      - 逐条列出约束及原因（合规/安全/业务规则）
+      - 用表格列出必须拒绝的输入类型、判定条件、拒绝话术模板（对齐模板「硬约束」段）
+
+      **输出契约**——Agent 产出的格式约定：
+      - 默认输出格式（先说结论再解释 / 结构化分点 / 只给动作不给解释）
+      - 详细度、追问策略、目标受众（给开发者看 / 给终端用户看 / 给另一个 agent 看）
+
+      **基线 Prompt**——从本 charter 渲染出的 system-prompt 等价物：
+      - 以「你是…」开头的一段完整立场陈述，覆盖授权、约束、输出契约的摘要
+      - 下游 harness/adapter 取这一段直接注入目标运行时（Claude Code system prompt / OpenSpec skill frontmatter / 自建 runtime）
     requires: []
 
   - id: skills
@@ -23,7 +36,7 @@ artifacts:
     description: Skill 定义（Markdown 格式，harness 自动发现）
     template: skill.md
     instruction: |
-      基于 persona.md，为 Agent 定义技能。每个 skill 一个 Markdown 文件，放在 skills/ 目录下。
+      基于 charter.md，为 Agent 定义技能。每个 skill 一个 Markdown 文件，放在 skills/ 目录下。
 
       - frontmatter：name（skill 名）、description（一句话用途）、when-to-use（触发语义）
       - 正文：触发条件（什么情况下 Agent 应激活这个 skill）
@@ -32,7 +45,7 @@ artifacts:
       - 错误处理与边界情况（输入残缺、工具失败、权限不足时怎么做）
       - 与其他 skill 的协作方式（显式声明依赖或调用关系，用 skill 文件名引用）
     requires:
-      - persona
+      - charter
 
   - id: commands
     generates: commands/**/*.md
@@ -75,7 +88,7 @@ artifacts:
       - 三类用例（每个用例：输入 + 期望断言）：
         1. 正常路径：给定标准输入 → 期望输出（断言产物形状/字段/关键值）
         2. 边界情况：残缺输入/超长输入/歧义输入 → 期望行为（降级/追问/拒绝）
-        3. 拒绝场景：越界输入 → 期望拒绝理由（匹配 persona 里定义的拒绝话术）
+        3. 拒绝场景：越界输入 → 期望拒绝理由（匹配 charter 里定义的拒绝话术）
       - 断言方式：针对 Agent 产物的形状和字段（文件存在性、JSON 字段、关键词匹配、exit code）——不依赖 LLM as-judge，可重复执行
       - 标注每条用例验证的是哪个 skill/command
       - 可重复判定：给出具体判定命令（grep、jq、diff、test -f 等）
@@ -109,14 +122,13 @@ artifacts:
       - 每个 command 至少一条「已注册并可被用户调用」（commands/ 下的文件就位）
       - 每个 tool 至少一条「已可执行」（脚本有正确入口、dry-run 通过）
       - 每条 eval 至少一条「已运行并通过」
-      - cli 就绪：「入口可调用、--help 正常输出、状态 API 返回有效 JSON」
-      - 末尾一条端到端任务：从一个真实用户意图出发，走完 persona → skill → command → tool → eval → cli 全链路
+      - cli（如果本 agent 是 CLI 工具）：「入口可调用、--help 正常输出、状态 API 返回有效 JSON」
+      - 末尾一条端到端任务：从一个真实用户意图出发，走完 charter → skill → command → tool → eval → cli 全链路
     requires:
       - skills
       - commands
       - tools
       - evals
-      - cli
 
 apply:
   requires:
@@ -126,7 +138,7 @@ apply:
     就绪检查（readiness gate）：
     1) 每个 skill 都有对应的 command 和 eval（skill↔command↔eval 三者齐全，不漏不重）
     2) 每个 tool 都可执行（脚本有正确入口、dry-run 不出错）
-    3) cli 入口可调用、--help 正常、状态 API 返回合法 JSON
+    3) 如果 cli.md 存在：cli 入口可调用、--help 正常、状态 API 返回合法 JSON
     4) 所有 evals 通过
 
     集成（integration）：
