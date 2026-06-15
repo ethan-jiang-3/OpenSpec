@@ -93,23 +93,20 @@ proposal 和 specs 通常不用大动——"为什么要做"和"规格化要交�
 
 ### Level 3：fork schema，增删改 artifact
 
-**什么时候需要**：4 个 artifact 大方向对，但多了或者少了。比如你做需求工程——交付物是 PRD，没有"实现方案"这一步，design 用不上。
+**什么时候需要**：4 个 artifact 大方向对，但多了或者少了。
 
-**怎么做**：fork 一个接近的 schema，删掉不需要的 artifact，调整依赖关系。
+举个例子——你在做需求工程。你的交付物不是代码，是一份跟利益相关者反复沟通、不断打磨出来的 PRD。spec-driven 勉强能用，但 design 对你没意义——你不需要"实现方案"，那是后面开发团队的事。反过来，proposal 你需要的比 spec-driven 重得多——不只是 Why/What Changes，还要包含利益相关者分析、用户画像、原始用户故事、问答审计追踪。**4 个 artifact 多了 1 个，但剩下的 1 个又不够厚。**
 
-**实际案例——requirement-driven**：
+再比如你做的是一个轻量迭代流程——你觉得 proposal + specs 拆成两个 artifact 太啰嗦，一个"需求概要"就够了。那就合并。
 
-从 spec-driven 的 4-artifact 框架出发，做了两件事：
-1. **删掉 design**——需求工程不需要"实现方案"，那是开发团队的事
-2. **把 proposal 加厚**——需求工程的 proposal 比代码工程重得多，要包含利益相关者分析、用户画像、原始用户故事、边界场景
-
-结果是 3 个 artifact：
+**怎么做**：fork 一个接近的 schema，删掉不需要的 artifact、加厚需要的那几个、调整依赖关系。结果可能是 3 个 artifact，也可能是 5 个——取决于你的流程。
 
 ```text
+# 需求工程的例子——去掉 design，加厚 proposal
 proposal → specs → tasks → apply
 ```
 
-artifact 名一个没改——用户看到 proposal/specs/tasks 就知道怎么走。只是 proposal 重了（合并了传统 RE 的 discovery + needs），design 没了（因为不需要）。
+artifact 名一个没改——用户看到 proposal/specs/tasks 就知道怎么走。只是 proposal 变重了（合并了传统 RE 的发现+获取阶段），design 没了（不需要）。
 
 **什么时候加 artifact**：如果你的流程需要 spec-driven 没有的阶段。比如你想在 proposal 和 specs 之间加一个"用户访谈记录"，或者在 tasks 后面加一个"上线检查清单"。加 artifact 的关键规则：
 
@@ -122,29 +119,13 @@ artifact 名一个没改——用户看到 proposal/specs/tasks 就知道怎么�
 
 **什么时候需要**：你的工作流和 spec-driven 的 proposal → specs → design → tasks 完全没有对应关系。artifact 种类、名字、依赖关系全部不同。
 
-**怎么做**：用 `openspec schema init` 起手架，或者直接手写 schema.yaml + templates/。
+举个例子——你在协作生产一篇深度文章或文案。你的流程是：定选题和受众 → 列大纲和核心论点 → 搜集素材和事实核查 → 写初稿 → 编辑审校 → 打磨发布。这个流程跟 proposal → specs → design → tasks 完全没有对应关系——你没有"规格"，没有"实现方案"，有的是"大纲""素材""初稿""审校""发布"这些完全不同的阶段。
 
-**实际案例——article-driven**：
+再比如你在做一个需要多方反复审批的合规流程——你的 artifact 可能是"申请→初审→补充材料→复审→批准"，每个阶段有不同的人参与、不同的 checklist。这和代码开发八竿子打不着。
 
-文章生产的流程和代码实现完全没有对应关系。所以定义了 7 个 artifact，完全不同形状的 DAG：
+**怎么做**：用 `openspec schema init` 起手架，或者直接手写 schema.yaml + templates/。从头定义你的 artifact 名、依赖关系、apply gate。
 
-```text
-brief ──→ outline ──→ tasks ──↴
-  │          │                    ├──→ apply
-  └──→ research ──→ draft ──→ edit ──→ publish
-```
-
-| artifact | 做什么 | 和 spec-driven 有对应吗 |
-|----------|-------|----------------------|
-| brief | 定受众、目标、范围 | 勉强像 proposal（但短得多） |
-| outline | 核心论点 + 章节流 | 勉强像 design（但只管结构） |
-| research | 来源包、事实核查 | 没有 |
-| draft | 完整初稿 | 没有 |
-| edit | 编辑审读 | 没有 |
-| publish | CMS-ready 发布包 | 没有 |
-| tasks | 追踪清单 | 同名，职责一致 |
-
-**这一级的代价**：用户需要学一套新的 artifact 名和流程。不要轻易走到这一级——先确认 Level 2 或 Level 3 真的不够。
+**这一级的代价**：用户需要学一套新的 artifact 名和流程。不要轻易走到这一级——先确认 Level 2 或 Level 3 真的不够。很多时候你觉得"完全不一样"，细看发现只是 design 的内容不对（Level 2）或者多了/少了一个 artifact（Level 3），框架本身没变。
 
 ---
 
@@ -267,43 +248,6 @@ apply:                          # apply 阶段配置
 | `apply.requires` | string[] | 是 | 至少一个 artifact id |
 | `apply.tracks` | string/null | 否 | 进度追踪文件，**必须用 `tasks.md`** |
 | `apply.instruction` | string | 否 | apply 阶段的 agent 提示 |
-
----
-
-## 三个参考案例
-
-社区已有三个 schema 案例，覆盖了 Level 2、3、4 三种模式。完整 schema-package 在 `_faq_on_digested/` 下。
-
-### agent-dev-driven（Level 2——改内容，不改结构）
-
-```
-proposal → specs → design → tasks → apply
-```
-
-- 和 spec-driven 同构，4 个 artifact 名一个没改
-- design 改动最大：代码架构 → Skills/Commands/Tools/Evals/CLI 设计
-- **证明**：同一套 DAG 框架可以承载完全不同领域的产出
-
-### requirement-driven（Level 3——减 artifact）
-
-```
-proposal → specs → tasks → apply
-```
-
-- 去掉了 design——需求工程不需要实现方案
-- proposal 加厚——合并了 discovery + needs
-- artifact 名全用 OpenSpec 原生——proposal/specs/tasks
-- **证明**：不需要的 artifact 大胆删，需要的阶段塞进已有 artifact 的 instruction 里
-
-### article-driven（Level 4——完全自定义 DAG）
-
-```
-brief → outline → research → tasks → draft → edit → publish
-```
-
-- 7 个 artifact，全部新名字
-- 有 spec-driven 不存在的 artifact 类型：draft、edit、publish
-- **证明**：OpenSpec 的 artifact DAG 是真正领域无关的
 
 ---
 
@@ -448,5 +392,4 @@ agent 不需要你在 instruction 里教它怎么沟通、怎么审查——它�
 ## 下一步
 
 - 理解了怎么创建 schema 之后，去看实战系列（[10](10-实战-claude-code-里的-openspec-到底怎么落地.md)–[15](15-实战-多人协作与Git工作流.md)）——把自定义 schema 放进真实的 Claude Code 工作流里
-- 想看更多 schema 案例？`_faq_on_digested/schema-agent-dev/`、`schema-article-driven/`、`schema-requirement/` 下有完整的 schema-package 和设计解释
-- 想改 OpenSpec 源码本身？那超出了 schema 系统的边界——参考 [90-附录](90-附录-给机器看的-agent-协议.md) 了解底层 protocol
+- 想深入了解 schema 系统的底层约束？回到 [04](04-高级-config-schema-与项目边界.md) 看 artifact DAG 的设计原理，或者看 [90-附录](90-附录-给机器看的-agent-协议.md) 了解 agent 怎么消费 schema 产出的指令
