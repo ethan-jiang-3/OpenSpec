@@ -9,18 +9,20 @@ spec-driven        写 agent 也能写，但得自己翻译软件术语 →  age
 agent-dev-driven   同一套框架，翻译提前做好了，直接用
 ```
 
+## 为什么不做成全新的 schema
+
+已有雏形自建了 persona / skills / scripts / tests 一套新 artifact 名，其实没必要。spec-driven 那套 proposal → specs → design → tasks 的心智模型是现成的——proposal 就是 proposal（说清楚为什么改），specs 就是 specs（用 delta ops 规格化），design 就是 design（实现方案），tasks 就是 tasks（拆任务）。不管交付物是代码还是 agent，这个流程不变。唯一变的是 design 和 tasks 里面填什么——那改 template 和 instruction 就够了，不需要发明新 artifact。
+
 ## 和 spec-driven 差在哪
 
-四个 artifact，两个不改，两个微调：
+四个 artifact，两个不改，两个微调。requires 关系完全一样（`proposal → specs → design → tasks → apply`）：
 
 | artifact | 和 spec-driven 比 |
 |----------|------------------|
 | `proposal` | 基本不改。Why / What Changes / Capabilities / Impact 照写。Impact 里把「code, APIs」换成「skills, commands, tools, harnesses」就行——模板已经替你换好了 |
 | `specs` | 不改。delta ops + Requirement + Scenario，agent capability 和软件 capability 规格化方式一模一样 |
-| `design` | **动得最多**。spec-driven 的 design 想的是代码架构和技术选型，agent-dev-driven 的 design 想的是 skills / commands / tools / evals / CLI。模板预先搭好了这些段，不用每次自己加。另外 spec-driven 的 design 是可选的（小改动可以跳过）——agent 开发每次都得出完整实现方案，所以这里设了必写 |
+| `design` | **动得最多**。spec-driven 的 design 想的是代码架构和技术选型，agent-dev-driven 的 design 想的是 skills / commands / tools / evals / CLI。模板预先搭好了这些段，不用每次自己加。另外 spec-driven 的 design 是可选的——agent 开发每次都得出完整实现方案，所以设了必写 |
 | `tasks` | checklist 格式一样。模板里预先填好了推荐的 task 分组（Skills → Commands → Tools → Evals → CLI → Harness Integration → End-to-End），不用每次从空白 checklist 开始 |
-
-**requires 关系完全一样**：`proposal → specs → design → tasks → apply`。和 spec-driven 同款 DAG。
 
 ## config.yaml 怎么配
 
@@ -39,10 +41,6 @@ context: |
   ## Baseline System Prompt
   You are <Agent Name>, a <role>. …
 ```
-
-## 为什么不做成全新的 schema
-
-已有雏形自建了 persona / skills / scripts / tests 一套新 artifact 名，其实没必要。spec-driven 那套 proposal → specs → design → tasks 的心智模型是现成的——proposal 就是 proposal（说清楚为什么改），specs 就是 specs（用 delta ops 规格化），design 就是 design（实现方案），tasks 就是 tasks（拆任务）。不管交付物是代码还是 agent，这个流程不变。唯一变的是 design 和 tasks 里面填什么——那改 template 和 instruction 就够了，不需要发明新 artifact。
 
 ## 使用方式
 

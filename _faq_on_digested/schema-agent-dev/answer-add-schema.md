@@ -12,7 +12,7 @@ OpenSpec 的 schema 系统允许你定义自己的 artifact 种类、依赖关�
 | **init** | `openspec schema init my-name` | 从零建。脚手架自带 templates stub。 |
 | **手写** | 直接创建 `openspec/schemas/my-name/schema.yaml` + `templates/*.md` | 完全掌控。 |
 
-**fork 优先**——`agent-dev-driven` 就是 spec-driven 的 instruction 级 fork：artifact 名和 DAG 完全一样，只改了每个 artifact 的 instruction 和 template 内容。
+**fork 优先**——`agent-dev-driven` 就是 spec-driven 的 instruction 级 fork：artifact 名和 DAG 完全一样，改的只是 design 和 tasks 的 instruction 与 template（proposal 和 specs 几乎不动）。
 
 ## 装在哪里——两个位置
 
