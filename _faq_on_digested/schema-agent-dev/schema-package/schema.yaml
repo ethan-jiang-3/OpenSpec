@@ -5,45 +5,44 @@ description: Agent 开发工作流——proposal → specs → design → tasks�
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: Agent 提案——Why（为什么做这个 change）、What Changes、Capabilities、Impact。和 spec-driven proposal 同构
+    description: Initial proposal document outlining the change
     template: proposal.md
     instruction: |
-      Create the proposal that establishes WHY this change is needed.
+      Create the proposal document that establishes WHY this change is needed.
 
       Sections:
-      - **Why**: 1-2 sentences on the problem or opportunity. What does this change enable the agent to do?
-      - **What Changes**: Bullet list. New agent capabilities, modifications to existing behavior, or removals.
-      - **Capabilities**: Identify which agent capabilities will be created or modified:
+      - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
+      - **What Changes**: Bullet list of changes. Be specific about new capabilities, modifications, or removals. Mark breaking changes with **BREAKING**.
+      - **Capabilities**: Identify which specs will be created or modified:
         - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names (e.g., `data-export`, `refund-handling`).
-        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Each needs a delta spec file. Check `openspec/specs/` for existing spec names.
-      - **Impact**: Affected skills, commands, tools, harnesses, dependencies.
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Check `openspec/specs/` for existing spec names. Leave empty if no requirement changes.
+      - **Impact**: Affected skills, commands, tools, harnesses, or dependencies.
 
-      IMPORTANT: The Capabilities section creates the contract between proposal and specs.
-      Each capability listed here needs a corresponding spec file.
+      IMPORTANT: The Capabilities section is critical. It creates the contract between
+      proposal and specs phases. Research existing specs before filling this in.
+      Each capability listed here will need a corresponding spec file.
 
-      Agent identity, hard constraints, refusal templates, and the baseline system prompt are
-      project-level concerns——put them in openspec/config.yaml context, not in every proposal.
-      This proposal focuses on THIS change only.
+      Keep it concise (1-2 pages). Focus on the "why" not the "how"——
+      implementation details belong in design.md.
 
-      Keep it concise (1-2 pages). Focus on "why" and "what" not "how"——
-      implementation belongs in design.md.
+      This is the foundation - specs, design, and tasks all build on this.
     requires: []
 
   - id: specs
     generates: "specs/**/*.md"
-    description: Agent 能力规格——delta ops（ADDED/MODIFIED/REMOVED/RENAMED）Requirement+Scenario。和 spec-driven specs 完全同构
+    description: Detailed specifications for the change
     template: spec.md
     instruction: |
-      Create specification files that define WHAT the agent should do. Same delta-ops format as spec-driven specs——agent capabilities are spec-able.
+      Create specification files that define WHAT the agent should do.
 
       Create one spec file per capability listed in the proposal's Capabilities section.
       - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
       - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
 
-      Delta operations (## headers):
-      - **ADDED Requirements**: New agent capabilities
-      - **MODIFIED Requirements**: Changed agent behavior - MUST include full updated content
-      - **REMOVED Requirements**: Deprecated capabilities - MUST include **Reason** and **Migration**
+      Delta operations (use ## headers):
+      - **ADDED Requirements**: New capabilities
+      - **MODIFIED Requirements**: Changed behavior - MUST include full updated content
+      - **REMOVED Requirements**: Deprecated features - MUST include **Reason** and **Migration**
       - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
 
       Format requirements:
@@ -62,14 +61,19 @@ artifacts:
       Common pitfall: Using MODIFIED with partial content loses detail at archive time.
       If adding new concerns without changing existing behavior, use ADDED instead.
 
-      Agent scenarios use the same WHEN/THEN format——replace system events with user inputs:
+      Example:
       ```
-      #### Scenario: User asks for data export
+      ## ADDED Requirements
+
+      ### Requirement: User can export data
+      The agent SHALL allow users to export their data in CSV format.
+
+      #### Scenario: Successful export
       - **WHEN** user says "export my data"
       - **THEN** agent calls export tool and responds with a CSV download link
       ```
 
-      Specs should be testable——each scenario is a potential eval case.
+      Specs should be testable - each scenario is a potential eval case.
     requires:
       - proposal
 
@@ -101,30 +105,40 @@ artifacts:
 
   - id: tasks
     generates: tasks.md
-    description: Agent 构建清单——可跟踪的 checkbox 任务
+    description: Implementation checklist with trackable tasks
     template: tasks.md
     instruction: |
-      Create the task list that breaks down the agent build. Same checkbox format as spec-driven tasks——the apply phase parses `- [ ]` to track progress.
+      Create the task list that breaks down the implementation work.
 
-      **IMPORTANT: Follow the template format exactly.** Tasks not using `- [ ]` won't be tracked.
+      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+      checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
 
       Guidelines:
       - Group related tasks under ## numbered headings
       - Each task MUST be a checkbox: `- [ ] X.Y Task description`
       - Tasks should be small enough to complete in one session
-      - Order tasks by dependency
+      - Order tasks by dependency (what must be done first?)
 
-      Task groups (adapt to what design.md actually includes——skip groups not needed):
-      1. **Skills**: Write skill MD files per design's Skill definitions
-      2. **Commands**: Write slash-command MD files per design's Command definitions
-      3. **Tools**: Write tool scripts per design's Tool definitions
-      4. **Evals**: Write eval case files per design's Eval plan
-      5. **CLI**: Implement CLI entry point, subcommands, status API per design's CLI section
-      6. **Harness Integration**: Copy skills/ and commands/ to target harness directories, register commands, run evals
-      7. **End-to-End**: One real user intent walked end-to-end through the full agent
+      Example:
+      ```
+      ## 1. Skills
 
-      Reference specs for what must be built, design for how to build it.
-      Each task should be verifiable——you know when it's done.
+      - [ ] 1.1 Write skills/data-export.md per design Skill definitions
+      - [ ] 1.2 Write skills/refund-handling.md per design Skill definitions
+
+      ## 2. Commands
+
+      - [ ] 2.1 Write commands/export.md per design Command definitions
+
+      ## 3. Harness Integration
+
+      - [ ] 3.1 Copy skill files to target harness directory
+      - [ ] 3.2 Copy command files to target harness directory
+      - [ ] 3.3 Run eval cases and verify all pass
+      ```
+
+      Reference specs for what needs to be built, design for how to build it.
+      Each task should be verifiable - you know when it's done.
     requires:
       - specs
       - design
@@ -133,23 +147,10 @@ apply:
   requires: [tasks]
   tracks: tasks.md
   instruction: |
-    Read design.md and tasks.md. Build each agent component per the design, checking off tasks as you go.
+    Read design.md and tasks.md. Work through pending tasks, mark complete as you go.
+    Pause if you hit blockers or need clarification.
 
-    Readiness check before starting:
-    1) Every component in design.md (skills/commands/tools/evals/CLI) has a corresponding task group in tasks.md
-    2) Any component not included in design.md is intentionally absent——don't build it
-
-    Build components:
-    3) Skill MD files with YAML frontmatter (name, description, when-to-use)
-    4) Slash-command MD files with proper frontmatter and argument prelude
-    5) Tool scripts with executable entry (shebang for scripts, proper exports for JS)
-    6) Eval case files with concrete, repeatable assertion commands
-    7) CLI entry point and subcommands if design calls for it
-
-    Harness integration:
-    8) Copy skill files to target harness skill directory (e.g., .claude/skills/<name>/SKILL.md)
-    9) Copy command files to target harness command directory (e.g., .claude/commands/opsx/<name>.md)
-    10) Run all eval cases, record pass/fail——fix failures before continuing
-    11) Walk one end-to-end path: a real user intent from input to expected output
-
-    Definition of done: tasks.md all checked off, all evals pass, end-to-end path confirmed.
+    For agent changes, this means: write skill MD files, slash-command MD files, tool scripts,
+    eval case files, and CLI entry points per the design. Copy deliverables to the target
+    harness directory (e.g., .claude/skills/, .claude/commands/). Run evals and verify.
+    Walk one end-to-end path from user input to expected output.

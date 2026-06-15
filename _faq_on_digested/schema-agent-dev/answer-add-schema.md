@@ -47,7 +47,7 @@ DAG 和 spec-driven 完全一样：
 ```text
 1. 写 proposal.md  → specs 解锁
 2. 写 specs/*.md   → design 解锁
-3. 写 design.md    → tasks 解锁（proposal 同时解锁 design 和 specs，但 tasks 等 design+specs 都就绪）
+3. 写 design.md    → tasks 解锁（proposal 并行解锁 specs 和 design，两者都就绪后 tasks 解锁）
 4. 写 tasks.md（勾 checkbox）→ apply 解锁
 5. apply（构建 agent 组件 + 接入 harness + 端到端验证）
 ```
