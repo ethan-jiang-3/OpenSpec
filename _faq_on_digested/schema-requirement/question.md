@@ -2,24 +2,26 @@
 
 OpenSpec 的 schema 系统能不能用来做**需求工程**——产出物不是代码，也不是文章，而是一份经过反复沟通打磨成型的需求规格文档（PRD），递交给开发团队去实现？
 
-如果可以，一个 `requirement-driven` schema 长什么样？和 `spec-driven`、`article-driven` 是什么关系？
+如果可以，怎么用 OpenSpec 原生概念（proposal、specs、tasks）来建模，而不是发明一套新的 artifact 名字？
 
 # 背景
 
-阅读 `_digested/` 中关于 schema、change/apply/archive 的材料，以及已有的 `agent-dev-driven`（agent 开发）和 `article-driven`（内容生产）两个社区 schema 之后，产生的一个追问：
+已有的三个 schema 覆盖了三种产出物：
+- `spec-driven`：代码实现（delta specs → 源码文件）
+- `agent-dev-driven`：agent 组件（skills、commands、tools）——和 spec-driven 同框架，只改 instruction/template 内容
+- `article-driven`：发布文章（brief → outline → research → draft → edit → publish）
 
-- `spec-driven` 的产出物是代码实现（delta specs → 源码文件）
-- `agent-dev-driven` 的产出物是 agent 组件（skills、commands、tools）
-- `article-driven` 的产出物是发布文章（标题、正文、SEO 元数据）
+这三种本质上都是"一个人+AI 可以独立完成的产出"。但需求工程不一样——**需求不是一个人闭门造出来的，是跟利益相关者反复聊出来的**。
 
-这三种本质上都是"一个人+AI 可以独立完成的产出"。但需求工程不一样——**需求不是一个人闭门造出来的，是跟利益相关者反复聊出来的**。这个"反复沟通、不断打磨"的过程能不能建模到 OpenSpec 的 artifact DAG 里？
+这个问题的关键是：能不能不发明新 artifact 名，用 OpenSpec 用户已经认识的 `proposal → specs → tasks` 来承载需求工程流程，把"反复沟通、不断打磨"编码进 instruction 和 template 里？
 
 # 答案摘要
 
-可以。本目录就是概念验证：定义了一套 `requirement-driven` schema，把需求工程流程建模为 6 个 artifact 的 DAG：
+可以。本目录就是概念验证：用 OpenSpec 原生框架承载需求工程。
 
-- **6 个 artifact**：discovery → needs → spec → review → signoff（+ tasks 追踪全流程）
-- **核心动态**：跟利益相关者反复沟通、不断打磨需求、直到成型后递交给开发团队
-- **兼容策略**：保留 `tasks.md` 文件名、不改 OpenSpec 源码，和 `agent-dev-driven`、`article-driven` 一样的零侵入方式
+- **3 个 artifact**：`proposal → specs → tasks`（和 spec-driven 同框架，去掉了 `design`——需求工程不需要"实现方案"）
+- **proposal 合并了 discovery + needs**：问题域探索、利益相关者分析、原始需求草图全部在 proposal 中完成
+- **specs = PRD**：FR-N 功能需求（MoSCoW）、NFR、用户故事、验收标准、Approval 章节、Developer Handoff Notes
+- **迭代沟通在 apply**：审查、沟通、修改、签收、交接——所有重沟通的工作在 apply 阶段通过 tasks.md 驱动
 
-详见 [`answer.md`](answer.md)（综合回答）和 [`schema-package/`](schema-package/)（schema 定义 + 6 个阶段模板）。
+详见 [`answer.md`](answer.md) 和 [`schema-package/`](schema-package/)。
