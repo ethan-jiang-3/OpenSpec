@@ -127,6 +127,8 @@ artifact 名一个没改——用户看到 proposal/specs/tasks 就知道怎么�
 
 **这一级的代价**：用户需要学一套新的 artifact 名和流程。不要轻易走到这一级——先确认 Level 2 或 Level 3 真的不够。很多时候你觉得"完全不一样"，细看发现只是 design 的内容不对（Level 2）或者多了/少了一个 artifact（Level 3），框架本身没变。
 
+不管走到哪一级，接下来都是同一件事：创建 schema 文件、写 template、部署、验证。下面讲怎么做。
+
 ---
 
 ## 实战：三种创建方式
@@ -184,32 +186,29 @@ openspec/schemas/<name>/
 
 ## Schema.yaml 解剖
 
-以 requirement-driven 为例，看一个完整的 schema.yaml 长什么样：
+拿一个简化的工作流（去掉 design 的 3-artifact schema）来看结构。你的 schema 可能是 4 个 artifact、5 个、7 个——但骨架一样。
 
 ```yaml
-name: requirement-driven        # schema 名（用 --schema 时指定）
+name: my-workflow               # schema 名（用 --schema 时指定）
 version: 1
-description: 需求工程工作流——proposal → specs → tasks
+description: 一句话说清楚这个工作流干什么
 
 artifacts:                      # artifact 列表——定义 DAG
   - id: proposal                # 唯一 ID
-    generates: proposal.md      # 输出文件名
-    description: 问题域探索 + 利益相关者分析
+    generates: proposal.md      # 输出文件名，支持 glob（如 specs/**/*.md）
+    description: 这个 artifact 产出什么
     template: proposal.md       # 对应 templates/ 下的模板文件
     instruction: |              # agent 生成此 artifact 时的提示词
-      创建 proposal 文档，建立对这个需求工作的上下文理解。
-      ...
-      文档章节：
-      - Why：1-2句说明业务问题
-      - Stakeholders：利益相关者及其角色
-      ...
+      在这里写你希望 agent 怎么生成 proposal.md。
+      章节结构、关键原则、行为准则——都写在这里。
     requires: []                # 依赖——为空表示无依赖，是 DAG 起点
 
   - id: specs
-    generates: "specs/**/*.md"  # 支持 glob 模式
+    generates: "specs/**/*.md"
     template: spec.md
     instruction: |
-      创建正式的需求规格文档（PRD）...
+      在这里写你希望 agent 怎么生成规格文档。
+      每个领域不一样——代码规格写 delta ops，PRD 写功能需求，文章大纲写章节流。
     requires:
       - proposal                # specs 依赖 proposal 先完成
 
@@ -217,10 +216,11 @@ artifacts:                      # artifact 列表——定义 DAG
     generates: tasks.md
     template: tasks.md
     instruction: |
-      创建需求工程流程的任务清单...
+      在这里写你希望 agent 怎么生成任务清单。
+      用 `- [ ]` checkbox 格式——apply 阶段靠这个追踪进度。
     requires:
       - proposal
-      - specs                   # 多个依赖——proposal 和 specs 都就绪后 tasks 才解锁
+      - specs                   # 多个依赖——都就绪后 tasks 才解锁
 
 apply:                          # apply 阶段配置
   requires:                     # 至少一个 artifact 就绪才能 apply
@@ -228,10 +228,7 @@ apply:                          # apply 阶段配置
     - tasks
   tracks: tasks.md              # 进度追踪文件（必须是 tasks.md）
   instruction: |                # apply 阶段的 agent 提示词
-    Execute the requirement engineering workflow using the checklist:
-    1) read proposal.md and specs before making changes
-    2) complete tasks in priority order
-    ...
+    写清楚执行循环和 done 标准。简短——别把方法论教科书塞进来。
 ```
 
 ### 每个字段的约束
@@ -338,32 +335,39 @@ openspec schema validate my-schema --verbose
 
 ### 6. apply.instruction 保持简短
 
-对比一下：
-
 ```yaml
-# ❌ 太长——把方法论教科书塞进了 YAML
+# ❌ 太长——把沟通方法论、审查 checklist、质量标准全塞进 YAML
 apply:
   instruction: |
-    你现在进入执行阶段...
+    你现在进入执行阶段。你的角色是需求工程推动者……
     ## 执行循环
-    ...（80行）
+    对每个未完成任务：1) 读取文档 2) 完成任务 3) 标记 [x] 4) 有返工就加新任务
     ## 沟通
-    ...（20行）
+    - 有疑问时提问，有把握时确认
+    - 帮助利益相关者想得更深
+    - 知道何时坚持、何时让步
     ## 审查
-    ...（15行 checklist）
+    - [ ] 所有用户故事有对应需求
+    - [ ] 所有需求有可测试验收标准
+    - [ ] 错误/边界/空数据覆盖
+    - [ ] 无矛盾、无歧义、无隐含假设
     ## 迭代
-    ...（15行）
+    - 阶段宽松，交付物严格
+    - 审查发现缺口就回去补
     ## 质量判断
-    ...（15行）
+    足够好标准：1) Must 有验收标准 2) 边界覆盖 3) 无矛盾 4) 开发团队能估算 5) 利益相关者确认
     ## 签收
-    ...（10行）
+    1) 填 Approval 2) 记权衡 3) 有拒签记条件
+    ## 交接
+    补齐 Handoff Notes：复杂度、集成点、建议顺序、已知未知、联系人
+    （……总共 80+ 行）
 
-# ✅ 简短——只给执行循环和 done 标准
+# ✅ 简短——只写执行循环和 done 标准
 apply:
   instruction: |
     Execute the workflow using the checklist:
     1) read inputs before making changes
-    2) complete tasks in priority order, mark [x]
+    2) complete tasks in priority order, mark [x] as you go
     3) when a task needs stakeholder input, ask — don't assume
     4) if review finds gaps, update artifacts and re-review
 
