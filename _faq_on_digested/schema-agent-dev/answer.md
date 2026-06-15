@@ -5,7 +5,7 @@
 用 `spec-driven` 写 agent 不是不行——proposal 写 "Why"、specs 写 delta ops、design 写实现方案、tasks 拆任务，流程完全走得通。但每次都要把 instruction 里的「代码」「API」「系统」脑补成「skills」「commands」「harness」——写多了烦。**agent-dev-driven 和 spec-driven 是同一个框架**，只是把 instruction 和 template 里那些软件味儿的东西提前换成了 agent 味儿。proposal 和 specs 基本没动，动的就是 design 和 tasks——因为这两步想的东西确实不一样。
 
 ```text
-spec-driven        写 agent 也能写，但得自己翻译软件术语 →  agent 术语
+spec-driven        写 agent 也能写，但得自己翻译软件术语 → agent 术语
 agent-dev-driven   同一套框架，翻译提前做好了，直接用
 ```
 

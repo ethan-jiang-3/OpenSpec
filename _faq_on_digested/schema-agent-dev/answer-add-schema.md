@@ -45,11 +45,10 @@ openspec new change build-my-agent --schema agent-dev-driven
 DAG 和 spec-driven 完全一样：
 
 ```text
-1. 写 proposal.md  → specs 解锁
-2. 写 specs/*.md   → design 解锁
-3. 写 design.md    → tasks 解锁（proposal 并行解锁 specs 和 design，两者都就绪后 tasks 解锁）
-4. 写 tasks.md（勾 checkbox）→ apply 解锁
-5. apply（构建 agent 组件 + 接入 harness + 端到端验证）
+1. 写 proposal.md           → specs 和 design 同时解锁（两者并行）
+2. 写 specs/*.md + design.md → 两个都就绪后 tasks 解锁
+3. 写 tasks.md（勾 checkbox）→ apply 解锁
+4. apply（构建 agent 组件 + 接入 harness + 端到端验证）
 ```
 
 看每个 artifact 的完整 instruction：
@@ -96,4 +95,4 @@ per-change——`openspec new change <topic> --schema agent-dev-driven`。
 
 ---
 
-> 本指南是 [`answer.md`](answer.md) 的实操伴侣——那里解释 agent-dev-driven **为什么和 spec-driven 同构**；这里是**怎么装上用起来**。
+> 本指南是 [`answer.md`](answer.md) 的实操伴侣——那里解释 agent-dev-driven **和 spec-driven 差在哪、为什么这样就够了**；这里是**怎么装上用起来**。
