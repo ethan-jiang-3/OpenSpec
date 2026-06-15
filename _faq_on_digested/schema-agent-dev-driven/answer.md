@@ -94,7 +94,7 @@ apply    requires: [tasks], tracks: tasks.md
 
 **决策**：拆成两个 artifact。command 测的是「用户输入 → 正确 skill 编排 → 预期输出形态」；cli 测的是「给定子命令 → 正确入口/返回/exit code」。合在一起会模糊两者的测试边界。
 
-**移除条件**：如果目标 agent 不是 CLI 工具（没有自己的二进制），cli 可以退化成一个「调用契约」文档放在 tools 里——这和本 schema 的 cli 作为独立 artifact 不矛盾，只是「你的 agent 是否 CLI 化」的选择。
+**移除条件**：如果目标 agent 不是 CLI 工具——直接跳过 cli.md 不写即可（cli 不阻塞 tasks，没有任何下游依赖它）。如果你需要一个轻量版，cli 可以退化成一个「调用契约」文档放在 tools 里。
 
 ### 决策 3：为什么保留顶层 charter artifact（尽管 OpenSpec 自己没有全局 system-prompt）
 
@@ -143,6 +143,8 @@ apply    requires: [tasks], tracks: tasks.md
    ```
 
 5. apply 阶段（`/opsx:apply`）按 `apply.instruction` 做就绪检查 → 把 skills/commands 渲染/拷贝进目标 harness 目录 → 跑 evals → 端到端验证。
+
+> 更完整的 schema 扩展与安装实操指南（fork/init/validate/调试/设为默认）见 [`answer-add-schema.md`](answer-add-schema.md)。
 
 ## 已知限制
 
