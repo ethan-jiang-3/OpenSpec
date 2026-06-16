@@ -53,6 +53,10 @@ const ProjectConfigSchema = z.object({
 | `context` | 否 | `string` | 最大 **50KB**（51,200 字节，运行时检查） | 无 |
 | `rules` | 否 | `Record<string, string[]>` | key 应为合法的 artifact ID | 无 |
 
+当前项目级 `openspec/config.yaml` 的有效顶层字段就是这三个：`schema`、`context`、`rules`。其中 `context` / `rules` 属于 prompt 注入层，影响 agent 生成 artifact 时看到的背景和约束；`schema` 属于 workflow schema 选择层，影响新 change 默认使用哪个 artifact DAG。
+
+如果 YAML 顶层额外写了其他 key，例如 `team:`、`metadata:`、`owner:`，当前实现会被 YAML parser 读到，但 `readProjectConfig()` 只逐字段拣取 `schema` / `context` / `rules`，不会把未知顶层字段复制进返回的 config，也不会为这些未知字段打印 warning。结果就是：**静默忽略，不报错，也不生效**。
+
 ### 50KB 限制
 
 `project-config.ts:45`：
@@ -333,5 +337,6 @@ rules:
 5. `context` 不是 string → 忽略
 6. `rules` 不是合法 record → 忽略
 7. `rules` 中有未知 artifact ID → warning，不阻断
+8. 未知顶层 key → 不报错、不 warning，但也不会生效；不要依赖它承载自定义 metadata
 
 这种设计的意图是：**config 不应该成为工作流的中断点**。即使 config 写得不好，agent 仍然可以工作 —— 只是质量可能下降。
