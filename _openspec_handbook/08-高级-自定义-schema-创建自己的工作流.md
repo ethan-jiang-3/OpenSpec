@@ -87,7 +87,7 @@ openspec schema fork spec-driven my-domain
 # 改 design.md 和 tasks.md 的 template——换成你这个领域的章节结构
 ```
 
-proposal 和 specs 通常不用大动——"为什么要做"和"规格化要交付什么"在大多数领域是相通的。动的就是 design（"怎么设计"）和 tasks（"怎么拆任务"）——因为不同领域的"设计"和"执行"确实不一样。
+proposal 和 specs 通常不用大动——"为什么要做"和"spec 化要交付什么"在大多数领域是相通的。动的就是 design（"怎么设计"）和 tasks（"怎么拆任务"）——因为不同领域的"设计"和"执行"确实不一样。
 
 **关键原则**：artifact 名不变，用户心智模型不变。不管写的是代码、agent、固件还是别的什么，proposal/specs/design/tasks 这四个动词用户已经会了。不要为了"领域感"发明新名字。
 

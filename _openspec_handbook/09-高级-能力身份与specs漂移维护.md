@@ -36,7 +36,7 @@
 
 **为什么这点重要**：你写进 `openspec/` 的任何东西，都得符合这个 schema 的契约——CLI 和 agent 是照着它解析的。**偏离契约（4 个 `#` 写成 3 个、capability 名拼错、缺 SHALL/MUST），工具要么静默忽略、要么 parse 失败，agent 就在残缺/错误的前提上推理，产生幻觉、行为混乱。**
 
-下面要讲的"能力身份"，就是这个契约里最核心、又最容易被忽略的一条。
+下面要讲的"capability 身份"，就是这个契约里最核心、又最容易被忽略的一条。
 
 **能力契约在 schema.yaml 中的样子**——proposal 宣布的每个 capability，specs 阶段必须产出同名 `specs/<capability>/spec.md`（简化自 `schemas/spec-driven/schema.yaml`）：
 
@@ -55,8 +55,8 @@ artifacts:
 
 ```text
 openspec/specs/
-├── auth/spec.md              ← "auth" 这个能力的合同
-├── data-export/spec.md       ← "data-export" 这个能力的合同
+├── auth/spec.md              ← "auth" 这个 capability 的合同
+├── data-export/spec.md       ← "data-export" 这个 capability 的合同
 └── notifications/spec.md
 ```
 
@@ -108,7 +108,7 @@ graph TD
 - **capability 层失配**：delta 指向的 capability 目录名，在 `openspec/specs/` 里对不上——要么"设计了没建"、要么"目录被改名了"、要么"早删了"。**表现：archive 一个 change 时，目标 spec 不存在或对不上；或一堆 change 悬空挂在 active。**
 - **requirement 层失配**：delta 的 `MODIFIED`/`REMOVED` 指向的标题，在当前主 spec 里找不到——标题被别的 archive 改写过、大小写变了、或手改过。**表现：archive 报 `... not found`，整批原子回滚。**
 
-两层是**同一个病**（名字身份失配），只是发生在不同层。再加上"有代码无 spec"（反向漂移：能力上线了 specs 没记）、"废弃 change 仍挂 active"（噪声）等，specs 就慢慢配不上"source of truth"这个名号了——而 agent 还把它当事实读，于是被带偏。
+两层是**同一个病**（名字身份失配），只是发生在不同层。再加上"有代码无 spec"（反向漂移：capability 上线了 specs 没记）、"废弃 change 仍挂 active"（噪声）等，specs 就慢慢配不上"source of truth"这个名号了——而 agent 还把它当事实读，于是被带偏。
 
 ## 平时怎么守住（handbook 通俗版）
 

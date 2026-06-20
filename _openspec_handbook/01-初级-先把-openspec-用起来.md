@@ -111,7 +111,7 @@ my-project/
 
 这一层先只要这样理解：
 
-- `openspec/specs/`：记录项目当前已经成立的规格
+- `openspec/specs/`：记录项目当前已经成立的 spec（行为基线）
 - `openspec/changes/`：记录你现在正在做的变更
 - `openspec/config.yaml`：补一些项目级背景和默认设置
 
@@ -208,7 +208,7 @@ my-project/
 
 | 误区 | 实际情况 |
 |------|---------|
-| "要先把整个系统的规格都写完才能开始" | 不需要。第一个 change 只需要描述"这次要改的那一块" |
+| "要先把整个系统的 spec 都写完才能开始" | 不需要。第一个 change 只需要描述"这次要改的那一块" |
 | "proposal 写完了就不能改了" | 随时可以改。Actions, not phases |
 | "archive 是删除 change" | 不是。是把 delta spec 合并回 specs/，并把 change 移到 archive/ 保留历史 |
 | "specs/ 是我手动维护的文档" | 不是。它是 archive 后自动更新的正式基线 |
@@ -228,7 +228,7 @@ my-project/
 
 ### 3. `changes/` 是工作区，不是垃圾堆
 
-每个 change 都是一个完整工作单元，有自己的规划、规格、任务和历史。
+每个 change 都是一个完整工作单元，有自己的规划、spec、任务和历史。
 
 ### 4. `specs/` 很重要，但初学时不用一次想透
 
