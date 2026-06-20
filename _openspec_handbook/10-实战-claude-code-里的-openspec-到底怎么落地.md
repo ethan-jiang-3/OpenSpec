@@ -59,7 +59,7 @@ openspec/
 
 这层管的是：
 
-- 项目当前正式规格基线
+- 项目当前正式 spec 基线
 - 进行中的 change 和它的 artifacts
 - 项目级背景与规则
 - change 结构定义，也就是 schema
@@ -157,7 +157,7 @@ graph TB
     end
 
     subgraph 项目事实层
-    C["openspec/specs/<br/>（正式规格基线）"]
+    C["openspec/specs/<br/>（正式 spec 基线）"]
     D["openspec/changes/<br/>（变更工作区）"]
     E["openspec/config.yaml<br/>（项目配置）"]
     F["openspec/schemas/<br/>（工作流定义）"]

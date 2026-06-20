@@ -21,7 +21,7 @@
 | 06 | `06-高级-config-yaml-怎么写到真正好用.md` | config 实战写法 |
 | 07 | `07-高级-workspace-跨仓库规划.md` | workspace 跨仓库规划 |
 | 08 | `08-高级-自定义-schema-创建自己的工作流.md` | 自定义 schema |
-| 09 | `09-高级-能力身份与specs漂移维护.md` | 能力身份模型 + specs 漂移维护 |
+| 09 | `09-高级-能力身份与specs漂移维护.md` | capability 身份模型 + specs 漂移维护 |
 | 10 | `10-实战-claude-code-里的-openspec-到底怎么落地.md` | Claude Code 落地 |
 | 11 | `11-实战-从一个真实-change-走完整条主线.md` | brownfield 案例 |
 | 12 | `12-实战-如何正确修改-artifacts.md` | artifact 修改指南 |

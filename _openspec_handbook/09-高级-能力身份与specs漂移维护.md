@@ -1,4 +1,4 @@
-# 09 · 能力身份与 specs 漂移维护
+# 09 · Capability 身份与 specs 漂移维护
 
 > 适用 openspec ≥ 1.4 · 高级篇。这一章按三层递进回答一个问题——根子是同一个，拆成三问：**specs 凭什么值得你维护、漂移会怎样反噬后续工作？** → **specs 到底按什么组织、靠什么定位？** → **用久了为什么和代码对不上、怎么守？**
 
@@ -11,7 +11,7 @@
 | 漂在哪 | 后面会发生什么 |
 |---|---|
 | spec 说"有"、代码早没了（冻结）| agent 拿过时前提去 propose / apply → 产出错误或要返工的代码；写出去的 delta 一 archive 还可能 `not found`、整批回滚 |
-| 代码新上了、spec 没记（漏报）| agent 在 specs 里找不到这块能力的契约 → 只能瞎猜或被迫读源码，行为不可预测、质量打折 |
+| 代码新上了、spec 没记（漏报）| agent 在 specs 里找不到这块 capability 的契约 → 只能瞎猜或被迫读源码，行为不可预测、质量打折 |
 | 标题或目录名被改、没走 RENAMED | 历史 delta 和当前 spec 全对不上 → 下一次正常的 archive 直接 `not found`、**整次归档原子中止**，工作卡在半路（本 repo 的 `simplify-skill-installation` 就是 16 条目标全 `not found`，连本该成功的部分也一并没落地）|
 | 废弃的 change 还挂在 active | agent 以为有一堆"进行中方向"，被假信号带偏，优先级和判断全乱 |
 
@@ -51,7 +51,7 @@ artifacts:
 
 ## capability 的身份 = 它的目录名
 
-很多人把 `openspec/specs/` 笼统当成"规格基线"。但它**不是一堆平铺的文档，而是按 capability（能力）切成一个个目录**：
+很多人把 `openspec/specs/` 笼统当成"spec 基线"。但它**不是一堆平铺的文档，而是按 capability（能力）切成一个个目录**：
 
 ```text
 openspec/specs/

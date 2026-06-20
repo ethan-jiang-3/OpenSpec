@@ -91,7 +91,7 @@ OpenSpec = 整套机制
 
 1. **初级**：先把 OpenSpec 用起来，知道日常怎么走
 2. **中级**：把 `specs`、`changes`、artifact、delta spec 这些概念真正连起来
-3. **高级**：理解生命周期思想、config/schema、全局约束、workspace、自定义 schema、能力身份与 specs 漂移维护
+3. **高级**：理解生命周期思想、config/schema、全局约束、workspace、自定义 schema、capability 身份与 specs 漂移维护
 
 ### B. 面向落地的实战场景
 
@@ -132,7 +132,7 @@ graph LR
     A[01-初级] --> B[02-中级] --> C[03-高级<br/>SDLC思想]
     C --> D[04-高级<br/>config/schema] --> E[05-高级<br/>全局约束]
     E --> F[06-高级<br/>config写法]
-    F --> H[09-高级<br/>能力身份/漂移]
+    F --> H[09-高级<br/>capability 身份/漂移]
 ```
 
 ### 路径 3：我要看实战落地
@@ -179,8 +179,8 @@ graph LR
 |------|-----------|---------|
 | **change** | 一次完整的增量变更工作包 | `openspec/changes/add-dark-mode/` |
 | **artifact** | change 内部的文档产物类型 | proposal.md、specs/*.md、design.md、tasks.md |
-| **delta spec** | 描述"这次改了哪里"的增量规格 | `## ADDED Requirements` / `## MODIFIED Requirements` |
-| **specs/** | 项目当前正式规格基线 | `openspec/specs/auth/spec.md` |
+| **delta spec** | 描述"这次改了哪里"的增量 spec | `## ADDED Requirements` / `## MODIFIED Requirements` |
+| **specs/** | 项目当前正式 spec 基线 | `openspec/specs/auth/spec.md` |
 | **capability / 能力** | specs 的组织单位，身份 = 目录名（`specs/<capability>/`） | `auth`、`data-export`（详见 [09](09-高级-能力身份与specs漂移维护.md)） |
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |

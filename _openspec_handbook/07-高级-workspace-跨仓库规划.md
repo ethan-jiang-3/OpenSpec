@@ -33,7 +33,7 @@ my-project/
 - **不是 CI/CD 系统** — workspace 不做自动化、不跑 pipeline
 - **不是项目管理工具** — workspace 不管 issue、不跟踪工时
 
-它的定位非常精准：**跨仓库变更的规划层**。它只做「规划」这件事，实现留给你已有的 repo。
+它的定位非常精准：**跨仓库 change的规划层**。它只做「规划」这件事，实现留给你已有的 repo。
 
 ## 三、workspace 的物理结构
 
@@ -48,7 +48,7 @@ my-project/
       .openspec.yaml            ← 绑定 workspace-planning schema
       proposal.md
       specs/
-        auth/spec.md            ← delta spec（描述跨仓库变更）
+        auth/spec.md            ← delta spec（描述跨仓库 change）
       design.md
       tasks.md
 ```
@@ -86,7 +86,7 @@ context:
     ├── AGENTS.md                ← workspace 级 agent 指导（workspace open 生成/刷新）
     ├── .code-workspace          ← VS Code 多根工作区（workspace open 生成）
     └── changes/add-oauth2/      ← workspace 级 change
-          ├── proposal.md        ← 跨仓库变更提案
+          ├── proposal.md        ← 跨仓库 change提案
           ├── specs/auth/spec.md ← delta spec
           ├── design.md          ← 跨仓库技术方案
           └── tasks.md           ← 实施任务清单
@@ -179,7 +179,7 @@ openspec workspace update      # 刷新 workspace 级 skill 文件
 
 ### 6.2 持久存在的协调 home
 
-Workspace 不是为一次跨仓库变更创建的临时目录。它设计为持久存在：
+Workspace 不是为一次跨仓库 change创建的临时目录。它设计为持久存在：
 
 - 一个 workspace 可以容纳多个 change（按时间顺序）
 - 一个 workspace 可以绑定不同的 initiative（按需切换 context）
@@ -236,7 +236,7 @@ Workspace 生成的 skill 模板中内置了 guardrail：
 | 场景 | 建议 |
 |------|------|
 | 单个仓库 | 不需要 workspace，repo-local OpenSpec 足够 |
-| 2-3 个关联仓库且偶有跨仓库变更 | workspace 有价值，但不是必须 |
+| 2-3 个关联仓库且偶有跨仓库 change | workspace 有价值，但不是必须 |
 | 3+ 仓库且频繁跨仓库协调 | workspace 是推荐的协调层 |
 | 团队需要在统一视图下看到跨仓库的变更全景 | workspace + context store 组合 |
 

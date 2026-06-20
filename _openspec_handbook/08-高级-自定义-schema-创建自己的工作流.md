@@ -207,8 +207,8 @@ artifacts:                      # artifact 列表——定义 DAG
     generates: "specs/**/*.md"
     template: spec.md
     instruction: |
-      在这里写你希望 agent 怎么生成规格文档。
-      每个领域不一样——代码规格写 delta ops，PRD 写功能需求，文章大纲写章节流。
+      在这里写你希望 agent 怎么生成 spec 文档。
+      每个领域不一样——代码 spec 写 delta ops，PRD 写功能需求，文章大纲写章节流。
     requires:
       - proposal                # specs 依赖 proposal 先完成
 

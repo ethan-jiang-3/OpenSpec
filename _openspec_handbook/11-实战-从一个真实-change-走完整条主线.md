@@ -77,7 +77,7 @@ order-hub/
     └── config.yaml
 ```
 
-而当前 `openspec/specs/orders/spec.md` 里，已经存在一些正式规格，比如：
+而当前 `openspec/specs/orders/spec.md` 里，已经存在一些正式 spec，比如：
 
 ```markdown
 # Orders Specification
@@ -428,7 +428,7 @@ size is small for the current staff workflow.
 
 更准确地说，`apply` 是：
 
-> **在已有 change 工件约束下，推进实现，并在必要时修正前面的理解。**
+> **在已有 change artifact 约束下，推进实现，并在必要时修正前面的理解。**
 
 ### 一次理想的推进
 
@@ -468,7 +468,7 @@ size is small for the current staff workflow.
 
 OpenSpec 更鼓励你当场修正 change。
 
-### 这时需要改哪些工件
+### 这时需要改哪些 artifact
 
 #### 1. 改 `design.md`
 
@@ -500,7 +500,7 @@ OpenSpec 更鼓励你当场修正 change。
 
 - 你一开始不会把所有东西都想对
 - 代码现实会反过来修正规划
-- 规划工件不是一次性写完的 PPT，而是活文档
+- 规划 artifact 不是一次性写完的 PPT，而是活文档
 
 这就是前面讲过的：
 
@@ -631,7 +631,7 @@ openspec/
 
 - `openspec/specs/` 是当前正式基线
 - `changes/` 是变更工作区
-- `artifact` 是 change 内部的四类工件
+- `artifact` 是 change 内部的四类 artifact
 - delta spec 是"增量变化"表达层
 
 ### 对应 `03` 生命周期思想篇
@@ -640,8 +640,8 @@ openspec/
 
 - 先围绕 change 组织工作
 - 在正式基线上做增量变化
-- 用多层工件拆开不同类型的信息
-- 在实现过程中允许回头修改前面的工件
+- 用多层 artifact 拆开不同类型的信息
+- 在实现过程中允许回头修改前面的 artifact
 - 最后通过 archive 把变化沉淀回正式基线
 
 ### 对应 `04` config/schema 边界篇
@@ -683,8 +683,8 @@ openspec/
 1. 先开 change
 2. 先把 intent / scope / behavior / design / tasks 分层写出来
 3. 再开始实现
-4. 发现理解有误时，回头修改工件
-5. 完成后 merge 回正式规格
+4. 发现理解有误时，回头修改 artifact
+5. 完成后 merge 回正式 spec
 6. 把整次 change 保留为历史
 ```
 

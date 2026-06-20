@@ -23,7 +23,7 @@
 ```mermaid
 graph TB
     subgraph 项目层
-    A["openspec/specs/<br/>（正式规格基线）"]
+    A["openspec/specs/<br/>（正式 spec 基线）"]
     B["openspec/config.yaml<br/>（项目级提示背景）"]
     C["openspec/schemas/<br/>（工作流骨架定义）"]
     end
