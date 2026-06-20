@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" font-family="monospace" font-size="11">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#555"/></marker>
+    <marker id="arrowG" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#15803d"/></marker>
+    <marker id="arrowB" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#1d4ed8"/></marker>
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/></linearGradient>
+    <linearGradient id="engineGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dcfce7"/><stop offset="100%" stop-color="#bbf7d0"/></linearGradient>
+    <linearGradient id="dataGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff7ed"/><stop offset="100%" stop-color="#fed7aa"/></linearGradient>
+    <linearGradient id="truthGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="100%" stop-color="#86efac"/></linearGradient>
+    <linearGradient id="neutralGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f3f4f6"/><stop offset="100%" stop-color="#e5e7eb"/></linearGradient>
+  </defs>
+
+  <rect width="1000" height="520" fill="#fafafa" rx="4"/>
+  <text x="500" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">图1 · 机理流水线：主 specs 怎么被造出来</text>
+
+  <!-- two entry paths -->
+  <rect x="120" y="46" width="330" height="58" rx="5" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="285" y="64" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">入口 A：openspec archive</text>
+  <text x="285" y="79" text-anchor="middle" font-size="9" fill="#1d4ed8">唯一确定写入 CLI · 原子 fail-fast</text>
+  <text x="285" y="93" text-anchor="middle" font-size="9" fill="#1d4ed8">成功后 move → changes/archive/&lt;日期&gt;-&lt;id&gt;/</text>
+
+  <rect x="550" y="46" width="330" height="58" rx="5" fill="url(#agentGrad)" stroke="#93c5fd" stroke-dasharray="5,3"/>
+  <text x="715" y="64" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">入口 B：/opsx:sync</text>
+  <text x="715" y="79" text-anchor="middle" font-size="9" fill="#1d4ed8">LLM 再对齐 · 非确定 · 幂等</text>
+  <text x="715" y="93" text-anchor="middle" font-size="9" fill="#1d4ed8">只改 spec · 不移动 change</text>
+
+  <!-- converge arrows -->
+  <line x1="285" y1="104" x2="420" y2="130" stroke="#1d4ed8" marker-end="url(#arrowB)"/>
+  <line x1="715" y1="104" x2="580" y2="130" stroke="#1d4ed8" stroke-dasharray="5,3" marker-end="url(#arrowB)"/>
+
+  <!-- buildUpdatedSpec engine -->
+  <rect x="120" y="132" width="760" height="150" rx="6" fill="url(#engineGrad)" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="500" y="152" text-anchor="middle" font-size="12" font-weight="bold" fill="#14532d">buildUpdatedSpec() — 唯一改写器（specs-apply.ts）</text>
+  <text x="500" y="169" text-anchor="middle" font-size="9" fill="#15803d">findSpecUpdates() 把每个 delta 配对到 openspec/specs/&lt;cap&gt;/spec.md，然后按序应用：</text>
+
+  <!-- 4 op chips -->
+  <rect x="140" y="180" width="165" height="44" rx="4" fill="#bbf7d0" stroke="#86efac"/>
+  <text x="222" y="197" text-anchor="middle" font-size="10" font-weight="bold" fill="#14532d">1. RENAMED</text>
+  <text x="222" y="213" text-anchor="middle" font-size="8" fill="#4b5563">FROM/TO · 改名 key</text>
+  <line x1="305" y1="202" x2="328" y2="202" stroke="#555" marker-end="url(#arrow)"/>
+
+  <rect x="330" y="180" width="165" height="44" rx="4" fill="#bbf7d0" stroke="#86efac"/>
+  <text x="412" y="197" text-anchor="middle" font-size="10" font-weight="bold" fill="#14532d">2. REMOVED</text>
+  <text x="412" y="213" text-anchor="middle" font-size="8" fill="#4b5563">从 map 删除</text>
+  <line x1="495" y1="202" x2="518" y2="202" stroke="#555" marker-end="url(#arrow)"/>
+
+  <rect x="520" y="180" width="165" height="44" rx="4" fill="#bbf7d0" stroke="#86efac"/>
+  <text x="602" y="197" text-anchor="middle" font-size="10" font-weight="bold" fill="#14532d">3. MODIFIED</text>
+  <text x="602" y="213" text-anchor="middle" font-size="8" fill="#4b5563">整块替换</text>
+  <line x1="685" y1="202" x2="708" y2="202" stroke="#555" marker-end="url(#arrow)"/>
+
+  <rect x="710" y="180" width="150" height="44" rx="4" fill="#bbf7d0" stroke="#86efac"/>
+  <text x="785" y="197" text-anchor="middle" font-size="10" font-weight="bold" fill="#14532d">4. ADDED</text>
+  <text x="785" y="213" text-anchor="middle" font-size="8" fill="#4b5563">追加末尾</text>
+
+  <text x="500" y="246" text-anchor="middle" font-size="9" fill="#15803d">MODIFIED = 整块替换（非 diff）· 匹配键 = normalizeRequirementName(标题文本)</text>
+  <text x="500" y="262" text-anchor="middle" font-size="9" fill="#b91c1c">任一目标 not found ⇒ 原子回滚："Aborted. No files were changed."</text>
+  <text x="500" y="276" text-anchor="middle" font-size="9" fill="#15803d">成功 ⇒ writeUpdatedSpec() 落盘</text>
+
+  <!-- arrow to specs -->
+  <line x1="500" y1="282" x2="500" y2="300" stroke="#555" marker-end="url(#arrow)"/>
+
+  <!-- specs output -->
+  <rect x="300" y="302" width="400" height="50" rx="6" fill="url(#truthGrad)" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="500" y="322" text-anchor="middle" font-size="11" font-weight="bold" fill="#14532d">openspec/specs/&lt;capability&gt;/spec.md</text>
+  <text x="500" y="340" text-anchor="middle" font-size="9" fill="#14532d">source of truth · 现状事实层（不是愿望层）</text>
+
+  <!-- identity hub -->
+  <rect x="120" y="370" width="760" height="130" rx="6" fill="url(#neutralGrad)" stroke="#d1d5db"/>
+  <rect x="120" y="370" width="8" height="130" fill="#b91c1c"/>
+  <text x="140" y="390" font-size="11" font-weight="bold" fill="#b91c1c">身份枢纽（整件事的支点）</text>
+  <text x="140" y="410" font-size="9" fill="#4b5563">· requirement 没有稳定 ID</text>
+  <text x="140" y="426" font-size="9" fill="#4b5563">· 身份 = "### Requirement: &lt;Name&gt;" 标题原文</text>
+  <text x="140" y="442" font-size="9" fill="#4b5563">· normalizeRequirementName() 仅 .trim()    ⇒  大小写敏感：Login ≠ login</text>
+  <text x="140" y="458" font-size="9" fill="#4b5563">· 段头 ## ADDED Requirements 却用 getSectionCaseInsensitive    ⇒  大小写不敏感</text>
+  <text x="140" y="480" font-size="9" font-weight="bold" fill="#b91c1c">★ 这个不对称 = ⑥ 身份脆弱性的根源：改个大小写，后续 delta 默默失配。</text>
+  <text x="140" y="494" font-size="8" fill="#9ca3af">源码：requirement-blocks.ts（normalizeRequirementName / getSectionCaseInsensitive）、specs-apply.ts（buildUpdatedSpec）</text>
+</svg>

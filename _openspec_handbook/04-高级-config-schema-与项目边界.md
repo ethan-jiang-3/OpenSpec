@@ -159,7 +159,7 @@ schema 不是数据库 schema，也不只是 template。
 - 谁依赖谁
 - apply 追踪哪份文件
 
-一个典型 schema 看起来像这样：
+默认的 **`spec-driven`** schema 看起来像这样（这就是 `config.yaml` 里 `schema: spec-driven` 指向的那个——它定义 artifact DAG、delta 操作、以及 proposal↔specs 的能力契约，是背后的 driver；想看它怎么用"目录名"给 capability 定身份，见 [`09-高级-能力身份与specs漂移维护`](09-高级-能力身份与specs漂移维护.md)）：
 
 ```yaml
 artifacts:

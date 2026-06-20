@@ -6,6 +6,21 @@
 
 ---
 
+## 先认清：这是 parser 的契约，不是参考文档
+
+`schema.yaml` 不是给人看的"说明文"——它是 **CLI 和 agent 解析 change 时的契约**。你写进 `openspec/` 的每个 artifact 都得合这个契约，否则工具要么静默忽略、要么 parse 失败，agent 就在残缺/错误前提上推理 → 幻觉和困惑行为。
+
+具体哪些是硬契约（偏离即出问题）：
+
+- **artifact DAG**（`requires`）：proposal→specs→design→tasks 的依赖是工具判断"下一个该生成什么 / 是否完成"的依据，自己加/漏 artifact 会破坏 `apply`/`status` 的判断。
+- **delta 操作段头**（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）：archive 靠它解析；写错段头 → delta 不被识别。
+- **格式**：`### Requirement: <name>`、scenario **必须 4 个 `#`**（`#### Scenario:`，写成 3 个或 bullet 会**静默失败**）、requirement 正文要含 `SHALL`/`MUST`。
+- **能力契约**：proposal 列的每个 capability 名，必须与 `specs/<capability>/` 目录名**逐字一致**（kebab-case）——这是 schema 自己点名的 proposal↔specs "critical contract"。
+
+所以**想真正用好 OpenSpec，高手会直接读一遍 `schemas/spec-driven/schema.yaml` 原文**（不是只读别人转述）。下面逐字段拆解是帮你读它的导航。
+
+---
+
 ## 完整 schema.yaml
 
 ```yaml

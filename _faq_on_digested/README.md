@@ -44,6 +44,7 @@ _faq_on_digested/
 - [`schema-agent-dev/`](schema-agent-dev/question.md) — OpenSpec 的 schema 能不能用来开发 AI Agent 本身？概念验证：和 spec-driven 同框架（proposal/specs/design/tasks），只改 instruction 内容，不改源码。
 - [`openspec-executable/`](openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的。
 - [`config-yaml-growth/`](config-yaml-growth/question.md) — 熟悉 SDD 的人能手动调 config.yaml，但普通程序员怎么搞？有没有交互式工具或 agent 辅助——还是现状就是个缺口？
+- [`keep-specs-aligned/`](keep-specs-aligned/question.md) — 怎么别让 main specs 和代码对不上：平时的习惯 / 怎么发现要修 / 最常见的几种修法。
 
 ## 引用规范
 

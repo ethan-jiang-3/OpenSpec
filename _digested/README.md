@@ -22,6 +22,7 @@
 | `schema/` | schema 系统专题 | schema 概念、内置 schema 详解、自定义实战 |
 | `internal-spec-driven/` | 核心命令源码剖析 | spec-driven 下 explore/propose/apply/archive 的精确机制 |
 | `mechanisms/` | 补充机制库 | workspace、tool delivery、spec model、workflow templates、CLI infra 等工程追问 |
+| `specs_truth/` | 主 specs 源真相治理 | specs 怎么被 delta 构造、为什么会和代码失真、七种修法与问题→方法决策矩阵 |
 | `_coverage/` | 覆盖矩阵 | 维护用索引，按源码、OpenSpec 自身 specs、测试目录追踪 digest 覆盖状态 |
 | `_change_log/` | 上游同步记录 | 每次 upstream 版本同步的变更摘要 |
 
@@ -33,6 +34,7 @@
 - **想自定义工作流** → `schema/`，从 `00-map.md` 开始
 - **想彻底搞懂每条命令** → `internal-spec-driven/`，从 `00-四条命令的共有机制.md` 开始
 - **读完主干后还有工程追问** → `mechanisms/`，从 `00-map.md` 开始
+- **想搞清楚 specs 为什么和代码对不上、怎么修** → `specs_truth/`，从 `00-map.md` 开始
 - **想检查源码覆盖缺口** → `_coverage/`。这是维护索引，不是新人阅读入口
 - **想跟踪上游变更** → `_change_log/`
 

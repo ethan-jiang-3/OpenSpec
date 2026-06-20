@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 470" font-family="monospace" font-size="11">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#15803d"/></marker>
+    <linearGradient id="engineGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dcfce7"/><stop offset="100%" stop-color="#bbf7d0"/></linearGradient>
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/></linearGradient>
+    <linearGradient id="warnGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#fde68a"/></linearGradient>
+    <linearGradient id="neutralGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f3f4f6"/><stop offset="100%" stop-color="#e5e7eb"/></linearGradient>
+    <linearGradient id="rootGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e0e7ff"/><stop offset="100%" stop-color="#c7d2fe"/></linearGradient>
+  </defs>
+
+  <rect width="1000" height="470" fill="#fafafa" rx="4"/>
+  <text x="500" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">图4 · 运维循环：巡检 → 修复 → 守住（顺时针）</text>
+
+  <!-- cycle arrows (drawn first, behind boxes) -->
+  <line x1="660" y1="120" x2="775" y2="158" stroke="#15803d" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="825" y1="262" x2="660" y2="332" stroke="#15803d" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="340" y1="332" x2="175" y2="262" stroke="#15803d" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="225" y1="158" x2="340" y2="120" stroke="#15803d" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+  <!-- center label -->
+  <rect x="400" y="200" width="200" height="60" rx="8" fill="url(#rootGrad)" stroke="#a5b4fc" stroke-width="1.3"/>
+  <text x="500" y="224" text-anchor="middle" font-size="12" font-weight="bold" fill="#3730a3">运维循环</text>
+  <text x="500" y="244" text-anchor="middle" font-size="9" fill="#3730a3">specs 长期对齐</text>
+  <text x="500" y="330" text-anchor="middle" font-size="9" font-style="italic" fill="#9ca3af">（循环往复，不是一次性大扫除）</text>
+
+  <!-- TOP: 巡检 -->
+  <rect x="300" y="50" width="400" height="86" rx="6" fill="url(#warnGrad)" stroke="#fcd34d"/>
+  <text x="500" y="70" text-anchor="middle" font-size="11" font-weight="bold" fill="#b45309">巡检（定期 · 发现漂移）</text>
+  <text x="500" y="88" text-anchor="middle" font-size="9" fill="#92400e">list --specs / view / validate --all</text>
+  <text x="500" y="103" text-anchor="middle" font-size="9" fill="#92400e">grep 悬空 delta 目标 · src ↔ specs 对照</text>
+  <text x="500" y="118" text-anchor="middle" font-size="9" fill="#92400e">grep changes/archive/ 重建 requirement 溯源</text>
+  <text x="500" y="130" text-anchor="middle" font-size="8" fill="#b45309">→ 产出"漂移清单"</text>
+
+  <!-- RIGHT: 分类选手段 -->
+  <rect x="720" y="160" width="255" height="104" rx="6" fill="url(#neutralGrad)" stroke="#d1d5db"/>
+  <text x="847" y="180" text-anchor="middle" font-size="11" font-weight="bold" fill="#4b5563">分类 · 选手段</text>
+  <text x="847" y="198" text-anchor="middle" font-size="9" fill="#4b5563">02 六类噪声信号</text>
+  <text x="847" y="213" text-anchor="middle" font-size="9" fill="#4b5563">→ 03 原语</text>
+  <text x="847" y="228" text-anchor="middle" font-size="9" fill="#4b5563">→ 04 决策矩阵</text>
+  <text x="847" y="248" text-anchor="middle" font-size="8" fill="#4b5563">决定用哪个原语</text>
+  <text x="847" y="260" text-anchor="middle" font-size="8" fill="#4b5563">（纪律/巡检是常态）</text>
+
+  <!-- BOTTOM: 落地 -->
+  <rect x="300" y="334" width="400" height="100" rx="6" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="500" y="354" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">落地（走受控流水线，别手搓 spec）</text>
+  <text x="500" y="372" text-anchor="middle" font-size="9" fill="#1d4ed8">openspec new change → 写 delta → openspec archive -y（自校验）</text>
+  <text x="500" y="388" text-anchor="middle" font-size="9" fill="#1d4ed8">DELETE / SHELVE 用文件操作（无 CLI 删除命令）</text>
+  <text x="500" y="404" text-anchor="middle" font-size="9" fill="#1d4ed8">archive 后补 ## Purpose · git diff review</text>
+  <text x="500" y="420" text-anchor="middle" font-size="8" fill="#b91c1c">★ 原子 fail-fast：not found 会回滚整批，失败项修完一起再 archive</text>
+
+  <!-- LEFT: 纪律 -->
+  <rect x="25" y="160" width="255" height="104" rx="6" fill="url(#engineGrad)" stroke="#86efac"/>
+  <text x="152" y="180" text-anchor="middle" font-size="11" font-weight="bold" fill="#15803d">前置纪律（防再积累）</text>
+  <text x="152" y="200" text-anchor="middle" font-size="9" fill="#15803d">做完即 archive</text>
+  <text x="152" y="216" text-anchor="middle" font-size="9" fill="#15803d">改名走 RENAMED</text>
+  <text x="152" y="232" text-anchor="middle" font-size="9" fill="#15803d">能力目录名稳定</text>
+  <text x="152" y="248" text-anchor="middle" font-size="9" fill="#15803d">validate --all 偶尔体检</text>
+  <text x="152" y="262" text-anchor="middle" font-size="8" fill="#15803d">archive 后 review spec↔代码</text>
+
+  <rect x="25" y="440" width="950" height="22" rx="4" fill="#f9fafb" stroke="#e5e7eb"/>
+  <text x="500" y="455" text-anchor="middle" font-size="9" fill="#4b5563">工具只管"写入那一刻"的可靠；这个循环把"长期对齐"变成可重复的人 + 纪律 + 巡检的责任。</text>
+</svg>
