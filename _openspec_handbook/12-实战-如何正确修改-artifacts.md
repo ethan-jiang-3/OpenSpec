@@ -8,7 +8,7 @@
 
 OpenSpec 有两种 profile（配置模式）：
 
-这里列出的 `/opsx:*` 是 OpenSpec workflow 投递到 agent 工具里的命令入口，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`。
+这里列出的 `/opsx:*` 是 OpenSpec workflow 提供给 agent 工具的命令入口，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`。
 
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
@@ -289,7 +289,7 @@ openspec/config.yaml
 schema: spec-driven
 ```
 
-**问题**：AI 生成的 artifacts 太泛泛，不符合项目特点。
+**问题**：AI 生成的 artifacts 过于笼统，不符合项目特点。
 
 **改进步骤**：
 

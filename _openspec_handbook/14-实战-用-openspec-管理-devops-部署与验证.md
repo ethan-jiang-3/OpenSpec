@@ -284,7 +284,7 @@ implementation done
 
 关键是：
 
-> **不要因为部署失败就绕开 OpenSpec；失败本身就是 change 需要记录和吸收的事实。**
+> **不要因为部署失败就绕开 OpenSpec；失败本身就是 change 需要记录和消化的事实。**
 
 ---
 

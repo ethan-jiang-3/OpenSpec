@@ -267,7 +267,7 @@ rules:
     - Approval-related changes must preserve authorization regression coverage
 ```
 
-这组规则更强，是因为它们更像真实项目里的判断器。
+这组规则更强，是因为它们更像真实项目里的判断依据。
 
 它们告诉你：
 
@@ -396,7 +396,7 @@ Keep <结构对象> organized by <组织原则>.
 
 ---
 
-## 推荐把 `rules` 分成 4 个小簇
+## 推荐把 `rules` 分成 4 个小类
 
 这不是必须，但很实用。
 
@@ -907,7 +907,7 @@ rules:
 
 ## 常见疑问：`config.yaml` 会不会限制团队灵活性
 
-这是一个高频担心：
+这是一个常见疑虑：
 
 - "规则写太多，会不会把团队绑死？"
 
@@ -929,7 +929,7 @@ rules:
 
 如果把整篇压成 7 句话，大概就是：
 
-1. `config.yaml` 不该只存在，它还必须写得有判断力
+1. `config.yaml` 不能只是个形式，它还必须写得有判断力
 2. 好的 `context` 提供长期稳定背景，不提供临时需求碎片
 3. 好的 `rules` 不是口号，而是可作用于真实 change 的工程约束
 4. "对象 + 条件 + 约束"通常比"best practices"更有用

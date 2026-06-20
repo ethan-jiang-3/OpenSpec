@@ -17,7 +17,7 @@
 
 更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，归档回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**（`validate` 只查文件结构，从不打开主 spec 去比对）。
 
-所以维护 specs 不是文档洁癖，而是**保住这套机制本身能成立的地基**。带着这个 stakes 往下读，"specs 按什么组织、为什么会漂"就不再是冷知识——它直接告诉你地基为什么这么脆、你又该怎么守。
+所以维护 specs 不是文档洁癖，而是**保住这套机制本身能成立的地基**。带着这个认知往下读，"specs 按什么组织、为什么会漂"就不再是冷知识——它直接告诉你地基为什么这么脆、你又该怎么守。
 
 ## 先看清：spec-driven 是背后的 driver
 
@@ -34,7 +34,7 @@
 
 > The Capabilities section is critical. It creates the **contract between proposal and specs phases**. … Each capability listed here will need a corresponding spec file.
 
-**为什么这点重要**：你写进 `openspec/` 的任何东西，都得合这个 schema 的契约——CLI 和 agent 是照着它解析的。**偏离契约（4 个 `#` 写成 3 个、capability 名拼错、缺 SHALL/MUST），工具要么静默忽略、要么 parse 失败，agent 就在残缺/错误的前提上推理 → 幻觉和困惑行为。**
+**为什么这点重要**：你写进 `openspec/` 的任何东西，都得符合这个 schema 的契约——CLI 和 agent 是照着它解析的。**偏离契约（4 个 `#` 写成 3 个、capability 名拼错、缺 SHALL/MUST），工具要么静默忽略、要么 parse 失败，agent 就在残缺/错误的前提上推理，产生幻觉、行为混乱。**
 
 下面要讲的"能力身份"，就是这个契约里最核心、又最容易被忽略的一条。
 
@@ -60,7 +60,7 @@ openspec/specs/
 └── notifications/spec.md
 ```
 
-**一个 capability 的身份，就是它在 `specs/` 下那个 kebab-case 目录名**（`auth`、`data-export`）。这个目录名同时扮演四个角色：
+**一个 capability 的身份，就是它在 `specs/` 下那个 kebab-case 目录名**（`auth`、`data-export`）。这个目录名同时承担四个角色：
 
 | 角色 | 说明 |
 |------|------|
@@ -99,7 +99,7 @@ graph TD
 
 > 一句话：**requirement 改名有"正规手续"（RENAMED）；capability 改名没有手续，是裸操作。** 所以 capability 目录名要当**稳定性契约**对待——能不改就不改。
 
-## 这就是 specs 漂移的根
+## 这就是 specs 漂移的根源
 
 `openspec/specs/` 号称 source of truth，但用着用着就和代码对不上了。根因就是上面这套身份模型 + 一个事实：**没有任何工具持续对账**（`validate` 只查文件结构、从不打开主 spec 去比对，`archive` 只在那一刻匹配一次）。
 
@@ -114,7 +114,7 @@ graph TD
 
 不必背一堆手段，记住几条就够：
 
-- **做完一个 change 就 `archive`，别让它卡在 active。** specs 只在 archive 那一刻更新；不 archive，specs 永远停在旧版本。
+- **做完一个 change 就 `archive`，别让它卡在 active 状态。** specs 只在 archive 那一刻更新；不 archive，specs 永远停在旧版本。
 - **requirement 改名走 `RENAMED`**，别"删旧 + 加新"（那会掐断历史，让老 delta 失配）。
 - **capability 目录名尽量别改。** 没有正规 rename 操作，改名=裸搬目录，要同步所有引用它的 delta——当稳定性契约对待。
 - **apply 改代码时，顺手想一句"这段 spec 还准吗"。** 这是最廉价的对齐动作。
@@ -132,7 +132,7 @@ graph TD
 
 - [`02-中级-把核心概念真正串起来`](02-中级-把核心概念真正串起来.md)——`specs/`、`changes/`、delta、archive 合并的基础（本章的根）。
 - [`04-高级-config-schema-与项目边界`](04-高级-config-schema-与项目边界.md)——schema 是什么、怎么选；本章的 `spec-driven` 就是默认那套。
-- [`12-实战-如何正确修改-artifacts`](12-实战-如何正确修改-artifacts.md)——动手改 artifact 时怎么不踩格式契约的坑（4 个 `#`、exact 名字等）。
+- [`12-实战-如何正确修改-artifacts`](12-实战-如何正确修改-artifacts.md)——动手改 artifact 时怎么不踩格式契约的坑（4 个 `#`、精确名字等）。
 - [`07-高级-workspace-跨仓库规划`](07-高级-workspace-跨仓库规划.md)——多仓库时 capability / area 目录怎么组织。
 
 > 想看源码级深挖——schema 字段逐项、合并算法、六类噪声的完整机理——仓库里 `_digested/specs_truth/` 专题接住；本章只给你判断锚点和最低守住动作。

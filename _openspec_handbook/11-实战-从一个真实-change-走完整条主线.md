@@ -41,7 +41,7 @@
 
 ## 这次案例选什么
 
-我们不用特别大的系统，就用一个非常典型、但又足够有现实感的例子：
+这里不用特别大的系统，就用一个非常典型、但又足够真实的例子：
 
 > **给一个已有 Web 应用新增"导出订单 CSV"能力。**
 
@@ -287,7 +287,7 @@ The system SHALL allow authorized staff users to view and export the order list.
 - **影响**：删除后会影响谁（现有用户、依赖系统）
 - **迁移**：用户应该怎么办（用什么替代、如何迁移）
 
-**例子**：上面的 PDF Export 就是一个典型的 REMOVED 例子。
+**例子**：上文的 PDF Export 就是一个典型的 REMOVED 案例。
 
 ### 为什么这里不用只改代码
 

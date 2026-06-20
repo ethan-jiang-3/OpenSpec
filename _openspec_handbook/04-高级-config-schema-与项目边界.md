@@ -14,7 +14,7 @@
 - `openspec/changes/<name>/.openspec.yaml`
 - `core` / `custom` profile
 
-如果这些边界没分开，就很容易什么都往一个地方理解。
+如果这些边界没分开，就很容易把所有东西混在一起。
 
 ---
 
@@ -51,7 +51,7 @@ graph TB
 | `openspec/schemas/<name>/schema.yaml` | change 的结构骨架和 artifact 依赖 | 工作流的"模板定义" |
 | `openspec/changes/<name>/.openspec.yaml` | 这次 change 最终绑定哪套 schema | 这次工作的"配置文件" |
 
-最重要的一句可以再说一遍：
+最重要的一句，再说一遍：
 
 > **`config.yaml` 改的是提示层，`schema` 改的是结构层。**
 
@@ -148,7 +148,7 @@ rules:
 
 schema 不是数据库 schema，也不只是 template。
 
-它更准确的角色是：
+更准确地说，它是：
 
 > **一次 change 应该长成什么样的工作流骨架。**
 
@@ -159,7 +159,7 @@ schema 不是数据库 schema，也不只是 template。
 - 谁依赖谁
 - apply 追踪哪份文件
 
-默认的 **`spec-driven`** schema 看起来像这样（这就是 `config.yaml` 里 `schema: spec-driven` 指向的那个——它定义 artifact DAG、delta 操作、以及 proposal↔specs 的能力契约，是背后的 driver；想看它怎么用"目录名"给 capability 定身份，见 [`09-高级-能力身份与specs漂移维护`](09-高级-能力身份与specs漂移维护.md)）：
+默认的 **`spec-driven`** schema 看起来像这样。它就是 `config.yaml` 里 `schema: spec-driven` 指向的那个——定义 artifact DAG、delta 操作、以及 proposal↔specs 的能力契约，是背后的 driver。想看它怎么用"目录名"给 capability 定身份，见 [`09-高级-能力身份与specs漂移维护`](09-高级-能力身份与specs漂移维护.md)：
 
 ```yaml
 artifacts:
@@ -290,7 +290,7 @@ schema 管的是：
 
 ## 这一层最重要的边界意识
 
-到了高级阶段，你最该有的不是"记住所有字段"，而是以下判断力：
+到了高级阶段，你最需要的不是"记住所有字段"，而是以下判断力：
 
 ### 什么时候改 `config.yaml`
 
@@ -348,7 +348,7 @@ graph TB
 - Workspace 的配置（profile/delivery/tools）来自 global config，不走 repo-local `config.yaml`
 - OpenSpec 运行时自动判断当前上下文属于 workspace 还是单 repo，无需手动切换
 
-这意味着「项目级全局约束放哪」这个问题现在多了一个答案：如果团队管理多个关联仓库，跨仓库的全局原则更适合放在 workspace 层。单仓库场景则继续用 project 层（`config.yaml` + `specs/`）。具体怎么选，取决于你的团队结构和仓库数量；跨仓库场景参考 `07` workspace 篇统一看。
+这意味着「项目级全局约束放哪」这个问题现在多了一个答案：如果团队管理多个关联仓库，跨仓库的全局原则更适合放在 workspace 层。单仓库场景则继续用 project 层（`config.yaml` + `specs/`）。具体怎么选，取决于你的团队结构和仓库数量；跨仓库场景参考 `07` workspace 篇。
 
 ---
 

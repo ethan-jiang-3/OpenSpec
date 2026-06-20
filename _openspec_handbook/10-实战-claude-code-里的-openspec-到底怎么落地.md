@@ -72,7 +72,7 @@ openspec/
 
 这层在 `.claude/` 目录里。
 
-典型地你会看到：
+通常你会看到：
 
 ```text
 .claude/
@@ -114,7 +114,7 @@ openspec/
 openspec init --tools claude
 ```
 
-之后如果 OpenSpec 的 workflow 模板、profile 或 delivery 选择变化，用：
+之后如果 OpenSpec 的 workflow 模板、profile 或 delivery 选项发生变化，用：
 
 ```bash
 openspec update
@@ -212,9 +212,9 @@ sequenceDiagram
 ```
 
 所以 Claude Code 本身不是 OpenSpec。
-它只是 OpenSpec 被人触发、被模型消费的宿主环境之一。
+它只是 OpenSpec 被人触发、被模型读取的宿主环境之一。
 
-同样，`/opsx:propose` 也不是 `openspec propose` 的别名。OpenSpec CLI 里没有一个单独的 `propose` 子命令；Claude Code 触发 `/opsx:propose` 后，会按照 skill/command 里的 workflow 说明调用 `openspec new change`、`openspec status`、`openspec instructions` 等 CLI 能力，再由 Claude Code 读项目代码、生成 Markdown artifacts、写回 `openspec/changes/`。
+同样，`/opsx:propose` 也不是 `openspec propose` 的别名。OpenSpec CLI 里没有一个单独的 `propose` 子命令；Claude Code 触发 `/opsx:propose` 后，会按照 skill/command 里的 workflow 说明调用 `openspec new change`、`openspec status`、`openspec instructions` 等 CLI 能力。然后由 Claude Code 读项目代码、生成 Markdown artifacts、写回 `openspec/changes/`。
 
 ---
 
@@ -229,7 +229,7 @@ Claude Code 下通常会同时投递 skills 和 commands。
 | CLI | `openspec status --json`、`openspec instructions ... --json` | 返回真实状态、路径、依赖、模板、context/rules |
 | 文件系统 | `openspec/specs/`、`openspec/changes/` | 保存项目事实和 change 状态 |
 
-一个容易混的点是：skill/command 里确实有很多说明文字，但它们不是事实源。真正的状态来自 `openspec/`，真正的运行时解释来自 CLI。
+一个容易混淆的地方是：skill/command 里确实有很多说明文字，但它们不是事实源。真正的状态来自 `openspec/`，真正的运行时解释来自 CLI。
 
 因此看到 `.claude/commands/opsx/` 时，应该读成：
 
@@ -283,7 +283,7 @@ Claude Code 里的 OpenSpec 命令入口
 - `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
 - Claude Code 只是宿主，不是 OpenSpec 本体
 
-如果你还没有读过高级主线，可以回看 [`03`](03-高级-openspec-的软件开发生命周期思想.md) 和 [`04`](04-高级-config-schema-与项目边界.md)，把方法论和边界补厚。
+如果你还没有读过高级主线，可以回看 [`03`](03-高级-openspec-的软件开发生命周期思想.md) 和 [`04`](04-高级-config-schema-与项目边界.md)，把方法论和边界加深理解。
 
 如果你已经在实战区继续往后读，下一篇更适合看一个完整 change 怎样从 propose 走到 archive：
 
