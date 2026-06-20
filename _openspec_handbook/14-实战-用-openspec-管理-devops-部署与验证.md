@@ -17,7 +17,7 @@ OpenSpec 不替代这些东西：
 
 它真正适合做的是：
 
-> **把一次部署当作 change 的一部分来规划、执行、验证和归档。**
+> **把一次部署当作 change 的一部分来规划、执行、验证和 archive。**
 
 也就是说：
 
@@ -261,7 +261,7 @@ implementation done
 这时再 archive，语义才完整：
 
 - `openspec/specs/` 表示当前正式能力
-- `openspec/changes/archive/` 保留这次变更历史
+- `openspec/changes/archive/` 保留这次 change 历史
 - 部署验证证据留在 change 的 tasks / summary / PR 中
 
 ---

@@ -1,4 +1,4 @@
-# 机理：主 specs 如何被 delta 构造出来
+# 机理：主 specs 如何由 delta 构造
 
 ## 主轴（整专题的引擎）
 
@@ -12,7 +12,7 @@
 
 日常四步 **explore → propose → apply → archive**：前三步是 `/opsx:` slash 技能（agent 驱动），**archive 是 `openspec` CLI 命令**——也是这四步里**唯一会写主 spec**的一步（specs 只在这一步更新）。`validate`/`list`/`view` 是另一类 CLI 工具命令，只读不写、不在这个圈里（CLI/slash 完整对照表见 `README.md`）。
 
-所以本章讲"specs 怎么被造"，本质上就是讲 **archive 这一步内部发生了什么**。
+所以本章讲"specs 怎么产生"，本质上就是讲 **archive 这一步内部发生了什么**。
 
 ## 整条流水线
 
@@ -144,7 +144,7 @@ Aborted. No files were changed.
 | delta→主 spec 配对 | `src/core/specs-apply.ts` — `findSpecUpdates` |
 | 落盘 | `src/core/specs-apply.ts` — `writeUpdatedSpec` |
 | 内部引擎（被 archive 调用） | `src/core/specs-apply.ts` — `applySpecs` |
-| 归档流程（原子、移动 change） | `src/core/archive.ts` |
+| archive 流程（原子、移动 change） | `src/core/archive.ts` |
 | CLI 命令注册（证实无 `apply`） | `src/cli/index.ts` |
 | /opsx:sync LLM 模板 | `src/core/templates/workflows/sync-specs.ts` |
 

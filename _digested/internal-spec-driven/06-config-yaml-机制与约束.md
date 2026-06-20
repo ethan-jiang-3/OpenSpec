@@ -94,7 +94,7 @@ if (projectConfig?.rules) {
 
 config.yaml 不是在启动时一次性全局读取的，而是**在需要时才读**。具体时机：
 
-### 时机 1：`openspec instructions <artifact>` 被调用时
+### 时机 1：`openspec instructions <artifact>` 调用时
 
 `src/core/artifact-graph/instruction-loader.ts`：
 ```typescript
@@ -148,7 +148,7 @@ Stack: TypeScript, React, Node.js, PostgreSQL
 </project_context>
 ```
 
-**关键**：`context` 被包裹在 `<!-- -->` 注释中，且明确标注 "Do NOT include this in your output"。它是给 AI agent 看的背景信息，**不是给输出文件的内容**。
+**关键**：`context` 位于 `<!-- -->` 注释中，且明确标注 "Do NOT include this in your output"。它是给 AI agent 看的背景信息，**不是给输出文件的内容**。
 
 ### 4.2 rules 的注入
 
@@ -169,7 +169,7 @@ const configRules = rulesForArtifact && rulesForArtifact.length > 0 ? rulesForAr
 </rules>
 ```
 
-同样被包裹在注释中，同样标注 "Do NOT include in your output"。
+同样位于注释中，同样标注 "Do NOT include in your output"。
 
 ### 4.3 context vs rules 的区别
 

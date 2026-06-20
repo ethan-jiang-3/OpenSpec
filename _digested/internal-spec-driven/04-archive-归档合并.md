@@ -58,7 +58,7 @@ Phase 3: Move
 | requirement 文本过长 | WARNING |
 | delta 数量超过阈值 | WARNING |
 
-如果存在任何 ERROR，**archive 被拒绝**。WARNING 会被显示但不阻止。
+如果存在任何 ERROR，**CLI 拒绝 archive**。WARNING 只显示，不阻止。
 
 `--no-validate` 可以跳过所有验证，但需要额外确认（或 `--yes`）。
 

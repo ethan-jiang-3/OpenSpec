@@ -183,9 +183,9 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - context package
 - implementation gate
 
-这也是为什么 `--json` 输出和内部 graph / instruction loader 层如此重要。
+正因如此，`--json` 输出和内部 graph / instruction loader 层才如此重要。
 
-**v1.3.1 重要修复**：此前 `--json` 模式下，spinner 的进度文本仍会泄漏到 stderr，导致 agent 在合并 stdout+stderr 时 JSON 解析失败。v1.3.1 修复了这个问题 —— 当 `--json` flag 传入时，spinner 输出被完全抑制，agent 可以安全合并 stdout/stderr。
+**v1.3.1 重要修复**：此前 `--json` 模式下，spinner 的进度文本仍会泄漏到 stderr，导致 agent 在合并 stdout+stderr 时 JSON 解析失败。v1.3.1 修复了这个问题 —— `--json` flag 传入后，完全抑制 spinner 输出，agent 可以安全合并 stdout/stderr。
 
 ## 为什么说 workflow 命令像本地 API
 
@@ -225,6 +225,6 @@ Workspace 命令在机器消费场景下提供了新的协议端点：
 
 ### workspace guardrail
 
-machine-facing 的一个重要安全机制：workspace 生成的 skill 模板中内置了 guardrail。当 agent 检测到 `actionContext.mode: "workspace-planning"` 时，某些 repo-local 操作（sync specs、archive）会被阻止，agent 会被告知这些操作尚未对 workspace 级 change 开放。
+machine-facing 的一个重要安全机制：workspace 生成的 skill 模板中内置了 guardrail。当 agent 检测到 `actionContext.mode: "workspace-planning"` 时，某些 repo-local 操作（sync specs、archive）会被阻止，agent 会收到提示：这些操作尚未对 workspace 级 change 开放。
 
 这确保了 AI agent 不会在 workspace 上下文中误执行 repo-local 语义的操作。

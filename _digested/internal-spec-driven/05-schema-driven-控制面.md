@@ -16,7 +16,7 @@
 
 改变这约 153 行 YAML（以及 4 个模板文件），就能改变整套工作流的行为。
 
-这就是 schema 系统的设计目标 —— 它被描述为 "artifact DAG definition file"（`_digested/schema/01-schema-到底是什么.md`）。它不定义"怎么实现"（那是 AI agent 的事），只定义"什么的什么东西在什么条件下产生"。
+这就是 schema 系统的设计目标 —— 其定位是 "artifact DAG definition file"（`_digested/schema/01-schema-到底是什么.md`）。它不定义"怎么实现"（那是 AI agent 的事），只定义"什么的什么东西在什么条件下产生"。
 
 ---
 
@@ -237,8 +237,8 @@ rules:                     # 按 artifact ID 注入特定约束
 **关键交互**：
 
 1. `config.schema` 决定了加载哪个 schema 的 artifact DAG
-2. `config.context` 被注入到**所有** artifact 指令中（50KB 上限，见 `src/core/project-config.ts`）
-3. `config.rules` 的 key 会被验证是否对应 schema 中真实存在的 artifact ID（未知 ID 产生 warning，每个 session 只警告一次，见 `validateConfigRules()` / `generateInstructions()` in `src/core/artifact-graph/instruction-loader.ts`）
+2. `config.context` 注入到**所有** artifact 指令中（50KB 上限，见 `src/core/project-config.ts`）
+3. CLI 会检查 `config.rules` 的 key 是否对应 schema 中真实存在的 artifact ID（未知 ID 产生 warning，每个 session 只警告一次，见 `validateConfigRules()` / `generateInstructions()` in `src/core/artifact-graph/instruction-loader.ts`）
 4. config 读取失败不会阻止指令生成 —— resilient 设计
 
 ---

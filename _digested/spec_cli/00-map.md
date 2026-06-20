@@ -6,7 +6,7 @@
 
 更具体一点：
 
-- 对人类来说，它是一个用来初始化、查看、校验、归档 change/spec 的工具。
+- 对人类来说，它是一个用来初始化、查看、校验、archive change/spec 的工具。
 - 对 OPSX 来说，它是一组稳定的本地协议端点，用来读取状态、获取模板、获取下一步说明、判断能否进入 apply、以及感知 schema。
 - 对 IDE / AI 工具集成来说，它还是一个“投递目标”，`init` / `update` 会把工作流模板安装成 skills 或 commands。
 - 对 workspace 来说，它还是跨仓库规划的协调接口，`workspace setup/open/update` 负责管理多仓库协作上下文。

@@ -28,7 +28,7 @@ graph TB
     C["openspec/schemas/<br/>（工作流骨架定义）"]
     end
     
-    subgraph 单次变更层
+    subgraph 单次 change 层
     D["openspec/changes/&lt;name&gt;/<br/>（一次 change）"]
     E[".openspec.yaml<br/>（绑定哪套 schema）"]
     end

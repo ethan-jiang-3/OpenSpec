@@ -187,7 +187,7 @@ proposal (root)
 ## 这套 schema 适合什么场景
 
 - 软件工程项目，需要明确的行为规格
-- 团队协作，需要 review 和归档
+- 团队协作，需要 review 和 archive
 - 变更影响面大，需要 design 文档
 - 需要可追溯的 requirement → implementation 链路
 

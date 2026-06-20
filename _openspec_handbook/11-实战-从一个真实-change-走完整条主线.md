@@ -566,7 +566,7 @@ openspec/changes/add-order-csv-export/
 
 所以 archive 的真正含义是：
 
-> **这次变更结束了，而且其结果现在已经成为正式基线的一部分。**
+> **这次 change 结束了，而且其结果现在已经成为正式基线的一部分。**
 
 ---
 

@@ -98,7 +98,7 @@ apply:
 
 | spec-driven | article-writing | 角色变化 |
 |-------------|----------------|---------|
-| proposal | research | "为什么做这个变更" → "写什么主题、有什么材料" |
+| proposal | research | "为什么做这个 change" → "写什么主题、有什么材料" |
 | specs | outline | "系统应该做什么" → "文章结构" |
 | design | （无直接对应） | — |
 | tasks | draft + polish | "实现步骤" → "写作和润色步骤" |
@@ -259,7 +259,7 @@ artifacts:
     generates: proposal.md
     template: proposal.md
     instruction: |
-      创建提案，要求：
+      创建 proposal，要求：
       - 使用 WHEN/THEN 格式列出可测试的验收标准
       - 每个功能点都要有对应的测试策略
     requires: []

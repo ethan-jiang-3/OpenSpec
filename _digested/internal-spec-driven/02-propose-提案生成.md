@@ -1,4 +1,4 @@
-# 02 — propose：提案生成
+# 02 — propose：Proposal 生成
 
 propose 是四条命令中最核心的一条。它执行完整的"从零到可实施"流程：创建 change、按 DAG 顺序逐一生成所有 artifact，直到满足 apply 条件。
 

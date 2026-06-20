@@ -2,11 +2,11 @@
 
 ## 它解决的不是“多仓库合并”
 
-熟悉 AI Coding 的人很容易期待一个多仓库工具能做这件事：把几个 repo 放进一个大上下文，然后让 agent 自动决定哪里规划、哪里实现、哪里归档。OpenSpec 当前没有这样做。
+熟悉 AI Coding 的人很容易期待一个多仓库工具能做这件事：把几个 repo 放进一个大上下文，然后让 agent 自动决定哪里规划、哪里实现、哪里 archive。OpenSpec 当前没有这样做。
 
 workspace 的设计更克制：它是 **local coordination view**。它帮一台机器上的 agent 同时看见多个 repo/folder、一个 initiative 上下文、合适的 opener 和 workspace-local skills；但它不把 linked repo 合并成新的事实源，也不替 repo 决定 durable change 应该落在哪里。
 
-这个取舍的工程意义是：跨仓库探索可以集中，业务规格和实现归属仍然清晰。workspace 负责“打开上下文”，repo-local OpenSpec 负责“承载可归档的变更”。
+这个取舍的工程意义是：跨仓库探索可以集中，业务 specs 和实现归属仍然清晰。workspace 负责“打开上下文”，repo-local OpenSpec 负责”承载可 archive 的 change”。
 
 ## 三个状态对象
 

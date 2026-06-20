@@ -195,7 +195,7 @@ artifacts:
     generates: proposal.md
     template: proposal.md
     instruction: |
-      创建提案文档。
+      创建 proposal 文档。
     requires: []
 
   - id: specs

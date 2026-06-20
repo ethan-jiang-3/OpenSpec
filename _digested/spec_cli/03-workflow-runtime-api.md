@@ -231,7 +231,7 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。
 触发条件可能有：
 
 - apply 依赖的 artifacts 还没生成。
-- tracking file 被要求存在，但文件还不存在。
+- schema 要求 tracking file 存在，但文件还不存在。
 - tracking file 存在，但里面没有任务。
 
 意义：
@@ -257,7 +257,7 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。
 
 意义：
 
-- apply 阶段已经完成，下一步更接近验证和归档。
+- apply 阶段已经完成，下一步更接近验证和 archive。
 
 ### 它影响谁
 
@@ -340,4 +340,4 @@ OpenSpec workflow 不是硬编码的单一流程，而是由 schema 定义驱动
 
 它们一起构成了一套本地 workflow runtime API。
 
-这也是为什么在整个项目里，workflow 命令远比表面上看起来更重要。它们不是附属功能，而是 OpenSpec 能被 AI 驱动起来的核心接口层。
+正因如此，在整个项目里 workflow 命令远比表面上看起来更重要。它们不是附属功能，而是 OpenSpec 能被 AI 驱动起来的核心接口层。

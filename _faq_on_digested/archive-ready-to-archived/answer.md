@@ -409,7 +409,7 @@ delta spec sync assessment
 
 ### 误区 5：archive 是可逆操作
 
-没有内置 unarchive。归档后 active change 消失，恢复需要手工移动目录或重建 change。
+没有内置 unarchive。archive 后 active change 消失，恢复需要手工移动目录或重建 change。
 
 ## 参考来源
 

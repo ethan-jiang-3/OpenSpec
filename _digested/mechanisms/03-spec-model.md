@@ -6,10 +6,10 @@ OpenSpec 选择 Markdown 作为 specs/changes 的存储格式，是为了让人�
 
 - 当前项目承认了哪些 requirement？
 - 一个 change 修改了哪些 requirement？
-- delta spec 是否能安全归档？
+- delta spec 是否能安全 archive？
 - `show --json` 和 `validate --json` 应该输出什么？
 
-Spec model 这一层的作用，就是把 Markdown 变成可验证、可查询、可归档的结构化对象。
+Spec model 这一层的作用，就是把 Markdown 变成可验证、可查询、可 archive的结构化对象。
 
 ```text
 Markdown files
@@ -31,7 +31,7 @@ Markdown files
 - Zod schema 负责结构合法性。
 - validator 负责 OpenSpec-specific 规则。
 
-不要把这三者混在一起。parser 不应该决定 workflow 顺序；schema 不应该处理文件系统归档；validator 不应该替 agent 判断代码是否实现正确。
+不要把这三者混在一起。parser 不应该决定 workflow 顺序；schema 不应该处理文件系统 archive；validator 不应该替 agent 判断代码是否实现正确。
 
 ## ChangeParser
 
@@ -44,7 +44,7 @@ Markdown files
 
 `parseChangeWithDeltas()` 会读取 change directory 下的 delta spec 文件，把 proposal 和 specs delta 组合成 `Change` 对象。
 
-这使得一个 change 不是“一个目录里有几个 Markdown 文件”这么简单，而是可以被 CLI 和 agent 作为结构化 change 来审阅、验证、输出 JSON。
+这使得一个 change 不是“一个目录里有几个 Markdown 文件”这么简单，而是 CLI 和 agent 可作为结构化 change 来审阅、验证、输出 JSON。
 
 ## requirement-blocks 是 archive 的关键
 

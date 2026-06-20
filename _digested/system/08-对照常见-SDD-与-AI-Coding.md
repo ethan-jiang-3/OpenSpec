@@ -117,7 +117,7 @@ OpenSpec workspace 是 local coordination view：
 - context store / initiative 保存协调上下文。
 - linked repo/folder 仍然保留自己的归属。
 
-它不把多个 repo 合成一个新的 source of truth，也不自动决定哪个 repo 应该创建可归档 change。实现和规格归属仍要回到 owning repo，除非具体 workflow 明确支持 workspace 级规划。
+它不把多个 repo 合成一个新的 source of truth，也不自动决定哪个 repo 应该创建可 archive change。实现和 specs 归属仍要回到 owning repo，除非具体 workflow 明确支持 workspace 级规划。
 
 ## 和传统阶段式 SDD 的区别
 
@@ -163,7 +163,7 @@ OpenSpec 的优势在这些场景里最明显：
 - 多次迭代的 change：规划和实施会互相修正。
 - 需要 agent 可重复执行：不能只靠聊天上下文记住状态。
 - 需要跨工具复用 workflow：不想绑定某个 agent 平台。
-- 需要审计规格变化：希望 delta 和 archive 留在 Git 历史里。
+- 需要审计 specs 变化：希望 delta 和 archive 留在 Git 历史里。
 - 需要自定义工作流：默认 proposal/specs/design/tasks 不够用，需要 schema 化。
 
 它不一定适合所有情况。如果只是一次很小的临时代码修改，完整 OpenSpec change 可能显得重。但只要你关心“AI 生成的规划和实施是否能被长期检查”，OpenSpec 的协议化设计就开始有意义。

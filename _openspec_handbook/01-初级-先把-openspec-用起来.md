@@ -8,7 +8,7 @@
 
 **OpenSpec 是一个"先把 change 讲清楚，再去写代码"的协作层。**
 
-它不是模型，不替你思考；它做的事是把一次改动拆成几份能讨论、能验证、能归档的文件。
+它不是模型，不替你思考；它做的事是把一次改动拆成几份能讨论、能验证、能 archive 的文件。
 
 如果你是第一次接触它，先不用记 `schema`、skill、adapter。
 先记这三步就够了：
@@ -32,8 +32,8 @@ stateDiagram-v2
     规划中 --> 规划中: 修改 proposal/specs/design/tasks
     规划中 --> 实现中: /opsx:apply
     实现中 --> 规划中: 发现问题，回头调整
-    实现中 --> 归档完成: /opsx:archive
-    归档完成 --> 空白: specs/ 已更新，准备下一个 change
+    实现中 --> archive 完成: /opsx:archive
+    archive 完成 --> 空白: specs/ 已更新，准备下一个 change
     
     note right of 规划中
         此时生成：
@@ -194,7 +194,7 @@ my-project/
 
 这一步才开始真正改代码。
 
-### 第三步：归档
+### 第三步：archive
 
 ```text
 /opsx:archive add-dark-mode

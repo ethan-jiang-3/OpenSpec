@@ -116,7 +116,7 @@ skill / command 只是投递载体。
 
 ## 7. 为什么 `propose` 很特殊
 
-从 profile 默认值和 `init` 完成后的 onboarding 提示可以看出，`propose` 被放在非常显眼的位置。
+从 profile 默认值和 `init` 完成后的 onboarding 提示可以看出，`propose` 放在非常显眼的位置。
 
 这说明项目正在把默认体验向以下模式收束：
 

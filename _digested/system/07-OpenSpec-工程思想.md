@@ -101,7 +101,7 @@ OpenSpec 借用宿主 coding agent 的 LLM 能力。agent 做这些事：
 - 用 LLM 生成 proposal/spec/design/tasks。
 - 实施代码修改、运行测试、更新 checkbox。
 
-但 agent 不应该自己发明 OpenSpec 状态。状态来自文件系统，解释来自 CLI，产物顺序来自 schema。这个分工让 AI 的创造性被放在合适的位置：它生成内容和做工程判断，但不随意改写协议。
+但 agent 不应该自己发明 OpenSpec 状态。状态来自文件系统，解释来自 CLI，产物顺序来自 schema。这个分工把 AI 的创造性放在了合适的位置：它负责生成内容和做工程判断，但不随意改写协议。
 
 这也是 `status` 和 `instructions` 的意义。它们不是给人看的帮助文本，而是给 agent 的稳定操作包。
 
@@ -148,7 +148,7 @@ workspace/context-store/initiative 是当前系统中最容易被误读的一层
 - 生成 workspace guidance 和 opener surface。
 - 记录本机 link path 和 preferred opener。
 
-业务规格和可归档 change 仍应由 owning repo 承载。workspace 的价值是打开上下文和协调边界，而不是制造新的大一统 source of truth。
+业务 specs 和可 archive change 仍应由 owning repo 承载。workspace 的价值是打开上下文和协调边界，而不是制造新的大一统 source of truth。
 
 ## 读源码时的主线
 

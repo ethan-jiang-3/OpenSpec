@@ -9,7 +9,7 @@ OpenSpec 当前至少有两条相关但不同的生命周期：
 | repo-local change lifecycle | 一个 repo 里的 `openspec/changes/<name>/` | propose → apply/sync → archive |
 | workspace coordination lifecycle | workspace + initiative + linked repos | explore context → identify owning repo → create repo-local plan |
 
-两者可以衔接，但不能混成一条自动流水线。workspace 帮你打开跨 repo 上下文；repo-local change 仍然是具体实现和归档的主要承载。
+两者可以衔接，但不能混成一条自动流水线。workspace 帮你打开跨 repo 上下文；repo-local change 仍然是具体实现和 archive 的主要承载。
 
 ## repo-local workflow 地图
 
@@ -68,11 +68,11 @@ status 判断的核心不是“阶段字段”，而是 artifact output 是否�
 
 | workflow | 本质 | 不应该误解成 |
 |----------|------|--------------|
-| `apply` | 根据 tasks 实施业务代码，并持续更新任务清单 | 自动合并 specs 或自动归档 |
+| `apply` | 根据 tasks 实施业务代码，并持续更新任务清单 | 自动合并 specs 或自动 archive |
 | `sync` | agent-driven 将 delta specs 的意图合并到主 specs | archive 的替代品 |
 | `archive` | CLI archive 或 agent archive 模板引导的收尾路径 | 普通实现步骤 |
 
-`sync` 进入 core profile 后，repo-local 生命周期里多了一个重要能力：可以在不归档 change 的情况下更新主 specs。这对长生命周期 change 或需要先同步规格再继续实现的场景有用。
+`sync` 进入 core profile 后，repo-local 生命周期里多了一个重要能力：可以在不 archive change 的情况下更新主 specs。这对长生命周期 change 或需要先同步 specs 再继续实现的场景有用。
 
 ## workspace coordination lifecycle
 

@@ -4,7 +4,7 @@
 
 ## 先回答：为什么这事值得你操心
 
-很多人把 specs 当"写一次、归档了就完"的产物，觉得维护是可有可无的额外负担。**这是个误解，而且代价不小。** `openspec/specs/` 是整套 spec-driven 机制的**事实层契约**——人和团队靠它理解"项目现在是什么"，coding agent 更是直接把它当成**现状的地面**来读。它一旦和代码对不上，后果不是"文档有点旧"这种无害小事，而是地基松动：后面所有基于它的工作，都会从错误的前提出发。
+很多人把 specs 当"写一次、archive 了就完"的产物，觉得维护是可有可无的额外负担。**这是个误解，而且代价不小。** `openspec/specs/` 是整套 spec-driven 机制的**事实层契约**——人和团队靠它理解"项目现在是什么"，coding agent 更是直接把它当成**现状的地面**来读。它一旦和代码对不上，后果不是"文档有点旧"这种无害小事，而是地基松动：后面所有基于它的工作，都会从错误的前提出发。
 
 漂移一旦发生，对后续工作的影响是**具体、且越拖越被动**的：
 
@@ -12,10 +12,10 @@
 |---|---|
 | spec 说"有"、代码早没了（冻结）| agent 拿过时前提去 propose / apply → 产出错误或要返工的代码；写出去的 delta 一 archive 还可能 `not found`、整批回滚 |
 | 代码新上了、spec 没记（漏报）| agent 在 specs 里找不到这块 capability 的契约 → 只能瞎猜或被迫读源码，行为不可预测、质量打折 |
-| 标题或目录名被改、没走 RENAMED | 历史 delta 和当前 spec 全对不上 → 下一次正常的 archive 直接 `not found`、**整次归档原子中止**，工作卡在半路（本 repo 的 `simplify-skill-installation` 就是 16 条目标全 `not found`，连本该成功的部分也一并没落地）|
+| 标题或目录名被改、没走 RENAMED | 历史 delta 和当前 spec 全对不上 → 下一次正常的 archive 直接 `not found`、**整次 archive 原子中止**，工作卡在半路（本 repo 的 `simplify-skill-installation` 就是 16 条目标全 `not found`，连本该成功的部分也一并没落地）|
 | 废弃的 change 还挂在 active | agent 以为有一堆"进行中方向"，被假信号带偏，优先级和判断全乱 |
 
-更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，归档回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**（`validate` 只查文件结构，从不打开主 spec 去比对）。
+更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，archive 回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**（`validate` 只查文件结构，从不打开主 spec 去比对）。
 
 所以维护 specs 不是文档洁癖，而是**保住这套机制本身能成立的地基**。带着这个认知往下读，"specs 按什么组织、为什么会漂"就不再是冷知识——它直接告诉你地基为什么这么脆、你又该怎么守。
 
@@ -105,7 +105,7 @@ graph TD
 
 漂移，就是**两层"名字身份"失配**：
 
-- **capability 层失配**：delta 指向的 capability 目录名，在 `openspec/specs/` 里对不上——要么"设计了没建"、要么"目录被改名了"、要么"早删了"。**表现：archive 一个 change 时，目标 spec 不存在或对不上；或一堆 change 悬空挂在 active。**
+- **capability 层失配**：delta 指向的 capability 目录名，在 `openspec/specs/` 里对不上——要么"设计了没建"、要么"目录改名了"、要么"早删了"。**表现：archive 一个 change 时，目标 spec 不存在或对不上；或一堆 change 悬空挂在 active。**
 - **requirement 层失配**：delta 的 `MODIFIED`/`REMOVED` 指向的标题，在当前主 spec 里找不到——标题被别的 archive 改写过、大小写变了、或手改过。**表现：archive 报 `... not found`，整批原子回滚。**
 
 两层是**同一个病**（名字身份失配），只是发生在不同层。再加上"有代码无 spec"（反向漂移：capability 上线了 specs 没记）、"废弃 change 仍挂 active"（噪声）等，specs 就慢慢配不上"source of truth"这个名号了——而 agent 还把它当事实读，于是被带偏。
@@ -123,7 +123,7 @@ graph TD
 
 ## 压缩结论
 
-1. specs 是事实层契约，不是归档文档——漂移即地基松动。
+1. specs 是事实层契约，不是 archive 文档——漂移即地基松动。
 2. capability 身份 = 目录名，没有 ID 兜底，改名是裸操作——当稳定性契约对待。
 3. requirement 身份 = 标题文本，改名有 RENAMED 手续——走正规手续，别"删旧加新"。
 4. 漂移会复利，且无工具自动对账（validate 只查结构）。

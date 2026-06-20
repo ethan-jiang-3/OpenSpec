@@ -151,7 +151,7 @@ Agent: 那就不一样了。
 
 explore 明确禁止写应用代码（"Never write code or implement features"），但**可以创建 OpenSpec artifact** —— 如果用户要求。
 
-这种"捕捉"被视为记录思考结果，不算实施。skill 模板中的原话：
+这种"捕捉"算记录思考结果，不算实施。skill 模板中的原话：
 
 > "You MAY create OpenSpec artifacts (proposals, designs, specs) if the user asks — that's capturing thinking, not implementing."
 
@@ -187,9 +187,9 @@ explore 结束时没有强制要求。可能的出路：
 
 | | explore | propose | apply | archive |
 |------|------|------|------|------|
-| **有状态流转** | 否 | 是（artifact 从 blocked→ready→done） | 是（tasks 从未完成→完成） | 是（change 从活跃→归档） |
+| **有状态流转** | 否 | 是（artifact 从 blocked→ready→done） | 是（tasks 从未完成→完成） | 是（change 从活跃→archive） |
 | **修改文件系统** | 否（除非用户要求捕捉） | 是（创建 artifact 文件） | 是（改代码+更新 checkbox） | 是（合并 spec+移动目录） |
-| **有"完成"概念** | 否 | 是（applyRequires 全部 done） | 是（所有 checkbox 标记） | 是（归档完成） |
+| **有"完成"概念** | 否 | 是（applyRequires 全部 done） | 是（所有 checkbox 标记） | 是（archive完成） |
 | **schema 管控** | 极弱（只读 status） | 极强（控制整个创建流程） | 中（apply phase 定义） | 强（控制合并规则） |
 
 ---

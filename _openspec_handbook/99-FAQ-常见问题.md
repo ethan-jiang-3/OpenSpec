@@ -7,7 +7,7 @@
 ## 基础概念
 
 ### Q1: OpenSpec 到底是什么？
-**A**: OpenSpec 是一个"先把 change 讲清楚，再去写代码"的协作层。它把一次改动拆成几份能讨论、能验证、能归档的文件（proposal/specs/design/tasks）。
+**A**: OpenSpec 是一个"先把 change 讲清楚，再去写代码"的协作层。它把一次改动拆成几份能讨论、能验证、能 archive 的文件（proposal/specs/design/tasks）。
 
 ### Q2: OpenSpec 和传统文档有什么区别？
 **A**: 传统文档是"写完就不改"，OpenSpec 是"边做边改"。而且 OpenSpec 用 delta spec 表达增量变化，不是每次重写整份文档。

@@ -43,7 +43,7 @@
 本质目标：
 
 - 将已配置工具中的 OpenSpec 工作流文件更新到当前版本和当前配置。
-- 同步 profile/delivery 变化，删除被取消的 workflow 产物。
+- 同步 profile/delivery 变化，删除已取消的 workflow 产物。
 
 输入：
 
@@ -175,19 +175,19 @@
 - 它不是检查代码编译或测试结果。
 - 它主要检查的是 OpenSpec 文档语义结构。
 
-## 5. 完成并归档 change
+## 5. 完成并 archive change
 
 ### `openspec archive [change]`
 
 本质目标：
 
-- 将一个变更从“进行中 change”收束为“已纳入主 specs 的历史变更”。
+- 将一个 change 从”进行中 change”收束为”已纳入主 specs 的历史 change”。
 
 它做的不只是移动目录，而是一个收尾流水线：
 
 1. 校验 proposal 和 delta specs。
 2. 查看 tasks 进度，必要时提醒仍有未完成项。
-3. 找出变更对主 specs 的影响。
+3. 找出 change 对主 specs 的影响。
 4. 生成合并后的目标 spec 内容。
 5. 对重建后的 spec 再做校验。
 6. 写入更新后的 specs。
@@ -318,7 +318,7 @@
 6. `openspec instructions apply --change <name>`
 7. `openspec archive <name>`
 
-从这个顺序看，CLI 实际上在协助人完成一整条从提出变更到归档规范的生命周期。它不是一堆孤立命令，而是一条工作流轨道。
+从这个顺序看，CLI 实际上协助人走完从提出 change 到 archive spec 的完整生命周期。它不是一堆孤立命令，而是一条工作流轨道。
 
 ## 8. Workspace 命令
 

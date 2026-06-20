@@ -15,7 +15,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 3. 模板调用 `openspec` CLI 读取状态或说明。
 4. CLI 从项目目录和 schema 中恢复运行时语义。
 5. CLI 返回结构化信息。
-6. 模板/agent 根据结果决定：生成文档、进入 apply、归档，或提示阻塞。
+6. 模板/agent 根据结果决定：生成文档、进入 apply、archive，或提示阻塞。
 
 也就是说，OPSX 模板像 orchestration layer，CLI 像本地 workflow kernel。
 
@@ -122,10 +122,10 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 ### 典型调用链
 
-1. 检查当前 change 是否准备归档。
+1. 检查当前 change 是否准备 archive。
 2. 调用 `openspec archive <name>`。
 3. CLI 自己完成 validate、spec 重建、写入和 archive 移动。
-4. 模板向用户报告归档完成或失败原因。
+4. 模板向用户报告 archive 完成或失败原因。
 
 ### 这里的边界
 
@@ -180,7 +180,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 - OPSX 模板：行动编排器。
 - AI：内容生成与代码修改执行者。
 
-## 十、为什么这说明 CLI 是核心而不是附件
+## 十、这正说明 CLI 是核心而不是附件
 
 如果没有 CLI，这些模板就必须自己做很多脆弱工作：
 
