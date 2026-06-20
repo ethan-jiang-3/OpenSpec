@@ -352,6 +352,16 @@ graph TB
 
 ---
 
+## 压缩结论
+
+1. `config.yaml` 管提示背景，`schema` 管结构骨架——改前者是补项目常识，改后者是改工作流形态
+2. `.openspec.yaml` 是 change 级绑定点，让单次 change 可以偏离项目默认 schema
+3. profile 管命令入口多少，schema 管 change 长什么样——两个独立维度
+4. v1.4.0 的 workspace 层是多仓库场景的第四作用域，单仓库用不着
+5. 判断力比记住所有字段重要：什么时候改 config、什么时候改 schema、什么时候看 workspace
+
+---
+
 ## 下一步
 
 如果你关心的是：

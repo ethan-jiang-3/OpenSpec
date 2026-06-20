@@ -199,7 +199,7 @@ Link 路径是每台机器不同的（`/Users/alice/...` vs `/home/bob/...`）�
 
 Workspace 生成的 skill 模板中内置了 guardrail：
 
-```
+```text
 当 actionContext.mode === "workspace-planning" 时：
   - 禁止 agent 执行 sync specs（workspace 没有主 spec）
   - 禁止 agent 执行 archive（workspace change 不走 repo archive 流程）
@@ -239,6 +239,13 @@ Workspace 生成的 skill 模板中内置了 guardrail：
 | 2-3 个关联仓库且偶有跨仓库变更 | workspace 有价值，但不是必须 |
 | 3+ 仓库且频繁跨仓库协调 | workspace 是推荐的协调层 |
 | 团队需要在统一视图下看到跨仓库的变更全景 | workspace + context store 组合 |
+
+## 压缩结论
+
+1. Workspace 是 OpenSpec 唯一的跨仓库规划层——它只管 What/Why，把 How 留给各 repo 的 spec-driven 流程
+2. 单仓库不需要 workspace；2-3 个仓库看情况；3+ 仓库且频繁跨仓库协调时才推荐
+3. Workspace 没有主 `specs/` 基线——spec 在各 linked repo 中，workspace 只做协调
+4. Workspace change 用 `workspace-planning` schema，不走 repo-local 的 archive/sync 流程
 
 ## 下一步
 

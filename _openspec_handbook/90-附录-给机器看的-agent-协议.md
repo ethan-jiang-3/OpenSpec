@@ -1,6 +1,8 @@
 # 90 · 附录：给机器看的 Agent 协议
 
 > 这一篇不是给第一次上手的人看的，而是给想研究"OpenSpec 怎么喂给宿主 agent"的人看的。
+>
+> **适用版本**：本文描述的 `--json` 输出格式与 `PlanningHome` 路由机制对齐 OpenSpec ≥ 1.4.1（v1.3.1 修复了 spinner 污染 stderr 的问题，v1.4.0 引入了 workspace 上下文路由）。
 
 ---
 
@@ -142,10 +144,6 @@ sequenceDiagram
 
 机器真正依赖的是这些结构化字段，而不是人类阅读版文档。
 
-**v1.3.1 重要修复**：此前 `--json` 模式下 spinner 的进度文本会泄漏到 stderr，agent 合并 stdout+stderr 时 JSON 解析被污染。v1.3.1 修复了此问题——`--json` 时 spinner 完全静默，agent 可安全合并两个输出流。
-
-**v1.4.0 补充**：在 workspace 上下文中，`status` 和 `instructions` 会使用 `workspace-planning` schema 而非 `spec-driven`。agent 不需要感知上下文切换——`PlanningHome` 抽象自动路由到正确的 schema。Workspace 生成的 skill 模板内置 guardrail，阻止 agent 在 workspace 上下文中执行 repo-local 操作（如 sync specs、archive）。
-
 ---
 
 ## skill、command、workflow 的关系
@@ -178,15 +176,12 @@ sequenceDiagram
 
 ---
 
-## 为什么这部分应该放在最后
+## 下一步
 
-因为这部分解决的是：
+如果你是在研究宿主集成，推荐回到这些主题篇核对理解：
 
-- 机器怎么调用
-- prompt 怎么拼
-- 哪些信息是 runtime 提供的
+- [`10` 实战·Claude Code 落地](10-实战-claude-code-里的-openspec-到底怎么落地.md) — 二层架构与入口投递
+- [`04` 高级·config/schema 边界](04-高级-config-schema-与项目边界.md) — schema 与 workflow 的关系
+- [`03` 高级·生命周期思想](03-高级-openspec-的软件开发生命周期思想.md) — 为什么 OpenSpec 把 AI 放进有边界的运行时
 
-它不是人类第一次上手 OpenSpec 时最先需要的认知。
-
-人类第一步应该先会用，第二步应该先理解 `specs` 和 `changes`。
-等主线稳了，再来看机器协议，才不会把整套系统看成"几份神秘 prompt 文件"。
+如果是第一次上手，这篇不该先读——从 [`01`](01-初级-先把-openspec-用起来.md) 初级篇开始更顺。

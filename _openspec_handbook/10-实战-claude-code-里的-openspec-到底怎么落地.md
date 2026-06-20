@@ -263,6 +263,18 @@ Claude Code 里的 OpenSpec 命令入口
 
 ---
 
+## 什么时候才需要继续看机器视角
+
+只有当你想研究这些问题时，才需要再往下看：
+
+- Claude Code 具体调用了哪些 CLI
+- `instructions --json` 里有什么
+- skill、command、workflow 三者如何对应
+
+这时再去看 [`90` 附录](90-附录-给机器看的-agent-协议.md)。
+
+---
+
 ## 下一步
 
 如果你现在已经分清了：
@@ -276,15 +288,3 @@ Claude Code 里的 OpenSpec 命令入口
 如果你已经在实战区继续往后读，下一篇更适合看一个完整 change 怎样从 propose 走到 archive：
 
 接着读 [`11`](11-实战-从一个真实-change-走完整条主线.md) 即可。
-
----
-
-## 什么时候才需要继续看机器视角
-
-只有当你想研究这些问题时，才需要再往下看：
-
-- Claude Code 具体调用了哪些 CLI
-- `instructions --json` 里有什么
-- skill、command、workflow 三者如何对应
-
-这时再去看 [`90` 附录](90-附录-给机器看的-agent-协议.md)。

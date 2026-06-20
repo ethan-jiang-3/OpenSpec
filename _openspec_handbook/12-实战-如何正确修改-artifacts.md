@@ -249,7 +249,7 @@ rm -rf openspec/changes/add-csv-export/
 ### 1. config.yaml — 项目级配置
 
 #### 文件位置
-```
+```text
 openspec/config.yaml
 ```
 
@@ -563,7 +563,7 @@ rm -rf openspec/changes/test-config-output/
 ### 2. proposal.md — 变更提案
 
 #### 文件位置
-```
+```text
 openspec/changes/<change-name>/proposal.md
 ```
 

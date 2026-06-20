@@ -380,7 +380,7 @@ agent 不需要你在 instruction 里教它怎么沟通、怎么审查——它�
 
 ---
 
-## 压缩总结
+## 压缩结论
 
 - **config 改提示层，schema 改结构层**——只有 schema 能改 artifact 种类、DAG、template、apply gate
 - **四级递进**：不改 schema（写 rules）→ fork 改内容（换 instruction/template）→ fork 改结构（增删 artifact）→ 从头定义（自己的 DAG）
