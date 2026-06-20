@@ -36,7 +36,7 @@ onboard
 | 探索 | `explore` | 不急着落盘，先澄清问题和方向 |
 | 创建/推进规划 | `propose`、`new`、`continue`、`ff` | 创建 change 和 artifact |
 | 实施 | `apply` | 根据 tasks 实施，并更新 task 状态 |
-| 规格同步 | `sync` | agent-driven 把 delta specs 同步到主 specs，但不 archive |
+| spec 同步 | `sync` | agent-driven 把 delta specs 同步到主 specs，但不 archive |
 | 校验/收尾/引导 | `verify`、`archive`、`bulk-archive`、`onboard` | 验证、归档、批量归档或引导式端到端流程 |
 
 ## 快速路径和拆分路径

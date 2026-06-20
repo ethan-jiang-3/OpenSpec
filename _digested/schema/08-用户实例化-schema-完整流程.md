@@ -69,7 +69,7 @@ artifacts:
     description: 资料搜集和主题研究
     template: research.md
     instruction: |
-      对写作主题进行系统调研：
+      系统调研写作主题：
       
       **信息采集**：
       - 搜集相关技术文档、论文、博客、代码仓库
@@ -131,7 +131,7 @@ artifacts:
     description: 审核反馈
     template: review.md
     instruction: |
-      对 draft.md 进行系统性审核：
+      系统审核 draft.md：
       
       **技术准确性**：
       - 代码示例是否能正常运行？

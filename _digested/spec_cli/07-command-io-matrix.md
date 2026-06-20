@@ -22,7 +22,7 @@
 | `view` | 人类 | 项目中的 changes/specs | 交互式 dashboard | 改善浏览体验 | 否 |
 | `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON | 帮助人工审阅和调试解析结果 | 否 |
 | `validate` | 人类 + 机器 | change delta specs、正式 specs | 合法性报告、退出码 | 决定是否需要修复、是否适合 archive | 否 |
-| `archive` | 人类 + OPSX | change 内容、主 specs、验证结果 | 更新后的 specs、归档目录、报告 | 结束 change 生命周期 | 是 |
+| `archive` | 人类 + OPSX | change 内容、主 specs、validate 结果 | 更新后的 specs、archive 目录、报告 | 结束 change 生命周期 | 是 |
 | `config` | 人类 | global config、workflow 选择 | 配置变更与摘要 | 影响后续 `init/update` 投递结果 | 是 |
 | `schema` | 高级用户/作者 | schema 搜索路径、schema.yaml、templates | schema 列表、校验结果、脚手架 | 改变 workflow 定义层 | 可能 |
 | `new change` | 人类 + OPSX | change 名称、schema、项目根目录 | 新建 change 目录与元数据 | 开启一个新的 workflow 实例 | 是 |

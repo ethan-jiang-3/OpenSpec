@@ -19,7 +19,7 @@ tool delivery 负责把说明交给不同工具
 
 | 常见理解 | OpenSpec 的真实边界 |
 |----------|---------------------|
-| 它是 spec 文档管理工具 | 它管理的是当前能力基线和一次次增量 change，不只是存放文档 |
+| 它是 spec 文档管理工具 | 它管理的是当前 capability 基线和一次次增量 change，不只是存放文档 |
 | 它是 IDE 插件 | 它是 CLI + 文件状态 + agent 指令投递，IDE/agent 只是消费方 |
 | 它是 LLM wrapper | 它不做创造性推理，推理发生在宿主 coding agent |
 | 它是固定流程引擎 | schema 定义 artifact DAG，workflow 只是围绕 DAG 的动作入口 |
@@ -39,7 +39,7 @@ openspec/config.yaml
 openspec/schemas/
 ```
 
-`specs/` 代表当前已经成立的能力基线。`changes/` 代表一次准备中的增量变更。OpenSpec 不靠隐藏数据库记录“到了哪个阶段”，而是通过文件是否存在、delta spec 怎么写、tasks checkbox 是否完成来判断当前状态。
+`specs/` 代表当前已经成立的 capability 基线。`changes/` 代表一次准备中的增量 change。OpenSpec 不靠隐藏数据库记录“到了哪个阶段”，而是通过文件是否存在、delta spec 怎么写、tasks checkbox 是否完成判断当前状态。
 
 这个取舍的好处是：
 
@@ -139,7 +139,7 @@ done: 输出存在
 
 ## workspace 的克制
 
-workspace/context-store/initiative 是当前系统里最容易被误读的一层。它不是把多个 repo 合并成一个超级 OpenSpec，也不是远端协作服务。
+workspace/context-store/initiative 是当前系统中最容易被误读的一层。它不是把多个 repo 合并成一个超级 OpenSpec，也不是远端协作服务。
 
 它的定位是 local coordination view：
 

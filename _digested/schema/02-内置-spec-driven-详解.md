@@ -8,7 +8,7 @@
 
 ## 先认清：这是 parser 的契约，不是参考文档
 
-`schema.yaml` 不是给人看的"说明文"——它是 **CLI 和 agent 解析 change 时的契约**。你写进 `openspec/` 的每个 artifact 都得合这个契约，否则工具要么静默忽略、要么 parse 失败，agent 就在残缺/错误前提上推理 → 幻觉和困惑行为。
+`schema.yaml` 不是给人看的"说明文"——它是 **CLI 和 agent 解析 change 时的契约**。你写进 `openspec/` 的每个 artifact 都必须符合这个契约。否则工具要么静默忽略，要么 parse 失败——agent 就会在残缺或错误的前提上推理，产生幻觉和困惑行为。
 
 具体哪些是硬契约（偏离即出问题）：
 

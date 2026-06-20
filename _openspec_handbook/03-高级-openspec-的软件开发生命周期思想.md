@@ -179,7 +179,7 @@ OpenSpec 里一个常被低估的设计，是 `openspec/specs/`。
 - 当前正式行为是 60 秒
 - 这次 change 把它改成 30 秒
 
-这就是为什么 delta spec 里会出现：
+正因如此，delta spec 里才需要出现：
 
 ```markdown
 ## MODIFIED Requirements

@@ -45,7 +45,7 @@ agent 不需要对每个 change 都做处理 —— 它只是"感知"到项目�
 
 ### 当关联到某个 change 时：`openspec status --change X --json`
 
-只有当用户提到具体 change，或者 agent 通过 `list` 发现只存在一个活跃 change 且上下文相关时，才会调用 status。这完全是**按需**的，不是强制步骤。
+只有用户提到具体 change，或者 agent 通过 `list` 发现只存在一个活跃 change 且上下文相关时，才会调用 status。这完全是**按需**的，不是强制步骤。
 
 通过 status 的 JSON 返回，agent 获取：
 - `changeRoot` — change 目录路径
@@ -93,7 +93,7 @@ OpenSpec CLI（只读信息源）
 
 ## 3. 零活跃 change 场景
 
-当 `openspec list --json` 返回 `[]`（项目中没有活跃 change）时，explore 不需要任何 OpenSpec 上下文就能工作。agent 直接从用户的问题出发，读代码、画图、讨论方案——这和 classic 模式下的通用代码讨论没有本质区别，但 explore 的 guardrails（第 8 节）仍然适用。
+`openspec list --json` 返回 `[]`（项目中没有活跃 change）时，explore 不需要任何 OpenSpec 上下文就能工作。agent 直接从用户的问题出发，读代码、画图、讨论方案——这和 classic 模式下的通用代码讨论没有本质区别，但 explore 的 guardrails（第 8 节）仍然适用。
 
 只有在用户明确表示"值得做一个 change"时，agent 才会建议 `/opsx:propose`，从而进入有状态的工作流轨道。
 

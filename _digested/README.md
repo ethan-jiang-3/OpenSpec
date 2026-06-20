@@ -2,7 +2,7 @@
 
 这个目录是对 OpenSpec 源码的**消化分析**：从 TypeScript 源码出发，理解机制、架构和设计意图。它不是用户指南——想学怎么用 OpenSpec 去 `_openspec_handbook/`。
 
-更准确地说，`_digested/` 面向的是已经熟悉 SDD、AI Coding、CLI/agent 工程的人，但还没有建立 OpenSpec 概念体系的读者。这里应该先帮你抓住 OpenSpec 的思想主轴，再进入源码机制，而不是把源码目录平铺成一堆分类货架。
+更准确地说，`_digested/` 面向已熟悉 SDD、AI Coding、CLI/agent 工程，但尚未建立 OpenSpec 概念体系的读者。这里先带你抓住 OpenSpec 的思想主轴，再进入源码机制——而不是把源码目录平铺成分类货架。
 
 ## 与同级目录的关系
 

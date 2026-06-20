@@ -44,7 +44,7 @@ brief ──→ outline ──→ tasks ──↴
 
 ### 为什么保留 tasks.md 文件名
 
-`openspec archive` 在 core logic 里对 `tasks.md` 有硬编码检查 —— 它通过文件名是否存在来判断"apply tracking file 是否完成"。如果改成别的名字（比如 `checklist.md`），archive 会直接失败。
+`openspec archive` 在 core logic 里对 `tasks.md` 有硬编码检查 —— 它通过文件名是否存在判断"apply tracking file 是否完成"。如果改成别的名字（比如 `checklist.md`），archive 会直接失败。
 
 这个约束不是 schema 系统的问题，而是当前 archive 实现的假设：tracking file 叫 tasks。article-driven 选择保留它，以此为代价换取零源码修改的兼容性。**如果要彻底脱离代码命名习惯，需要在 OpenSpec 源码层面把 tracking filename 做成 schema 可配置项。**
 

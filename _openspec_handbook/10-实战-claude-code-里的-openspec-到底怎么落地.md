@@ -158,7 +158,7 @@ graph TB
 
     subgraph 项目事实层
     C["openspec/specs/<br/>（正式 spec 基线）"]
-    D["openspec/changes/<br/>（变更工作区）"]
+    D["openspec/changes/<br/>（change 工作区）"]
     E["openspec/config.yaml<br/>（项目配置）"]
     F["openspec/schemas/<br/>（工作流定义）"]
     end
@@ -257,7 +257,7 @@ Claude Code 里的 OpenSpec 命令入口
 
 项目当前能力的正式表述，最终沉淀在这里。
 
-### 3. `openspec/changes/` 是变更工作区
+### 3. `openspec/changes/` 是 change 工作区
 
 平时迭代都发生在这里，archive 后再合并回基线。
 

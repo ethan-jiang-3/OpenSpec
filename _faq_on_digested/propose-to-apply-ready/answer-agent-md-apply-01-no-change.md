@@ -24,7 +24,7 @@ proposal -> specs/design -> tasks -> apply
 |---|---|
 | `proposal.md` | 说明为什么要做这个 agent/skill/command，目标用户、触发场景、交付物。 |
 | `design.md` | 说明 agent 行为、输入输出、工具边界、失败模式、验证方法。 |
-| `specs/**/*.md` | 如果确实有“能力基线”要维护，就写 behavior requirements；如果只是一次性内容产物，可以写得很轻。 |
+| `specs/**/*.md` | 如果确实有”capability 基线”要维护，就写 behavior requirements；如果只是一次性内容产物，可以写得很轻。 |
 | `tasks.md` | 明确列出要创建/修改的 Markdown、`SKILL.md`、command 模板、验证文件。 |
 
 最关键的是 `tasks.md`。默认 `/opsx:apply` 会根据 checkbox 执行任务，所以 task 必须把目标文件说清楚：

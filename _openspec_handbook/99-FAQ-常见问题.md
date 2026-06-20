@@ -181,7 +181,7 @@ specs/
 
 不推荐按技术层（models/services/controllers）。
 
-**关键**：每个 capability 的**目录名就是它的身份**——proposal 列的 capability、delta 要修改的目标、archive 的合并，全靠这个目录名寻址（同名才命中）。所以**别随便改目录名**：requirement 改名还有 `RENAMED` 操作，capability 改名没有任何操作，改了会让指向旧名的 delta 全悬空。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
+**关键**：每个 capability 的身份就是它的目录名。proposal 列的 capability、delta 的修改目标、archive 的合并操作——全都靠这个目录名寻址（同名才命中）。所以**别随便改目录名**：requirement 改名还有 `RENAMED` 操作，capability 改名没有任何操作，改了会让指向旧名的 delta 全悬空。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
 
 ### Q25: 一个功能涉及多个域怎么办？
 **A**: 
@@ -243,7 +243,7 @@ specs/
 **A**: Workspace 是跨仓库规划的本地视图（v1.4.0）。它不替代 repo 级 OpenSpec，而是在其之上加了一层。设计规则：**规划在 workspace，实现在 linked repo**。Workspace 级 change 用 `workspace-planning` schema，repo 级 change 用 `spec-driven` schema，两者互不干扰。
 
 ### Q33: 我什么时候需要 workspace？
-**A**: 当你同时维护多个关联仓库（如 API + Web + Mobile），需要在规划层协调它们时。单个仓库项目不需要 workspace。
+**A**: 如果你同时维护多个关联仓库（如 API + Web + Mobile）并需要在规划层协调它们，就需要 workspace。单个仓库项目不需要 workspace。
 
 ### Q34: workspace 会修改我 linked 的仓库吗？
 **A**: 不会。link 只记录关系（目录路径），不会创建、复制、初始化或修改 linked 目录中的任何文件。Workspace 的规划内容（changes、view.yaml）全部在 workspace 自己的目录中。

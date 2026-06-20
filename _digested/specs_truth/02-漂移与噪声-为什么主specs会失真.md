@@ -41,9 +41,9 @@ delta 和主 spec 的匹配发生在 `buildUpdatedSpec` 里，**只在 `archive`
 
 下面每类都给本 repo 里能直接指认的真实例子（写作时快照，用来对号入座，不是说必须处理）。
 
-### ① 悬空 delta 目标：active change 指向不存在的能力
+### ① 悬空 delta 目标：active change 指向不存在的 capability
 
-一个 change 的 `specs/<capability>/spec.md` 指向一个 `openspec/specs/` 里**根本没有**的能力目录——也就是 **capability 身份（=目录名）对不上**：设计了没建、能力目录被改名（capability 无 rename 操作，改名=裸搬目录）、或早删了。
+一个 change 的 `specs/<capability>/spec.md` 指向一个 `openspec/specs/` 里**根本没有**的capability 目录——也就是 **capability 身份（=目录名）对不上**：设计了没建、capability 目录被改名（capability 无 rename 操作，改名=裸搬目录）、或早删了。
 
 本 repo 实例（目标在 `specs/` 中均不存在）：
 
@@ -56,13 +56,13 @@ delta 和主 spec 的匹配发生在 `buildUpdatedSpec` 里，**只在 `archive`
 
 噪声在哪：这些 change 永远 archive 不干净，却长期挂 active，对 agent 释放"这里有个进行中方向"的假信号。
 
-### ② 有代码无 spec：发运了能力，但 specs 沉默（反向漂移）
+### ② 有代码无 spec：发运了 capability，但 specs 沉默（反向漂移）
 
-代码里已有一等公民能力，`openspec/specs/` 里却没有对应 spec——specs 漏报现状。
+代码里已有一等公民 capability，`openspec/specs/` 里却没有对应 spec——specs 漏报现状。
 
-本 repo 实例：`src/commands/context-store.ts`、`src/commands/initiative.ts` 都有 CLI 表面 + JSON 契约，却**没有**对应能力 spec。（`src/core/profile-sync-drift.ts` 是内部引擎，按 conventions 属 design/tasks、本就不该单独成 spec——区分"该补"和"不该有"是这类的判断难点。）
+本 repo 实例：`src/commands/context-store.ts`、`src/commands/initiative.ts` 都有 CLI 表面 + JSON 契约，却**没有**对应 capability spec。（`src/core/profile-sync-drift.ts` 是内部引擎，按 conventions 属 design/tasks、本就不该单独成 spec——区分"该补"和"不该有"是这类的判断难点。）
 
-噪声在哪：agent 在 specs 里找不到这些能力的契约，要么瞎猜要么读源码。
+噪声在哪：agent 在 specs 里找不到这些capability 的契约，要么瞎猜要么读源码。
 
 ### ③ 冻结 spec：spec 停在旧代码上
 
@@ -74,7 +74,7 @@ delta 和主 spec 的匹配发生在 `buildUpdatedSpec` 里，**只在 `archive`
 
 ### ④ 废弃但仍 active 的 change：噪音文件夹
 
-change 已废弃/被 supersede/纯提案没动，却还待在 active `changes/`。共同特征：`openspec validate` 直接报错——多数是 `No deltas found`（只有 `proposal.md`，没 `specs/` delta）。
+change 已废弃/被 supersede/纯 proposal 没动，却还待在 active `changes/`。共同特征：`openspec validate` 直接报错——多数是 `No deltas found`（只有 `proposal.md`，没 `specs/` delta）。
 
 本 repo 实例：`add-artifact-regeneration-support`、`schema-alias-support`（纯 proposal、代码无实现）；`workspace-agent-guidance` / `workspace-apply-repo-slice` / `workspace-verify-and-archive` / `workspace-reimplementation-roadmap`（proposal 自带 "deferred" 说明，实质已搁置）。
 

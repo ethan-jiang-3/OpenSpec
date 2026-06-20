@@ -22,7 +22,7 @@ Explore 到底是怎么一步步 figure out 是否应该 propose change 的？
 
 - 用户表达的目标、问题和约束
 - 当前 OpenSpec active changes
-- 既有 `openspec/specs/` 能力基线
+- 既有 `openspec/specs/` capability 基线
 - 既有 change artifacts
 - 真实项目代码、架构、模块边界和测试形态
 

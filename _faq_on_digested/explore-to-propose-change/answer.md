@@ -135,13 +135,13 @@ openspec status --change "<name>" --json
 ```text
 proposal.md        -> 这个 change 原本要解决什么，scope 是什么
 design.md          -> 已经做过哪些技术取舍
-specs/**/*.md      -> 本次增量打算怎样改变能力基线
+specs/**/*.md      -> 本次增量打算怎样改变capability 基线
 tasks.md           -> 实施已经拆到什么程度
 ```
 
 此时经常会发现：用户的新问题其实不是新 change，而是已有 change 的 scope 变化、设计补充、任务补充或假设失效。
 
-## Step 4：读取当前能力基线，而不是只看 change
+## Step 4：读取当前capability 基线，而不是只看 change
 
 OpenSpec 的核心事实源之一是：
 
@@ -149,7 +149,7 @@ OpenSpec 的核心事实源之一是：
 openspec/specs/
 ```
 
-它表示当前已经成立的能力基线。判断一个 change 应不应该存在，必须先知道它相对于当前基线是增量还是误解。
+它表示当前已经成立的capability 基线。判断一个 change 应不应该存在，必须先知道它相对于当前基线是增量还是误解。
 
 Explore 至少要弄清楚：
 
@@ -170,7 +170,7 @@ Explore 至少要弄清楚：
 
 ```text
 openspec list --json  -> []
-openspec/specs/       -> 空目录，甚至还没有形成任何能力基线文档
+openspec/specs/       -> 空目录，甚至还没有形成任何capability 基线文档
 openspec/changes/     -> 没有 active change
 ```
 
@@ -196,7 +196,7 @@ openspec/changes/     -> 没有 active change
 | EXP-14 | 错误捷径 | 只凭用户一句话直接建 change，会产生空泛、错位或重复的 artifacts。 |
 | EXP-15 | 事实源转向真实项目 | 读取 README/docs、代码入口、命令/API/UI、数据模型、测试和现有行为描述。 |
 | EXP-16 | 事实 baseline | 从真实代码和材料中反推出系统现在实际支持什么，这是首次 Explore 可用的当前状态。 |
-| EXP-17 | spec baseline | 承认 `openspec/specs/` 尚未记录这些能力，不能假装已经有规格基线。 |
+| EXP-17 | spec baseline | 承认 `openspec/specs/` 尚未记录这些能力，不能假装已经有 spec 基线。 |
 | EXP-18 | 不 propose | 用户只是想理解现状时，输出结构图或现状总结即可。 |
 | EXP-19 | 先补 baseline | 用户关心把现有能力规格化时，先 propose 一个记录当前能力的 baseline change。 |
 | EXP-20 | 具体功能 change | 代码事实足够清楚且用户目标是明确增量时，直接 propose 具体功能 change。 |
@@ -352,7 +352,7 @@ centralize-permission-checks
 
 ## 进入 propose 前应该说清楚什么
 
-当 Explore 认为可以 propose 时，agent 不应该只说“我来创建 change”。更好的输出是先把候选边界讲清楚：
+Explore 认为可以 propose 时，agent 不应该只说”我来创建 change”。更好的输出是先把候选边界讲清楚：
 
 ```text
 我建议 propose 一个 change：add-oauth-login
@@ -402,7 +402,7 @@ OpenSpec 的设计是：CLI 保证状态可解释，agent 负责工程判断，�
       openspec status --change "<name>" --json
       读取已有 artifacts
    ↓
-5. 读取 openspec/specs/ 当前能力基线
+5. 读取 openspec/specs/ 当前capability 基线
    ↓
 6. 搜索/阅读真实项目代码
    ↓
@@ -453,7 +453,7 @@ Propose 可以补细节，但它的主要工作是 artifact generation。真正�
 Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一个隐藏算法自动生成 change，而是因为它把 agent 放在一个受约束的探索姿态里：
 
 - 先看当前 OpenSpec 状态，避免脱离已有 planning context。
-- 再看 specs 和 change artifacts，避免脱离能力基线。
+- 再看 specs 和 change artifacts，避免脱离capability 基线。
 - 如果 specs 为空，就承认 OpenSpec 尚无 formalized baseline，并从真实代码反推出事实 baseline。
 - 再看真实代码，避免只凭用户意图空转。
 - 最后用工程判断把问题收敛成 change 边界。
@@ -475,4 +475,4 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 | [`../../_digested/internal-spec-driven/01-explore-探索模式.md`](../../_digested/internal-spec-driven/01-explore-探索模式.md) | Explore 的 guardrails、OpenSpec awareness、已有 change 场景 |
 | [`../../_digested/internal-spec-driven/02-propose-提案生成.md`](../../_digested/internal-spec-driven/02-propose-提案生成.md) | Propose 的 change 创建和 artifact DAG 生成过程 |
 | [`../../_digested/system/07-OpenSpec-工程思想.md`](../../_digested/system/07-OpenSpec-工程思想.md) | 文件状态优先、CLI 解释状态、agent 负责推理 |
-| [`../../_digested/system/08-对照常见-SDD-与-AI-Coding.md`](../../_digested/system/08-对照常见-SDD-与-AI-Coding.md) | `specs/` 是能力基线，`changes/` 是增量协议 |
+| [`../../_digested/system/08-对照常见-SDD-与-AI-Coding.md`](../../_digested/system/08-对照常见-SDD-与-AI-Coding.md) | `specs/` 是capability 基线，`changes/` 是增量协议 |

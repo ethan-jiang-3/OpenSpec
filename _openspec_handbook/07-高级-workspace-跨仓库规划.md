@@ -6,7 +6,7 @@
 
 ## 一、为什么需要 workspace
 
-当你的产品需求同时砸在 API、Web、Mobile 三个 repo 上时，每个 repo 各自的 spec-driven 流程就接不住了——你需要一个跨 repo 的规划层。在 v1.3.0 之前，OpenSpec 的所有操作都是 repo-local 的：
+产品需求同时砸在 API、Web、Mobile 三个 repo 上——每个 repo 各自的 spec-driven 流程就接不住了。你需要一个跨 repo 的规划层。v1.3.0 之前，OpenSpec 的所有操作都是 repo-local 的：
 
 ```text
 my-project/

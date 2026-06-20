@@ -96,7 +96,7 @@ Zod 负责基础结构；规则校验负责 OpenSpec 语义，比如 Purpose 长
 - ERROR 一定失败。
 - WARNING 在 strict mode 下也会导致失败。
 
-因此 `validate --strict` 和普通 validate 的语义不同。这个设计允许 OpenSpec 同时支持“宽松审阅”和“严格 CI/归档前检查”。
+因此 `validate --strict` 和普通 validate 的语义不同。这个设计允许 OpenSpec 同时支持“宽松审阅”和“严格 CI/archive 前检查”。
 
 ## read commands 是模型的外部视图
 

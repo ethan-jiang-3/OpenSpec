@@ -21,7 +21,7 @@
 
 ### 项 1：`add-change-stacking-awareness` 等（信号 ① 悬空目标）— 清除原语
 
-现状：active change，delta 指向 `specs/` 里没有的能力（`change-stacking-workflow/` 等）；`tasks.md` 0 进度；代码零实现；4 个月没动。诊断：设计了没建，不是"做完了没归档"。
+现状：active change，delta 指向 `specs/` 里没有的 capability（`change-stacking-workflow/` 等）；`tasks.md` 0 进度；代码零实现；4 个月没动。诊断：设计了没建，不是"做完了没 archive"。
 
 走法（SHELVE）：
 
@@ -78,7 +78,7 @@ openspec validate --all     # 这几个 ✗ 应清零（只证明僵尸清了）
 
 ### 项 5：`context-store` / `initiative` 有代码无 spec（信号 ②）— 修复原语（AUTHOR-NEW，重活）
 
-现状：`src/commands/context-store.ts`、`src/commands/initiative.ts` 是一等公民能力，specs 里没有。**等方向稳定后再写**（AUTHOR-NEW 最费工）。从已有代码补 spec 的完整采用流程见 `08-给已有代码补spec-greenfield.md`。
+现状：`src/commands/context-store.ts`、`src/commands/initiative.ts` 是一等公民 capability，specs 里没有。**等方向稳定后再写**（AUTHOR-NEW 最费工）。从已有代码补 spec 的完整采用流程见 `08-给已有代码补spec-greenfield.md`。
 
 ```bash
 openspec new change add-context-store-and-initiative-capabilities
@@ -95,7 +95,7 @@ openspec archive add-context-store-and-initiative-capabilities -y   # 补 Purpos
 
 ```bash
 openspec new change document-initiatives-layer-in-conventions
-#   specs/openspec-conventions/spec.md → ## MODIFIED：Project Structure 加上 initiatives/ 子树，说明它是协调层、非能力真相
+#   specs/openspec-conventions/spec.md → ## MODIFIED：Project Structure 加上 initiatives/ 子树，说明它是协调层、非 capability 真相
 openspec archive document-initiatives-layer-in-conventions -y
 ```
 
@@ -107,10 +107,10 @@ openspec archive document-initiatives-layer-in-conventions -y
 | simplify-skill-installation | ⑥+① | 清除+修复 | SHELVE 旧 delta；AUTHOR-NEW profiles/propose-workflow |
 | cli-view 错误串 | ③ | 修复 | 纠正型 delta |
 | workspace-* 4 项 + 2 项纯 proposal | ④ | 清除 | SHELVE |
-| context-store / initiative | ② | 修复(AUTHOR-NEW) | 补能力 spec |
+| context-store / initiative | ② | 修复(AUTHOR-NEW) | 补 capability spec |
 | initiatives 层 | ⑤ | 修复 | MODIFIED conventions |
 
-**真正的成功指标**：active `changes/` 清空噪声 + specs 覆盖所有已发运能力 + conventions 反映真实结构。这三条才是"specs 配得上 source of truth"。至于 `validate --all` 失败归零——那只是"僵尸 change（④）清了"的**副产品**，**只证明结构干净，不证明 specs 和代码对齐**（①②③ 它根本不查）。
+**真正的成功指标**：active `changes/` 清空噪声 + specs 覆盖所有已发运 capability + conventions 反映真实结构。这三条才是"specs 配得上 source of truth"。至于 `validate --all` 失败归零——那只是"僵尸 change（④）清了"的**副产品**，**只证明结构干净，不证明 specs 和代码对齐**（①②③ 它根本不查）。
 
 ## 守住的边界
 

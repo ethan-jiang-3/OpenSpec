@@ -2,9 +2,9 @@
 
 ## 主轴（整专题的引擎）
 
-> **specs 只在 `archive` 那一刻被写入；requirement 没有稳定 ID，身份就是 `### Requirement: <Name>` 标题文本；而且没有任何工具持续对账。 ⇒ 漂移是默认状态——"把 specs 弄对"是"用 delta + archive 重新表达"，不是手搓 spec；长期对齐靠人 + 纪律 + 巡检。**
+> **specs 只在 `archive` 那一刻写入；requirement 没有稳定 ID，身份就是 `### Requirement: <Name>` 标题文本；而且没有任何工具持续对账。 ⇒ 漂移是默认状态——"把 specs 弄对"是"用 delta + archive 重新表达"，不是手搓 spec；长期对齐靠人 + 纪律 + 巡检。**
 
-本章讲清这个论点的前两个支柱（specs 怎么被造、身份是什么）；第三个支柱（没工具对账）在 `02`，修法在 `03`。
+本章讲清这个论点的前两个支柱（specs 怎么产生、身份是什么）；第三个支柱（没工具对账）在 `02`，修法在 `03`。
 
 主 specs（`openspec/specs/<capability>/spec.md`）不是手写的，是**一路由 delta spec 经 `archive` 累加**出来的；写入主 spec 的确定路径只有 `openspec archive` 一条。理解这一点，后面的失真和修法都是推论。
 
@@ -41,13 +41,13 @@ openspec/changes/<id>/specs/<capability>/spec.md   ← delta（提案要改什�
 
 ## 身份模型：两层「以名字为身份」，无稳定 ID
 
-这是整件事最关键、也最容易被低估的一点：OpenSpec 用**名字**当身份，分两层，**都没有稳定 ID**。它既是 `archive` 能可靠合并的根基，也是漂移的根源（见 `02`）。
+这是整个模型最关键、也最容易被忽略的一点：OpenSpec 用**名字**当身份，分两层，**都没有稳定 ID**。它既是 `archive` 能可靠合并的根基，也是漂移的根源（见 `02`）。
 
 > 驱动这套契约的是 **spec-driven schema**（OpenSpec 默认、最常见的 schema，背后的 driver）——`schemas/spec-driven/schema.yaml` 把 capability 目录名定为 proposal↔specs 的 "critical contract"。结构字段级详解见 `../schema/02-内置-spec-driven-详解.md`；高手建议读一遍 schema 原文。
 
 ### 第一层：capability 身份 = 目录名
 
-一个 capability 的身份，是它在 `openspec/specs/` 下那个 **kebab-case 目录名**。它一身四任：main specs 的组织单位、proposal↔specs 的契约（schema 写死）、delta 的靶心（`changes/<id>/specs/<cap>/` 打 `specs/<cap>/`，**同名才命中**）、以及它唯一的"身份"。
+一个 capability 的身份，是它在 `openspec/specs/` 下那个 **kebab-case 目录名**。它承担四个角色：main specs 的组织单位、proposal↔specs 的契约（schema 写死）、delta 的靶心（`changes/<id>/specs/<cap>/` 打 `specs/<cap>/`，**同名才命中**）、以及它唯一的"身份"。
 
 - **没有 ID** ⇒ 一个 capability 全靠这行目录名维系。
 - **capability 没有 rename 操作**——requirement 有 `## RENAMED`，capability 没有任何对应物；改名只能裸搬目录，指向旧名的 delta 全悬空（见 `02` 信号①、`03` 纪律、`06` 缺口）。
@@ -111,7 +111,7 @@ Aborted. No files were changed.
 
 注意几点：
 
-- 报错只给一行 `... - not found`，**没有"你是不是指…"、没有列出当前 spec 里实际有哪些名字**。
+- 报错只输出一行 `... - not found`，**不会提示"你是否想指…"，也不会列出当前 spec 里实际存在的名字**。
 - 因为是原子的，连本来能成功创建的 `profiles`/`propose-workflow` 也一并没动。一个 delta 坏，整批不落地。
 - 这种"找不到"几乎都来自身份脆弱性：主 spec 的标题被改过、被别的 archive 重写过、或 delta 本身就指向一个从没存在过的名字。
 
@@ -130,7 +130,7 @@ Aborted. No files were changed.
 
 ## 它守护的边界
 
-主 specs 是**事实层**：它描述"项目现在是什么"。愿望（想要变成什么）放在 `changes/` 和 `initiatives/`。这条机理的设计意图是——让事实层只能通过 explore → propose → apply → archive 这条受控流水线（且只有 archive 写 spec）被改写，而不是让人随手编辑。代价是：一旦绕过这条流水线（手改、漏归档、改名没走 RENAMED），没有工具会帮你发现，specs 就开始和现实分叉。
+主 specs 是**事实层**：它描述"项目现在是什么"。愿望（想要变成什么）放在 `changes/` 和 `initiatives/`。这条机理的设计意图是——事实层的改写只能通过 explore → propose → apply → archive 这条受控流水线（且只有 archive 写 spec），而不是随手编辑。代价是：一旦绕过这条流水线（手改、漏 archive、改名没走 RENAMED），没有工具会帮你发现，specs 就开始和现实分叉。
 
 ## 源码锚点
 

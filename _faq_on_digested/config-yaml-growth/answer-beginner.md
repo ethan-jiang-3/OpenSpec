@@ -83,7 +83,7 @@ schema: spec-driven
 
 **3. 没有诊断/建议命令。** 仓库里有三个 `doctor`/`diagnostic`（`workspace doctor` / `context-store doctor` / `initiative diagnostic`）——**没有一个读 `config.yaml`**，也没有命令读你的 `package.json`/源码去建议该写什么。
 
-**4. agent 不是被引导的路径。** 你会想：让 Claude Code 帮我写不就行了？理论上能，但 **OpenSpec 的 skill 没引导 agent 去做这件事**——所有 workflow 把 `context`/`rules` 当**只读消费**（`propose.ts:64-65` "do NOT include in output"），`onboard` skill 全文不提 config。指令里 context/rules 缺失时**静默省略**，没有"你的 context 是空的、建议补上"的提示（`instruction-loader.ts:319`）。
+**4. agent 没有被引导到这条路径。** 你会想：让 Claude Code 帮我写不就行了？理论上能，但 **OpenSpec 的 skill 没引导 agent 去做这件事**——所有 workflow 把 `context`/`rules` 当**只读消费**（`propose.ts:64-65` "do NOT include in output"），`onboard` skill 全文不提 config。而且指令里 context/rules 缺失时**静默省略**，没有"你的 context 是空的、建议补上"的提示（`instruction-loader.ts:319`）。
 
 ```text
 普通人的现实：

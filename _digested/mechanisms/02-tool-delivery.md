@@ -2,7 +2,7 @@
 
 ## 它解决的是 agent 生态差异
 
-OpenSpec 的核心 workflow 语义不应该绑死在某个 AI Coding 工具上。Claude、Codex、Cursor、OpenCode、Gemini 等工具对“如何发现指令”的约定不同：有的看 skills，有的看 slash commands，有的用全局 prompt 目录，有的用项目内 command 文件。
+OpenSpec 的核心 workflow 语义不应绑定在某个 AI Coding 工具上。Claude、Codex、Cursor、OpenCode、Gemini 等工具对“如何发现指令”的约定不同：有的看 skills，有的看 slash commands，有的用全局 prompt 目录，有的用项目内 command 文件。
 
 Tool delivery 这一层的核心判断是：**稳定资产是 workflow 语义；skills 和 commands 只是投递外壳。**
 

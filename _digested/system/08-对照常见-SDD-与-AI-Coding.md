@@ -22,13 +22,13 @@ PRD-first 通常从一份大文档开始：先把需求讲完整，再拆设计�
 OpenSpec 的中心是：
 
 ```text
-specs/ 当前能力基线
+specs/ 当前 capability 基线
 changes/<name>/ 本次增量协议
 ```
 
-proposal 解释为什么改、改什么；delta specs 解释能力基线怎么变化；design 解释技术方案；tasks 解释实施步骤。它们都是 change 的 artifact，不是彼此的随意附件。
+proposal 解释为什么改、改什么；delta specs 解释capability 基线怎么变化；design 解释技术方案；tasks 解释实施步骤。它们都是 change 的 artifact，不是彼此的随意附件。
 
-所以 OpenSpec 更适合 brownfield：你不是每次写一份从零开始的 PRD，而是在已有规格基线上提交增量 patch。
+所以 OpenSpec 更适合 brownfield：你不是每次写一份从零开始的 PRD，而是在已有 spec 基线上提交增量 patch。
 
 ## 和 task-first 的区别
 
@@ -45,7 +45,7 @@ proposal
 
 这表示 tasks 应该从行为变化和技术方案推导出来。apply 阶段消费 tasks，但 tasks 不替代 proposal、delta specs 或 design。
 
-工程意义是：实施清单可以被执行和勾选，但它不是系统承认的能力合同。真正长期留下的是 archive 后的 `openspec/specs/`。
+工程意义是：实施清单可以被执行和勾选，但它不是系统承认的 capability 合同。真正长期留下的是 archive 后的 `openspec/specs/`。
 
 ## 和 prompt-template-first 的区别
 
@@ -108,7 +108,7 @@ same workflow semantics
 
 ## 和 monorepo / multi-root workspace 的区别
 
-multi-root workspace 常被理解成“把很多 repo 放进一个开发窗口”。OpenSpec workspace 也能打开多个 repo/folder，但它的边界更窄。
+multi-root workspace 常被理解为”把很多 repo 放进一个开发窗口”。OpenSpec workspace 也能打开多个 repo/folder，但它的边界更窄。
 
 OpenSpec workspace 是 local coordination view：
 
@@ -121,7 +121,7 @@ OpenSpec workspace 是 local coordination view：
 
 ## 和传统阶段式 SDD 的区别
 
-传统 SDD 容易被理解成阶段：
+传统 SDD 容易被理解为阶段式：
 
 ```text
 requirements → design → implementation → verification
@@ -142,7 +142,7 @@ archive 把 delta specs 合并回主 specs
 
 | 你熟悉的概念 | 在 OpenSpec 中更准确的对应 |
 |--------------|----------------------------|
-| Product baseline | `openspec/specs/` 当前能力基线 |
+| Product baseline | `openspec/specs/` 当前capability 基线 |
 | Change request | `openspec/changes/<name>/` |
 | PRD / proposal | `proposal.md`，解释 why 和 scope |
 | Spec patch | change 下的 `specs/**/*.md` delta spec |

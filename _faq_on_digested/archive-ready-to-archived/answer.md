@@ -2,7 +2,7 @@
 
 ## 一句话
 
-`openspec archive` 是 change 生命周期的收束动作。它不实施业务代码，而是把已经完成的 change 从“增量工作区”吸收到“正式能力基线”：
+`openspec archive` 是 change 生命周期的收束动作。它不实施业务代码，而是把已经完成的 change 从“增量工作区”吸收到“正式 capability 基线”：
 
 ```text
 选择 active change
@@ -296,7 +296,7 @@ Applying changes to openspec/specs/user-auth/spec.md:
 
 多 capability change 会输出 totals。
 
-这一步之后，`openspec/specs/` 代表新的 formal baseline。后续 explore/propose 都应该以这里为当前能力基线。
+这一步之后，`openspec/specs/` 代表新的 formal baseline。后续 explore/propose 都应该以这里为当前 capability 基线。
 
 ## Step 11：生成 archive 目标并检查冲突
 

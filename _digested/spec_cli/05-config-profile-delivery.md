@@ -129,7 +129,7 @@ skill / command 只是投递载体。
 
 这点非常重要。
 
-当用户运行 `openspec config` 时，通常不是在编辑某个 change，也不是在修改 schema 本身，而是在改：
+用户运行 `openspec config`，通常不是在编辑某个 change，也不是在修改 schema 本身，而是在改：
 
 - 启用哪些 workflow。
 - 这些 workflow 怎样出现在 AI 工具里。

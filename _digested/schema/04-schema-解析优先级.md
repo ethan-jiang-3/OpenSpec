@@ -8,7 +8,7 @@ OpenSpec 需要确定"用哪个 schema"时，走两层解析。理解这两层�
 
 ## 第一层：确定 schema 名字
 
-当用户创建 change 或执行 workflow 命令时，按以下优先级确定用哪个 schema：
+用户创建 change 或执行 workflow 命令时，按以下优先级确定用哪个 schema：
 
 ```
 1. CLI 显式参数        --schema <name>

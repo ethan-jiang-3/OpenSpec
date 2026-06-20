@@ -560,7 +560,7 @@ rm -rf openspec/changes/test-config-output/
 ```
 
 
-### 2. proposal.md — 变更提案
+### 2. proposal.md — change proposal
 
 #### 文件位置
 ```text
@@ -569,7 +569,7 @@ openspec/changes/<change-name>/proposal.md
 
 #### 这个文件是干什么的？
 
-`proposal.md` 是**变更提案**，回答：
+`proposal.md` 是**change proposal**，回答：
 - **Why**：为什么要做这个 change？
 - **What Changes**：要改什么？
 - **Out of Scope**：明确不做什么？

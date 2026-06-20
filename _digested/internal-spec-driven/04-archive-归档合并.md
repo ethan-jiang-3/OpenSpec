@@ -1,6 +1,6 @@
-# 04 — archive：归档合并
+# 04 — archive：archive 合并
 
-archive 是整个 change 生命周期的终点。它做三件事：验证 change、将 delta spec 合并到主 spec 基线、然后把 change 目录移到归档区。
+archive 是整个 change 生命周期的终点。它做三件事：验证 change、将 delta spec 合并到主 spec 基线、然后把 change 目录移到 archive 区。
 
 这里需要先区分两条相关但不同的路径：
 
@@ -15,12 +15,12 @@ archive 是整个 change 生命周期的终点。它做三件事：验证 change
 
 ![archive 三方架构实例化](figures/04-archive-flow.svg)
 
-`openspec archive` 来自 `src/core/archive.ts` 的 `ArchiveCommand.execute()`。逻辑上可分为三大阶段（validate → merge → move），但代码内部实际是**四步**顺序执行：① 结构/delta 验证 → ② tasks 完成检查 → ③ delta spec 合并写入（调用 `buildUpdatedSpec` / `writeUpdatedSpec`）→ ④ 归档移动。下面的图示把 ② 归入 Validate 的范畴，按逻辑阶段呈现：
+`openspec archive` 来自 `src/core/archive.ts` 的 `ArchiveCommand.execute()`。逻辑上可分为三大阶段（validate → merge → move），但代码内部实际是**四步**顺序执行：① 结构/delta 验证 → ② tasks 完成检查 → ③ delta spec 合并写入（调用 `buildUpdatedSpec` / `writeUpdatedSpec`）→ ④ archive 移动。下面的图示把 ② 归入 Validate 的范畴，按逻辑阶段呈现：
 
 ```
 Phase 1: Validate
   ├── proposal.md 验证（非阻塞，只警告）
-  └── delta spec 验证（阻塞，有 ERROR 就拒绝归档）
+  └── delta spec 验证（阻塞，有 ERROR 就拒绝 archive）
 
 Phase 2: Merge（除非 --skip-specs）
   ├── 找到所有 delta spec
@@ -30,7 +30,7 @@ Phase 2: Merge（除非 --skip-specs）
 
 Phase 3: Move
   ├── 创建 archive/ 目录
-  ├── 生成归档名 YYYY-MM-DD-<changeName>
+  ├── 生成archive 名 YYYY-MM-DD-<changeName>
   └── mv changeDir → archive/
 ```
 
@@ -40,13 +40,13 @@ Phase 3: Move
 
 ### 2.1 proposal 验证（非阻塞）
 
-`archive.ts:96-111`：用 `Validator.validateChange()`（`src/core/validation/validator.ts`）验证 proposal.md 的结构（Why/What Changes 等 section 是否存在、长度是否合理）。但**验证失败不会阻止归档**——proposal 验证是信息性的。
+`archive.ts:96-111`：用 `Validator.validateChange()`（`src/core/validation/validator.ts`）验证 proposal.md 的结构（Why/What Changes 等 section 是否存在、长度是否合理）。但**验证失败不会阻止 archive**——proposal 验证是信息性的。
 
 ### 2.2 delta spec 验证（阻塞）
 
 `archive.ts:113-151`：扫描 `<changeDir>/specs/` 下每个子目录中带 delta header 的文件（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）。
 
-如果发现 delta spec，用 `Validator.validateChangeDeltaSpecs()`（`src/core/validation/validator.ts`）进行严格验证：
+如果发现 delta spec，用 `Validator.validateChangeDeltaSpecs()`（`src/core/validation/validator.ts`）严格验证：
 
 | 检查项 | 级别 |
 |--------|------|
@@ -58,7 +58,7 @@ Phase 3: Move
 | requirement 文本过长 | WARNING |
 | delta 数量超过阈值 | WARNING |
 
-如果存在任何 ERROR，**归档被拒绝**。WARNING 会被显示但不阻止。
+如果存在任何 ERROR，**archive 被拒绝**。WARNING 会被显示但不阻止。
 
 `--no-validate` 可以跳过所有验证，但需要额外确认（或 `--yes`）。
 
@@ -141,7 +141,7 @@ after:    ""（Requirements section 之后的文字）
 
 ### 3.5 按序应用操作
 
-这是整个归档流程中最关键的代码段 (`specs-apply.ts:244-306`)。操作有严格的顺序，**不能打乱**：
+这是整个archive 流程中最关键的代码段 (`specs-apply.ts:244-306`)。操作有严格的顺序，**不能打乱**：
 
 #### 第一：RENAMED（`specs-apply.ts:245-266`）
 
@@ -204,13 +204,13 @@ const rebuilt = [parts.before, parts.headerLine, reqBody, parts.after]
   .replace(/\n{3,}/g, '\n\n');  // 压缩多余空行
 ```
 
-**对顺序的尊重**：已有的 requirement 保持它们原来的相对位置。新的 requirement 追加到 Requirements section 末尾。这避免了每次归档打乱整个 spec，让 git diff 可读。
+**对顺序的尊重**：已有的 requirement 保持它们原来的相对位置。新的 requirement 追加到 Requirements section 末尾。这避免了每次archive 打乱整个 spec，让 git diff 可读。
 
 ### 3.7 写前验证
 
 CLI 会先对所有 `SpecUpdate` 调用 `buildUpdatedSpec()`，把 rebuilt 内容准备好；如果这一步任何一个 spec 失败，会在写入前中止并提示 "No files were changed."。
 
-随后在实际写入每个重建后的 spec 之前，用 `Validator.validateSpecContent()`（`src/core/validation/validator.ts`）验证。如果有 ERROR，**整个归档在写入前中断**，change 目录仍在原地。
+随后在实际写入每个重建后的 spec 之前，用 `Validator.validateSpecContent()`（`src/core/validation/validator.ts`）验证。如果有 ERROR，**整个 archive 在写入前中断**，change 目录仍在原地。
 
 需要注意的是：一旦进入实际 `writeUpdatedSpec()` 写入阶段，CLI 没有事务式回滚。如果写入过程中发生 I/O 异常，已经写入的文件不会自动恢复。
 
@@ -218,7 +218,7 @@ CLI 会先对所有 `SpecUpdate` 调用 `buildUpdatedSpec()`，把 rebuilt 内�
 
 ## 4. 移动阶段
 
-### 4.1 生成归档名
+### 4.1 生成archive 名
 
 ```typescript
 const archiveName = `${YYYY-MM-DD}-${changeName}`;
@@ -227,7 +227,7 @@ const archiveName = `${YYYY-MM-DD}-${changeName}`;
 
 ### 4.2 冲突检测
 
-如果 `archive/2026-06-14-add-dark-mode/` 已存在 → 报错退出。建议用户改名或删除重复归档。
+如果 `archive/2026-06-14-add-dark-mode/` 已存在 → 报错退出。建议用户改名或删除重复 archive。
 
 ### 4.3 移动
 
@@ -273,10 +273,10 @@ if delta specs exist:
    对比 change 中的 delta spec 和主 spec
    提示用户：
      - "Sync now (recommended)"  → 调用 openspec-sync-specs skill
-     - "Archive without syncing" → 直接归档（delta 丢失但 change 保留在 archive 中）
+     - "Archive without syncing" → 直接 archive（delta 丢失但 change 保留在 archive 中）
 ```
 
-这是一个**安全网**——如果用户在归档前忘了同步 spec，agent 会提醒。但用户可以选择跳过。
+这是一个**安全网**——如果用户在archive 前忘了同步 spec，agent 会提醒。但用户可以选择跳过。
 
 ---
 
@@ -290,8 +290,8 @@ if delta specs exist:
 
 ---
 
-## 7. 归档后的不可逆性
+## 7. archive 后的不可逆性
 
-归档操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活跃工作流中消失了。如果 spec 合并出问题，只能手动修正主 spec 文件然后重新提交。
+archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活跃工作流中消失了。如果 spec 合并出问题，只能手动修正主 spec 文件然后重新提交。
 
 这也是为什么验证阶段如此严格 —— 一旦写入主 spec，错误的 requirement 就会成为系统的正式基线。

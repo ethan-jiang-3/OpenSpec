@@ -109,7 +109,7 @@ description: 快速迭代——跳过规格和设计，直接从提案到任务
 artifacts:
   - id: proposal
     generates: proposal.md
-    description: 变更提案
+    description: change proposal
     template: proposal.md
     instruction: |
       写一份简洁的提案：为什么做、做什么、影响什么。
@@ -148,7 +148,7 @@ artifacts:
     description: 调研与发现
     template: research.md
     instruction: |
-      对问题进行调研分析：
+      调研分析问题：
       - 当前状态和痛点
       - 已有方案或类似实现的参考
       - 技术可行性和风险评估
@@ -157,10 +157,10 @@ artifacts:
 
   - id: proposal
     generates: proposal.md
-    description: 基于调研的变更提案
+    description: 基于调研的change proposal
     template: proposal.md
     instruction: |
-      基于 research.md 的调研结果，写一份变更提案。
+      基于 research.md 的调研结果，写一份change proposal。
       必须引用调研中的关键发现。
     requires:
       - research

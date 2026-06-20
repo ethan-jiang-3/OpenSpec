@@ -118,13 +118,13 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 ### 目标
 
-完成 change 收尾，把 delta specs 纳入正式 specs 并归档。
+完成 change 收尾，把 delta specs 纳入正式 specs 并 archive。
 
 ### 典型调用链
 
 1. 检查当前 change 是否准备归档。
 2. 调用 `openspec archive <name>`。
-3. CLI 自己完成验证、spec 重建、写入和归档移动。
+3. CLI 自己完成 validate、spec 重建、写入和 archive 移动。
 4. 模板向用户报告归档完成或失败原因。
 
 ### 这里的边界

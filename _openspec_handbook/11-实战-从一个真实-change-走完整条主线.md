@@ -630,7 +630,7 @@ openspec/
 你已经看到了：
 
 - `openspec/specs/` 是当前正式基线
-- `changes/` 是变更工作区
+- `changes/` 是 change 工作区
 - `artifact` 是 change 内部的四类 artifact
 - delta spec 是"增量变化"表达层
 

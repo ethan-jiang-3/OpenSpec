@@ -74,7 +74,7 @@ rules:
 
 **什么时候需要**：artifact 名字和流程（proposal → specs → design → tasks）是对的，但内容不对。
 
-举个例子——你在开发 AI Agent。spec-driven 勉强能用：proposal 写 Why/What Changes，specs 写 delta ops，design 写技术方案，tasks 拆任务。但写到 design 的时候就很别扭——你要定义的不是"用 React 还是 Vue""数据库怎么分库分表"，而是 Skill 的触发条件是什么、Slash Command 的参数怎么设计、Tool 的输入输出 schema 长什么样、Evals 怎么测 agent 行为。**流程一样，填空的内容完全不同。**
+举个例子——你在开发 AI Agent。spec-driven 勉强能用：proposal 写 Why/What Changes，specs 写 delta ops，design 写技术方案，tasks 拆任务。但写到 design 的时候就很别扭——你要定义的不是"用 React 还是 Vue""数据库怎么分库分表"，而是：Skill 怎么触发、Slash Command 参数怎么设计、Tool 输入输出 schema 长什么样、Evals 怎么测 agent 行为。**流程一样，填空的内容完全不同。**
 
 再比如你在做硬件固件开发——design 里写的是中断向量表、寄存器映射、功耗预算，不是软件架构图。但 proposal → specs → design → tasks 的框架不变。
 

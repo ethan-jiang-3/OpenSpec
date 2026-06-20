@@ -167,7 +167,7 @@
 影响：
 
 - 是进入 archive 前最关键的守门器之一。
-- 对 change 来说，重点检查 delta spec 结构和场景完整性。
+- 对 change 来说，重点检查 delta spec 结构和 scenario 完整性。
 - 对 spec 来说，重点检查正式规范结构与 requirement/scenario 完整性。
 
 容易误解：
@@ -186,7 +186,7 @@
 它做的不只是移动目录，而是一个收尾流水线：
 
 1. 校验 proposal 和 delta specs。
-2. 查看任务进度，必要时提醒仍有未完成项。
+2. 查看 tasks 进度，必要时提醒仍有未完成项。
 3. 找出变更对主 specs 的影响。
 4. 生成合并后的目标 spec 内容。
 5. 对重建后的 spec 再做校验。
@@ -203,7 +203,7 @@
 
 - 更新后的正式 specs。
 - 被移动到 archive 的 change 目录。
-- 归档过程报告。
+- archive 过程报告。
 
 影响：
 
@@ -213,7 +213,7 @@
 容易误解：
 
 - 它不是简单的“标记完成”。
-- 它真正做的是把 change 里的增量规范吸收到正式 specs。
+- 它真正做的是把 change 里的 delta specs 吸收到正式 specs。
 
 ## 6. 配置 OpenSpec 的工作方式
 
@@ -274,7 +274,7 @@
 
 对人类意义：
 
-- 这是把“一个新需求/变更”正式放进 OpenSpec 生命周期的起点。
+- 这是把”一个新需求/change”正式放进 OpenSpec 生命周期的起点。
 
 ### `openspec status --change <name>`
 

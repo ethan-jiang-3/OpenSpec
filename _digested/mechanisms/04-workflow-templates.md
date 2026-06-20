@@ -4,7 +4,7 @@
 
 OpenSpec CLI 负责保存和解释状态，但真正执行“读用户意图、调用命令、写 artifact、修改代码”的是宿主 coding agent。workflow templates 就是 agent 的操作手册源码。
 
-这点很容易误解。`apply`、`sync`、`verify` 等模板不是 TypeScript 里的硬编码执行流程；它们是被 init/update 投递到不同 agent 的指令文本。agent 读到这些指令后，调用 `openspec status --json`、`openspec instructions ... --json`、`openspec validate` 等 runtime API，再由模型和工具执行实际写入。
+这点很容易误解。`apply`、`sync`、`verify` 等模板不是 TypeScript 里的硬编码执行流程；它们由 init/update 投递到不同 agent 的指令文本。agent 读到这些指令后，调用 `openspec status --json`、`openspec instructions ... --json`、`openspec validate` 等 runtime API；然后由模型和工具执行实际写入。
 
 所以 workflow templates 位于两层之间：
 

@@ -2,7 +2,7 @@
 
 ## 一句话
 
-**specs 不是手写出来的，是 archive 出来的**——哪怕是从零开始。给一个已经在跑的代码库补 spec，本质就是 `03` 修复原语的**加法情形（AUTHOR-NEW）批量做**：按能力切分、逐个写 ADDED delta、逐个 archive。这是"采用 OpenSpec"，不是"修漂移"。
+**specs 不是手写出来的，是 archive 出来的**——哪怕是从零开始。给一个已经在跑的代码库补 spec，本质就是 `03` 修复原语的**加法情形（AUTHOR-NEW）批量做**：按 capability切分、逐个写 ADDED delta、逐个 archive。这是"采用 OpenSpec"，不是"修漂移"。
 
 ## 先破一个误解：specs 怎么从无到有
 
@@ -20,8 +20,8 @@ openspec archive add-<capability> -y          # archive 发现目标 spec 不存
 
 一个已经在跑的代码库（几万行代码、一堆功能）现在要采用 OpenSpec。这是 `02` 信号 ②（有代码无 spec）的**规模化版本**。流程：
 
-1. **按能力切分**：把代码库切成若干"能力"——通常是用户可感知的功能单元或一组命令（如 `context-store`、`initiative`、`cli-view`）。**别按文件/目录切，按能力切**（一个能力可能跨多个文件）。
-2. **逐个、增量地补**：每个能力一个 change（`add-<capability>-spec`），写 `## ADDED Requirements`，如实描述**已发运**的行为，然后 archive。**别想一次把全库写成 spec**——那是注定失败的瀑布。
+1. **按 capability切分**：把代码库切成若干"能力"——通常是用户可感知的功能单元或一组命令（如 `context-store`、`initiative`、`cli-view`）。**别按文件/目录切，按 capability切**（一个能力可能跨多个文件）。
+2. **逐个、增量地补**：每个 capability一个 change（`add-<capability>-spec`），写 `## ADDED Requirements`，如实描述**已发运**的行为，然后 archive。**别想一次把全库写成 spec**——那是注定失败的瀑布。
 3. **按优先级排**：先补最常被 agent 误读、最活跃的能力；边缘的、内部机制的后补或不补。
 4. **每个 archive 后补 `## Purpose`**（占位是 `TBD - ...`）。
 
@@ -40,8 +40,8 @@ openspec archive add-<capability>-spec -y
 
 不是所有代码都该有 spec（`02` 的判断难点）：
 
-- **该有 spec**：一等公民能力——有用户可感知行为 / CLI 表面 / JSON 契约 / 跨模块的功能单元。例：`context-store`、`initiative`、`archive`。
-- **不该单独有 spec**：内部引擎、纯实现机制（被别的命令调用的模块）。按 conventions，这些属 `design.md`/`tasks.md` 范畴，其可观测行为应由**调用它的那个能力的 spec** 覆盖。例：`profile-sync-drift.ts`（内部引擎，靠 `cli-update`/`global-config` spec 覆盖，不自立 spec）。
+- **该有 spec**：一等公民 capability——有用户可感知行为 / CLI 表面 / JSON 契约 / 跨模块的功能单元。例：`context-store`、`initiative`、`archive`。
+- **不该单独有 spec**：内部引擎、纯实现机制（被别的命令调用的模块）。按 conventions，这些属 `design.md`/`tasks.md` 范畴，其可观测行为应由**调用它的那个capability 的 spec** 覆盖。例：`profile-sync-drift.ts`（内部引擎，靠 `cli-update`/`global-config` spec 覆盖，不自立 spec）。
 - **灰色地带**：拿不准就问"agent 会不会需要读它来判断行为"——会，就补；不会，就归内部。
 
 ## 和"修漂移"的区别（别混）
@@ -53,7 +53,7 @@ openspec archive add-<capability>-spec -y
 
 ## 守住的边界
 
-greenfield 的陷阱是**野心太大**（想一次写全）和**写成愿望**（描述想要的行为而非已发运的）。对策就是"按能力切、增量补、如实描述已发运"。把每个能力的 spec 当一次小型的 propose→archive，跑顺了，代码库就能从"零 spec"稳步走到"specs 覆盖所有已发运能力"——这才是 `05` 里"specs 配得上 source of truth"的前提。
+greenfield 的陷阱是**野心太大**（想一次写全）和**写成愿望**（描述想要的行为而非已发运的）。对策就是"按 capability切、增量补、如实描述已发运"。把每个 capability的 spec 当一次小型的 propose→archive，跑顺了，代码库就能从"零 spec"稳步走到"specs 覆盖所有已发运 capability"——这才是 `05` 里"specs 配得上 source of truth"的前提。
 
 ## 继续阅读
 

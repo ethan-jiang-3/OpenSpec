@@ -4,7 +4,7 @@
 
 ## change
 
-一个 change 是一次待推进的变更实例。
+一个 change 是一次待推进的 change 实例。
 
 它通常有：
 
@@ -13,15 +13,15 @@
 - 若干 artifact 输出，例如 `proposal.md`、`design.md`、`tasks.md`。
 - 可能还带有 schema 元数据。
 
-不要把 change 理解成“单个 markdown 文件”。它更像一个变更工作区。
+不要把 change 理解成“单个 markdown 文件”。它更像一个change 工作区。
 
 ## spec
 
-spec 是正式规范空间里的能力定义，通常位于 `openspec/specs/<spec>/spec.md`。
+spec 是正式规范空间里的 capability 定义，通常位于 `openspec/specs/<spec>/spec.md`。
 
 不要把 spec 和 change 混为一谈：
 
-- change 是正在进行中的变更实例。
+- change 是正在进行中的 change 实例。
 - spec 是较稳定、已纳入主规范库的正式结果。
 
 ## schema
@@ -76,7 +76,7 @@ artifact graph 是 artifact 及其依赖关系构成的有向图。
 
 completed set 是当前 change 已完成 artifact 的集合。
 
-它通常通过“artifact 对应输出文件是否存在”来推导，而不是通过数据库字段标记。
+它通常通过”artifact 对应输出文件是否存在”推导，而不是通过数据库字段标记。
 
 ## change context
 
