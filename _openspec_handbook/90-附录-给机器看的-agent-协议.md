@@ -142,7 +142,7 @@ sequenceDiagram
 - `rules`：项目级约束，确保生成的内容符合团队规范
 - `dependencies`：生成前应该先读哪些 artifact，确保内容一致
 
-机器真正依赖的是这些结构化字段，而不是人类阅读版文档。
+机器真正依赖的是这些结构化字段，而不是给人阅读的文档。
 
 ---
 
@@ -152,7 +152,7 @@ sequenceDiagram
 
 | 名词 | 它是什么 |
 |------|----------|
-| workflow | 一个动作语义，例如 propose / apply / archive |
+| workflow | 一个工作流动作，例如 propose / apply / archive |
 | skill | 给宿主 agent 看的能力说明书 |
 | command | 给用户触发的命令入口模板 |
 
@@ -178,7 +178,7 @@ sequenceDiagram
 
 ## 下一步
 
-如果你是在研究宿主集成，推荐回到这些主题篇核对理解：
+如果你是在研究宿主集成，推荐回到这些主题篇检验理解：
 
 - [`10` 实战·Claude Code 落地](10-实战-claude-code-里的-openspec-到底怎么落地.md) — 二层架构与入口投递
 - [`04` 高级·config/schema 边界](04-高级-config-schema-与项目边界.md) — schema 与 workflow 的关系

@@ -75,7 +75,7 @@ OpenSpec = 整套机制
 - `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --json`、`openspec archive <name>`。
 - `/opsx:*` 是 Claude Code、Cursor、Codex 等宿主 agent 里的用户入口，比如 `/opsx:propose`、`/opsx:apply`。
 - `opsx` 这个名字只是 slash command 的命名空间或文件前缀，不是另一套独立系统。
-- 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有这个单一等价命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
+- 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有与之完全对应的单一命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
 
 所以更准确的说法是：**`/opsx:*` 是 OpenSpec workflow 在 agent 工具里的入口，`openspec` CLI 是这些 workflow 读取状态和获取指令的运行时。**
 

@@ -902,11 +902,11 @@ rm -rf openspec/changes/add-csv-export/
 | 文件 | 推荐修改方式 | 关键风险 |
 |------|--------------|----------|
 | `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把增量规格写成全量重写 |
-| `design.md` | 实现发现方案变化时及时回改，说明原因和风险 | 只改代码不改设计，后人看不到真实取舍 |
+| `design.md` | 实现发现方案变化时及时回头修改，说明原因和风险 | 只改代码不改设计，后人看不到真实取舍 |
 | `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节 |
 | `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析 |
 
-一个实用判断：
+一条实用判断准则：
 
 - 行为承诺变了，优先改 delta spec
 - 技术路径变了，优先改 design

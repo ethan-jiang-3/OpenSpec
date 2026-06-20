@@ -246,11 +246,10 @@ Workspace 生成的 skill 模板中内置了 guardrail：
 2. 单仓库不需要 workspace；2-3 个仓库看情况；3+ 仓库且频繁跨仓库协调时才推荐
 3. Workspace 没有主 `specs/` 基线——spec 在各 linked repo 中，workspace 只做协调
 4. Workspace change 用 `workspace-planning` schema，不走 repo-local 的 archive/sync 流程
+5. 这就是 v1.4.0 给 OpenSpec 带来的最大变化——在 repo-local 之外提供了一层跨仓库的规划视图
 
 ## 下一步
 
 - 想知道 workspace 的配置层和 repo-local config.yaml 怎么共存 → [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)
 - 想自定义 workspace 工作流 → [08 高级·自定义 schema](08-高级-自定义-schema-创建自己的工作流.md)
 - 多人 + 多 repo 时 workspace 协作怎么落地 → [15 实战·多人协作与 Git 工作流](15-实战-多人协作与Git工作流.md)
-
-这就是 v1.4.0 给 OpenSpec 带来的最大变化。

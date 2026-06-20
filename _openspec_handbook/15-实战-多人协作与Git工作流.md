@@ -611,7 +611,7 @@ Blocking rule:
 
 ### 用 review 检查冲突
 
-`openspec validate` 能检查结构和格式，但它不会替你判断两个并行 change 是否语义冲突。review 时要显式看两件事：这次 delta spec 改了哪些 requirement，以及这些 requirement 是否正被另一个 active change 修改。
+`openspec validate` 能检查结构和格式，但它不会替你判断两个并行 change 是否语义冲突。review 时要明确检查两件事：这次 delta spec 改了哪些 requirement，以及这些 requirement 是否正被另一个 active change 修改。
 
 ---
 

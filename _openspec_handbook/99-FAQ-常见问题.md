@@ -181,7 +181,7 @@ specs/
 
 不推荐按技术层（models/services/controllers）。
 
-**关键**：每个 capability 的**目录名就是它的身份**——proposal 列的 capability、delta 要打的目标、archive 的合并，全靠这个目录名寻址（同名才命中）。所以**别随便改目录名**：requirement 改名还有 `RENAMED` 操作，capability 改名没有任何操作，改了会让指向旧名的 delta 全悬空。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
+**关键**：每个 capability 的**目录名就是它的身份**——proposal 列的 capability、delta 要修改的目标、archive 的合并，全靠这个目录名寻址（同名才命中）。所以**别随便改目录名**：requirement 改名还有 `RENAMED` 操作，capability 改名没有任何操作，改了会让指向旧名的 delta 全悬空。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
 
 ### Q25: 一个功能涉及多个域怎么办？
 **A**: 

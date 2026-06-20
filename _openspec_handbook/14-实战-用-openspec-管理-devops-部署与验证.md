@@ -277,10 +277,10 @@ implementation done
 | 情况 | OpenSpec 处理 |
 |------|---------------|
 | CI 失败 | 不勾 deployment tasks，修实现或测试 |
-| staging smoke test 失败 | 回改 design/tasks，修复后重测 |
+| staging smoke test 失败 | 回头修改 design/tasks，修复后重测 |
 | production 部署失败但已回滚 | 记录回滚结果，继续保持 change active |
 | production 部署成功但指标异常 | 按 rollback guard 决策，记录证据 |
-| 发现需求本身有误 | 回改 proposal/specs/design，再重新 apply |
+| 发现需求本身有误 | 回头修改 proposal/specs/design，再重新 apply |
 
 关键是：
 
