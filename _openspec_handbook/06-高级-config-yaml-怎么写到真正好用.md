@@ -70,6 +70,14 @@ rules:
 
 ## 一份真正好用的 `config.yaml`，通常有 3 个特征
 
+| 特征 | 一句话 | 反例（不该进 config.yaml） |
+|---|---|---|
+| 高杠杆 | 一条规则一旦写进去，会影响很多 change | 只对单个 change 有意义的事 |
+| 可判断 | 有对象、有范围、有判断方向（如"审批改动必须守授权回归"） | 空泛口号（如"要有完善测试"） |
+| 长期稳定 | 跨 change 长期成立，不是一次性的 | "这次加一个异步 worker"、"这次补 3 个集成测试" |
+
+下面三条展开：
+
 ### 1. 它写的是"高杠杆信息"
 
 也就是一条规则一旦写进去，会影响很多 change。
@@ -268,7 +276,7 @@ rules:
 它们告诉你：
 
 - 什么是好的目录演化方向
-- 什么类型的改动必须先补工件
+- 什么类型的改动必须先补 artifact
 - 哪些逻辑最好 test-first
 - 哪类 regression 绝不能掉
 - 哪种实现方式属于架构违规
@@ -339,7 +347,7 @@ New user-visible behavior should be reflected in OpenSpec artifacts before or du
 为什么更好：
 
 - 明确了"document"不是随便写点说明
-- 明确了什么时候要反映到工件里
+- 明确了什么时候要反映到 artifact 里
 
 ---
 
@@ -404,7 +412,7 @@ Keep <结构对象> organized by <组织原则>.
 - 模块边界
 - import 纪律
 
-### 2. 工件类规则
+### 2. artifact 类规则
 
 比如：
 
@@ -481,11 +489,10 @@ rules:
     - Keep code organized by domain capability first
     - Shared UI belongs in src/ui/
     - Avoid cross-module imports that bypass published interfaces
+    - Design documents should explain migration or rollout risks when behavior changes existing flows
   specs:
     - New user-visible behavior should be reflected in OpenSpec artifacts before or during implementation
     - Changes affecting role-sensitive behavior should include explicit scenarios in specs
-  design:
-    - Design documents should explain migration or rollout risks when behavior changes existing flows
   tasks:
     - Core approval logic should be developed test-first when feasible
     - Approval-related changes must preserve authorization regression coverage
@@ -501,7 +508,7 @@ rules:
 - 有项目类型
 - 有质量重心
 - 有结构约束
-- 有工件要求
+- 有 artifact 要求
 - 有测试重点
 - 有风险红线
 
@@ -613,7 +620,7 @@ rules:
 
 - 目录结构
 - 模块边界
-- 工件反映要求
+- artifact 反映要求
 - 测试重点
 - 风险底线
 
@@ -672,7 +679,7 @@ rules:
 
 ---
 
-## 样例 A：企业内部审批系统
+### 样例 A：企业内部审批系统
 
 ```yaml
 schema: spec-driven
@@ -689,10 +696,9 @@ rules:
   design:
     - Organize code by domain capability
     - Avoid cross-module imports that bypass published interfaces
+    - Existing workflow changes should document rollout or migration risk in design
   specs:
     - Role-sensitive behavior changes should include explicit scenarios in specs
-  design:
-    - Existing workflow changes should document rollout or migration risk in design
   tasks:
     - Approval logic should be developed test-first when feasible
     - Approval-related changes must preserve authorization regression coverage
@@ -711,7 +717,7 @@ rules:
 
 ---
 
-## 样例 B：外部 API 平台
+### 样例 B：外部 API 平台
 
 ```yaml
 schema: spec-driven
@@ -746,7 +752,7 @@ rules:
 
 ---
 
-## 样例 C：前端 SaaS 控制台
+### 样例 C：前端 SaaS 控制台
 
 ```yaml
 schema: spec-driven
@@ -763,10 +769,9 @@ rules:
   design:
     - Shared UI belongs in src/ui/
     - Feature screens belong in src/features/<feature>/
+    - Changes to critical UI flows should explain state and error handling in design
   specs:
     - New user-visible flows should include happy-path and unhappy-path scenarios in specs
-  design:
-    - Changes to critical UI flows should explain state and error handling in design
   tasks:
     - Critical admin flows should preserve regression coverage
     - Accessibility-impacting changes should verify keyboard and focus behavior
@@ -783,7 +788,7 @@ rules:
 
 ---
 
-## 样例 D：数据处理或任务编排系统
+### 样例 D：数据处理或任务编排系统
 
 ```yaml
 schema: spec-driven
@@ -938,7 +943,7 @@ rules:
 
 ---
 
-## 下一步怎么读
+## 下一步
 
 如果你想继续看：
 

@@ -650,7 +650,7 @@ openspec/
 
 - `config.yaml` 可能在注入项目 context
 - schema 在决定这次 change 的 artifact 结构
-- `.openspec.yaml` 可能记录 change 绑定的 schema
+- `.openspec.yaml` 记录 change 绑定的 schema
 
 ### 对应 `10` Claude Code 实战篇
 
@@ -756,7 +756,7 @@ AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和
 
 ---
 
-## 下一步怎么读
+## 下一步
 
 如果你读完这篇之后，感觉整条主线终于立住了，那么接下来有两种方向：
 

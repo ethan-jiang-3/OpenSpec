@@ -1,10 +1,10 @@
 # 12 · 实战：如何正确修改 Artifacts
 
-> 这一篇专门解决新手最困惑的问题：**OpenSpec 的 artifacts 到底该怎么改？**
+> 这一篇解决新手最困惑的问题：**OpenSpec 的 artifacts 到底该怎么改？** 和别的 SDD 工具不同，OpenSpec 是**弱约束**——artifacts 归你所有，可以手改、可以让 AI 重写、改完跑 `validate`。本文教你在这个自由度下，按文件类型安全地改、不踩格式坑。core profile 是默认前提，见下方专节。
 
 ---
 
-## ⚠️ 重要前提：Profile 说明
+## 重要前提：Profile 说明
 
 OpenSpec 有两种 profile（配置模式）：
 
@@ -12,8 +12,8 @@ OpenSpec 有两种 profile（配置模式）：
 
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
-| **core** | 5 个命令（v1.4.0 起） | 快速开发，简单场景 | ✅ 是（默认） |
-| **custom** | 11 个命令 | 复杂项目，需要更多控制 | ❌ 否 |
+| **core** | 5 个命令（v1.4.0 起） | 快速开发，简单场景 | 是（默认） |
+| **custom** | 11 个命令 | 复杂项目，需要更多控制 | 否 |
 
 ### 检查你当前的 Profile
 
@@ -84,53 +84,6 @@ openspec update
 
 ---
 
-## OpenSpec 与其他 SDD 工具的根本区别
-
-### 其他 SDD 工具的模式
-
-```mermaid
-graph LR
-    A[用户在上下文中聊天] --> B[AI 决定一切]
-    B --> C[生成 artifacts]
-    C --> D[强约束，不能随意修改]
-    
-    style D fill:#ffcccc,stroke:#ff0000
-```
-
-**特点**：
-- AI 全权决定什么内容进哪个 artifact
-- 强约束，用户很难自由修改
-- 修改通常需要重新生成
-
-### OpenSpec 的模式
-
-```mermaid
-graph LR
-    A[用户描述需求] --> B[AI 生成初稿]
-    B --> C[用户自由编辑]
-    C --> D[弱约束，灵活修改]
-    
-    style D fill:#ccffcc,stroke:#00ff00
-```
-
-**特点**：
-- AI 只是帮你起草，artifacts 是**你的文档**
-- 弱约束，用户可以随时自由编辑
-- 修改方式灵活：手动编辑、AI 辅助、重新生成
-
-### 为什么 OpenSpec 选择"弱约束"？
-
-| 维度 | 强约束（其他工具） | 弱约束（OpenSpec） |
-|------|------------------|-------------------|
-| **优点** | 不会出错，格式统一 | 灵活，适应真实需求变化 |
-| **缺点** | 不灵活，难以微调 | 需要用户理解规则 |
-| **适用场景** | 标准化流程 | 真实项目的迭代开发 |
-
-**OpenSpec 的哲学**：
-> 真实项目中，需求会变、设计会变、任务会变。与其强制锁定，不如给用户自由，但提供清晰的指导。
-
----
-
 ## 修改 Artifacts 的三种方式
 
 在开始具体讲解之前，先理解修改 artifacts 的三种基本方式：
@@ -139,9 +92,9 @@ graph LR
 
 | 方式 | 适用场景 | 优点 | 缺点 | 风险等级 |
 |------|---------|------|------|---------|
-| **手动编辑** | 小改动、微调措辞、添加细节 | 快速、精确、保留上下文 | 可能破坏格式、需要熟悉规则 | 🟡 中等 |
-| **AI 辅助编辑** | 中等改动、调整结构、重写某段 | 平衡灵活性和安全性 | 需要明确指令 | 🟢 低 |
-| **完全重新生成** | 大改动、推翻重来、格式完全错误 | 保证格式正确、省心 | 丢失之前的手动修改 | 🔴 高 |
+| **手动编辑** | 小改动、微调措辞、添加细节 | 快速、精确、保留上下文 | 可能破坏格式、需要熟悉规则 | 中等 |
+| **AI 辅助编辑** | 中等改动、调整结构、重写某段 | 平衡灵活性和安全性 | 需要明确指令 | 低 |
+| **完全重新生成** | 大改动、推翻重来、格式完全错误 | 保证格式正确、省心 | 丢失之前的手动修改 | 高 |
 
 ### 决策树：我该用哪种方式？
 
@@ -316,9 +269,9 @@ openspec/config.yaml
 
 | 内容 | 示例 | 风险 |
 |------|------|------|
-| **context** | 添加技术栈信息 | 🟢 低 |
-| **rules** | 添加项目约束 | 🟢 低 |
-| **schema** | 改变默认 schema | 🟡 中 |
+| **context** | 添加技术栈信息 | 低 |
+| **rules** | 添加项目约束 | 低 |
+| **schema** | 改变默认 schema | 中 |
 
 #### 不建议手动改的内容
 
@@ -431,10 +384,9 @@ context: |
 ```bash
 # 直接编辑文件
 vim openspec/config.yaml
-
-# 验证格式
-openspec validate
 ```
+
+改完后用 `openspec schemas` 确认 schema 能被解析（`openspec validate` 主要验证 change/spec 结构，不是 config.yaml 专用校验器）。
 
 **方式 2：让 AI 帮你改**
 ```markdown
@@ -495,7 +447,7 @@ ls openspec/changes/test-new-schema/
 
 **错误 1：YAML 格式错误**
 ```yaml
-# ❌ 错误：缩进不对
+# 错误：缩进不对
 rules:
 - Write tests
   - Add docs
@@ -503,7 +455,7 @@ rules:
 
 **修复**：
 ```yaml
-# ✅ 正确：统一缩进
+# 正确：统一缩进
 rules:
   - Write tests
   - Add docs
@@ -511,7 +463,7 @@ rules:
 
 **错误 2：context 和 rules 混淆**
 ```yaml
-# ❌ 错误：把约束写在 context 里
+# 错误：把约束写在 context 里
 context: |
   Tech: TypeScript
   You must write tests
@@ -519,7 +471,7 @@ context: |
 
 **修复**：
 ```yaml
-# ✅ 正确：约束放在 rules 里
+# 正确：约束放在 rules 里
 context: |
   Tech: TypeScript
 
@@ -529,7 +481,7 @@ rules:
 
 **错误 3：规则太模糊**
 ```yaml
-# ❌ 错误：太模糊
+# 错误：太模糊
 rules:
   - Write good code
   - Be careful
@@ -537,7 +489,7 @@ rules:
 
 **修复**：
 ```yaml
-# ✅ 正确：具体明确
+# 正确：具体明确
 rules:
   - Keep domain code grouped by capability, not by technical layer
   - Do not bypass published module interfaces
@@ -863,27 +815,27 @@ Generate CSV on demand from the filtered order query and return as file download
 
 **错误 1：删除了必需的标题**
 ```markdown
-# ❌ 错误：删除了 ## Why
+# 错误：删除了 ## Why
 This change adds CSV export.
 ```
 
 **修复**：
 ```markdown
-# ✅ 正确：保留标题
+# 正确：保留标题
 ## Why
 This change adds CSV export to help CS team with reporting.
 ```
 
 **错误 2：Out of Scope 太模糊**
 ```markdown
-# ❌ 错误
+# 错误
 ## Out of Scope
 - Other stuff
 ```
 
 **修复**：
 ```markdown
-# ✅ 正确
+# 正确
 ## Out of Scope
 - XLSX export
 - Scheduled exports
@@ -892,7 +844,7 @@ This change adds CSV export to help CS team with reporting.
 
 **错误 3：What Changes 和 Approach 混淆**
 ```markdown
-# ❌ 错误：把实现细节写在 What Changes
+# 错误：把实现细节写在 What Changes
 ## What Changes
 - Use streaming CSV generation with Papa Parse library
 - Add button with onClick handler
@@ -900,7 +852,7 @@ This change adds CSV export to help CS team with reporting.
 
 **修复**：
 ```markdown
-# ✅ 正确：What Changes 写"做什么"，Approach 写"怎么做"
+# 正确：What Changes 写"做什么"，Approach 写"怎么做"
 ## What Changes
 - Add CSV export button
 - Export filtered order data
@@ -913,11 +865,11 @@ Use streaming CSV generation with Papa Parse library.
 
 | 场景 | 是否重新生成 | 推荐做法 |
 |------|-------------|---------|
-| 微调措辞 | ❌ 不需要 | 手动编辑 |
-| 补充背景信息 | ❌ 不需要 | 手动编辑或 AI 辅助 |
-| 调整 Out of Scope | ❌ 不需要 | 手动编辑 |
-| 需求完全变了 | ✅ 需要 | 删除后让 AI 重新生成 |
-| 格式完全乱了 | ✅ 需要 | 删除后让 AI 重新生成 |
+| 微调措辞 | 不需要 | 手动编辑 |
+| 补充背景信息 | 不需要 | 手动编辑或 AI 辅助 |
+| 调整 Out of Scope | 不需要 | 手动编辑 |
+| 需求完全变了 | 需要 | 删除后让 AI 重新生成 |
+| 格式完全乱了 | 需要 | 删除后让 AI 重新生成 |
 
 **重新生成的步骤（Custom Profile）**：
 ```bash
@@ -972,6 +924,8 @@ openspec status --change <change-name> --json
 
 ---
 
-## 下一步怎么读
+## 下一步
 
-如果你已经理解 artifacts 可以怎样安全修改，接下来可以读 `13`，看复杂系统从零开始时如何用多个 spec 和 design 决策建立第一版基线。
+- artifacts 会安全改了，想看复杂系统从零开始怎么用多个 spec + design 建第一版基线 → [13 实战·从零设计较复杂系统](13-实战-从零开始设计一个较复杂系统.md)
+- 想看一个 change 从头到尾走完整条主线 → [11 实战·从真实 change 走完整条主线](11-实战-从一个真实-change-走完整条主线.md)
+- 多人改同一份 spec / Git 协作时怎么不踩坑 → [15 实战·多人协作与 Git 工作流](15-实战-多人协作与Git工作流.md)

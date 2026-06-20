@@ -1,6 +1,23 @@
 # 09 · 能力身份与 specs 漂移维护
 
-> 适用 openspec ≥ 1.4 · 高级篇。这一章回答两个长期被轻描淡写的问题：**specs 到底按什么组织、靠什么定位？** 以及 **用久了 main specs 为什么会和代码对不上、怎么守？** 两者其实是同一件事。
+> 适用 openspec ≥ 1.4 · 高级篇。这一章按三层递进回答一个问题：**specs 凭什么值得你维护、漂移会怎样反噬后续工作？** → **specs 到底按什么组织、靠什么定位？** → **用久了为什么和代码对不上、怎么守？** 三者其实是同一件事。
+
+## 先回答：为什么这事值得你操心
+
+很多人把 specs 当"写一次、归档了就完"的产物，觉得维护是可有可无的额外负担。**这是个误解，而且代价不小。** `openspec/specs/` 是整套 spec-driven 机制的**事实层契约**——人和团队靠它理解"项目现在是什么"，coding agent 更是直接把它当成**现状的地面**来读。它一旦和代码对不上，后果不是"文档有点旧"这种无害小事，而是地基松动：后面所有基于它的工作，都会从错误的前提出发。
+
+漂移一旦发生，对后续工作的影响是**具体、且越拖越被动**的：
+
+| 漂在哪 | 后面会发生什么 |
+|---|---|
+| spec 说"有"、代码早没了（冻结）| agent 拿过时前提去 propose / apply → 产出错误或要返工的代码；写出去的 delta 一 archive 还可能 `not found`、整批回滚 |
+| 代码新上了、spec 没记（漏报）| agent 在 specs 里找不到这块能力的契约 → 只能瞎猜或被迫读源码，行为不可预测、质量打折 |
+| 标题或目录名被改、没走 RENAMED | 历史 delta 和当前 spec 全对不上 → 下一次正常的 archive 直接 `not found`、**整次归档原子中止**，工作卡在半路（本 repo 的 `simplify-skill-installation` 就是 16 条目标全 `not found`，连本该成功的部分也一并没落地）|
+| 废弃的 change 还挂在 active | agent 以为有一堆"进行中方向"，被假信号带偏，优先级和判断全乱 |
+
+更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，归档回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**（`validate` 只查文件结构，从不打开主 spec 去比对）。
+
+所以维护 specs 不是文档洁癖，而是**保住这套机制本身能成立的地基**。带着这个 stakes 往下读，"specs 按什么组织、为什么会漂"就不再是冷知识——它直接告诉你地基为什么这么脆、你又该怎么守。
 
 ## 先看清：spec-driven 是背后的 driver
 
@@ -20,6 +37,17 @@
 **为什么这点重要**：你写进 `openspec/` 的任何东西，都得合这个 schema 的契约——CLI 和 agent 是照着它解析的。**偏离契约（4 个 `#` 写成 3 个、capability 名拼错、缺 SHALL/MUST），工具要么静默忽略、要么 parse 失败，agent 就在残缺/错误的前提上推理 → 幻觉和困惑行为。**
 
 下面要讲的"能力身份"，就是这个契约里最核心、又最容易被忽略的一条。
+
+**能力契约在 schema.yaml 中的样子**——proposal 宣布的每个 capability，specs 阶段必须产出同名 `specs/<capability>/spec.md`（简化自 `schemas/spec-driven/schema.yaml`）：
+
+```yaml
+# schemas/spec-driven/schema.yaml（节选）
+artifacts:
+  - id: specs
+    requires: [proposal]
+    # ↑ proposal Capabilities 节列出的每个名字 → specs/<name>/spec.md
+    # 目录名即身份——同名才命中，改名即失配
+```
 
 ## capability 的身份 = 它的目录名
 
@@ -52,6 +80,18 @@ OpenSpec 的身份模型是**「以名字为身份」（name-as-identity），�
 | **capability** | **目录名**（`specs/<capability>/`，kebab-case） | 改目录名 / 目录没了 | **没有** |
 | **requirement** | **标题文本**（`### Requirement: <Name>`） | 改标题 / 大小写 | 有（`## RENAMED Requirements`，FROM/TO） |
 
+```mermaid
+graph TD
+    subgraph capability["capability 层"]
+    C[身份 = 目录名<br/>specs/&lt;capability&gt;/] --> C1[怕：改目录名 / 目录没了]
+    C1 --> C2["rename：没有操作<br/>（改名=裸搬目录）"]
+    end
+    subgraph requirement["requirement 层"]
+    R[身份 = 标题文本<br/>### Requirement: &lt;Name&gt;] --> R1[怕：改标题 / 大小写]
+    R1 --> R2["rename：RENAMED<br/>FROM/TO ✓"]
+    end
+```
+
 两个推论，直接关系到 specs 会不会漂：
 
 1. **都怕改名，且没有 ID 兜底。** 传统系统里改个名字，ID 不变，引用不断链。OpenSpec **没有 ID**——名字一改，所有指向旧名字的引用全部失配，而且**没有任何工具告诉你断了**。
@@ -81,11 +121,18 @@ OpenSpec 的身份模型是**「以名字为身份」（name-as-identity），�
 - **偶尔巡检**：`openspec list` / `openspec validate --all` 能抓结构坏死（僵尸 change）；但**别把"validate 干净"当成"specs 对齐"**——它查不出 capability/requirement 的名字失配和 specs↔代码漂移。
 - **别手改主 spec 文件**。要改就写 change（delta）再 archive；手改没有任何工具追踪，下次 delta 一撞就 `not found`。
 
-## 手册内继续读
+## 压缩结论
+
+1. specs 是事实层契约，不是归档文档——漂移即地基松动。
+2. capability 身份 = 目录名，没有 ID 兜底，改名是裸操作——当稳定性契约对待。
+3. requirement 身份 = 标题文本，改名有 RENAMED 手续——走正规手续，别"删旧加新"。
+4. 漂移会复利，且无工具自动对账（validate 只查结构）。
+
+## 下一步
 
 - [`02-中级-把核心概念真正串起来`](02-中级-把核心概念真正串起来.md)——`specs/`、`changes/`、delta、archive 合并的基础（本章的根）。
 - [`04-高级-config-schema-与项目边界`](04-高级-config-schema-与项目边界.md)——schema 是什么、怎么选；本章的 `spec-driven` 就是默认那套。
 - [`12-实战-如何正确修改-artifacts`](12-实战-如何正确修改-artifacts.md)——动手改 artifact 时怎么不踩格式契约的坑（4 个 `#`、exact 名字等）。
-- [`07-高级-workspace-跨仓库规划-v1.4.0`](07-高级-workspace-跨仓库规划-v1.4.0.md)——多仓库时 capability / area 目录怎么组织。
+- [`07-高级-workspace-跨仓库规划`](07-高级-workspace-跨仓库规划.md)——多仓库时 capability / area 目录怎么组织。
 
-> 想看**源码级深挖**（schema 字段逐项、合并算法、六类噪声/修法的完整机理）：仓库里另有 `_digested/` 专题——那是给挖源码的人准备的，不是本手册的一部分。
+> 想看源码级深挖——schema 字段逐项、合并算法、六类噪声的完整机理——仓库里 `_digested/specs_truth/` 专题接住；本章只给你判断锚点和最低守住动作。

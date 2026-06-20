@@ -321,22 +321,9 @@ schema 管的是：
 
 ---
 
-## 下一步该看什么
-
-如果你关心的是：
-
-- 长期项目规则到底该放在哪
-- 哪些信息该进 `config.yaml`
-- 哪些信息该进 `specs/` 或 change artifacts
-- 什么时候应该改 schema，而不是继续堆 rules
-
-下一篇看 `05`，它专门讲项目级全局约束到底该放在哪。
-
----
-
 ## v1.4.0 补充：第四层 — workspace 层
 
-本文讨论的三层结构（project、user、package）是 repo-local 视角。v1.4.0 引入了第四个作用域：
+v1.4.0 在项目内三层（项目级 config、单 repo specs、单次 change）之上，引入了第四个作用域：
 
 ```mermaid
 graph TB
@@ -349,6 +336,9 @@ graph TB
     B["openspec/config.yaml"]
     C["openspec/schemas/"]
     end
+    W --> WC
+    WC -.关联.-> A
+    WC -.关联.-> B
 ```
 
 **Workspace 层改变了边界讨论**：
@@ -356,6 +346,19 @@ graph TB
 - Workspace change 使用 `workspace-planning` schema（不是 `spec-driven`）
 - Workspace 没有主 `specs/` 基线（spec 在各 linked repo 中）
 - Workspace 的配置（profile/delivery/tools）来自 global config，不走 repo-local `config.yaml`
-- `PlanningHome` 抽象在运行时判断当前属于 workspace 还是 repo
+- OpenSpec 运行时自动判断当前上下文属于 workspace 还是单 repo，无需手动切换
 
-这意味着「项目级全局约束放哪」这个问题现在有四种可能的答案：**workspace 层、project 层、user 层、package 层**。具体怎么选，取决于你的团队结构和仓库数量；跨仓库场景可以回到 `07` workspace 篇统一看。
+这意味着「项目级全局约束放哪」这个问题现在多了一个答案：如果团队管理多个关联仓库，跨仓库的全局原则更适合放在 workspace 层。单仓库场景则继续用 project 层（`config.yaml` + `specs/`）。具体怎么选，取决于你的团队结构和仓库数量；跨仓库场景参考 `07` workspace 篇统一看。
+
+---
+
+## 下一步
+
+如果你关心的是：
+
+- 长期项目规则到底该放在哪
+- 哪些信息该进 `config.yaml`
+- 哪些信息该进 `specs/` 或 change artifacts
+- 什么时候应该改 schema，而不是继续堆 rules
+
+下一篇看 `05`，它专门讲项目级全局约束到底该放在哪。

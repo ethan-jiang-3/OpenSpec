@@ -1,6 +1,6 @@
 # 15 · 实战：多人协作与 Git 工作流
 
-> 这一篇专门讲多人团队使用 OpenSpec + Git 时的最佳实践和协作流程。
+> 多人用 OpenSpec + Git 时，**绝大多数冲突都来自一件事：有人忘了"一个 change = 一个分支、PR 合并后立即 archive"这条纪律。** 这一篇把这条纪律拆成 4 个场景（独立功能 / 有依赖 / 改同一个 spec / 紧急 bugfix），告诉你每一步敲哪条命令、archive 顺序错会怎样、怎么用 PR 串行化避免基线不一致。
 
 ---
 
@@ -361,35 +361,7 @@ gitGraph
 
 ### 策略 2：Stacked Changes（高级）
 
-适合大功能拆分成多个小 change：
-
-```mermaid
-gitGraph
-    commit id: "initial"
-    branch feature/auth-foundation
-    checkout feature/auth-foundation
-    commit id: "propose foundation"
-    commit id: "implement foundation"
-    checkout main
-    merge feature/auth-foundation tag: "PR merged"
-    commit id: "archive foundation"
-    
-    branch feature/auth-permissions
-    checkout feature/auth-permissions
-    commit id: "propose permissions"
-    commit id: "implement permissions"
-    checkout main
-    merge feature/auth-permissions tag: "PR merged"
-    commit id: "archive permissions"
-    
-    branch feature/auth-audit
-    checkout feature/auth-audit
-    commit id: "propose audit"
-    commit id: "implement audit"
-    checkout main
-    merge feature/auth-audit tag: "PR merged"
-    commit id: "archive audit"
-```
+适合大功能拆分成多个小 change（工作流如下；不再用 gitGraph 图）：
 
 **工作流**：
 1. 先做 auth-foundation，PR 合并后 archive
@@ -538,36 +510,15 @@ git stash pop  # 恢复之前的工作
 
 ## 团队协作最佳实践
 
-### 可视化：团队协作的 Do's and Don'ts
+### Do's and Don'ts 速查表
 
-```mermaid
-graph LR
-    subgraph "✅ 推荐做法"
-    A1[一个 change<br/>一个分支] --> B1[PR 合并后<br/>立即 archive]
-    B1 --> C1[每天开始前<br/>git pull]
-    C1 --> D1[在 proposal 里<br/>声明依赖]
-    D1 --> E1[团队沟通<br/>谁改哪个 spec]
-    end
-    
-    subgraph "❌ 避免做法"
-    A2[多个 change<br/>共用一个分支] --> B2[PR 合并后<br/>忘记 archive]
-    B2 --> C2[从不 pull<br/>基于旧代码]
-    C2 --> D2[依赖关系<br/>不写清楚]
-    D2 --> E2[不沟通<br/>盲目并行]
-    end
-    
-    style A1 fill:#ccffcc,stroke:#00ff00
-    style B1 fill:#ccffcc,stroke:#00ff00
-    style C1 fill:#ccffcc,stroke:#00ff00
-    style D1 fill:#ccffcc,stroke:#00ff00
-    style E1 fill:#ccffcc,stroke:#00ff00
-    
-    style A2 fill:#ffcccc,stroke:#ff0000
-    style B2 fill:#ffcccc,stroke:#ff0000
-    style C2 fill:#ffcccc,stroke:#ff0000
-    style D2 fill:#ffcccc,stroke:#ff0000
-    style E2 fill:#ffcccc,stroke:#ff0000
-```
+| 推荐做法 | 避免做法 |
+|---|---|
+| 一个 change 一个分支 | 多个 change 共用一个分支 |
+| PR 合并后立即 archive | PR 合并后忘记 archive |
+| 每天开始前 git pull | 从不 pull，基于旧代码 |
+| 在 proposal 里声明依赖 | 依赖关系不写清楚 |
+| 团队沟通谁改哪个 spec | 不沟通，盲目并行 |
 
 ### 1. 建立 change 命名规范
 
@@ -673,30 +624,6 @@ Blocking rule:
 
 ### 可视化：团队协作时间线
 
-```mermaid
-gantt
-    title 3人团队协作时间线
-    dateFormat YYYY-MM-DD
-    section Alice
-    订单列表功能    :a1, 2024-01-01, 5d
-    archive        :milestone, a2, 2024-01-06, 0d
-    订单导出功能    :a3, 2024-01-08, 5d
-    archive        :milestone, a4, 2024-01-13, 0d
-    
-    section Bob
-    支付流程       :b1, 2024-01-01, 5d
-    archive        :milestone, b2, 2024-01-06, 0d
-    等待 Alice     :crit, b3, 2024-01-06, 2d
-    退款功能       :b4, 2024-01-08, 5d
-    archive        :milestone, b5, 2024-01-13, 0d
-    
-    section Carol
-    邮件通知       :c1, 2024-01-01, 5d
-    archive        :milestone, c2, 2024-01-06, 0d
-    短信通知       :c3, 2024-01-08, 5d
-    archive        :milestone, c4, 2024-01-13, 0d
-```
-
 **第 1 周**：
 
 ```
@@ -738,34 +665,9 @@ Bob 需要等 Alice 的 change archive 后再开始。
 
 ---
 
-## 总结：多人协作的黄金法则
+## 压缩结论
 
-```mermaid
-mindmap
-  root((多人协作<br/>黄金法则))
-    分支管理
-      一个 change = 一个分支
-      从 main 创建分支
-      PR 合并后删除分支
-    Archive 纪律
-      PR 合并后立即 archive
-      每天结束前检查
-      archive 前先 git pull
-    冲突预防
-      避免并行修改同一 spec
-      在 proposal 里声明依赖
-      团队沟通谁改哪个 spec
-    Code Review
-      同时 review 代码和 specs
-      检查 delta spec 准确性
-      确保依赖关系清晰
-    工具使用
-      使用 PR template
-      建立命名规范
-      用看板维护依赖顺序
-```
-
-### 文字版黄金法则
+### 快速记忆
 
 1. **一个 change = 一个 Git 分支**
 2. **PR 合并后立即 archive**
@@ -779,18 +681,7 @@ mindmap
 
 ---
 
-## 下一步
-
-如果你想深入了解：
-- **Git 冲突解决**：参考 Git 官方文档
-- **Change 依赖管理**：在 proposal、PR 和看板里维护显式依赖
-- **团队规范**：根据团队情况定制 PR template 和命名规范
-
-如果遇到具体问题，回到 `99` FAQ 查常见问法。
-
----
-
-## v1.4.0 补充：Workspace 协作
+## 跨仓库协作（workspace 场景）
 
 本文讨论的协作模式是基于「单个仓库内多个 change」的场景。v1.4.0 引入了跨仓库 workspace，协作模式在此基础上增加了一个层级：
 
@@ -810,4 +701,12 @@ Workspace 层的协作原则与 repo 层类似但有区别：
 - **Workspace 不 archive** — 实现完成后，各 repo 各自 archive 自己的 change
 - **context store 提供团队共享的 initiative 文件**（requirements、design、decisions），作为 workspace 规划的输入
 
-详细机制可以回到 `07` workspace 篇统一看。
+详细机制见 [07 高级·workspace 跨仓库规划](07-高级-workspace-跨仓库规划.md)。
+
+---
+
+## 下一步
+
+- 多仓库协作的完整机制 → [07 高级·workspace 跨仓库规划](07-高级-workspace-跨仓库规划.md)
+- 部署验证、CI 怎么纳入 change 闭环 → [14 实战·用 openspec 管理 devops](14-实战-用-openspec-管理-devops-部署与验证.md)
+- 遇到具体疑问 → [99 FAQ](99-FAQ-常见问题.md)

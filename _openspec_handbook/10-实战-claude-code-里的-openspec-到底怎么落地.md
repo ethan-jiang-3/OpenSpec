@@ -122,48 +122,7 @@ openspec update
 
 刷新 Claude Code 入口层。
 
-### 小结：Claude Code 怎么临时换模型
-
-这件事和 OpenSpec 本身没有直接关系。OpenSpec 只负责 `openspec/` 状态和 `.claude/` 入口投递；Claude Code 用哪个模型，是 Claude Code 启动环境的问题。
-
-要临时切到另一个兼容 Claude Code 的模型服务，通常需要准备这些东西：
-
-```text
-claude 命令可用
-目标 provider 的 API endpoint
-目标 provider 的 API key
-Claude Code 能识别的模型映射
-一套会话级环境变量或 settings 注入方式
-退出后恢复原配置的办法
-```
-
-这里最关键的不是某个具体 provider，而是两个原则：
-
-1. **模型切换在 Claude Code 层完成**：OpenSpec 的 `status`、`instructions`、schema、artifacts 都不需要变。
-2. **临时接管要可恢复**：启动前备份 settings，退出时恢复，避免把某次模型实验污染成项目长期配置。
-
-执行上可以理解成这条链：
-
-```text
-确认 Claude Code 当前支持的模型配置入口
-  -> 设置新的 endpoint、token 和模型名
-  -> 让 Claude Code 启动时读到会话级 env 或 settings
-  -> 启动 claude
-  -> 会话结束后恢复原 settings/env
-```
-
-如果要把 Claude Code 临时切到 DeepSeek、OpenRouter 或其他兼容 Anthropic 接口的服务，通常要关心的是这几类配置面，而不是某个固定脚本：
-
-```text
-provider base URL / API endpoint
-API key 或 token
-默认模型名
-不同模型档位的映射（如果 provider 需要）
-会话级 env 或 Claude Code settings
-恢复原配置的备份方案
-```
-
-具体变量名要以你当前 Claude Code 版本和 provider 文档为准。不要把 API key 写进 handbook、仓库，或任何会被提交、同步、共享的文件。更稳妥的做法是从环境变量读取 key，让你自己的启动方式只负责会话级切换和恢复。
+> **模型切换是 Claude Code 层的事，不影响 OpenSpec。** OpenSpec 的 `status`、`instructions`、schema、artifacts 都不因换模型而变。需要切模型时，在 Claude Code 的 settings 或启动环境里配置 endpoint/key/model，结束后恢复原配置即可——不要把 API key 写进项目文件。
 
 ---
 
@@ -304,7 +263,7 @@ Claude Code 里的 OpenSpec 命令入口
 
 ---
 
-## 下一步更适合看什么
+## 下一步
 
 如果你现在已经分清了：
 
@@ -312,11 +271,11 @@ Claude Code 里的 OpenSpec 命令入口
 - `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
 - Claude Code 只是宿主，不是 OpenSpec 本体
 
-如果你还没有读过高级主线，可以回看 `03` 和 `04`，把方法论和边界补厚。
+如果你还没有读过高级主线，可以回看 [`03`](03-高级-openspec-的软件开发生命周期思想.md) 和 [`04`](04-高级-config-schema-与项目边界.md)，把方法论和边界补厚。
 
 如果你已经在实战区继续往后读，下一篇更适合看一个完整 change 怎样从 propose 走到 archive：
 
-接着读 `11` 即可。
+接着读 [`11`](11-实战-从一个真实-change-走完整条主线.md) 即可。
 
 ---
 
@@ -328,4 +287,4 @@ Claude Code 里的 OpenSpec 命令入口
 - `instructions --json` 里有什么
 - skill、command、workflow 三者如何对应
 
-这时再去看 `90` 附录。
+这时再去看 [`90` 附录](90-附录-给机器看的-agent-协议.md)。

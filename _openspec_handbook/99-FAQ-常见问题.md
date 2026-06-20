@@ -33,6 +33,7 @@
 - `/opsx:propose`：在 Claude Code、Cursor、Codex 等宿主工具里用，agent 会按 workflow 自动跑多步 CLI
 - CLI 里没有 `openspec propose` 这个等价命令
 - 对应的底层步骤通常是 `openspec new change <name>`，再用 `openspec status --json` 和 `openspec instructions <artifact> --json` 生成 artifacts
+- 机器协议层面（status/instructions 返回什么、agent 怎么跑多步），详见 [90 附录·给机器看的 agent 协议](90-附录-给机器看的-agent-协议.md)
 
 ### Q6: 我必须按 propose → apply → archive 的顺序吗？
 **A**: 不是必须的。这是推荐顺序，但你可以：
@@ -128,10 +129,14 @@
 - **config.yaml**：项目级背景和规则（技术栈、测试约定）
 - **schema**：change 的结构骨架（有哪些 artifact、依赖关系）
 
+两者各自该装什么、边界在哪，详见 [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)。
+
 ### Q19: profile 和 schema 有什么区别？
 **A**:
 - **profile**：你能用哪些命令（core/custom）
 - **schema**：每个 change 长什么样（默认是 spec-driven）
+
+profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)。
 
 ### Q20: `.openspec.yaml` 是什么？
 **A**: change 目录里的配置文件，记录这次 change 用哪套 schema。大多数情况下自动生成，不需要手动改。
@@ -153,12 +158,16 @@
 3. 创建一个新 change，用 REMOVED/MODIFIED 反向操作
 4. archive 新 change
 
+（一个 change 的完整正向生命周期见 [11 实战·从真实 change 走完整条主线](11-实战-从一个真实-change-走完整条主线.md)；回滚本质是用 delta 反向操作。）
+
 ### Q23: 怎么处理 breaking change？
 **A**: 
 1. 在 proposal 里明确标注"Breaking Change"
 2. 在 specs 里说明影响范围
 3. 在 design 里说明迁移方案
 4. 考虑分阶段发布（先废弃，再删除）
+
+（proposal/specs/design 这些 artifact 具体怎么改，见 [12 实战·如何正确修改 artifacts](12-实战-如何正确修改-artifacts.md)。）
 
 ### Q24: specs/ 的目录结构怎么组织？
 **A**: 推荐按能力域组织：
@@ -172,7 +181,7 @@ specs/
 
 不推荐按技术层（models/services/controllers）。
 
-**关键**：每个 capability 的**目录名就是它的身份**——proposal 列的 capability、delta 要打的目标、archive 的合并，全靠这个目录名寻址（同名才命中）。所以**别随便改目录名**：requirement 改名还有 `RENAMED` 操作，capability 改名没有任何操作，改了会让指向旧名的 delta 全悬空。详见 [`09-高级-能力身份与specs漂移维护`](09-高级-能力身份与specs漂移维护.md)。
+**关键**：每个 capability 的**目录名就是它的身份**——proposal 列的 capability、delta 要打的目标、archive 的合并，全靠这个目录名寻址（同名才命中）。所以**别随便改目录名**：requirement 改名还有 `RENAMED` 操作，capability 改名没有任何操作，改了会让指向旧名的 delta 全悬空。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
 
 ### Q25: 一个功能涉及多个域怎么办？
 **A**: 
@@ -246,6 +255,8 @@ specs/
 - **workspace**：本地规划视图，可以绑定到一个 initiative
 - 关系：context store → initiative → workspace → linked repos
 
+三层机制的完整说明，详见 [07 高级·workspace 跨仓库规划](07-高级-workspace-跨仓库规划.md)。
+
 ### Q36: 怎么开始使用 workspace？
 **A**: 
 1. `openspec context-store setup team-context --path /path/to/store`（可选，团队共享）
@@ -256,9 +267,9 @@ specs/
 ## 下一步
 
 如果这个 FAQ 没有回答你的问题：
-1. 回看对应的主题文档（01-07 或 10-15）
-2. 在 GitHub 提 issue
-3. 查看 OpenSpec 官方文档
+1. 概念类问题 → 回看对应的主题文档（用 [00-index 文件地图](00-index.md#文件地图) 定位）
+2. 实战类问题 → 从 [11](11-实战-从一个真实-change-走完整条主线.md)（brownfield 主线）或 [13](13-实战-从零开始设计一个较复杂系统.md)（greenfield）找相近场景
+3. 在 GitHub 提 issue 或查看 OpenSpec 官方文档
 
 ---
 

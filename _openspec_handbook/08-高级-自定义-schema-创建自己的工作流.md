@@ -172,7 +172,7 @@ openspec schema init my-workflow
 
 直接创建目录结构：
 
-```
+```text
 openspec/schemas/<name>/
   schema.yaml
   templates/

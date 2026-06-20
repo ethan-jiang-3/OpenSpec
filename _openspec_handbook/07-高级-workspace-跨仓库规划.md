@@ -1,15 +1,14 @@
 # 07 · 高级：Workspace 跨仓库规划（v1.4.0）
 
-> 这章是 v1.4.0 最大的架构变化。OpenSpec 从「单仓库 spec-driven」扩展到「多仓库 workspace 协调」。
-> 如果你目前只维护单个仓库，这章可以跳过。但如果你想理解 OpenSpec 的未来方向，这是必读。
+> **Workspace 是 OpenSpec 唯一的「跨仓库规划层」：它只管 What/Why，把 How 留给各 repo 已有的 spec-driven 流程。** 本章对应 v1.4.0 引入、v1.4.1 修补的 workspace 机制；如果你只维护单仓库，可跳过，但想理解 OpenSpec 的演进方向，这是必读。
 
 ---
 
 ## 一、为什么需要 workspace
 
-在 v1.3.0 之前，OpenSpec 的所有操作都是 repo-local 的：
+当你的产品需求同时砸在 API、Web、Mobile 三个 repo 上时，每个 repo 各自的 spec-driven 流程就接不住了——你需要一个跨 repo 的规划层。在 v1.3.0 之前，OpenSpec 的所有操作都是 repo-local 的：
 
-```
+```text
 my-project/
   openspec/
     specs/        ← 这个 repo 的正式规范
@@ -40,7 +39,7 @@ my-project/
 
 一个典型的 workspace 目录长这样：
 
-```
+```text
 ~/workspaces/platform/          ← workspace 根目录（v1.4.0）
   .openspec-workspace/
     view.yaml                   ← 视图状态（名称、links、opener、tools、profile drift）
@@ -73,7 +72,7 @@ context:
 
 ## 四、workspace 的数据流
 
-```
+```text
 团队共享层
   Context Store（/shared/team-context/）
     └── initiatives/oauth2-migration/
@@ -241,12 +240,10 @@ Workspace 生成的 skill 模板中内置了 guardrail：
 | 3+ 仓库且频繁跨仓库协调 | workspace 是推荐的协调层 |
 | 团队需要在统一视图下看到跨仓库的变更全景 | workspace + context store 组合 |
 
-## 十、总结
+## 下一步
 
-Workspace 把 OpenSpec 的定位从「单仓库 spec 管理」扩展到了「系统级变更规划」。它不是要替代任何已有的东西，而是在 repo-local OpenSpec 之上加了一层：
-
-- **下面**：每个 repo 内的 OpenSpec 继续管理 spec、change、archive
-- **上面**：workspace 提供跨仓库协调的规划视图
-- **中间**：`PlanningHome` 抽象自动判断当前属于哪一层，选择正确的 schema
+- 想知道 workspace 的配置层和 repo-local config.yaml 怎么共存 → [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)
+- 想自定义 workspace 工作流 → [08 高级·自定义 schema](08-高级-自定义-schema-创建自己的工作流.md)
+- 多人 + 多 repo 时 workspace 协作怎么落地 → [15 实战·多人协作与 Git 工作流](15-实战-多人协作与Git工作流.md)
 
 这就是 v1.4.0 给 OpenSpec 带来的最大变化。
