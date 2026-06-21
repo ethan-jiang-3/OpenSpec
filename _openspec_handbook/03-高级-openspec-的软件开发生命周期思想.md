@@ -17,17 +17,50 @@ OpenSpec 的 5 条设计哲学（详见 [`00-index`](00-index.md#openspec-核心
 
 ## 传统 SDLC vs OpenSpec：核心差异
 
+在理解 OpenSpec 之前，先花一点时间看 SDLC 是怎么一步步走到今天的——知道"为什么会有敏捷"，才真正理解"为什么 OpenSpec 长这样"。
+
+### SDLC 简史：从瀑布到敏捷
+
+```text
+1970s 瀑布式          1980s V 模式           2001 敏捷
+───────              ────────              ────────
+需求→设计→开发→测试    需求拆解→逐层验证       短迭代 sprint
+   ↓                     ↓                    ↓
+过了就不能回头          每一步有对应测试       持续反馈、拥抱变化
+   ↓                     ↓                    ↓
+问题：阶段锁            问题：阶段锁没破        突破：不靠一次完美蓝图
+                           靠短反馈环反复精炼
+```
+
+**瀑布式**（1970s）是最早的正规 SDLC：需求→设计→开发→测试，线性排开，适合需求在项目一开始就完全确定的场景（航天、军用软件）。根本问题在于**阶段锁**——一个阶段结束你就不能再回头。需求写到一半才发现没想清，只能憋着；设计定了又被代码现实打脸，只能凑合。
+
+**V 模式**（1980s）在瀑布上加了左右对称的验证——左侧需求逐层拆解、右侧测试逐层对照，"每一步都有对应的验证"——但它还是线性的，**阶段锁没破**。
+
+**敏捷**（2001 Agile Manifesto）是根本性转折。它不只是在瀑布上打补丁，而是换了套世界观：**不靠一次性完美的蓝图，而靠短反馈环在有限上下文里反复精炼**。这个思想比软件老得多——它从丰田精益（1950s Kanban、小批量、即时反馈）吸过来的，敏捷把它在软件开发语境里表达成了 4 个价值观和 12 条原则。后来敏捷被广泛应用于金融、教育、制造、法律——证明了它是一套**通用方法学**，不只属于代码。
+
+### OpenSpec 就是敏捷在 AI 辅助时代的落地
+
+Agile 的 sprint 循环（plan → build → review → retro），在 AI 辅助的语境下被 OpenSpec 落成了四个动词：
+
+```text
+  敏捷 sprint                  OpenSpec
+  ───────────                  ────────
+  plan（规划）           →     propose（形成 change）
+  build（构建）          →     apply（实施）
+  review + retro（审视）  →     explore（反复打磨、探现状）
+                                 archive（沉淀回基线）
+```
+
+把 `explore` 和 `propose` 拆开是 OpenSpec 在 AI 时代做的关键区分——在敏捷里，review 和 retro 主要靠人来做；在 OpenSpec 里，explore 可以把 AI agent 也放进反馈环，让它在 change 的有限上下文里反复核对自洽性、查矛盾、补漏的 scenario。**Agile 说"拥抱变化"；OpenSpec 说"把变化框进一个 change，用 explore 在围栏里反复打磨到自洽"**——同一套思想，只是 OpenSpec 多了 spec 做上下文锚点、多了 AI agent 做信息加工。
+
+区别也在这里：敏捷里"文档"是次要的、可选的（"working software over comprehensive documentation"）；OpenSpec 里 spec 是一等公民——因为 **AI agent 需要它做有限受控上下文**。没有 spec，AI 就是 Vibe Coding（随口说说→自由发挥→不知不觉失控）；有了 spec，AI 在围栏里探、改、验，每一步都在受控范围里。
+
 ```mermaid
-graph LR
-    subgraph 传统瀑布式
-    A1[需求阶段] -->|锁定| A2[设计阶段]
-    A2 -->|锁定| A3[开发阶段]
-    A3 -->|锁定| A4[测试阶段]
-    A4 --> A5[结束]
-    end
-    
+graph TB    
     subgraph OpenSpec 方式
+    E[explore 探现状] -.可反复穿插.-> B1
     B1[形成 change] --> B2[写 artifacts]
+    B2 -.反复 explore 打磨.-> B2
     B2 --> B3[开始实现]
     B3 -.回头修正.-> B2
     B3 --> B4[沉淀回基线]
@@ -35,13 +68,14 @@ graph LR
     end
 ```
 
-| 维度 | 传统 SDLC | OpenSpec |
-|------|----------|----------|
+| 维度 | 传统 SDLC（瀑布 / V 模式） | OpenSpec（敏捷思想的延续） |
+|------|--------------------------|--------------------------|
 | **阶段切换** | 单向门，过了就不能回头 | 随时可以回头修正 |
 | **完成定义** | 代码写完就算完成 | 代码 + spec 沉淀才算完成 |
 | **需求变更** | 视为失败或返工 | 视为开发的正常部分 |
 | **文档更新** | 要么不改，要么整份重写 | 增量修改（delta spec） |
 | **适用场景** | 需求明确的新项目 | 需求模糊的老项目增量开发 |
+| **底层哲学** | 一次性完美蓝图 | 短反馈环 × 有限上下文 × 反复精炼 |
 
 ---
 
@@ -53,7 +87,7 @@ OpenSpec 对软件开发生命周期的理解，可以压缩成 5 句话：
 2. 真正需要管理的不是抽象项目，而是**一次次可追踪的 change**
 3. 系统当前能力必须有一个**正式基线**
 4. 新工作应该先表达成**增量变化**，而不是重写整个世界
-5. AI 的价值不是替代思考，而是**加速把想法沉淀成可执行 artifact**
+5. AI 的价值不是替代思考，而是**帮你先把想法探清楚、打磨到自洽（`explore`），再沉淀成可执行 artifact**
 
 如果把这 5 句吃透，OpenSpec 大多数设计都会变得很顺。
 
@@ -123,23 +157,9 @@ OpenSpec 更像是把"change"放在中心。
 - "这次 change 的边界是什么？"
 - "这次 change 准备怎么落地？"
 
-### 例子 1：加深色模式
-
-这不是"重新定义 UI 系统"，而是：
-
-- 当前系统已经有 UI spec
-- 这次 change 准备新增一个"主题切换" capability
-- 于是你写的是这次 change 的 proposal、delta spec、design、tasks
-
-### 例子 2：修登录跳转 bug
-
-这也不是"重写认证系统"。
-
-更合理的表达是：
-
-- 当前认证与跳转行为已经在 `specs/` 里有基线
-- 这次 change 只改一个不符合预期的行为
-- change 完成后，把那块 delta merge 回正式 spec
+> 以建筑工程项目管理系统 BuildFlow 为例——当前系统已有项目、任务、材料模块。两种场景都是一个 `change`：
+> ① 产品经理想加"施工进度看板"——不是"重新定义项目管理"，而是在已有 UI spec 基础上新增一个 `dashboard` capability，写这次 change 的 proposal、delta spec、design、tasks 就行。
+> ② 现场反馈：任务标记"已完成"后没触发验收通知——这也不是"重写任务系统"，当前 tasks spec 已有基线，这次 change 只修一条不符预期的行为，改完把 delta merge 回正式 spec。
 
 这就是"以 change 为中心"的威力：
 
@@ -166,26 +186,13 @@ OpenSpec 里一个常被低估的设计，是 `openspec/specs/`。
 
 > **给整个开发过程提供一个当前 capability 坐标系。**
 
-### 例子 3：支付超时从 60 秒改成 30 秒
-
-如果没有正式基线，你只能说：
-
-- "我们现在想要 30 秒"
-
-但这句话不够。
-
-因为真正的change 语义是：
-
-- 当前正式行为是 60 秒
-- 这次 change 把它改成 30 秒
-
-正因如此，delta spec 里才需要出现：
-
-```markdown
-## MODIFIED Requirements
-```
-
-它的价值不在于形式，而在于承载了change 语义。
+> 以 BuildFlow 为例——当前 `specs/materials/spec.md` 规定材料审批 3 个工作日内完成。甲方要求工地进度加快，压缩到 1 个工作日。如果没有正式基线，你只能说"我们现在想要 1 天"。但真正的 change 语义是：当前正式行为是 3 天，这次 change 把它改成 1 天。正因如此，delta spec 里才需要出现：
+>
+> ```markdown
+> ## MODIFIED Requirements
+> ```
+>
+> 它的价值不在于形式，而在于承载了 change 语义。
 
 ---
 
@@ -218,17 +225,12 @@ OpenSpec 走第三条路：
 - 更适合多人并行
 - archive 后能自然沉淀回基线
 
-### 例子 4：导出功能新增 CSV 与 XLSX
-
-如果整份重写，你可能交出一大篇新的导出 spec。
-
-但用 OpenSpec 的思路，更好的写法是：
-
-- ADDED：支持 CSV 导出
-- ADDED：支持 XLSX 导出
-- MODIFIED：导出按钮的可见条件
-
-这样 reviewer 一眼就知道你改的到底是什么。
+> 以 BuildFlow 为例——要给"项目报告"模块新增导出能力。整份重写的话，要交一大篇新 export spec，审查者要逐行找你到底改了什么。用 delta spec 只要三笔：
+> - `ADDED`：支持导出施工日志（CSV）
+> - `ADDED`：支持导出建材清单（XLSX）
+> - `MODIFIED`：导出入口对项目经理和监理同时可见
+>
+> 这样 reviewer 一眼就知道你改的到底是什么。
 
 ---
 
@@ -252,23 +254,32 @@ OpenSpec 走第三条路：
 
 OpenSpec 的做法，本质上是在降低混乱。
 
-### 例子 5：给用户系统加 SSO 登录
+> 以 BuildFlow 为例——甲方要求外部监理能登录系统在线审批。如果不拆层，文档里很容易同时混着：为什么甲方要求监理接入、监理登录后应该看到什么、用 SAML 还是 OIDC、哪几个页面和接口要改。拆开以后：
+> - `proposal`：为什么现在接——甲方合同要求监理在线审批，第一版只覆盖材料验收环节
+> - `specs`：登录行为——新增监理角色、权限范围（只看自己负责的项目）、失败场景
+> - `design`：选 OIDC——甲方已有 Identity Provider，比 SAML 轻
+> - `tasks`：先接 IdP → 做角色映射 → 补监理界面 → 写验收测试
 
-如果不拆层，文档里很容易同时混着：
+### explore：change 出来后，反复打磨它的手段
 
-- 为什么公司要接入企业身份源
-- 用户登录后应该看到什么
-- 用 SAML 还是 OIDC
-- 哪几个页面、接口、环境变量要改
+到这里，OpenSpec 生命周期上的四个动词都该登场了：
 
-这些信息都重要，但它们不是同一层。
+```text
+explore  →  propose  →  apply  →  archive
+勘测         出方案      施工       验收归档
+```
 
-拆开以后会更顺：
+这是装修那条比方的精确版——四个动作各对应装修的一环，比初级篇的笼统直觉更清楚。但 `explore` 有一个其他三个没有的特性：**它可以反复穿插**。
 
-- `proposal`：为什么现在要做 SSO，范围到哪里
-- `specs`：登录行为、失败场景、绑定关系如何变化
-- `design`：选 OIDC 还是 SAML，为什么
-- `tasks`：先接 provider，再做 callback，再补测试
+动手前探一下现状，只是 `explore` 的用法之一；它更大的价值在 `change` 出来**之后**——`change` 一成形（propose 生成了初稿），你就可以**反复 explore 这个 change、打磨它**。原因很实在：
+
+- **初稿几乎一定有内部自洽性问题**。proposal 说"这次只改导出过滤"，可 delta spec 的 scenario 却写成"导出全部订单"——前后对不上。这种裂缝很常见，因为 LLM 生成有概率出幻觉，多个 artifact 一起生成时，接缝处最容易错。
+- **change 本身就是 explore 的围栏**。`change` 一旦成形，就约定了上下文（proposal + specs + design + tasks 这一圈）。你在这个有限空间里反复 explore，核对一致性、查矛盾、补漏的 scenario——比漫无边际地探整个 codebase 准得多。
+- 所以 `explore` 的真正价值，是在 change 出来**之后**才解锁的：**change 既是产物，也是 explore 的围栏**。
+
+复杂系统尤其吃这一套——多个 capability spec 一起生成，跨 spec 的字段、状态、角色接缝处最易出幻觉，靠的就是反复 explore 把它们对齐。
+
+> 一句话：`propose` 给你初稿，`explore` 让你把它打磨到自洽。两者常常交替——改一轮、探一轮，直到 proposal 经得起推敲，再进 `apply`。
 
 ---
 
@@ -303,9 +314,10 @@ gantt
     axisFormat %s
     section OpenSpec 方式
     写 proposal/specs/design/tasks :done, 0, 2
-    开始实现                        :active, 2, 5
-    发现问题，回头改 design          :crit, 3, 4
-    继续实现（基于修正后的 design）  :active, 4, 7
+    反复 explore 打磨 proposal      :crit, 2, 3
+    开始实现                        :active, 3, 6
+    发现问题，回头改 design          :crit, 4, 5
+    继续实现（基于修正后的 design）  :active, 5, 7
     archive 沉淀                    :7, 8
 ```
 
@@ -349,23 +361,7 @@ OpenSpec 的隐含标准更高一点：
 4. 有可回看的历史
 5. 有沉淀回基线的结果
 
-### 例子 6：一个"代码做了但没真正完成"的 change
-
-假设 AI 已经把"忘记密码"功能写出来了，但：
-
-- `tasks.md` 没更新
-- delta spec 没补全
-- archive 没做
-
-这时从 OpenSpec 的视角，它不是一个真正"完成"的 change。
-
-因为：
-
-- spec 基线还没更新
-- 历史变更没有结案
-- 团队以后看不清为什么这么做
-
-这就是它对"完成"更严格的定义。
+> 以 BuildFlow 为例——AI 已经把"施工安全巡检"功能写出来了：现场监理用手机提交巡检记录，系统自动生成整改单。代码能跑，但回头一看：`tasks.md` 没更新（checkbox 还空着），delta spec 没补全（`safety-inspection/spec.md` 没写巡检记录和整改单的关系），archive 更是没做。从 OpenSpec 视角，它不是一个真正"完成"的 change——spec 基线没更新，历史变更没结案，三个月后团队看不清"巡检功能到底承诺了什么"。这就是 OpenSpec 对"完成"更严格的定义：代码存在不算完成，change 被表达清楚、实现清楚、沉淀回基线才算。
 
 ---
 
@@ -379,43 +375,17 @@ OpenSpec 并不是把 AI 当作"自动写代码机器"。
 - 帮你整理 delta specs
 - 帮你列 design 和 tasks
 - 帮你按 tasks 实现
-- 帮你回头验证一致性
+- 帮你用 `explore` 反复验证一致性（见上文 explore 一节）
 
 也就是说，AI 被放进了一个**有 artifact、有边界、有状态**的工作流里。
 
 这和纯聊天式"你帮我做个功能"很不一样。
 
-### 例子 7：两种 AI 使用方式的差别
-
-### 方式 A：纯聊天
-
-```text
-"帮我给系统加一个批量导出功能。" 
-```
-
-常见后果：
-
-- 很快开始写代码
-- scope 模糊
-- 边界 case 容易漏
-- 做完后没人说得清到底承诺了什么
-
-### 方式 B：OpenSpec 式
-
-```text
-/opsx:propose add-bulk-export
-```
-
-先形成：
-
-- 为什么做
-- 改哪些行为
-- 技术方案怎么选
-- 任务怎么拆
-
-然后再进入实现。
-
-这不是为了官僚化，而是为了让 AI 更不容易跑飞。
+> **方式 A：纯聊天**——"帮我给 BuildFlow 加个批量导出施工日志的功能。"AI 很快开始写代码，但 scope 模糊（导出哪些字段？什么格式？谁有权限？），做完没人说得清到底承诺了什么。
+>
+> **方式 B：OpenSpec 式**—— `/opsx:propose add-bulk-diary-export`。先 explore 探现状（现有 diary 模块的 spec、导出权限在哪个 capability），再形成 change：为什么做（甲方要施工日志交审）、改哪些行为（支持按项目/日期范围过滤导出 CSV）、技术方案怎么选（异步导出还是同步）、任务怎么拆。然后 apply → archive。
+>
+> 方式 B 不是为了官僚化，而是让 AI 在有限受控上下文里干活——不容易跑飞。
 
 ---
 
@@ -464,6 +434,7 @@ OpenSpec 不是万能方案，它偏向的是"让增量开发可解释、可沉�
 | "delta spec 只是格式要求" | 它是增量思维的体现，适合老项目和并行开发 | 它是核心设计理念 |
 | "archive 只是归档，不重要" | archive 是把变更沉淀回基线，是闭环的关键 | 没有 archive 就没有正式基线更新 |
 | "OpenSpec 只适合大项目" | 个人项目也能用，profile 机制支持不同复杂度 | 从个人到企业都适用 |
+| "explore 只是动手前探一下" | change 出来后可反复 explore 打磨 proposal；change 本身就是 explore 的围栏 | 它是贯穿始终的打磨手段 |
 
 ---
 

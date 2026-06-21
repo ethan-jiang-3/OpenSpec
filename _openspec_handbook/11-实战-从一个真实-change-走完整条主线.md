@@ -43,7 +43,7 @@
 
 这里不用特别大的系统，就用一个非常典型、但又足够真实的例子：
 
-> **给一个已有 Web 应用新增"导出订单 CSV"能力。**
+> **给一个已有 Web 应用新增"导出施工任务 CSV"能力。**
 
 为什么选这个例子？
 
@@ -61,7 +61,7 @@
 假设项目目录是这样：
 
 ```text
-order-hub/
+buildflow/
 ├── src/
 │   ├── orders/
 │   ├── auth/
@@ -77,14 +77,14 @@ order-hub/
     └── config.yaml
 ```
 
-而当前 `openspec/specs/orders/spec.md` 里，已经存在一些正式 spec，比如：
+而当前 `openspec/specs/tasks/spec.md` 里，已经存在一些正式 spec，比如：
 
 ```markdown
 # Orders Specification
 
 ## Requirements
 
-### Requirement: Order List Visibility
+### Requirement: Task List Visibility
 The system SHALL allow authorized staff users to view the order list.
 
 #### Scenario: Staff user opens order list
@@ -92,7 +92,7 @@ The system SHALL allow authorized staff users to view the order list.
 - WHEN the user opens the Orders page
 - THEN the system displays recent orders
 
-### Requirement: Order Filtering
+### Requirement: Task Filtering
 The system SHALL allow filtering by date range and status.
 
 #### Scenario: Filter orders by status
@@ -114,12 +114,12 @@ The system SHALL allow filtering by date range and status.
 
 产品同学提了一个需求：
 
-> 客服团队希望把筛选后的订单导出成 CSV，方便线下核对和发给财务。
+> 项目经理希望把筛选后的施工任务导出成 CSV，方便线下核对和发给甲方。
 
 这时最容易犯的错误，是直接让 AI 去改代码：
 
 ```text
-"帮我给订单页加一个导出按钮，并导出 CSV。" 
+"帮我给施工任务页加一个导出按钮，并导出 CSV。" 
 ```
 
 OpenSpec 的思路不是这样。
@@ -132,6 +132,8 @@ OpenSpec 的思路不是这样。
 
 所以第一步不是改代码，而是发起 change。
 
+在发起 change 之前，你可以先 `/opsx:explore` 探一下现状——施工任务页现有 spec 写了什么、过滤逻辑在哪、谁有导出权限。这是选做，但能让 proposal 的 Scope 写得更准。
+
 ---
 
 ## 第 1 步：`/opsx:propose`，让 change 成形
@@ -139,7 +141,7 @@ OpenSpec 的思路不是这样。
 你在宿主工具里输入：
 
 ```text
-/opsx:propose add-order-csv-export
+/opsx:propose add-task-csv-export
 ```
 
 这一步的本质，不是"让 AI 瞎写四份文档"。
@@ -153,9 +155,9 @@ OpenSpec 的思路不是这样。
 ```text
 openspec/
 ├── specs/
-│   └── orders/spec.md
+│   └── tasks/spec.md
 └── changes/
-    └── add-order-csv-export/
+    └── add-task-csv-export/
         ├── proposal.md
         ├── design.md
         ├── tasks.md
@@ -168,6 +170,12 @@ openspec/
 
 因为从现在起，"导出 CSV"不再只是一个聊天里的念头，而是一个有名字、有目录、有内部结构的正式 change。
 
+而 change 一成形，就该轮到 `explore` 上场了——注意，这和第 0 步探 codebase 现状不同：这里的 explore 探的是 change 内部四份 artifact 是否自洽。
+
+AI 首次生成的初稿，几乎一定有内部自洽性问题。最常见的：proposal 的 Out of Scope 明明写了"不做 XLSX"，可 tasks.md 里却冒出一个"支持 XLSX 导出"的任务——前后打架。这种裂缝很常见，因为 LLM 生成有概率出幻觉，几份 artifact 一起生成时，接缝处最容易错。
+
+这时不要急着 `/opsx:apply`，而是对这个 change **反复 explore**：在 change 约定的上下文里（proposal + delta spec + design + tasks 这一圈）核对一致性、查矛盾、补漏的 scenario。change 把探索框在了一个有限空间里，所以探得比漫无边际地翻 codebase 准得多。（后面第 2 到第 5 步展示的是已经对齐的初稿；真实场景里这一步往往要反复几轮，第 8 步会集中演示一次。）
+
 ---
 
 ## 第 2 步：先看 `proposal.md`，这一步在钉边界
@@ -175,7 +183,7 @@ openspec/
 一个合理的 `proposal.md` 可能会长这样：
 
 ```markdown
-# Proposal: Add Order CSV Export
+# Proposal: Add Order Task CSV Export
 
 ## Intent
 Support customer service and finance workflows by allowing staff users
@@ -226,7 +234,7 @@ Generate CSV on demand from the filtered order query and return it as a file dow
 接着看 change 里的：
 
 ```text
-openspec/changes/add-order-csv-export/specs/orders/spec.md
+openspec/changes/add-task-csv-export/specs/tasks/spec.md
 ```
 
 一个合理的 delta spec 可能是：
@@ -236,7 +244,7 @@ openspec/changes/add-order-csv-export/specs/orders/spec.md
 
 ## ADDED Requirements
 
-### Requirement: Order CSV Export
+### Requirement: Order Task CSV Export
 The system SHALL allow authorized staff users to export the currently filtered order list as a CSV file.
 
 #### Scenario: Export filtered orders
@@ -253,7 +261,7 @@ The system SHALL allow authorized staff users to export the currently filtered o
 
 ## MODIFIED Requirements
 
-### Requirement: Order List Visibility
+### Requirement: Task List Visibility
 The system SHALL allow authorized staff users to view and export the order list.
 
 #### Scenario: Staff user opens order list
@@ -311,7 +319,7 @@ The system SHALL allow authorized staff users to view and export the order list.
 接下来，一个典型的 `design.md` 可能是：
 
 ```markdown
-# Design: Add Order CSV Export
+# Design: Add Order Task CSV Export
 
 ## Technical Approach
 Add an Export CSV action to the Orders page.
@@ -413,7 +421,7 @@ size is small for the current staff workflow.
 这时才进入：
 
 ```text
-/opsx:apply add-order-csv-export
+/opsx:apply add-task-csv-export
 ```
 
 ---
@@ -455,7 +463,7 @@ size is small for the current staff workflow.
 
 工程师实现到一半时发现：
 
-- 当前订单列表接口只返回分页结果
+- 当前施工任务列表接口只返回分页结果
 - 财务要求导出"当前过滤条件下的全部结果"
 - 如果直接复用现有列表接口，会只导出当前页，不符合预期
 
@@ -467,6 +475,8 @@ size is small for the current staff workflow.
 - 文档以后再说
 
 OpenSpec 更鼓励你当场修正 change。
+
+不过修正前，先对这个 change 再 `/opsx:explore` 一轮：确认"分页 vs 全量"这个矛盾在 delta spec 和 design 里到底是怎么承诺的、还有没有别处也藏着旧的"导出当前页"说法——避免只改了一处、另一处还留着对不上的承诺。
 
 ### 这时需要改哪些 artifact
 
@@ -513,12 +523,12 @@ OpenSpec 更鼓励你当场修正 change。
 假设最后代码和任务都做完了，目录和状态大概是这样：
 
 ```text
-openspec/changes/add-order-csv-export/
+openspec/changes/add-task-csv-export/
 ├── proposal.md
 ├── design.md
 ├── tasks.md
 └── specs/
-    └── orders/spec.md
+    └── tasks/spec.md
 ```
 
 而 `tasks.md` 已经变成：
@@ -556,12 +566,12 @@ openspec/changes/add-order-csv-export/
 现在执行：
 
 ```text
-/opsx:archive add-order-csv-export
+/opsx:archive add-task-csv-export
 ```
 
 这一步最核心的事，不是挪目录，而是两件事：
 
-1. 把 delta spec merge 回主 `openspec/specs/orders/spec.md`
+1. 把 delta spec merge 回主 `openspec/specs/tasks/spec.md`
 2. 把 change 文件夹移入 `openspec/changes/archive/`
 
 所以 archive 的真正含义是：
@@ -577,10 +587,10 @@ openspec/changes/add-order-csv-export/
 ```text
 openspec/
 ├── specs/
-│   └── orders/spec.md              ← 旧基线
+│   └── tasks/spec.md              ← 旧基线
 └── changes/
-    └── add-order-csv-export/
-        └── specs/orders/spec.md    ← 本次 change 的 delta
+    └── add-task-csv-export/
+        └── specs/tasks/spec.md    ← 本次 change 的 delta
 ```
 
 ### archive 之后
@@ -588,14 +598,14 @@ openspec/
 ```text
 openspec/
 ├── specs/
-│   └── orders/spec.md              ← 已包含 CSV 导出能力
+│   └── tasks/spec.md              ← 已包含 CSV 导出能力
 └── changes/
     └── archive/
-        └── 2026-04-20-add-order-csv-export/
+        └── 2026-04-20-add-task-csv-export/
             ├── proposal.md
             ├── design.md
             ├── tasks.md
-            └── specs/orders/spec.md
+            └── specs/tasks/spec.md
 ```
 
 这里最容易忽略的一点是：
@@ -702,7 +712,7 @@ openspec/
 | 坑 | 表现 | 为什么错 | 正确做法 |
 |-----|------|---------|---------|
 | **边界不清** | proposal 里写"优化导出功能"，但没说清楚做到哪里 | 后面会不断膨胀，从 CSV 变成 XLSX、邮件、定时任务 | 明确写 Out of Scope |
-| **delta spec 写成全量** | 把整个订单系统的所有能力都重写一遍 | 审查者看不出这次改了什么，并行开发容易冲突 | 只写 ADDED/MODIFIED/REMOVED |
+| **delta spec 写成全量** | 把整个施工任务系统的所有能力都重写一遍 | 审查者看不出这次改了什么，并行开发容易冲突 | 只写 ADDED/MODIFIED/REMOVED |
 | **design 和 spec 混淆** | 把"用同步方式导出"写进 spec | 这是实现决策，不是用户行为合同 | 实现方式放 design，行为承诺放 spec |
 | **发现问题不回头修正** | 实现时发现设计有误，但只改代码不改文档 | 文档和代码脱节，后人看不懂当时的真实决策 | 回头修正 design/spec，保持一致 |
 | **忘记 archive** | 代码写完就算完成，不执行 archive | specs/ 基线没更新，下一个 change 没有正确的参考基线 | 必须 archive 才算闭环 |
@@ -711,7 +721,7 @@ openspec/
 
 **错误做法**：
 ```text
-用户：给订单页加个导出功能
+用户：给施工任务页加个导出功能
 AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和定时导出
 ```
 
@@ -723,7 +733,7 @@ AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和
 
 **OpenSpec 做法**：
 ```markdown
-# Proposal: Add Order CSV Export
+# Proposal: Add Order Task CSV Export
 
 ## Scope
 - CSV export only
@@ -743,16 +753,17 @@ AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和
 
 ---
 
-## 这篇案例最该带走的 8 句话
+## 这篇案例最该带走的 9 句话
 
 1. 一个 change 的起点不是代码，而是让变更先成形
 2. `proposal` 的核心价值是控制边界
 3. delta spec 的核心价值是表达行为变化
 4. `design` 讲的是技术选型，不是行为合同
 5. `tasks` 让 change 从"说得清楚"进入"做得下去"
-6. `apply` 不是机械执行，而是带反馈的实施
-7. `archive` 不是收纳动作，而是正式沉淀动作
-8. OpenSpec 真正管理的是"基线 + 增量变化 + 历史闭环"
+6. 初稿几乎一定有自洽裂缝——用 `explore` 在 change 上下文里反复核对，比人眼翻文档准
+7. `apply` 不是机械执行，而是带反馈的实施
+8. `archive` 不是收纳动作，而是正式沉淀动作
+9. OpenSpec 真正管理的是"基线 + 增量变化 + 历史闭环"
 
 ---
 

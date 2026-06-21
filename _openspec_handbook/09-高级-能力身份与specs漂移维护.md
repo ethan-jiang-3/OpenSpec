@@ -86,6 +86,9 @@ graph TD
     C[身份 = 目录名<br/>specs/&lt;capability&gt;/] --> C1[怕：改目录名 / 目录没了]
     C1 --> C2["rename：没有操作<br/>（改名=裸搬目录）"]
     end
+```
+```mermaid
+graph TD
     subgraph requirement["requirement 层"]
     R[身份 = 标题文本<br/>### Requirement: &lt;Name&gt;] --> R1[怕：改标题 / 大小写]
     R1 --> R2["rename：RENAMED<br/>FROM/TO ✓"]

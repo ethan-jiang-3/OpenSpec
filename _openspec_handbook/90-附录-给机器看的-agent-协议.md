@@ -89,24 +89,24 @@ sequenceDiagram
 
 ```json
 {
-  "change": "add-order-csv-export",           // 当前 change 名称
+  "change": "add-task-csv-export",           // 当前 change 名称
   "schema": "spec-driven",                    // 使用的 schema
   "artifacts": {
     "proposal": { 
       "status": "done",                       // 已完成
-      "path": "changes/add-order-csv-export/proposal.md" 
+      "path": "changes/add-task-csv-export/proposal.md" 
     },
     "specs": { 
       "status": "done",                       // 已完成
-      "path": "changes/add-order-csv-export/specs/" 
+      "path": "changes/add-task-csv-export/specs/" 
     },
     "design": { 
       "status": "in_progress",                // 进行中
-      "path": "changes/add-order-csv-export/design.md" 
+      "path": "changes/add-task-csv-export/design.md" 
     },
     "tasks": { 
       "status": "todo",                       // 待开始
-      "path": "changes/add-order-csv-export/tasks.md" 
+      "path": "changes/add-task-csv-export/tasks.md" 
     }
   },
   "nextRecommended": "design"                 // 建议下一步做什么
@@ -122,8 +122,8 @@ sequenceDiagram
 ```json
 {
   "artifact": "design",                       // 要生成的 artifact 类型
-  "change": "add-order-csv-export",           // 所属 change
-  "outputPath": "openspec/changes/add-order-csv-export/design.md",  // 输出路径
+  "change": "add-task-csv-export",           // 所属 change
+  "outputPath": "openspec/changes/add-task-csv-export/design.md",  // 输出路径
   "template": "# Design\n\n## Approach\n## Decisions\n## Risks\n",  // 文本模板
   "instruction": "Describe technical approach and key tradeoffs.",   // 生成指令
   "context": "Stack: TypeScript, React, Node.js",                    // 项目背景（来自 config.yaml）

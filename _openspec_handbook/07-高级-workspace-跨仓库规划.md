@@ -44,7 +44,7 @@ my-project/
   .openspec-workspace/
     view.yaml                   ← 视图状态（名称、links、opener、tools、profile drift）
   changes/                      ← workspace 级 change
-    add-oauth2-provider/
+    add-task-tracking-provider/
       .openspec.yaml            ← 绑定 workspace-planning schema
       proposal.md
       specs/
@@ -65,7 +65,7 @@ links:
 tools: [claude, cursor]
 context:
   store: team-context
-  initiative: oauth2-migration
+  initiative: task-tracking-migration
 ```
 
 **关键设计**：link 只记录路径关系。Workspace 不会往任何 linked repo 里写文件、改配置、或执行 Git 操作。
@@ -75,7 +75,7 @@ context:
 ```text
 团队共享层
   Context Store（/shared/team-context/）
-    └── initiatives/oauth2-migration/
+    └── initiatives/task-tracking-migration/
           ├── requirements.md    ← 跨仓库使命的整体需求
           ├── design.md          ← 架构决策
           └── decisions.md       ← 关键决策记录
@@ -85,7 +85,7 @@ context:
     ├── view.yaml                ← 本地视图状态
     ├── AGENTS.md                ← workspace 级 agent 指导（workspace open 生成/刷新）
     ├── .code-workspace          ← VS Code 多根工作区（workspace open 生成）
-    └── changes/add-oauth2/      ← workspace 级 change
+    └── changes/add-task-tracking/      ← workspace 级 change
           ├── proposal.md        ← 跨仓库 change提案
           ├── specs/auth/spec.md ← delta spec
           ├── design.md          ← 跨仓库技术方案
@@ -94,10 +94,10 @@ context:
 实现层（linked repos）
   /projects/platform-api/        ← API 仓库
     openspec/
-      changes/implement-oauth2/  ← 仓库级 change（具体实现）
+      changes/implement-task-tracking/  ← 仓库级 change（具体实现）
   /projects/platform-web/        ← Web 仓库
     openspec/
-      changes/implement-oauth2/  ← 仓库级 change（具体实现）
+      changes/implement-task-tracking/  ← 仓库级 change（具体实现）
 ```
 
 **关键数据流规则**：
@@ -134,7 +134,7 @@ openspec workspace open --agent claude
 openspec workspace open --editor
 
 # 绑定 initiative
-openspec workspace open --initiative team-context/oauth2-migration
+openspec workspace open --initiative team-context/task-tracking-migration
 ```
 
 打开时 CLI 会做两件事：
@@ -146,7 +146,7 @@ openspec workspace open --initiative team-context/oauth2-migration
 ```bash
 # 在 workspace 目录内
 cd ~/workspaces/platform
-openspec new change add-oauth2 --areas api,web
+openspec new change add-task-tracking --areas api,web
 # --areas 标识哪些 linked repo 受影响
 ```
 
