@@ -182,7 +182,7 @@ for offline reconciliation and sharing with the finance department.
 # 场景：specs 里的 scenarios 不够完整
 
 # 在 Claude Code 里说：
-"请帮我在 specs/orders/spec.md 的 'Order CSV Export' requirement 里，
+"请帮我在 specs/tasks/spec.md 的 'Task CSV Export' requirement 里，
 添加以下 scenarios：
 1. 导出空列表时的处理
 2. 导出超过 10000 条记录时的限制
@@ -218,7 +218,7 @@ for offline reconciliation and sharing with the finance department.
 # 场景：proposal 完全偏离了需求，需要重写
 
 # 步骤 1：删除文件
-rm openspec/changes/add-csv-export/proposal.md
+rm openspec/changes/add-task-csv-export/proposal.md
 
 # 步骤 2：在 Claude Code 里重新生成
 /opsx:continue
@@ -229,14 +229,14 @@ rm openspec/changes/add-csv-export/proposal.md
 # 场景：proposal 完全偏离了需求，需要重写
 
 # 步骤 1：删除文件
-rm openspec/changes/add-csv-export/proposal.md
+rm openspec/changes/add-task-csv-export/proposal.md
 
 # 步骤 2：在 Claude Code 里说：
 "请重新生成 proposal.md，需求是：[描述你的需求]"
 
 # 或者，如果想重新开始整个 change
-rm -rf openspec/changes/add-csv-export/
-/opsx:propose add-csv-export
+rm -rf openspec/changes/add-task-csv-export/
+/opsx:propose add-task-csv-export
 ```
 
 
@@ -298,7 +298,7 @@ schema: spec-driven
 schema: spec-driven
 
 context: |
-  Project: OrderManagement
+  Project: BuildFlow
   Tech stack: TypeScript, React, Node.js, PostgreSQL
   Testing: Vitest (unit) + Playwright (e2e)
 ```
@@ -310,7 +310,7 @@ context: |
 schema: spec-driven
 
 context: |
-  Project: OrderManagement
+  Project: BuildFlow
   Tech stack: TypeScript, React, Node.js, PostgreSQL
   Testing: Vitest (unit) + Playwright (e2e)
   Deployment: Vercel
@@ -335,7 +335,7 @@ rules:
 schema: spec-driven
 
 context: |
-  Project: OrderManagement
+  Project: BuildFlow
   Tech stack: TypeScript, React, Node.js, PostgreSQL
   Testing: Vitest (unit) + Playwright (e2e)
   Deployment: Vercel
@@ -412,8 +412,8 @@ rules:
 rules:
   tasks:
     - Write tests for new features
-    - Changes touching order domain must preserve order creation regression tests
-    - Changes touching payment flow must preserve payment authorization tests
+    - Changes touching task domain must preserve order creation regression tests
+    - Changes touching inspection flow must preserve payment authorization tests
 ```
 
 **效果**：AI 生成的 tasks.md 会包含"运行回归测试"的任务。
@@ -706,7 +706,7 @@ which is error-prone and time-consuming (30+ minutes per report).
 - Export filtered order data
 
 # 创建新的 change
-/opsx:propose add-order-pdf-export
+/opsx:propose add-task-pdf-export
 ```
 
 **为什么推荐选择 2**：
@@ -745,7 +745,7 @@ Background job provides better UX.
 **方式 1：手动编辑**（推荐）
 ```bash
 # 直接编辑文件
-vim openspec/changes/add-csv-export/proposal.md
+vim openspec/changes/add-task-csv-export/proposal.md
 
 # 用删除线标记旧内容，添加新内容
 ```
@@ -766,7 +766,7 @@ vim openspec/changes/add-csv-export/proposal.md
 #### 完整示例：一个好的 proposal.md
 
 ```markdown
-# Proposal: Add Order CSV Export
+# Proposal: Add Task CSV Export
 
 ## Why
 Customer service team needs to export filtered order data to CSV for:
@@ -874,7 +874,7 @@ Use streaming CSV generation with Papa Parse library.
 **重新生成的步骤（Custom Profile）**：
 ```bash
 # 1. 删除文件
-rm openspec/changes/add-csv-export/proposal.md
+rm openspec/changes/add-task-csv-export/proposal.md
 
 # 2. 在 Claude Code 里重新生成
 /opsx:continue
@@ -883,14 +883,14 @@ rm openspec/changes/add-csv-export/proposal.md
 **重新生成的步骤（Core Profile）**：
 ```bash
 # 1. 删除文件
-rm openspec/changes/add-csv-export/proposal.md
+rm openspec/changes/add-task-csv-export/proposal.md
 
 # 2. 在 Claude Code 里说：
 "请重新生成 proposal.md，需求是：[详细描述你的需求]"
 
 # 或者，重新开始整个 change
-rm -rf openspec/changes/add-csv-export/
-/opsx:propose add-csv-export
+rm -rf openspec/changes/add-task-csv-export/
+/opsx:propose add-task-csv-export
 ```
 
 ---

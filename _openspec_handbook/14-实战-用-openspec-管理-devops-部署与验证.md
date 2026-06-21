@@ -58,9 +58,9 @@ flowchart LR
 
 ---
 
-## 一个真实场景：上线 CSV 导出
+## 一个真实场景：上线 施工任务 CSV 导出
 
-假设 `add-order-csv-export` 已经在本地实现完成，tasks 大部分也已经勾上了。
+假设 `add-task-csv-export` 已经在本地实现完成，tasks 大部分也已经勾上了。
 
 现在还剩最后一段工作：
 
@@ -92,7 +92,7 @@ flowchart LR
 
 ## 3. Staging deployment
 - [ ] Deploy to staging
-- [ ] Run order export smoke test in staging
+- [ ] Run task export smoke test in staging
 - [ ] Verify exported rows match active filters
 - [ ] Check application logs for export errors
 
@@ -124,7 +124,7 @@ OpenSpec 只是把"这次部署怎样才算完成"变成明确协议。
 
 ```markdown
 ## Scope
-- Add CSV export for filtered order list
+- Add CSV export for filtered task list
 - Restrict export to authorized staff users
 - Deploy as part of normal web/API release
 
@@ -143,7 +143,7 @@ OpenSpec 只是把"这次部署怎样才算完成"变成明确协议。
 
 这段的价值是提前防止两类失控：
 
-- 实现 scope 失控：从 CSV 导出演变成 reporting 平台
+- 实现 scope 失控：从 施工任务 CSV 导出演变成 reporting 平台
 - 发布 scope 失控：从普通发布演变成基础设施变更
 
 ---
@@ -171,7 +171,7 @@ OpenSpec 只是把"这次部署怎样才算完成"变成明确协议。
 
 ## Verification
 - Run staging smoke test before production.
-- In production, export a filtered order list using a staff test account.
+- In production, export a filtered task list using a staff test account.
 - Confirm CSV row count matches UI filtered count.
 - Monitor export endpoint error rate and p95 latency for 30 minutes.
 
@@ -205,12 +205,12 @@ OpenSpec 不跑自动化，但 `tasks.md` 可以明确调用哪些自动化。
 
 ```markdown
 ## 3. Staging verification
-- [ ] Run `npm run test:e2e -- --grep "order export"`
-- [ ] Run `scripts/smoke/export-orders.sh staging`
+- [ ] Run `npm run test:e2e -- --grep "task export"`
+- [ ] Run `scripts/smoke/export-tasks.sh staging`
 - [ ] Attach CI run URL to final summary
 
 ## 4. Production verification
-- [ ] Run `scripts/smoke/export-orders.sh production`
+- [ ] Run `scripts/smoke/export-tasks.sh production`
 - [ ] Check dashboard: API error rate, p95 latency, export count
 - [ ] Confirm no new Sentry errors for export endpoint
 ```
