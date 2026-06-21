@@ -171,12 +171,12 @@ profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schem
 
 ### Q24: specs/ 的目录结构怎么组织？
 **A**: 推荐按能力域组织：
-```
+```text
 specs/
 ├── auth/spec.md
-├── requests/spec.md
-├── approvals/spec.md
-└── notifications/spec.md
+├── tasks/spec.md
+├── inspections/spec.md
+└── materials/spec.md
 ```
 
 不推荐按技术层（models/services/controllers）。
