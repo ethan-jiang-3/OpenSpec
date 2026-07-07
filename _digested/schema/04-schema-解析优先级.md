@@ -15,7 +15,7 @@ OpenSpec 需要确定"用哪个 schema"时，走两层解析。理解这两层�
         ↓
 2. Change 元数据       openspec/changes/<name>/.openspec.yaml 的 schema 字段
         ↓
-3. Planning-home 默认   workspace 场景下默认用 workspace-planning
+3. Planning-home 默认   始终为 spec-driven
         ↓
 4. 项目 config         openspec/config.yaml 的 schema 字段
         ↓
@@ -41,14 +41,7 @@ openspec continue my-feature
 # → 用 rapid（从 .openspec.yaml 读）
 ```
 
-**情况 3：在 workspace 里创建 change**
-```bash
-# 在 workspace planning home 下
-openspec new change cross-repo-feature
-# → 用 workspace-planning（planning-home 默认优先于项目 config）
-```
-
-**情况 4：只用项目 config**
+**情况 3：只用项目 config**
 ```yaml
 # openspec/config.yaml
 schema: spec-driven
@@ -58,7 +51,7 @@ openspec new change my-feature
 # → 用 spec-driven
 ```
 
-**情况 5：什么都没配置**
+**情况 4：什么都没配置**
 ```bash
 openspec new change my-feature
 # → 用 spec-driven（硬编码默认）
@@ -140,4 +133,3 @@ openspec schema which spec-driven --json
 
 1. **改了 config.yaml 的 schema 字段，但已有 change 不受影响** — 因为已有 change 的 `.openspec.yaml` 优先级更高
 2. **项目里 fork 了 spec-driven，但没改内容，结果仍然是 spec-driven 行为** — shadow 不会改变行为，除非你实际编辑了 schema.yaml
-3. **在 workspace 里创建 change 却用了 spec-driven** — 检查是否在 workspace planning home 下，planning-home 默认会走 workspace-planning

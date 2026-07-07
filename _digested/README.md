@@ -17,11 +17,11 @@
 
 | 目录 | 聚焦 | 一句话 |
 |------|------|--------|
-| `system/` | 总体系统专题 | repo-local planning、workspace、context store、tool delivery、agent runtime API 的整体模型 |
+| `system/` | 总体系统专题 | repo-local planning、store coordination、tool delivery、agent runtime API 的整体模型 |
 | `spec_cli/` | CLI 架构解读 | CLI 作为"本地运行时 API"的设计意图和命令 IO 模型 |
 | `schema/` | schema 系统专题 | schema 概念、内置 schema 详解、自定义实战 |
 | `internal-spec-driven/` | 核心命令源码剖析 | spec-driven 下 explore/propose/apply/archive 的精确机制 |
-| `mechanisms/` | 补充机制库 | workspace、tool delivery、spec model、workflow templates、CLI infra 等工程追问 |
+| `mechanisms/` | 补充机制库 | store、tool delivery、spec model、workflow templates、CLI infra 等工程追问 |
 | `specs_truth/` | 主 specs 源真相治理 | specs 怎么被 delta 构造、为什么会和代码失真、七种修法与问题→方法决策矩阵 |
 | `_coverage/` | 覆盖矩阵 | 维护用索引，按源码、OpenSpec 自身 specs、测试目录追踪 digest 覆盖状态 |
 | `_change_log/` | 上游同步记录 | 每次 upstream 版本同步的变更摘要 |

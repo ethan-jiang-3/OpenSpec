@@ -1,6 +1,4 @@
-# 测试覆盖矩阵（v1.5.0）
-
-> **v1.5.0 刷新**：删除 `test/core/workspace/`、`test/commands/workspace*.test.ts`、`test/core/context-store/`、`test/commands/context-store.test.ts`、`test/core/collections/initiatives/`、`test/commands/initiative.test.ts`。新增大量 store/workset/context/doctor 测试。
+# 测试覆盖矩阵
 
 ## 已对应专题
 
@@ -28,18 +26,7 @@
 | `test/core/templates/` | `../mechanisms/04-workflow-templates.md` |
 | `test/telemetry/`、`test/commands/feedback.test.ts` | `../mechanisms/05-cli-infra.md` |
 | `test/specs/` | `_coverage/specs-coverage.md` |
-| `test/vocabulary-sweep.test.ts` | v1.5.0 新增术语扫描测试 |
-
-## 已删除测试（v1.5.0 移除）
-
-| 旧测试目录/文件 | 状态 |
-|-----------------|------|
-| `test/core/workspace/` | 随 workspace 源码删除 |
-| `test/commands/workspace*.test.ts` | 随 workspace 命令删除 |
-| `test/core/context-store/` | 随 context-store 源码删除 |
-| `test/commands/context-store.test.ts` | 随 context-store 命令删除 |
-| `test/core/collections/initiatives/` | 随 initiatives 源码删除 |
-| `test/commands/initiative.test.ts` | 随 initiative 命令删除 |
+| `test/vocabulary-sweep.test.ts` |术语扫描测试 |
 
 ## 仍偏地图级覆盖
 

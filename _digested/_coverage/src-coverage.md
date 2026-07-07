@@ -1,6 +1,4 @@
-# 源码覆盖矩阵（v1.5.0）
-
-> **v1.5.0 刷新**：`src/core/workspace/`、`src/core/context-store/`、`src/core/collections/initiatives/`、`src/core/collections/runtime.ts` 已删除。新增 `src/core/store/`、`src/core/worksets.ts`、`src/core/references.ts`、`src/core/root-selection.ts`、`src/core/relationship-health.ts`、`src/core/working-set.ts`、`src/core/openers.ts`、`src/core/file-state.ts`、`src/core/openspec-root.ts`、`src/core/id.ts`、`src/core/zod-issues.ts`。新增命令 `src/commands/store.ts`、`src/commands/context.ts`、`src/commands/workset.ts`、`src/commands/doctor.ts`、`src/commands/shared-gather.ts`、`src/commands/shared-output.ts`。删除命令 `src/commands/workspace.ts`+`src/commands/workspace/`、`src/commands/context-store.ts`、`src/commands/initiative.ts`。
+# 源码覆盖矩阵
 
 ## 机制级覆盖
 
@@ -41,19 +39,6 @@
 | `src/telemetry/`、`src/commands/feedback.ts` | `../mechanisms/05-cli-infra.md` |
 | `src/core/change-metadata/`、`src/utils/change-metadata.ts`、`src/core/change-status-policy.ts` | `../internal-spec-driven/03-apply-实施执行.md`、`../spec_cli/03-workflow-runtime-api.md` |
 | `src/core/id.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-
-### 已删除（v1.5.0 移除）
-
-| 旧源码 | 曾覆盖位置 | 状态 |
-|--------|------------|------|
-| `src/core/workspace/` | 曾：`../mechanisms/01-workspace-coordination.md` | 已删除 |
-| `src/commands/workspace.ts`、`src/commands/workspace/` | 曾：同上 | 已删除 |
-| `src/core/context-store/` | 曾：同上 | 已删除 |
-| `src/commands/context-store.ts` | 曾：同上 | 已删除 |
-| `src/core/collections/initiatives/` | 曾：同上 | 已删除 |
-| `src/commands/initiative.ts` | 曾：同上 | 已删除 |
-| `src/core/collections/runtime.ts` | 曾：同上 | 已删除 |
-| `schemas/workspace-planning/` | 曾：`../schema/03-内置-workspace-planning-详解.md` | 已删除 |
 
 ## 部分覆盖
 

@@ -126,8 +126,6 @@ openspec status --change "<name>" --json
 
 目的：了解 schemaName、planningHome、actionContext。
 
-**Workspace guard**：如果 `actionContext.mode === "workspace-planning"` 且 `allowedEditRoots` 为空，停止 —— 不能在 workspace 模式下跨仓库编辑文件。
-
 ### Step 3：获取 apply 指令
 
 ```bash

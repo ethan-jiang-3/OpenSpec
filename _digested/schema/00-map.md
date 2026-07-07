@@ -1,12 +1,11 @@
 # Schema · 导读地图
 
-> 这一系列把 OpenSpec 的 schema 系统从头拆到尾——从它到底是什么、内置的两套 schema、到你怎么在项目里定义自己的一套。
+> 这一系列把 OpenSpec 的 schema 系统从头拆到尾——从它到底是什么、内置的 spec-driven schema、到你怎么在项目里定义自己的一套。
 
 ## 文章列表
 
 - [01-schema-到底是什么.md](01-schema-到底是什么.md) — 把 schema 这个概念钉死：它不是什么（不是 database schema、不是 template、不是 config），以及 artifact 依赖图
 - [02-内置-spec-driven-详解.md](02-内置-spec-driven-详解.md) — 逐字段拆解默认 schema：4 个 artifact 的 instruction、依赖关系、apply 阶段
-- [03-内置-workspace-planning-详解.md](03-内置-workspace-planning-详解.md) — workspace-planning schema 的设计意图和使用场景
 - [04-schema-解析优先级.md](04-schema-解析优先级.md) — 两层优先级：用哪个名字（CLI > .openspec.yaml > config.yaml > 默认）、从哪加载（project > user > package）
 - [05-四层注入机制.md](05-四层注入机制.md) — context → rules → instruction → template 如何叠加控制 AI 行为
 - [06-自定义-schema-实战.md](06-自定义-schema-实战.md) — 从 fork、init、手写三种方式创建自定义 schema，包括 CLI 命令和文件结构

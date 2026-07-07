@@ -137,15 +137,15 @@ done: 输出存在
 
 这种设计更贴近 brownfield AI Coding：真实代码库里的理解经常在实施过程中才变清楚。
 
-## store 模型的克制（v1.5.0）
+## store 模型的克制
 
-v1.5.0 的 store/reference/workset 模型替代了 v1.4.0 的 workspace/context-store/initiative。新模型的设计更克制：
+store/reference/workset 模型的设计原则是克制：
 
 - store 是全局注册的 repo checkout，不创建新的协调层。
 - reference 只是声明”这个项目还关心哪些仓库的 specs”。
 - working set 是查询接口，不自动 clone、不自动 sync、不内联内容。
 - workset 是纯个人本地的多仓库打开视图，不分享。
-- 没有 workspace-planning schema——所有 change 都在具体 repo 下，用 `spec-driven`。
+- 所有 change 都在具体 repo 下，用 `spec-driven`。store 提供跨仓库 spec 索引，不参与 change 生命周期。
 
 业务 specs 和可 archive change 仍由 owning repo 承载。store 的价值是让 agent 知道”还有哪些 specs 可以读”，而不是制造跨 repo 的事务。
 

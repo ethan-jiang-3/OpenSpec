@@ -7,7 +7,7 @@ OpenSpec 当前有两条相关但不同的生命周期：
 | 生命周期 | 主体 | 典型状态 |
 |----------|------|----------|
 | repo-local change lifecycle | 一个 repo 里的 `openspec/changes/<name>/` | propose → apply/sync → archive |
-| store coordination（v1.5.0） | store registry + references + working set | register stores → declare references → inspect context → create repo-local plan in owning repo |
+| store coordination | store registry + references + working set | register stores → declare references → inspect context → create repo-local plan in owning repo |
 
 两者可以衔接，但不能混成一条自动流水线。store 提供跨仓库的上下文引用；repo-local change 仍然是具体实现和 archive 的主要承载。
 
@@ -74,7 +74,7 @@ status 判断的核心不是“阶段字段”，而是 artifact output 是否�
 
 `sync` 进入 core profile 后，repo-local 生命周期里多了一个重要能力：可以在不 archive change 的情况下更新主 specs。这对长生命周期 change 或需要先同步 specs 再继续实现的场景有用。
 
-## store coordination（v1.5.0）
+## store coordination
 
 store 侧的上下文流：
 
@@ -101,7 +101,6 @@ openspec store register <path> --id <id>
 | `status` / `instructions` 的 JSON 和调用链 | `../spec_cli/03-workflow-runtime-api.md` |
 | schema 如何定义 artifact DAG | `../schema/01-schema-到底是什么.md` |
 | `spec-driven` 的 proposal/specs/design/tasks | `../schema/02-内置-spec-driven-详解.md` |
-| `workspace-planning` schema | （v1.5.0 已删除） |
 | explore/propose/apply/archive 精确机制 | `../internal-spec-driven/00-四条命令的共有机制.md` |
 
 ## 源码入口

@@ -61,44 +61,6 @@ openspec new change fix-cli-view-error-string
 openspec archive fix-cli-view-error-string -y
 ```
 
-### 项 4：`workspace-*` 系列（信号 ④ 废弃仍 active）— 清除原语
-
-现状：4 个 workspace-* change，proposal 自带 "deferred" 说明、多无 delta、validate 报 `No deltas found`。
-
-走法（SHELVE，叙事保留在 explorations）：
-
-```bash
-for c in workspace-agent-guidance workspace-apply-repo-slice workspace-verify-and-archive workspace-reimplementation-roadmap; do
-  mv "openspec/changes/$c" "openspec/explorations/$c"
-done
-openspec validate --all     # 这几个 ✗ 应清零（只证明僵尸清了）
-```
-
-同理 `add-artifact-regeneration-support`、`schema-alias-support`（纯 proposal、代码无实现）也 SHELVE。
-
-### 项 5：`context-store` / `initiative` 有代码无 spec（信号 ②）— 修复原语（AUTHOR-NEW，重活）
-
-现状：`src/commands/context-store.ts`、`src/commands/initiative.ts` 是一等公民 capability，specs 里没有。**等方向稳定后再写**（AUTHOR-NEW 最费工）。从已有代码补 spec 的完整采用流程见 `08-给已有代码补spec-greenfield.md`。
-
-```bash
-openspec new change add-context-store-and-initiative-capabilities
-#   specs/context-store/spec.md → ## ADDED（读 src/commands/context-store.ts + src/core/context-store/ 写实）
-#   specs/initiative/spec.md    → ## ADDED（读 src/commands/initiative.ts + src/core/collections/initiatives/ 写实）
-openspec archive add-context-store-and-initiative-capabilities -y   # 补 Purpose
-```
-
-判断点：`src/core/profile-sync-drift.ts` **不要**单独成 spec（内部引擎，属 design/tasks；其可观测行为应靠 `cli-update`/`global-config` spec 覆盖）。
-
-### 项 6：`initiatives/` 没被 conventions 承认（信号 ⑤）— 修复原语（更新结构 spec）
-
-现状：`openspec/initiatives/` 是平行权威层，但 `openspec-conventions` 的 "Project Structure" 没提它。**不是把 initiatives 并进 specs**（那会压垮有意分层），是让 conventions 承认它。详见 `09-平行权威层-initiatives.md`。
-
-```bash
-openspec new change document-initiatives-layer-in-conventions
-#   specs/openspec-conventions/spec.md → ## MODIFIED：Project Structure 加上 initiatives/ 子树，说明它是协调层、非 capability 真相
-openspec archive document-initiatives-layer-in-conventions -y
-```
-
 ## 全貌与真正的成功指标
 
 | 项 | 信号 | 原语 | 动作 |
@@ -106,9 +68,6 @@ openspec archive document-initiatives-layer-in-conventions -y
 | add-change-stacking-awareness 等 5 项 | ① | 清除 | SHELVE |
 | simplify-skill-installation | ⑥+① | 清除+修复 | SHELVE 旧 delta；AUTHOR-NEW profiles/propose-workflow |
 | cli-view 错误串 | ③ | 修复 | 纠正型 delta |
-| workspace-* 4 项 + 2 项纯 proposal | ④ | 清除 | SHELVE |
-| context-store / initiative | ② | 修复(AUTHOR-NEW) | 补 capability spec |
-| initiatives 层 | ⑤ | 修复 | MODIFIED conventions |
 
 **真正的成功指标**：active `changes/` 清空噪声 + specs 覆盖所有已发运 capability + conventions 反映真实结构。这三条才是"specs 配得上 source of truth"。至于 `validate --all` 失败归零——那只是"僵尸 change（④）清了"的**副产品**，**只证明结构干净，不证明 specs 和代码对齐**（①②③ 它根本不查）。
 

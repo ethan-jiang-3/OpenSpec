@@ -39,10 +39,6 @@
 | `workset open` | 人类 + editor | workset name、opener | 在 editor 中打开多仓库视图 | 一键恢复开发环境 | 是 |
 | `doctor` | 人类 | root、references、store registry | 诊断报告 | 排查 store 注册/引用/checkout 健康 | 否 |
 
-### 删除的命令（v1.4.0 → v1.5.0）
-
-`workspace`、`context-store`、`initiative` 命令已在 v1.5.0 中全部删除，由上述 store/context/workset/doctor 替代。
-
 ## workflow 命令简表
 
 | 命令 | 读入什么 | 产出什么 | 产出后帮助什么 |

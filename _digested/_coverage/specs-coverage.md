@@ -1,6 +1,4 @@
-# OpenSpec 自身 Specs 覆盖矩阵（v1.5.0）
-
-> **v1.5.0 刷新**：`workspace-foundation`、`workspace-links`、`workspace-open`、`workspace-change-planning` 四个 spec 随源码删除。新增 `openspec/work/simplify-context-and-workspace-model/` 目录下的 stores 设计文档（capstone、slices 等），暂未覆盖。
+# OpenSpec 自身 Specs 覆盖矩阵
 
 ## 已有强覆盖
 
@@ -30,16 +28,7 @@
 | `legacy-cleanup` | `../mechanisms/02-tool-delivery.md` |
 | `opsx-archive-skill`、`opsx-verify-skill`、`opsx-onboard-skill` | `../mechanisms/04-workflow-templates.md` |
 
-## 已删除（v1.5.0 移除）
-
-| 旧 spec | 状态 |
-|----------|------|
-| `workspace-foundation` | 随源码删除 |
-| `workspace-links` | 随源码删除 |
-| `workspace-open` | 随源码删除 |
-| `workspace-change-planning` | 随源码删除 |
-
-## 待后续评估（新 v1.5.0 stores 设计文档）
+## 待后续评估（stores 设计文档）
 
 | 文档/目录 | 说明 |
 |-----------|------|

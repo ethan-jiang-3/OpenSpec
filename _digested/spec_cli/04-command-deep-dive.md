@@ -105,9 +105,8 @@
 - 核心对象：schema.yaml、template 文件、来源优先级、shadowing。
 - 影响：workflow 运行时如何解释 artifact 与 apply phase。
 
-## 六、store / context / workset / doctor 命令族（v1.5.0）
+## 六、store / context / workset / doctor 命令族
 
-v1.5.0 用 store 模型替代了 v1.4.0 的 workspace/context-store/initiative。四条新命令各有独立职责。
 
 ### `store register`
 

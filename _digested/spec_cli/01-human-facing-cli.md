@@ -320,43 +320,31 @@
 
 从这个顺序看，CLI 实际上协助人走完从提出 change 到 archive spec 的完整生命周期。它不是一堆孤立命令，而是一条工作流轨道。
 
-## 8. Workspace 命令
+## 8. Store / Context / Workset 命令
 
-Workspace 命令面向的场景是：你同时维护多个关联仓库（如 API + Web + Mobile），需要在规划层协调它们。
+多条新命令各有独立职责：
 
-### `openspec workspace setup`
+### `openspec store register <path> --id <id>`
 
-创建跨仓库规划 home。交互式流程会引导你：
-- 给 workspace 命名（kebab-case）
-- link 至少一个本地目录
-- 选择 preferred opener（VS Code / Codex / Claude / Copilot）
-- 选择要为 workspace 生成的 AI 工具 skills
+将一个本地 repo checkout 注册为全局 store。可选 `--remote` 和 `--branch`。
 
-也支持非交互：`openspec workspace setup --no-interactive --name platform --link /path/to/api --link web=/path/to/web`
+### `openspec store list` / `unregister` / `info`
 
-### `openspec workspace list` / `ls`
+列出、注销、查看已注册的 store。
 
-列出本地所有已知 workspace 及其 links。
+### `openspec context`
 
-### `openspec workspace link <path>`
+查看当前 working set：root + `config.yaml` 中 `references:` 声明的 store 的 spec 索引。输出可选 human JSON 或 `.code-workspace`。
 
-将另一个仓库加到已有 workspace 中。link name 默认从目录 basename 推断，可以用 `name=path` 显式命名。
+### `openspec workset save` / `open` / `list`
 
-### `openspec workspace open`
+保存、打开、列出个人本地的多仓库视图。纯本地，不共享。
 
-在 agent 或 editor 中打开 workspace：
-- 生成/刷新 `AGENTS.md`（workspace 级 agent 指导）
-- 生成 `.code-workspace`（VS Code 多根工作区文件）
-- 可绑定 initiative：`--initiative team-context/billing-launch`
+### `openspec doctor`
 
-### `openspec workspace update`
+检查 store reference 健康状态。
 
-刷新 workspace 级的 skill 文件（与 repo-local `openspec update` 不同：workspace 的投递是 skills-only）。
+### 和 repo-local 的关系
 
-### `openspec workspace doctor`
+Store 提供跨仓库的上下文引用，不替代 repo 级工作流。change 始终在具体 repo 下创建和 archive。设计原则：**上下文引用用 store，实现在 owning repo**。
 
-诊断：哪些 link 的路径在当前机器上不存在、是否需要 relink。
-
-### 与其他命令的关系
-
-Workspace 不替代 repo 级工作流，而是提供一个上一层级的规划层。设计规则：**规划在 workspace，实现在 linked repo**。在 workspace 内创建 change 用的是 `workspace-planning` schema，在各 repo 内创建 change 用的还是 `spec-driven`。

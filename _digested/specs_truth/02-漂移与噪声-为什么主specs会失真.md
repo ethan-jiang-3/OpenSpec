@@ -86,7 +86,7 @@ change 已废弃/被 supersede/纯 proposal 没动，却还待在 active `change
 
 噪声在哪：两棵树各说各话，没人告诉 agent 这俩的边界；conventions spec 自己也过时了。
 
-> 这一类**不一定要消除**：`initiatives/` 可能是有意的协调层。真正的修法是让 conventions 承认并说清这层角色，而不是把 initiatives 并进 specs。详见 `09-平行权威层-initiatives.md`。
+> 这一类**不一定要消除**：`initiatives/` 可能是有意的协调层。真正的修法是让 conventions 承认并说清这层角色，而不是把 initiatives 并进 specs。（initiatives 概念已废弃。）
 
 ### ⑥ 身份脆弱性：标题改动，delta 默默失配（①③⑤ 的 ur-cause）
 

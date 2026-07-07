@@ -198,33 +198,23 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 所以理解 OpenSpec CLI 时，不应只视其为”终端工具”，还应视其为”工作流内核暴露出的本地协议”。
 
-## workspace 级机器接口
+## store 级机器接口
 
-Workspace 命令在机器消费场景下提供了新的协议端点：
+### `openspec store list --json`
 
-### `openspec workspace list --json`
+- 列出已注册 store 及其 backend 的结构化信息。
+- 帮助 agent 发现可用的跨仓库上下文。
 
-作用：
-- 列出已知 workspace 及其 links 的结构化信息。
-- 返回每个 workspace 的名称、link 映射、context 绑定状态。
+### `openspec context --json`
 
-对机器的意义：
-- 在需要自动选择 workspace 时提供候选发现。
-- 帮助 agent 理解当前可用的跨仓库规划上下文。
+- 输出 working set（root + referenced stores 的 spec 索引）。
+- agent 可据此了解当前项目还关心哪些仓库的 specs。
 
-### `openspec status --change <name> --json`（workspace 上下文内）
+### `--store <id>` flag
 
-在 workspace 上下文中运行时，`status` 会使用 `workspace-planning` schema 而非 repo-local 的 `spec-driven`。这意味着：
-- artifact 图不同
-- apply 条件不同
-- 输出的状态语义适应跨仓库规划
+- 所有核心命令（`status`、`instructions`、`list` 等）支持 `--store <id>` 选择操作目标 store。
+- 无 `--store` 时默认使用 nearest `openspec/` 目录。
 
-### `openspec instructions <artifact> --change <name> --json`（workspace 上下文内）
+### v1.5.0 的 guardrail 变化
 
-同样，`instructions` 在 workspace 上下文中编译的说明包，会反映 `workspace-planning` schema 的依赖、规则和输出路径。agent 不需要感知自己是在 workspace 还是 repo 中 —— `PlanningHome` 抽象自动路由到正确的 schema。
-
-### workspace guardrail
-
-machine-facing 的一个重要安全机制：workspace 生成的 skill 模板中内置了 guardrail。当 agent 检测到 `actionContext.mode: "workspace-planning"` 时，某些 repo-local 操作（sync specs、archive）会被阻止，agent 会收到提示：这些操作尚未对 workspace 级 change 开放。
-
-这确保了 AI agent 不会在 workspace 上下文中误执行 repo-local 语义的操作。
+v1.4.0 的 workspace guardrail（`actionContext.mode = "workspace-planning"` 阻止 sync/archive）在 v1.5.0 中不再需要——因为 `actionContext.mode` 始终为 `repo-local`，不存在 workspace 级 change。跨仓库操作自然被 store reference 的只读语义保护。

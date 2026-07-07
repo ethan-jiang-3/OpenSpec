@@ -165,4 +165,4 @@ OpenSpec CLI 同时管理三种空间：
 
 而 profile/delivery 正是连接这些空间的桥。
 
-当前实现里，workspace 的 skill 投递是 **skills-only**（不做 command 生成）。这意味着 workspace 级的工作流目前只以 skill 形式出现，command 形式的 workspace 工作流预留到后续版本。此外，workspace 通过 `workspace_skills` 状态字段实现独立的 profile drift 跟踪——与 repo-local 的 profile drift 检测机制相同，但数据存储在 workspace 自己的 `view.yaml` 中。
+（workspace 已被 store 模型替代。旧 workspace skills-only 投递和 `workspace_skills` drift 跟踪不再适用。store 不通过 skill/command 投递机制暴露——它通过 `openspec context` 的 working set 提供给 agent。）

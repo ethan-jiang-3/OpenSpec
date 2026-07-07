@@ -1,12 +1,9 @@
-# Store 模型与仓库协同（v1.5.0）
-
-> **v1.5.0 重写**：替代旧 `01-workspace-coordination.md`。v1.4.0 的 workspace + context-store + initiative → v1.5.0 store + reference + workset。
+# Store 模型与仓库协同
 
 ## 它解决的不是"多仓库合并"
 
-v1.5.0 的 store 模型设计比 v1.4.0 workspace 更克制：它不创建协调视图，不管理 linked repos，不引入 initiative 目录结构。
+Store 模型不创建协调视图，不管理 linked repos。它就是两件事：
 
-它就是两件事：
 1. **store**：全局注册仓库 checkout，让 OpenSpec 知道"这些 repo 存在"
 2. **reference**：项目声明"我还关心这些 store 的 specs"
 
@@ -56,18 +53,6 @@ openspec store unregister platform-api # 注销
 5. 组装成 working set
 
 不可解析的 store 会报告 warning（"not available — run: git clone ..."），不会让整个命令失败。
-
-## 和 v1.4.0 workspace 的本质区别
-
-| 维度 | v1.4.0 | v1.5.0 |
-|------|--------|--------|
-| 多仓库入口 | `view.yaml` + managed workspace root | 全局 store registry |
-| 仓库关系 | workspace links（路径映射） | `config.yaml` references（名称声明） |
-| 协调上下文 | initiative 目录（长期） | 无——working set 是瞬时查询 |
-| agent guard | `actionContext.mode = "workspace-planning"` | 无——所有 mode = `repo-local` |
-| 个人视图 | 无独立概念 | workset（纯本地，不共享） |
-| schema | `workspace-planning` schema | 无——只有 `spec-driven` |
-| CLI | `openspec workspace *` | `openspec store` + `context` + `workset` + `doctor` |
 
 ## 源码入口
 

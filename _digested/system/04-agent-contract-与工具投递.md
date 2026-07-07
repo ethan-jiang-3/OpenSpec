@@ -40,7 +40,6 @@ repo-local `init/update` 会根据 delivery：
 - `commands`：生成 command 文件。
 - `both`：两者都生成。
 
-（v1.5.0：workspace 已删除。store 不生成 skills-only 投递——它通过 `openspec context` 和 working set 暴露给 agent。）
 
 ## skills 与 commands 的区别
 
@@ -126,4 +125,3 @@ tool-agnostic CommandContent
 | workflow templates | `src/core/templates/workflows/` |
 | command adapters | `src/core/command-generation/` |
 | tool registry | `AI_TOOLS` in `src/core/config.ts` |
-| workspace skills | `src/core/workspace/skills.ts` |

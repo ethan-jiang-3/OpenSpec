@@ -1,53 +1,63 @@
-# 计划 1/3：_digested/ 剩余更新（1D 收尾 + 1E + 1F + 1G）
+# 计划 1/3：_digested/ → v1.5.0 更新
 
-## 当前进度
+## 状态：✅ 基本完成，等质检确认
 
-- ✅ 1A `_coverage/` — 三个覆盖矩阵已刷新
-- ✅ 1B `system/` — 整体系统模型已更新（03 重写 + 全目录 workspace→store）
-- ✅ 1C `mechanisms/` — store 协调章已重写（01 替换 + 00/README 更新）
-- 🔶 1D `spec_cli/` — `04` 和 `07` 已更新，但 `00-map.md`、`01`、`08` 仍有 workspace 引用待改
-- ⬜ 1E `schema/` — 待做
-- ⬜ 1F `internal-spec-driven/` — 待做
-- ⬜ 1G `specs_truth/` — 待做
+Phase 1 的所有子阶段已执行。以下是实际完成情况（和原计划的差异）：
 
-## 剩余任务
+## 实际完成
 
-### 1D 收尾：spec_cli/ 轻量修改
+### ✅ 1A `_coverage/`
+- `src-coverage.md` — 重写：删除旧模块行，新增 store/references/worksets 等
+- `specs-coverage.md` — 重写：删除 workspace-* spec 条目
+- `tests-coverage.md` — 重写：删除旧测试目录，新增 store 测试
+- 所有 "v1.5.0 刷新" banner 和 "已删除" 表已移除
 
-| 文件 | 操作 | 内容 |
-|------|------|------|
-| `00-map.md` | 局部改 | "workspace operator" audience → "store operator" |
-| `01-human-facing-cli.md` | 局部改 | workspace 命令引用更新 |
-| `08-glossary-and-models.md` | 局部改 | 删除 workspace/context-store/initiative 定义，新增 store/workset/reference/context |
-| `02-machine-facing-cli.md` | 局部改 | workspace CLI 接口引用 |
-| `05-config-profile-delivery.md` | 局部改 | workspace 投递模式引用 |
+### ✅ 1B `system/`
+- `03-planning-home-与-workspace.md` — **完全删除**，由 `03-planning-home-与-store-模型.md` 替代
+- `00-map.md` — 第五层 "Workspace coordination" → "Store coordination"，移除 "当前版本最重要的变化" 对比节
+- `02-目录与状态边界.md` — workspace/context-store/initiative 状态全部移除
+- `06-源码地图与扩展点.md` — 旧模块路径删除，store 新模块路径新增
+- `01/04/05/07/08/README` — 局部修改
 
-### 1E：schema/ 更新
+### ✅ 1C `mechanisms/`
+- `01-workspace-coordination.md` — **删除**，由 `01-store-模型与仓库协同.md` 替代
+- `00-map.md` / `README.md` — 导航更新
+- 新 store 文件中的 v1.4.0 对比表已移除，banner 已移除
 
-| 文件 | 操作 | 操作描述 |
-|------|------|----------|
-| `03-内置-workspace-planning-详解.md` | 标记废弃 | 加 v1.5.0 警告 banner：此 schema 已从源码中删除。保留正文作为历史参考 |
-| `00-map.md` | 局部改 | 移除或标注 workspace-planning 条目 |
-| `04-schema-解析优先级.md` | 局部改 | PlanningHome 默认值可能不再区分 repo/workspace |
-| `05-四层注入机制.md` | 局部改 | tangential mention |
+### ✅ 1D `spec_cli/`
+- `04-command-deep-dive.md` — 第六节 workspace 命令族重写为 store/context/workset/doctor
+- `07-command-io-matrix.md` — workspace 行删除，store/context/workset/doctor 行新增
+- `00/01/02/05/08` — 局部修改
 
-### 1F：internal-spec-driven/ 复查
+### ✅ 1E `schema/`
+- `03-内置-workspace-planning-详解.md` — **已删除**（schema 不存在了，不留历史文件）
+- `00-map.md` — 03 条目移除，intro 更新
+- `04-schema-解析优先级.md` — workspace-planning 引用和示例移除
 
-| 文件 | 操作 | 操作描述 |
-|------|------|----------|
-| `04-archive-归档合并.md` | 重点复查 | 读新版 `src/core/archive.ts`，确认 resolution 收敛后的流程描述是否准确 |
-| `02-propose-提案生成.md` | tangetial | workspace mention |
-| `03-apply-实施执行.md` | tangetial | workspace mention |
-| `05-schema-driven-控制面.md` | tangetial | workspace-planning mention |
+### ✅ 1F `internal-spec-driven/`
+- `03-apply` — workspace guard 行已删除
+- `02-propose` — annotation 已清洁
 
-### 1G：specs_truth/ 处理
+### ✅ 1G `specs_truth/`
+- `09-平行权威层-initiatives.md` — **已删除**
+- `00-map.md` — 09 条目和引用移除，01/02/03/05/08 相关引用更新
 
-| 文件 | 操作 | 操作描述 |
-|------|------|----------|
-| `09-平行权威层-initiatives.md` | 重写或标记废弃 | initiatives 已废弃。决定：标记 `> **v1.5.0**: initiatives 概念已废弃，本文仅保留作为历史参考` |
-| `06-源码锚点与缺口.md` | 局部改 | archive resolution 相关锚点可能变化 |
-| `01`、`02`、`00-map` | 局部复查 | tangetial mentions |
+## 执行中的策略变化
 
-### 工作量估计
+原计划是"标注废弃、保留历史参考"，实际执行改为 **彻底删除旧概念**：
+- schema/03 和 specs_truth/09 直接删除（不留历史文件）
+- 所有 "v1.5.0 已删除" 标注移除
+- v1.4.0 对比表、banner、"替代了旧" 叙述移除
+- 保持当前状态叙述，不讲历史
 
-约 1 轮对话可完成（大部分是轻量编辑）。
+## 已知残余
+
+约 30 处旧概念引用仍在 `specs_truth/` 和 `mechanisms/04` 中，主要是：
+- specs_truth 的历史走查实例（具体的 change 名称和源码文件名）
+- mechanisms/04 的模板内容描述
+
+这些嵌入在较大段落的解释中，需要逐段改写。
+
+## 下一步
+
+等待质检 agent 完成，修掉发现的问题，然后可以进入 Phase 2（_faq_on_digested/）。

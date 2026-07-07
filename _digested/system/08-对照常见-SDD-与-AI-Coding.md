@@ -106,7 +106,7 @@ same workflow semantics
 
 multi-root workspace 常被理解为”把很多 repo 放进一个开发窗口”。OpenSpec store 也能让 agent 引用多个 repo 的 specs，但它的边界更窄。
 
-v1.5.0 的 store 模型是 declared reference system：
+store 模型是 declared reference system：
 
 - `openspec store register` 注册全局 checkout。
 - `openspec/config.yaml` 的 `references:` 声明”这个项目关心哪些 store”。

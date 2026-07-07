@@ -9,9 +9,9 @@
 - 对人类来说，它是一个用来初始化、查看、校验、archive change/spec 的工具。
 - 对 OPSX 来说，它是一组稳定的本地协议端点，用来读取状态、获取模板、获取下一步说明、判断能否进入 apply、以及感知 schema。
 - 对 IDE / AI 工具集成来说，它还是一个“投递目标”，`init` / `update` 会把工作流模板安装成 skills 或 commands。
-- 对 workspace 来说，它还是跨仓库规划的协调接口，`workspace setup/open/update` 负责管理多仓库协作上下文。
+- 对 store operator 来说，它提供跨仓库上下文引用接口，`store register`/`context`/`workset` 负责管理多仓库 spec 引用。
 
-## 三类受众 + workspace operator
+## 三类受众
 
 ### 1. 人类用户
 
@@ -23,7 +23,7 @@
 - proposal / spec / design / tasks 是什么内容。
 - 这个 change 合不合法，什么时候能 archive。
 - 我该如何定制 schema、workflow、profile。
-- 我有哪些 workspace，它们关联了哪些仓库。
+- 有哪些已注册的 store，它们的 specs 是否可引用。
 
 对应常用命令：
 
@@ -36,7 +36,7 @@
 - `config`
 - `schema`
 - `view`
-- `workspace list` / `workspace doctor`
+- `store list` / `context`
 
 ### 2. OPSX / AI 工作流
 
@@ -58,24 +58,21 @@ OPSX 关心的是：
 - `list --json`
 - `new change`
 
-### 3. Workspace operator
+### 3. Store operator
 
-Workspace operator 关心的是：
+Store operator 关心的是：
 
-- 跨仓库规划的 workspace 如何创建和链接仓库。
-- 如何在 agent/editor 中打开 workspace 上下文。
-- workspace 级 skill 文件是否需要同步。
-- workspace 级 change 的规划与仓库级 change 的关系。
-- context store 和 initiative 的团队协调状态。
+- 哪些 repo checkout 已注册为 store。
+- 当前项目的 `references:` 声明了哪些 store。
+- working set 中哪些 store 可用、哪些缺失。
+- 如何保存和恢复多仓库打开视图。
 
 对应常用命令：
 
-- `workspace setup` / `workspace link`
-- `workspace open`
-- `workspace update` / `workspace doctor`
-- `new change`（workspace 上下文内）
-- `context-store setup`
-- `initiative create`
+- `store register` / `store list`
+- `context`（human/JSON/.code-workspace）
+- `workset save` / `workset open` / `workset list`
+- `doctor`
 
 ## 四层结构
 
@@ -96,18 +93,16 @@ Workspace operator 关心的是：
 - schema 定义
 - 应用阶段跟踪文件
 
-### 2. Workspace 层
+### 2. Store 层
 
-在项目状态层之上，workspace 引入了跨仓库的规划状态：
+store 引入了跨仓库的上下文引用（不创建规划状态，只做索引）：
 
-- `.openspec-workspace/view.yaml` — workspace 视图状态（名称、链接仓库、已选工具、profile drift 记录）
-- `workspace changes/` — workspace 级 change（使用 `workspace-planning` schema，不同于 repo-local `spec-driven`）
-- `~/.local/share/openspec/workspaces/registry.yaml` — 本地 workspace 注册表
+- `~/.openspec/stores/registry.yaml` — 全局 store 注册表
+- `<checkout>/.openspec-store/store.yaml` — store 身份 metadata
+- `openspec/config.yaml` 的 `references:` — 项目声明的 store 依赖
+- `openspec context` — working set 查询
 
-Workspace 的核心设计规则：**规划在 workspace 层，实现在 linked repo 层**。
-
-- `PlanningHome` 抽象在运行时判断当前路径属于 workspace 还是 repo。
-- workspace 的 skill 生成是 skills-only（此版本的约束），command 生成预留到后续版本。
+Store 的核心设计规则：**上下文引用用 store，实现在 owning repo**。
 
 ### 3. 运行时解释层
 
@@ -118,18 +113,17 @@ Workspace 的核心设计规则：**规划在 workspace 层，实现在 linked r
 - `loadChangeContext()` 把 change、schema、graph、completed 状态组装成运行时上下文。
 - `generateInstructions()` 把模板、规则、依赖、输出位置编译成 AI 可执行说明。
 
-这一层决定了 workflow 命令的真正价值。在 workspace 上下文中，schema 解析会自动切换到 `workspace-planning`。
+这一层决定了 workflow 命令的真正价值。v1.5.0 中所有 change 使用 `spec-driven` schema。
 
 ### 4. 工具投递层
 
-这一层对应 `init` / `update` / `workspace update`：
+这一层对应 `init` / `update`：
 
 - 根据全局配置里的 `profile` 决定启用哪些 workflow。
 - 根据 `delivery` 决定是生成 skills、commands，还是两者都生成。
 - 根据不同 AI 工具的 adapter，把同一份工作流内容格式化成不同外壳文件。
-- `workspace update` 在 workspace root 生成 skills（skills-only 模式），并通过 `workspace_skills` 状态跟踪 profile drift。
 
-也就是说，OpenSpec CLI 不只管理项目内容，还负责把“如何使用这些内容”的工作流安装到外部工具，**以及管理 workspace 级的跨仓库规划上下文**。
+也就是说，OpenSpec CLI 不只管理项目内容，还负责把”如何使用这些内容”的工作流安装到外部工具。
 
 ## 为什么 workflow 命令最关键
 

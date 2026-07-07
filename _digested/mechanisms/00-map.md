@@ -8,7 +8,7 @@
 
 | 读者问题 | 对应机制 |
 |----------|----------|
-| 多仓库场景下，OpenSpec 如何让 agent 看到上下文，但不乱改归属？ | store coordination（v1.5.0） |
+| 多仓库场景下，OpenSpec 如何让 agent 看到上下文，但不乱改归属？ | store coordination |
 | OpenSpec 怎么把同一套工作流放进 Claude、Codex、Cursor、OpenCode 等工具？ | tool delivery |
 | Markdown spec/change 凭什么能被机器稳定理解？ | spec model |
 | `/opsx:new`、`/opsx:continue`、`/opsx:sync` 这些不是核心四命令的入口有什么意义？ | workflow templates |

@@ -23,7 +23,7 @@
 | **new** | ✓（`new change`） | ✓（`/opsx:new`） |
 | **explore / propose / apply** | ✗ | ✓ |
 | continue / ff / sync / verify / onboard / bulk-archive | ✗ | ✓ |
-| list / view / show / status / instructions / config / schema / workspace / context-store / initiative / … | ✓ | ✗ |
+| list / view / show / status / instructions / config / schema / store / context / workset / … | ✓ | ✗ |
 
 日常工作流圈 **explore → propose → apply → archive**：前三步在 `/opsx:` slash 层（agent 驱动），**archive 是 CLI**（把 delta 合进 specs 那一步）。`validate`/`list`/`view` 是另一类——**CLI 工具命令，只读不写、偶尔用，不在工作流圈里**。`validate` 是结构 linter，**抓不出 specs↔代码漂移**（见 `02`/`06`）。
 
@@ -43,7 +43,6 @@
 - **排错（对着 `archive ... not found`）**：直跳 `04` 诊断树；只有分支 (b) 才回 `01` 身份模型。
 - **维护者（季度巡检）**：`07` 图4 运维循环 → `03` 巡检 → `05` 走查当模板。
 - **给已有代码补 spec（采用 OpenSpec）**：`08` greenfield。
-- **想懂 `initiatives/` 那层平行权威**：`09`。
 - **想查源码出处 / 确认工具边界**：`06`。
 
 > 本专题是**纯文档**：解释机制、给方法、给决策矩阵、给走查示例，不替你执行对真实 `openspec/` 的改动——清理由你按 `03`/`04`/`05` 的 recipe 自己决定何时、是否做。（这条只说一次。）
