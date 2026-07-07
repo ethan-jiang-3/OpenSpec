@@ -944,6 +944,6 @@ rules:
 如果你想继续看：
 
 - 多仓库场景下，单个 repo 的 `config.yaml` 为什么还不够
-- workspace 怎样在 repo-local OpenSpec 之上提供本地协调视图
+- store 怎样给多仓库项目提供跨仓库上下文引用
 
-下一篇看 `07`，进入 workspace 跨仓库规划。
+下一篇看 `07`，进入 store 跨仓库协同。

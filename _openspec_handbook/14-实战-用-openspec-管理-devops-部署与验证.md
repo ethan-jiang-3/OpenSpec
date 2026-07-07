@@ -235,7 +235,7 @@ OpenSpec 只要求它们被纳入 change 的完成标准。
 | 基础设施变更 | 单独 change |
 | 多阶段 rollout | 单独 change 更清楚 |
 | 回滚策略复杂 | 单独 change 更清楚 |
-| 跨多个 repo / 服务部署 | 考虑 workspace 级规划 + repo 级 changes |
+| 跨多个 repo / 服务部署 | 通过 store `references:` 引用其他仓库 specs + repo 级 changes |
 
 判断法很简单：
 

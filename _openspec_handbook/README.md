@@ -1,6 +1,6 @@
 # OpenSpec 学习手册
 
-> **手册版本 v1.0** · 对齐 openspec 1.4.1 · 2026-06。版本规则与变更记录见 [`00-index.md`](00-index.md) 的「版本与维护」。
+> **手册版本 v1.2** · 对齐 openspec 1.5.0 · 2026-07。版本规则与变更记录见 [`00-index.md`](00-index.md) 的「版本与维护」。
 >
 > 各篇定位、结构、风格的硬约束见 [00-index《内容宪章》](00-index.md#内容宪章写作规范)——写新篇前先读。
 
@@ -19,7 +19,7 @@
 | 04 | `04-高级-config-schema-与项目边界.md` | 配置和结构边界 |
 | 05 | `05-高级-项目级全局约束到底放哪.md` | 约束层级判断 |
 | 06 | `06-高级-config-yaml-怎么写到真正好用.md` | config 实战写法 |
-| 07 | `07-高级-workspace-跨仓库规划.md` | workspace 跨仓库规划 |
+| 07 | `07-高级-store-跨仓库协同.md` | store 跨仓库协同 |
 | 08 | `08-高级-自定义-schema-创建自己的工作流.md` | 自定义 schema |
 | 09 | `09-高级-能力身份与specs漂移维护.md` | capability 身份模型 + specs 漂移维护 |
 | 10 | `10-实战-claude-code-里的-openspec-到底怎么落地.md` | Claude Code 落地 |

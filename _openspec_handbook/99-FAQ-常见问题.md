@@ -237,32 +237,30 @@ specs/
 
 ---
 
-## Workspace（v1.4.0 新增）
+## Store 跨仓库协同
 
-### Q32: workspace 是什么？和 repo 里的 OpenSpec 有什么关系？
-**A**: Workspace 是跨仓库规划的本地视图（v1.4.0）。它不替代 repo 级 OpenSpec，而是在其之上加了一层。设计规则：**规划在 workspace，实现在 linked repo**。Workspace 级 change 用 `workspace-planning` schema，repo 级 change 用 `spec-driven` schema，两者互不干扰。
+### Q32: store 是什么？和 repo 里的 OpenSpec 有什么关系？
+**A**: Store 是 OpenSpec 的跨仓库上下文引用机制。它不替代 repo 级 OpenSpec，而是让 agent 知道「还有哪些仓库的 specs 可以看」。单仓库项目不需要 store。所有 change 仍在具体 repo 下，使用 `spec-driven` schema。
 
-### Q33: 我什么时候需要 workspace？
-**A**: 如果你同时维护多个关联仓库（如 API + Web + Mobile）并需要在规划层协调它们，就需要 workspace。单个仓库项目不需要 workspace。
+### Q33: 我什么时候需要 store？
+**A**: 如果你同时维护多个关联仓库（如 API + Web + Mobile）且希望 agent 在做 change 时能参考其他仓库的 specs，就需要 store。单个仓库项目不需要。
 
-### Q34: workspace 会修改我 linked 的仓库吗？
-**A**: 不会。link 只记录关系（目录路径），不会创建、复制、初始化或修改 linked 目录中的任何文件。Workspace 的规划内容（changes、view.yaml）全部在 workspace 自己的目录中。
+### Q34: store 会修改我 referenced 的仓库吗？
+**A**: 不会。`references:` 只是名称声明——agent 通过 `openspec context` 获取 referenced store 的 spec 索引（只读），不内联内容、不写入任何文件。
 
-### Q35: workspace 和 context store 什么关系？
-**A**: 
-- **context store**：团队共享的协调数据目录（可以 Git 管理），包含多个 initiative
-- **initiative**：context store 中的跨仓库使命（含 requirements、design、decisions 等）
-- **workspace**：本地规划视图，可以绑定到一个 initiative
-- 关系：context store → initiative → workspace → linked repos
+### Q35: store、context、workset 有什么区别？
+**A**:
+- **store**：全局注册的仓库 checkout（`openspec store register`）
+- **reference**：项目声明的 store 依赖（`config.yaml` 的 `references:`）
+- **context**：working set 查询（`openspec context`）——root + referenced stores 的 spec 索引
+- **workset**：个人本地的多仓库打开视图（`openspec workset save/open/list`），不共享
 
-三层机制的完整说明，详见 [07 高级·workspace 跨仓库规划](07-高级-workspace-跨仓库规划.md)。
-
-### Q36: 怎么开始使用 workspace？
-**A**: 
-1. `openspec context-store setup team-context --path /path/to/store`（可选，团队共享）
-2. `openspec workspace setup`（交互式，link 你的各个仓库）
-3. `openspec workspace open`（在 agent 中打开 workspace 上下文）
-4. 在 workspace 中创建 change：`openspec new change <name>`
+### Q36: 怎么开始使用 store？
+**A**:
+1. `openspec store register /path/to/other-repo --id other-repo`（注册一个仓库）
+2. 在 `openspec/config.yaml` 加 `references: [other-repo]`
+3. `openspec context`（查看 working set）
+4. 正常创建 change：`openspec new change <name>`（change 仍在当前 repo 下）
 
 ## 下一步
 

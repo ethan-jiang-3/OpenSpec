@@ -10,9 +10,9 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.1** |
-| **对齐 OpenSpec** | 1.4.1 |
-| **本版日期** | 2026-06 |
+| **手册版本** | **v1.2** |
+| **对齐 OpenSpec** | 1.5.0 |
+| **本版日期** | 2026-07 |
 
 **两个版本维度（别混）**：
 
@@ -21,7 +21,7 @@
 
 **freshness 约定**：
 
-- **版本敏感页**（如 workspace 篇等与特定版本特性深度绑定的页面）在内容中注明适用版本（如 `v1.4.0 新增`），不要求在文件名标版本号。
+- **版本敏感页**（如 store 篇等与特定版本特性深度绑定的页面）在内容中注明适用版本，不要求在文件名标版本号。
 - **概念页**（01-06、08、09 等）通用、不标版本；随对齐 OpenSpec 升级时复审。
 - 每次大修 / 对齐新版本，在下面 changelog 记一行。
 
@@ -31,6 +31,7 @@
 |---------|------|--------------|---------|
 | v1.0 | 2026-06 | 1.4.1 | 首版编号化；新增 `09-能力身份与specs漂移维护`（spec-driven 是 driver + capability=目录名身份 + 两层 name-as-identity + 漂移维护）；`02`/`04`/`99` 补 capability 身份与 RENAMED 前向指针。 |
 | v1.1 | 2026-06 | 1.4.1 | `explore` 地位补全（贯穿 02/03/11/13）：02 状态机补 explore 两处、03 新增 explore 深层机制（反复打磨 proposal / 对抗 LLM 幻觉 / change 作围栏）+ 生命周期补全四动词 `explore→propose→apply→archive`、11/13 实战织入 explore（change 出来后反复打磨保质量）；宪章「三层递进梯度」原则微调（高级可作精炼对照锚点）。 |
+| v1.2 | 2026-07 | 1.5.0 | 07 章重写：workspace → store 模型（跨仓库上下文引用）；00-index 版本/术语/命令表/阅读路径更新；workspace/initiative/context-store 概念全部删除。 |
 
 ---
 
@@ -92,7 +93,7 @@ OpenSpec = 整套机制
 
 1. **初级**：先把 OpenSpec 用起来，知道日常怎么走
 2. **中级**：把 `specs`、`changes`、artifact、delta spec 这些概念真正连起来
-3. **高级**：理解生命周期思想、config/schema、全局约束、workspace、自定义 schema、capability 身份与 specs 漂移维护
+3. **高级**：理解生命周期思想、config/schema、全局约束、store 跨仓库协同、自定义 schema、capability 身份与 specs 漂移维护
 
 ### B. 面向落地的实战场景
 
@@ -156,12 +157,12 @@ graph LR
     A[主线] --> B[90-附录<br/>机器协议]
 ```
 
-### 路径 5：我要管理多仓库（v1.4.0 新增）
+### 路径 5：我要管理多仓库（store 模型）
 
 ```mermaid
 graph LR
     A[01-初级] --> B[02-中级] --> C[04-高级<br/>config/schema]
-    C --> D[07-高级<br/>workspace]
+    C --> D[07-高级<br/>store 跨仓库协同]
 ```
 
 ### 路径 6：我要自定义工作流（创建自己的 schema）
@@ -186,7 +187,7 @@ graph LR
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
 | **profile** | 选择安装哪些工作流命令 | core（5个命令，v1.4.0 起）vs custom（自选命令） |
-| **workspace**（v1.4.0） | 跨仓库规划的本地协调视图 | 管理多个关联 repo 的 change 在 workspace 层协调 |
+| **store** | 全局注册的仓库 checkout；通过 `references:` 声明跨仓库依赖 | `openspec store register` → `config.yaml` 加 `references:` → `openspec context` 查看 |
 | **brownfield** | 已有代码库，在上面继续改 | 接手一个跑了 3 年的系统 |
 | **greenfield** | 从零开始的新项目 | 白纸一张，全新设计 |
 
@@ -231,11 +232,11 @@ graph LR
 | `openspec archive <name>` | 归档 change |
 | `openspec config profile` | 切换工作流 profile |
 | `openspec update` | 更新 AI 工具的 skills/commands |
-| `openspec workspace setup` | 创建跨仓库 workspace（v1.4.0） |
-| `openspec workspace open` | 在 agent/editor 中打开 workspace（v1.4.0） |
-| `openspec workspace list` | 列出已知 workspace（v1.4.0） |
-| `openspec workspace update` | 同步 workspace 级 skills（v1.4.0） |
-| `openspec workspace doctor` | 诊断 workspace 配置（v1.4.0） |
+| `openspec store register` | 注册一个仓库 checkout 为全局 store |
+| `openspec store list` | 列出已注册的 store |
+| `openspec context` | 查看 working set（root + referenced stores 的 spec 索引） |
+| `openspec workset save/open/list` | 保存/打开/列出个人多仓库工作视图 |
+| `openspec doctor` | 检查 store reference 健康状态 |
 
 ---
 
@@ -249,7 +250,7 @@ graph LR
 | [04-高级-config-schema-与项目边界.md](04-高级-config-schema-与项目边界.md) | 看清配置和结构边界 | 想定制或深入理解的人 |
 | [05-高级-项目级全局约束到底放哪.md](05-高级-项目级全局约束到底放哪.md) | 判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和 capability spec 彻底分开的人 |
 | [06-高级-config-yaml-怎么写到真正好用.md](06-高级-config-yaml-怎么写到真正好用.md) | 讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
-| [07-高级-workspace-跨仓库规划.md](07-高级-workspace-跨仓库规划.md) | workspace 跨仓库规划（v1.4.0 新增） | 需要管理多个关联仓库的人 |
+| [07-高级-store-跨仓库协同.md](07-高级-store-跨仓库协同.md) | store 跨仓库上下文引用 | 需要管理多个关联仓库的人 |
 | [08-高级-自定义-schema-创建自己的工作流.md](08-高级-自定义-schema-创建自己的工作流.md) | 自定义 schema——从 fork 到完全自定义 DAG | config.yaml 不够用、想创建自己工作流的人 |
 | [09-高级-能力身份与specs漂移维护.md](09-高级-能力身份与specs漂移维护.md) | capability 身份模型（capability=目录名）+ specs 漂移维护 | 想搞懂 specs 怎么组织、为什么会漂、怎么守的人 |
 | [10-实战-claude-code-里的-openspec-到底怎么落地.md](10-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
@@ -341,6 +342,6 @@ graph LR
 
 ### 3. 最后才讲"为什么会这样设计"
 
-所以生命周期思想、`schema`、`config.yaml`、workspace、Claude Code 集成、agent protocol，都被压到后面。
+所以生命周期思想、`schema`、`config.yaml`、store 跨仓库协同、Claude Code 集成、agent protocol，都被压到后面。
 
 这是故意的，不是遗漏。

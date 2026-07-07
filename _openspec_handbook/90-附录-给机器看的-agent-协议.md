@@ -2,7 +2,7 @@
 
 > 这一篇不是给第一次上手的人看的，而是给想研究"OpenSpec 怎么喂给宿主 agent"的人看的。
 >
-> **适用版本**：本文描述的 `--json` 输出格式与 `PlanningHome` 路由机制适用于 OpenSpec ≥ 1.4.1（v1.3.1 修复了 spinner 污染 stderr 的问题，v1.4.0 引入了 workspace 上下文路由）。
+> **适用版本**：本文描述的 `--json` 输出格式与 `PlanningHome` 路由机制适用于 OpenSpec ≥ 1.5.0。
 
 ---
 

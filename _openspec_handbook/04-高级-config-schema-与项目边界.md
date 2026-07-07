@@ -309,7 +309,7 @@ schema 管的是：
 - apply 的前置条件
 - 模板和 instruction 的组织方式
 
-### 什么时候看 workspace
+### 什么时候看 store
 
 当你遇到的是：
 
@@ -317,38 +317,19 @@ schema 管的是：
 - 单仓库 `openspec/` 已经不足以表达系统级计划
 - 你需要本地 coordination view，而不是把多个 repo 硬塞进一个 spec
 
-这时才需要看 workspace。
+这时才需要看 store。
 
 ---
 
-## v1.4.0 补充：第四层 — workspace 层
+## 补充：跨仓库 — store 层
 
-v1.4.0 在项目内三层（项目级 config、单 repo specs、单次 change）之上，引入了第四个作用域：
+多仓库场景下，项目可以通过 store 机制引用其他仓库的 specs：
 
-```mermaid
-graph TB
-    subgraph workspace层
-    W[".openspec-workspace/view.yaml<br/>（workspace 级配置）"]
-    WC["workspace changes/<br/>（跨仓库 change）"]
-    end
-    subgraph 项目层
-    A["openspec/specs/"]
-    B["openspec/config.yaml"]
-    C["openspec/schemas/"]
-    end
-    W --> WC
-    WC -.关联.-> A
-    WC -.关联.-> B
-```
+- `openspec store register` 全局注册仓库 checkout
+- `openspec/config.yaml` 的 `references:` 声明依赖
+- `openspec context` 查看 working set（纯查询，不写）
 
-**Workspace 层改变了边界讨论**：
-
-- Workspace change 使用 `workspace-planning` schema（不是 `spec-driven`）
-- Workspace 没有主 `specs/` 基线（spec 在各 linked repo 中）
-- Workspace 的配置（profile/delivery/tools）来自 global config，不走 repo-local `config.yaml`
-- OpenSpec 运行时自动判断当前上下文属于 workspace 还是单 repo，无需手动切换
-
-这意味着「项目级全局约束放哪」这个问题现在多了一个答案：如果团队管理多个关联仓库，跨仓库的全局原则更适合放在 workspace 层。单仓库场景则继续用 project 层（`config.yaml` + `specs/`）。具体怎么选，取决于你的团队结构和仓库数量；跨仓库场景参考 `07` workspace 篇。
+store 不创建新的 schema、不改变 change 生命周期。所有 change 仍在具体 repo 下，使用 `spec-driven`。跨仓库场景参考 [07](07-高级-store-跨仓库协同.md)。
 
 ---
 
@@ -357,8 +338,8 @@ graph TB
 1. `config.yaml` 管提示背景，`schema` 管结构骨架——改前者是补项目常识，改后者是改工作流形态
 2. `.openspec.yaml` 是 change 级绑定点，让单次 change 可以偏离项目默认 schema
 3. profile 管命令入口多少，schema 管 change 长什么样——两个独立维度
-4. v1.4.0 的 workspace 层是多仓库场景的第四作用域，单仓库用不着
-5. 判断力比记住所有字段重要：什么时候改 config、什么时候改 schema、什么时候看 workspace
+4. store 是多仓库场景的上下文引用机制，单仓库用不着
+5. 判断力比记住所有字段重要：什么时候改 config、什么时候改 schema、什么时候看 store
 
 ---
 

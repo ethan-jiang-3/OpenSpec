@@ -681,32 +681,32 @@ Bob 需要等 Alice 的 change archive 后再开始。
 
 ---
 
-## 跨仓库协作（workspace 场景）
+## 跨仓库协作（store 场景）
 
-本文讨论的协作模式是基于「单个仓库内多个 change」的场景。v1.4.0 引入了跨仓库 workspace，协作模式在此基础上增加了一个层级：
+本文讨论的协作模式是基于「单个仓库内多个 change」的场景。多仓库场景下，store 模型提供跨仓库上下文引用：
 
-### Workspace 级协作
+### 跨仓库协作
 
-当使用 workspace 时，协作分为两层：
+使用 store 时，协作分为两层：
 
 | 层 | 内容 | 谁参与 |
 |----|------|--------|
-| **Workspace 层** | 跨仓库变更的意图、范围、架构方案 | 所有相关 repo 的开发者 |
+| **Store/Reference 层** | 声明跨仓库依赖（`references:`），查看 referenced store 的 spec 索引 | 所有相关 repo 的开发者 |
 | **Repo 层** | 单个仓库的具体实现 | 该 repo 的开发者 |
 
-Workspace 层的协作原则与 repo 层类似但有区别：
+跨仓库协作原则：
 
-- **Workspace change 是对「要做什么」的共识**，不包含具体代码实现计划
-- **各 repo 各自创建 change 来实现自己的部分**，使用 repo-local 的 `spec-driven` schema
-- **Workspace 不 archive** — 实现完成后，各 repo 各自 archive 自己的 change
-- **context store 提供团队共享的 initiative 文件**（requirements、design、decisions），作为 workspace 规划的输入
+- **`references:` 声明「这个项目还关心哪些仓库的 specs」**，不包含跨仓库实现计划
+- **各 repo 各自创建 change 来实现自己的部分**，使用 `spec-driven` schema
+- **Change 生命周期不变** — 实现完成后，各 repo 各自 archive 自己的 change
+- **`openspec context` 提供 referenced store 的 spec 索引**，作为 agent 上下文
 
-详细机制见 [07 高级·workspace 跨仓库规划](07-高级-workspace-跨仓库规划.md)。
+详细机制见 [07 高级·store 跨仓库协同](07-高级-store-跨仓库协同.md)。
 
 ---
 
 ## 下一步
 
-- 多仓库协作的完整机制 → [07 高级·workspace 跨仓库规划](07-高级-workspace-跨仓库规划.md)
+- 多仓库协作的完整机制 → [07 高级·store 跨仓库协同](07-高级-store-跨仓库协同.md)
 - 部署验证、CI 怎么纳入 change 闭环 → [14 实战·用 openspec 管理 devops](14-实战-用-openspec-管理-devops-部署与验证.md)
 - 遇到具体疑问 → [99 FAQ](99-FAQ-常见问题.md)
