@@ -221,12 +221,12 @@ openspec/changes/     -> 没有 active change
 | baseline 和新能力纠缠 | 现有行为未规格化，新需求又依赖理解旧行为 | 拆成两个 changes：先补 baseline，再做新能力 |
 | 代码事实不足 | 项目结构不清、测试缺失、关键行为无法确认 | 继续 Explore，必要时建议 spike，而不是急着 propose |
 
-例如用户说“我想给这个已有 CLI 加 workspace 支持”，而 `openspec/specs/` 为空。Explore 不能直接写一个大而空的 `add-workspace-support`。它应先查现有 CLI 的命令注册、配置模型、路径解析、测试结构，再判断：
+例如用户说”我想让这个 CLI 支持跨仓库 store 引用”，而 `openspec/specs/` 为空。Explore 不能直接写一个大而空的 `add-store-support`。它应先查现有 CLI 的命令注册、配置模型、路径解析、测试结构，再判断：
 
 ```text
-现有 CLI 已经有 repo-local planning home，但没有 workspace view
-目标是新增 workspace local coordination，而不是重写所有命令
-影响面集中在 planning-home/workspace/open surface
+现有 CLI 已经有 repo-local planning home
+目标是新增 store/reference/working-set 机制，而不是重写所有命令
+影响面集中在 commands/store、core/store/、core/references.ts
 ```
 
 如果这些边界清楚，就可以 propose 一个具体 change。相反，如果连现有 CLI 的状态模型都没弄清，应该继续 Explore 或先 propose 一个“document current planning model”的 baseline change。
@@ -471,7 +471,7 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 | `src/commands/workflow/status.ts` | `status --json` 解析 planning home、change、schema 后输出结构化 status JSON |
 | `src/commands/workflow/instructions.ts` | `instructions <artifact> --json` 输出依赖文件、输出路径、template、rules、instruction 等 agent 操作包 |
 | `src/core/artifact-graph/instruction-loader.ts` | `formatChangeStatus()` 组装 `artifactPaths`、`actionContext`、`nextSteps`；`generateInstructions()` 组装 artifact instructions |
-| `src/core/change-status-policy.ts` | `actionContext` 和 `nextSteps` 的语义，包括 repo-local / workspace-planning 边界 |
+| `src/core/change-status-policy.ts` | `actionContext` 和 `nextSteps` 的语义， |
 | [`../../_digested/internal-spec-driven/01-explore-探索模式.md`](../../_digested/internal-spec-driven/01-explore-探索模式.md) | Explore 的 guardrails、OpenSpec awareness、已有 change 场景 |
 | [`../../_digested/internal-spec-driven/02-propose-提案生成.md`](../../_digested/internal-spec-driven/02-propose-提案生成.md) | Propose 的 change 创建和 artifact DAG 生成过程 |
 | [`../../_digested/system/07-OpenSpec-工程思想.md`](../../_digested/system/07-OpenSpec-工程思想.md) | 文件状态优先、CLI 解释状态、agent 负责推理 |

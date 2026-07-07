@@ -2,7 +2,7 @@
 
 ## 一句话
 
-`/opsx:apply` 不是“无论如何把 tasks 全部做完”。它有明确 guardrails：如果 planning 不完整、workspace 没有 edit root、task 不清楚、设计被代码事实推翻、实施出错或用户中断，agent 应该暂停，而不是猜。
+`/opsx:apply` 不是”无论如何把 tasks 全部做完”。它有明确 guardrails：如果 planning 不完整、task 不清楚、设计被代码事实推翻、实施出错或用户中断，agent 应该暂停，而不是猜。
 
 ## blocked：不能开始实施
 
@@ -31,31 +31,6 @@ agent 不应该继续改代码，而应该：
 ```
 
 archive 会合并 specs 并移动 change，这是后续动作。
-
-## workspace guard：没有 allowed edit root 就不能改代码
-
-apply skill 要求先跑：
-
-```bash
-openspec status --change "<name>" --json
-```
-
-如果：
-
-```text
-actionContext.mode == "workspace-planning"
-allowedEditRoots == []
-```
-
-agent 必须停止。原因是 workspace-local planning artifacts 只是本机协调视图，linked repos/folders 在没有明确 edit root 前只能当上下文。
-
-正确行为：
-
-```text
-解释 full workspace apply 当前不支持
-把 linked repos/folders 当 read-only context
-要求用户通过明确 implementation workflow 选择 affected area / edit root
-```
 
 ## task 不清楚
 
@@ -135,7 +110,7 @@ Options:
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/apply-change.ts` | blocked/all_done/workspace guard、暂停条件、输出格式 |
+| `src/core/templates/workflows/apply-change.ts` | blocked/all_done、暂停条件、输出格式 |
 | `src/commands/workflow/instructions.ts` | blocked/all_done/ready 判定、missingArtifacts 语义 |
-| `src/core/change-status-policy.ts` | workspace-planning actionContext 和 allowedEditRoots |
+| `src/core/change-status-policy.ts` | actionContext（repo-local）和 allowedEditRoots |
 | `_digested/internal-spec-driven/03-apply-实施执行.md` | apply gate 和 fluid workflow 解释 |

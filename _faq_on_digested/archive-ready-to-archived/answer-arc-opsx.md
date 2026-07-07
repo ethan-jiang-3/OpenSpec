@@ -55,8 +55,7 @@ src/core/templates/workflows/archive-change.ts
 1. 没有 change name 时，运行 `openspec list --json` 并让用户选择。
 2. 运行 `openspec status --change "<name>" --json`。
 3. 检查 artifact completion。
-4. 检查 `actionContext.mode`，遇到 workspace-planning 就停止。
-5. 读取 tasks file，警告未完成 tasks。
+4. 读取 tasks file，警告未完成 tasks。
 6. 用 `artifactPaths.specs.existingOutputPaths` 找 delta specs。
 7. 做 delta sync assessment。
 8. 必要时调用 `openspec-sync-specs`。
@@ -81,22 +80,7 @@ artifacts
 
 - `changeRoot`：不能硬编码 `openspec/changes/<name>`。
 - `artifactPaths.specs.existingOutputPaths`：delta spec 文件列表。
-- `actionContext`：workspace guard。
-
 CLI `ArchiveCommand` 是 repo-local 文件系统命令；OPSX 模板要适配 agent runtime，所以需要 status JSON。
-
-## workspace archive guard
-
-OPSX 模板明确说：
-
-```text
-If status reports actionContext.mode: "workspace-planning",
-explain that workspace archive is not supported in this slice and STOP.
-```
-
-原因是 workspace planning 是本地协调视图，不等于某个 linked repo 的可写实现 root。模板不能把 workspace change 直接移动进 repo-local archive，也不能擅自编辑 linked repos。
-
-CLI `openspec archive` 主线没有这层 workspace status guard，因为它不是走 workflow runtime API 的模板路径。
 
 ## sync assessment 是模板层，不是 CLI 内部步骤
 
@@ -149,7 +133,6 @@ CLI archive 则调用 `moveDirectory()`，优先 `fs.rename()`，必要时 fallb
 | `/opsx:archive` 为什么让 agent 先检查 status | 模板主线：`archive-change.ts` |
 | delta spec 程序化合并算法 | `specs-apply.ts` |
 | agent 如何智能同步 specs | `sync-specs.ts` 模板 |
-| workspace archive 为什么停止 | OPSX 模板的 `actionContext` guard |
 
 ## 参考来源
 
@@ -157,7 +140,7 @@ CLI archive 则调用 `moveDirectory()`，优先 `fs.rename()`，必要时 fallb
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板步骤、workspace guard、sync assessment、manual move |
+| `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板步骤、sync assessment、manual move |
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven spec sync 语义 |
 | `src/core/archive.ts` | CLI archive 与模板路径的差异 |
 | `_digested/internal-spec-driven/04-archive-归档合并.md` | CLI 和 OPSX 两条路径的分层说明 |

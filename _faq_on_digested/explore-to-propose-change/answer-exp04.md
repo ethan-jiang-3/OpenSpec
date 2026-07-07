@@ -260,9 +260,7 @@ JSON 模式下同样有 `dependencies` 字段。agent 就能知道：写 `tasks.
 }
 ```
 
-在 workspace planning 模式下，它会变成更保守的语义：workspace-local planning artifacts 是上下文，linked repos/folders 在未选择 edit root 前只是 read-only context。
-
-这解释了另一个问题：agent 不只是知道“读哪些 artifact 文件”，还知道“这些文件属于哪个 planning home、能不能把 linked repo 当成可编辑实现范围”。这对 Explore 很重要，因为 Explore 常常会跨 repo 看上下文，但不应该随便把 workspace-local planning 当成某个 repo 的 source of truth。
+`actionContext.mode` 始终为 `repo-local`。跨仓库上下文通过 store reference 获取——agent 可以读取 referenced store 的 specs 索引，但不内联内容、不自动写入。
 
 ## 第七层：EXP-04 不会告诉 agent 读业务源码的具体文件
 
@@ -317,4 +315,4 @@ skill prompt 规定动作
 | `src/commands/workflow/status.ts` | `status --json` 解析 planning home、change、schema 后输出结构化 status JSON |
 | `src/commands/workflow/instructions.ts` | `instructions <artifact> --json` 输出依赖文件、输出路径、template、rules、instruction 等 agent 操作包 |
 | `src/core/artifact-graph/instruction-loader.ts` | `formatChangeStatus()` 组装 `artifactPaths`、`actionContext`、`nextSteps`；`generateInstructions()` 组装 artifact instructions |
-| `src/core/change-status-policy.ts` | `actionContext` 和 `nextSteps` 的语义，包括 repo-local / workspace-planning 边界 |
+| `src/core/change-status-policy.ts` | `actionContext` 和 `nextSteps` 的语义 |

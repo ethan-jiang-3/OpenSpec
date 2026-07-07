@@ -84,5 +84,4 @@ agent 会像处理代码 change 一样走完 brief → outline → research → 
 ## 已知限制
 
 - **archive 的 tasks.md 硬编码**：这是当前绕过它的原因，也是这个 schema 最大的"代码痕迹"。如果未来 archive 把 tracking filename 做成可配置项，tasks.md 可以改名来更贴合内容生产的语境。
-- **v1.4.0 workspace schema 变化**：这个 schema 基于 v1.3.0 的 schema 系统设计。v1.4.0 引入了 workspace 级 schema，可能会影响 schema 的解析优先级或 workspace 层面的 apply 行为，需要后续验证。
 - **不是通用 CMS 替代品**：这个 schema 适合个人或小团队的结构化写作流程，不适合需要审批流、多级编辑、发布调度等 CMS 级功能。它验证的是"OpenSpec 协议可以泛化"这个命题，不是"OpenSpec 可以替代 CMS"。

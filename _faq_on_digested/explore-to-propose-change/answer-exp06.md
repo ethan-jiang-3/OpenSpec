@@ -152,7 +152,7 @@ risks 要记录会改变工程方案的风险，而不是泛泛说“有风险�
 - provider callback 需要防 CSRF。
 - permission middleware 改造可能影响所有 routes。
 - tests 没有覆盖当前 OAuth half-implementation。
-- workspace 模式下没有 allowed edit root。
+
 
 风险类型不同，可能意味着要拆 change。
 

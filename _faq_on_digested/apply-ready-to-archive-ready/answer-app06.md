@@ -131,7 +131,6 @@ agent 可以继续下一个 pending task，直到：
 - 实施暴露设计问题。
 - 测试失败且需要决策。
 - 用户中断。
-- workspace guard 不允许编辑。
 
 停下来不是失败。OpenSpec 的 apply 模板明确允许 fluid workflow：实施中发现问题，可以更新 artifacts 后继续。
 

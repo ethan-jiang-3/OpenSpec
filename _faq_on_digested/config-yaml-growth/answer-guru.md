@@ -25,7 +25,7 @@ guru 不只调 `config.yaml`（提示层），而是重塑工作流的**结构�
 2. **每个 artifact 的 `instruction`**——agent 生成该 artifact 时遵循的 prompt 骨架。config 的 rules 只能**补充**它，**替换**不了。
 3. **`templates/*.md`**——artifact 的输出骨架（段落结构、HTML 注释引导）。这是**结构**，区别于 rules（**内容约束**）。
 4. **依赖 DAG（`requires`）**——可以完全重画，不必是 `proposal → specs → design → tasks`。
-5. **`apply` 块**——自己的 `requires` 门、`tracks` 文件、自己的 `instruction`。`schemas/workspace-planning/schema.yaml` 就用它强制"把 linked repos 当只读"——这种**结构级护栏**，任何 config rule 都表达不了。
+5. **`apply` 块**——自己的 `requires` 门、`tracks` 文件、自己的 `instruction`。`schemas/spec-driven/schema.yaml` 就用它定义 apply 的门槛——这种**结构级护栏**，任何 config rule 都表达不了。
 
 ## 工具
 

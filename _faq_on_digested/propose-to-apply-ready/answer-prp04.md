@@ -145,14 +145,9 @@ Run openspec instructions proposal --change "add-auth" --json before writing tha
 repo-local:
   sourceOfTruth = repo
   allowedEditRoots = [projectRoot]
-
-workspace-planning:
-  sourceOfTruth = workspace-local
-  allowedEditRoots = []
-  linked repos/folders are context until explicit edit root is selected
 ```
 
-这让 propose 不会硬编码 repo-local 路径，也不会在 workspace planning 里误把 linked repo 当成可编辑 source of truth。
+v1.5.0 中 `actionContext.mode` 始终为 `repo-local`。跨仓库上下文通过 store reference 获取，但不进入 change 生命周期。
 
 ## PRP-04 的输出对 agent 的意义
 

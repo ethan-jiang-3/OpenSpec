@@ -10,7 +10,7 @@ Implementation 已经完成，`tasks.md` 里的 checkbox 也都完成了。接�
 - change 里的 delta specs 怎么合并到主 `openspec/specs/`？
 - `ADDED`、`MODIFIED`、`REMOVED`、`RENAMED` 的合并顺序为什么重要？
 - 什么情况下会跳过 spec updates，或者 archive 了但 specs 没有更新？
-- `/opsx:archive` 为什么看起来会先做 status、sync assessment 和 workspace guard？
+- `/opsx:archive` 为什么看起来会先做 status 和 sync assessment？
 - 最终 archived 的文件系统状态是什么？
 
 # 背景

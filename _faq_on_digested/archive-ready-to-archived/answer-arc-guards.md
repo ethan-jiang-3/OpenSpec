@@ -136,18 +136,6 @@ fallback: copyDirRecursive() + fs.rm(src)
 
 如果 fallback 到 copy + remove，中途 I/O 异常可能留下部分复制结果或源目录仍在。CLI 没有更高层事务机制。
 
-## OPSX workspace guard
-
-`/opsx:archive` 模板还有一类 CLI 主线没有的 guard：
-
-```text
-actionContext.mode == "workspace-planning"
-```
-
-模板要求停止，说明 workspace archive 当前不支持。不要移动 workspace changes 到 repo-local archive，也不要编辑 linked repos。
-
-这属于 agent 模板层 guard，不是 `ArchiveCommand.execute()` 的内部判断。
-
 ## archived 后的风险
 
 archive 后没有内置 unarchive。
@@ -176,5 +164,5 @@ archive 没有跳过关键 validation
 | `src/core/archive.ts` | hard stop、warnings、skip specs、skip validation、move fallback |
 | `src/core/specs-apply.ts` | prepare before write、merge failure behavior |
 | `src/utils/task-progress.ts` | missing tasks and checkbox progress |
-| `src/core/templates/workflows/archive-change.ts` | OPSX workspace archive guard |
+| `src/core/templates/workflows/archive-change.ts` | OPSX  |
 | `test/core/archive.test.ts` | missing tasks/specs、skip specs、declined updates、archive exists、interactive confirmation |

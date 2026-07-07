@@ -365,7 +365,7 @@ openspec/changes/archive/YYYY-MM-DD-<change>/
 ```text
 openspec status --change "<name>" --json
 artifact completion check
-workspace archive guard
+
 delta spec sync assessment
 ```
 

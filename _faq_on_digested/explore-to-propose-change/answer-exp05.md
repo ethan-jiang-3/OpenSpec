@@ -57,7 +57,7 @@ EXP-05 解决的是真实项目事实：
 
 ```text
 "auth 系统有点乱"
-"想加 workspace 支持"
+"想加跨仓库 store 支持"
 "apply 和 archive 好像不一致"
 "schema 机制是不是能扩展"
 ```
@@ -66,7 +66,7 @@ agent 会先把这些词转成候选搜索：
 
 ```bash
 rg -n "auth|session|oauth|permission" .
-rg -n "workspace|planningHome|view.yaml" src test docs
+rg -n "store|references|registry.yaml" src test docs
 rg -n "archive|apply|tasks.md|checkbox" src test _digested
 rg -n "schema|artifact|requires|generates" src schemas test
 ```
@@ -149,7 +149,7 @@ OpenSpec change 的边界通常对应用户可观察行为、能力协议或 wor
 
 这一步会直接影响是否拆 change。
 
-如果一个目标要同时改 parser、schema、command runtime、adapter、workspace guard，它可能不是一个简单 feature，而是跨层机制变化，需要 design 或拆分。
+如果一个目标要同时改 parser、schema、command runtime、adapter、，它可能不是一个简单 feature，而是跨层机制变化，需要 design 或拆分。
 
 ## 第五类入口：测试
 

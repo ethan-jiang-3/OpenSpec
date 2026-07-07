@@ -33,7 +33,7 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、t
 | APP-08 | implement code | 按 task 做最小、聚焦的真实代码修改，并按项目方式验证。 |
 | APP-09 | update checkbox | task 完成后立即把 tracking file 中对应 checkbox 改成 done。 |
 | APP-10 | loop/re-read progress | 继续下一个 pending task；必要时重新获取 apply instructions 刷新进度。 |
-| APP-11 | pause guard | 任务不清、设计问题、错误阻塞、workspace guard 或用户中断时暂停。 |
+| APP-11 | pause guard | 任务不清、设计问题、错误阻塞或用户中断时暂停。 |
 | APP-12 | all tasks done | tracking file 中所有 checkbox tasks 都已完成。 |
 | APP-13 | final summary | 输出本轮完成任务、总体进度、测试/验证结果和剩余风险。 |
 | APP-14 | archive-ready handoff | apply 完成后建议 archive；archive 是下一步，不属于 apply 本身。 |
@@ -42,7 +42,7 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、t
 
 - [`answer-app03.md`](answer-app03.md) — `instructions apply --json` 返回什么。
 - [`answer-app06.md`](answer-app06.md) — task 实施循环和 checkbox 更新。
-- [`answer-app-guards.md`](answer-app-guards.md) — blocked/all_done/workspace guard/暂停条件。
+- [`answer-app-guards.md`](answer-app-guards.md) — blocked/all_done/暂停条件。
 
 ## Step 1：选择 change
 
@@ -84,15 +84,6 @@ actionContext
 artifactPaths
 artifacts
 ```
-
-关键是 `actionContext`。如果 status JSON 表示：
-
-```text
-actionContext.mode = "workspace-planning"
-allowedEditRoots = []
-```
-
-apply skill 必须停止，不得随便编辑 linked repos/folders。workspace planning artifacts 只能当上下文，真正实施需要明确 edit root。
 
 ## Step 3：获取 apply runtime 包
 
@@ -215,7 +206,6 @@ apply 不是盲目执行到底。遇到这些情况应该暂停：
 - 实施时发现 proposal/spec/design/tasks 不一致。
 - 真实代码事实推翻了设计假设。
 - 测试失败且原因不清。
-- workspace planning 没有 allowed edit root。
 - 用户中断或改变方向。
 
 暂停时 agent 应该输出：
@@ -292,7 +282,7 @@ Completed this session:
 | `src/commands/workflow/instructions.ts` | `generateApplyInstructions()`、task checkbox 解析、state/progress/contextFiles 输出 |
 | `src/core/artifact-graph/outputs.ts` | required artifact 输出文件判定 |
 | `src/core/artifact-graph/instruction-loader.ts` | change context 和 artifact 文件收集 |
-| `src/core/change-status-policy.ts` | `actionContext` 的 repo-local/workspace-planning 语义 |
+| `src/core/change-status-policy.ts` | `actionContext`（repo-local）的语义 |
 | `schemas/spec-driven/schema.yaml` | 默认 `apply.requires: [tasks]`、`tracks: tasks.md` 和 apply instruction |
 | [`../../_digested/internal-spec-driven/03-apply-实施执行.md`](../../_digested/internal-spec-driven/03-apply-实施执行.md) | apply gate、checkbox、实施循环、暂停条件 |
 | [`../propose-to-apply-ready/answer.md`](../propose-to-apply-ready/answer.md) | apply-ready 的前置状态 |

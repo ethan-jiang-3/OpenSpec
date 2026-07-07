@@ -27,7 +27,7 @@
 |---|---|
 | `openspec/config.yaml` | 真实范例：OpenSpec 团队 dogfood 的手写 config（context 分两块、rules 跨 specs/tasks/design，已 echo 部分 schema 术语） |
 | `schemas/spec-driven/schema.yaml` | spec-driven 各 artifact 的 instruction 与关键术语（capability / requirement / scenario / SHALL / Non-Goals / Risk→Mitigation 等） |
-| `schemas/workspace-planning/schema.yaml` | schema 层范例：同样 artifact ID 但不同 instruction + `apply` 块强制 linked repos 只读——config 表达不了的结构护栏 |
+| `schemas/spec-driven/schema.yaml` | schema 层范例：`apply` 块定义 requires/tracks/instruction——config 表达不了的结构护栏 |
 
 ## 官方文档
 
