@@ -65,7 +65,7 @@ schema artifact DAG
 
 因此改模板会影响输出风格和结构，但不等于改 workflow 语义。要改 workflow 语义，需要看 schema、profile、workflow template 和 runtime API 的边界。
 
-## 和 agent memory / context store 的区别
+## 和 agent memory / store 的区别
 
 很多 agent 系统强调 memory：把历史事实、偏好和项目知识存进一个长期上下文。OpenSpec 对上下文更保守。
 
@@ -75,16 +75,12 @@ repo-local 的长期事实是：
 openspec/specs/
 ```
 
-workspace/context-store/initiative 提供跨 repo 协调上下文，但它也不是“agent 私有记忆”。它是本机或团队可管理的协调数据：
+v1.5.0 的 store/reference 模型提供跨 repo 上下文引用，但它也不是”agent 私有记忆”。它是本机可管理的、可读的、可检查的：
 
 ```text
-context store
-  └── initiatives/<id>/
-      ├── requirements.md
-      ├── design.md
-      ├── decisions.md
-      ├── questions.md
-      └── tasks.md
+~/.openspec/stores/registry.yaml     ← 注册的 store
+openspec/config.yaml references:     ← 声明的依赖
+openspec context                     ← 查询 working set
 ```
 
 OpenSpec 的倾向是让关键上下文可读、可版本化、可检查，而不是只存在 agent 的隐式 memory 里。
@@ -108,16 +104,17 @@ same workflow semantics
 
 ## 和 monorepo / multi-root workspace 的区别
 
-multi-root workspace 常被理解为”把很多 repo 放进一个开发窗口”。OpenSpec workspace 也能打开多个 repo/folder，但它的边界更窄。
+multi-root workspace 常被理解为”把很多 repo 放进一个开发窗口”。OpenSpec store 也能让 agent 引用多个 repo 的 specs，但它的边界更窄。
 
-OpenSpec workspace 是 local coordination view：
+v1.5.0 的 store 模型是 declared reference system：
 
-- `view.yaml` 记录本机 links、context、opener、workspace skills。
-- `AGENTS.md` 和 `.code-workspace` 是 open surface。
-- context store / initiative 保存协调上下文。
-- linked repo/folder 仍然保留自己的归属。
+- `openspec store register` 注册全局 checkout。
+- `openspec/config.yaml` 的 `references:` 声明”这个项目关心哪些 store”。
+- `openspec context` 输出 working set（root + referenced stores 的 spec 索引）。
+- workset 是个人本地的多仓库视图。
+- referenced repo 仍然保留自己的归属。
 
-它不把多个 repo 合成一个新的 source of truth，也不自动决定哪个 repo 应该创建可 archive change。实现和 specs 归属仍要回到 owning repo，除非具体 workflow 明确支持 workspace 级规划。
+它不把多个 repo 合成一个新的 source of truth，也不自动决定哪个 repo 应该创建可 archive change。实现和 specs 归属仍要回到 owning repo。
 
 ## 和传统阶段式 SDD 的区别
 
@@ -153,7 +150,7 @@ archive 把 delta specs 合并回主 specs
 | Tool integration | skill/command delivery |
 | Runtime state API | `openspec status --json` |
 | Action instruction API | `openspec instructions ... --json` |
-| Multi-repo context | workspace + context store + initiative |
+| Multi-repo context | store registry + references + working set |
 
 ## 什么时候 OpenSpec 的设计特别有价值
 
@@ -179,4 +176,4 @@ OpenSpec 的优势在这些场景里最明显：
 | schema 为什么不是模板别名 | `../schema/01-schema-到底是什么.md` |
 | CLI 为什么像 runtime API | `../spec_cli/03-workflow-runtime-api.md` |
 | 默认 spec-driven 到底怎么跑 | `../internal-spec-driven/00-四条命令的共有机制.md` |
-| workspace/context-store 的边界 | `../mechanisms/01-workspace-coordination.md` |
+| store/reference 的边界 | `../mechanisms/01-store-模型与仓库协同.md` |

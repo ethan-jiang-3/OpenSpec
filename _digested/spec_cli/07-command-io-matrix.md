@@ -31,15 +31,17 @@
 | `instructions apply` | OPSX + 高级用户 | apply config、context files、tasks | apply instruction 包 | 决定是否进入代码实施阶段 | 否 |
 | `templates` | 高级用户/工具 | schema 解析路径、artifact templates | 模板路径与来源 | 帮助调试模板覆盖与解析 | 否 |
 | `schemas` | 高级用户/工具 | project/user/package schemas | schema 列表与来源 | 帮助发现可用 workflow 模型 | 否 |
-| `workspace setup` | 人类 | workspace 名称、link 路径、opener 选择、工具选择 | `.openspec-workspace/view.yaml`、registry 注册 | 创建跨仓库规划 home | 是 |
-| `workspace list` | 人类 + 机器 | registry + view.yaml | workspace 列表及 links | 帮助发现和选择 workspace | 否 |
-| `workspace link` | 人类 | 目标目录路径 | 更新 view.yaml 的 links | 扩展 workspace 可规划的仓库范围 | 是 |
-| `workspace relink` | 人类 | link name + 新路径 | 更新 link 的本地路径 | 适配不同机器的 checkout 布局 | 是 |
-| `workspace open` | 人类 + agent | workspace、opener 选择、initiative 绑定 | AGENTS.md（刷新）、.code-workspace | 启动 agent/editor 并注入 workspace 上下文 | 是 |
-| `workspace update` | 人类 | workspace root、profile、delivery、tool 选择 | workspace 级 skill 文件 | 同步 workspace 的 workflow skills | 是 |
-| `workspace doctor` | 人类 | view.yaml、link 路径 | 诊断报告（缺失路径、建议） | 排查 workspace 配置问题 | 否 |
-| `context-store setup` | 人类 | store 名称、路径 | context store 目录（含 Git repo） | 创建团队共享协调数据空间 | 是 |
-| `initiative create` | 人类 + agent | initiative 名称、store | initiative 协调文件（requirements、design 等） | 创建跨仓库使命的协调单元 | 是 |
+| `store register` | 人类 | 本地路径、store id、remote（可选） | `~/.openspec/stores/registry.yaml`、`.openspec-store/store.yaml` | 全局注册仓库 checkout | 是 |
+| `store list` | 人类 + 机器 | registry | store 列表及 backend | 发现已注册的 store | 否 |
+| `store unregister` | 人类 | store id | 从 registry 删除条目 | 注销不再需要的 store | 是 |
+| `context` | 人类 + 机器 | root + references | working set（human/JSON/.code-workspace） | 查看当前上下文引用的仓库 | 否 |
+| `workset save` | 人类 | name、root、store list | `~/.openspec/worksets/worksets.yaml` | 保存多仓库打开视图 | 是 |
+| `workset open` | 人类 + editor | workset name、opener | 在 editor 中打开多仓库视图 | 一键恢复开发环境 | 是 |
+| `doctor` | 人类 | root、references、store registry | 诊断报告 | 排查 store 注册/引用/checkout 健康 | 否 |
+
+### 删除的命令（v1.4.0 → v1.5.0）
+
+`workspace`、`context-store`、`initiative` 命令已在 v1.5.0 中全部删除，由上述 store/context/workset/doctor 替代。
 
 ## workflow 命令简表
 
@@ -62,7 +64,7 @@
 - `schemas --json`
 - `templates --json`
 - `list --json`
-- `workspace list --json`
+- `store list --json`
 
 共同特征：
 
@@ -83,7 +85,7 @@
 
 其中：
 
-- `init/update/workspace update` 更偏改变工具接入层。
+- `init/update` 更偏改变工具接入层。
 - `new change/archive` 更偏改变业务工作流状态。
-- `workspace setup` 更偏改变跨仓库规划基础设施。
+- `store register` 更偏改变跨仓库上下文基础设施。
 - `config/schema` 更偏改变系统配置与模型定义层。

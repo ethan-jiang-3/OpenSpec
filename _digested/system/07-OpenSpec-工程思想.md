@@ -24,9 +24,9 @@ tool delivery 负责把说明交给不同工具
 | 它是 LLM wrapper | 它不做创造性推理，推理发生在宿主 coding agent |
 | 它是固定流程引擎 | schema 定义 artifact DAG，workflow 只是围绕 DAG 的动作入口 |
 | skill/command 是核心资产 | skill/command 是投递产物，核心资产仍是 `openspec/`、schema 和模板 |
-| workspace 是多仓库事实源 | workspace 是本机协调视图，不替 linked repo 决定业务归属 |
+| 把 store 当成多仓库事实源 | store 提供跨仓库 spec 索引，不替 referenced repo 决定业务归属 |
 
-这些边界解释了为什么 OpenSpec 源码里会同时有 parser、validator、artifact graph、workflow template、tool adapter、workspace opener。它们不是散装功能，而是服务同一个分层目标。
+这些边界解释了为什么 OpenSpec 源码里会同时有 parser、validator、artifact graph、workflow template、tool adapter、store registry。它们不是散装功能，而是服务同一个分层目标。
 
 ## 文件状态优先
 
@@ -137,22 +137,21 @@ done: 输出存在
 
 这种设计更贴近 brownfield AI Coding：真实代码库里的理解经常在实施过程中才变清楚。
 
-## workspace 的克制
+## store 模型的克制（v1.5.0）
 
-workspace/context-store/initiative 是当前系统中最容易被误读的一层。它不是把多个 repo 合并成一个超级 OpenSpec，也不是远端协作服务。
+v1.5.0 的 store/reference/workset 模型替代了 v1.4.0 的 workspace/context-store/initiative。新模型的设计更克制：
 
-它的定位是 local coordination view：
+- store 是全局注册的 repo checkout，不创建新的协调层。
+- reference 只是声明”这个项目还关心哪些仓库的 specs”。
+- working set 是查询接口，不自动 clone、不自动 sync、不内联内容。
+- workset 是纯个人本地的多仓库打开视图，不分享。
+- 没有 workspace-planning schema——所有 change 都在具体 repo 下，用 `spec-driven`。
 
-- 让 agent 在本机同时看到多个 repo/folder。
-- 绑定一个 initiative 上下文。
-- 生成 workspace guidance 和 opener surface。
-- 记录本机 link path 和 preferred opener。
-
-业务 specs 和可 archive change 仍应由 owning repo 承载。workspace 的价值是打开上下文和协调边界，而不是制造新的大一统 source of truth。
+业务 specs 和可 archive change 仍由 owning repo 承载。store 的价值是让 agent 知道”还有哪些 specs 可以读”，而不是制造跨 repo 的事务。
 
 ## 读源码时的主线
 
-理解 OpenSpec 源码时，不要从“命令很多”或“目录很多”开始。更稳定的读法是：
+理解 OpenSpec 源码时，不要从”命令很多”或”目录很多”开始。更稳定的读法是：
 
 ```text
 1. 文件状态是什么
@@ -160,7 +159,7 @@ workspace/context-store/initiative 是当前系统中最容易被误读的一层
 3. CLI 怎么解释状态
 4. template 怎么告诉 agent 行动
 5. delivery 怎么进入不同工具
-6. workspace 怎么扩展本机上下文
+6. store 怎么提供跨仓库上下文引用
 ```
 
 对应专题：
@@ -181,4 +180,4 @@ workspace/context-store/initiative 是当前系统中最容易被误读的一层
 | Markdown parser / validator | `src/core/parsers/`、`src/core/validation/` |
 | workflow templates | `src/core/templates/workflows/` |
 | skill / command 投递 | `src/core/shared/skill-generation.ts`、`src/core/command-generation/` |
-| workspace coordination | `src/core/workspace/`、`src/core/context-store/`、`src/core/collections/initiatives/` |
+| store coordination | `src/core/store/`、`src/core/references.ts`、`src/core/root-selection.ts` |

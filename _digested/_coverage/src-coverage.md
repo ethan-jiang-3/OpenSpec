@@ -1,4 +1,6 @@
-# 源码覆盖矩阵
+# 源码覆盖矩阵（v1.5.0）
+
+> **v1.5.0 刷新**：`src/core/workspace/`、`src/core/context-store/`、`src/core/collections/initiatives/`、`src/core/collections/runtime.ts` 已删除。新增 `src/core/store/`、`src/core/worksets.ts`、`src/core/references.ts`、`src/core/root-selection.ts`、`src/core/relationship-health.ts`、`src/core/working-set.ts`、`src/core/openers.ts`、`src/core/file-state.ts`、`src/core/openspec-root.ts`、`src/core/id.ts`、`src/core/zod-issues.ts`。新增命令 `src/commands/store.ts`、`src/commands/context.ts`、`src/commands/workset.ts`、`src/commands/doctor.ts`、`src/commands/shared-gather.ts`、`src/commands/shared-output.ts`。删除命令 `src/commands/workspace.ts`+`src/commands/workspace/`、`src/commands/context-store.ts`、`src/commands/initiative.ts`。
 
 ## 机制级覆盖
 
@@ -6,18 +8,25 @@
 |------|----------|
 | `src/core/artifact-graph/` | `../schema/`、`../internal-spec-driven/05-schema-driven-控制面.md` |
 | `schemas/spec-driven/` | `../schema/02-内置-spec-driven-详解.md`、`../internal-spec-driven/` |
-| `schemas/workspace-planning/` | `../schema/03-内置-workspace-planning-详解.md` |
 | `src/commands/workflow/` | `../spec_cli/03-workflow-runtime-api.md`、`../internal-spec-driven/` |
 | `src/core/archive.ts`、`src/core/specs-apply.ts` | `../internal-spec-driven/04-archive-归档合并.md` |
 | `src/core/project-config.ts` | `../schema/05-四层注入机制.md`、`../internal-spec-driven/06-config-yaml-机制与约束.md` |
-| `src/core/planning-home.ts` | `../system/03-planning-home-与-workspace.md` |
+| `src/core/planning-home.ts` | `../system/03-planning-home-与-store-模型.md` |
 | `src/core/config.ts`、`src/core/global-config.ts`、`src/core/profiles.ts`、`src/core/config-schema.ts` | `../spec_cli/05-config-profile-delivery.md`、`../mechanisms/02-tool-delivery.md` |
-| `src/core/workspace/` | `../mechanisms/01-workspace-coordination.md` |
-| `src/commands/workspace.ts`、`src/commands/workspace/` | `../mechanisms/01-workspace-coordination.md` |
-| `src/core/context-store/` | `../mechanisms/01-workspace-coordination.md` |
-| `src/core/collections/initiatives/` | `../mechanisms/01-workspace-coordination.md` |
-| `src/core/collections/runtime.ts` | `../mechanisms/01-workspace-coordination.md` |
-| `src/commands/context-store.ts`、`src/commands/initiative.ts` | `../mechanisms/01-workspace-coordination.md` |
+| `src/core/store/` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/worksets.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/references.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/root-selection.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/relationship-health.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/working-set.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/openers.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/file-state.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/openspec-root.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/commands/store.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/commands/context.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/commands/workset.ts`、`src/commands/workset-input.ts`、`src/commands/workset-prompts.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/commands/doctor.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md` |
 | `src/core/shared/skill-generation.ts` | `../mechanisms/02-tool-delivery.md` |
 | `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md` |
@@ -31,6 +40,20 @@
 | `src/commands/completion.ts` | `../mechanisms/05-cli-infra.md` |
 | `src/telemetry/`、`src/commands/feedback.ts` | `../mechanisms/05-cli-infra.md` |
 | `src/core/change-metadata/`、`src/utils/change-metadata.ts`、`src/core/change-status-policy.ts` | `../internal-spec-driven/03-apply-实施执行.md`、`../spec_cli/03-workflow-runtime-api.md` |
+| `src/core/id.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+
+### 已删除（v1.5.0 移除）
+
+| 旧源码 | 曾覆盖位置 | 状态 |
+|--------|------------|------|
+| `src/core/workspace/` | 曾：`../mechanisms/01-workspace-coordination.md` | 已删除 |
+| `src/commands/workspace.ts`、`src/commands/workspace/` | 曾：同上 | 已删除 |
+| `src/core/context-store/` | 曾：同上 | 已删除 |
+| `src/commands/context-store.ts` | 曾：同上 | 已删除 |
+| `src/core/collections/initiatives/` | 曾：同上 | 已删除 |
+| `src/commands/initiative.ts` | 曾：同上 | 已删除 |
+| `src/core/collections/runtime.ts` | 曾：同上 | 已删除 |
+| `schemas/workspace-planning/` | 曾：`../schema/03-内置-workspace-planning-详解.md` | 已删除 |
 
 ## 部分覆盖
 
@@ -48,4 +71,4 @@
 | 源码 | 覆盖位置 |
 |------|----------|
 | `src/cli/index.ts` | `../system/06-源码地图与扩展点.md`、`../spec_cli/04-command-deep-dive.md` |
-| `src/index.ts`、`src/core/index.ts`、`src/core/collections/index.ts`、`src/core/shared/index.ts` | `../system/06-源码地图与扩展点.md` |
+| `src/index.ts`、`src/core/index.ts` | `../system/06-源码地图与扩展点.md` |

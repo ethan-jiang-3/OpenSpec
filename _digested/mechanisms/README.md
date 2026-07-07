@@ -19,7 +19,7 @@
 | # | 文件 | 回答的问题 |
 |---|------|------------|
 | 0 | `00-map.md` | 这些机制为什么被收拢在一起，读的时候怎么选 |
-| 1 | `01-workspace-coordination.md` | workspace/context-store/initiative 为什么是 local coordination view，而不是大一统 repo |
+| 1 | `01-store-模型与仓库协同.md` | v1.5.0 的 store/reference/workset 如何替代旧 workspace/context-store/initiative |
 | 2 | `02-tool-delivery.md` | 同一套 workflow 语义如何投递到不同 coding agent |
 | 3 | `03-spec-model.md` | Markdown 如何成为可验证、可查询、可归档的协议状态 |
 | 4 | `04-workflow-templates.md` | workflow 模板为什么是 agent 操作手册源码，而不是 CLI 硬编码流程 |

@@ -2,13 +2,13 @@
 
 ## 一句话定位
 
-OpenSpec 当前不是单一的“spec 文件夹工具”，而是一套本地协作系统：
+OpenSpec 当前不是单一的”spec 文件夹工具”，而是一套本地协作系统：
 
 - 用 repo-local `openspec/` 管项目当前规格和一次次增量 change。
 - 用 schema 把一次 change 的 artifact 结构显式化。
 - 用 CLI workflow 命令给 agent 提供结构化 runtime API。
 - 用 init/update 把这些 workflow 投递给不同 coding agent。
-- 用 workspace/context-store/initiative 扩展到多仓库、多目录的本地协调视图。
+- 用 store/reference/workset 模型支持多仓库上下文引用。（v1.5.0：替代了旧 workspace/context-store/initiative 三件套）
 
 这个专题只讲这些层之间怎么拼起来。具体命令 IO、schema 字段、默认四类 artifact 的细节，分别去 `spec_cli/`、`schema/`、`internal-spec-driven/`。
 
@@ -41,14 +41,14 @@ OpenSpec 当前系统
    skills / commands
    per-tool command adapters
 
-5. Workspace coordination
-   managed workspace local view
-   context store registry
-   initiative collection
-   linked repos/folders
+5. Store coordination
+   global store registry
+   declared references
+   working set assembly
+   personal worksets
 ```
 
-这五层不是替代关系，而是叠加关系。repo-local 仍然是单仓库工作的默认形态；workspace 不是把所有 linked repo 合并成一个大 repo，而是在本机创建一个协调视图。
+这五层不是替代关系，而是叠加关系。repo-local 仍然是单仓库工作的默认形态；store 不是把所有 linked repo 合并成一个大 repo，而是通过声明的 reference 关系让 agent 知道「还有哪些仓库的 specs 可以看」。
 
 ## 每层回答的问题
 
@@ -58,7 +58,7 @@ OpenSpec 当前系统
 | Schema runtime | 一次 change 应该有哪些 artifact，依赖关系是什么？ | `schema.yaml`、templates |
 | Agent runtime API | agent 此刻应该写什么、能写什么、缺什么？ | `status` / `instructions` JSON |
 | Tool delivery | 哪些 workflow 以什么形式交给哪个 coding agent？ | global config、skills、commands |
-| Workspace coordination | 多个 repo/folder 如何作为本地协作上下文出现？ | `.openspec-workspace/view.yaml`、context stores、initiatives |
+| Store coordination | 哪些其他仓库的 specs 与当前项目相关？agent 怎么引用它们？ | `~/.openspec/stores/registry.yaml`、`openspec/config.yaml` references、working set |
 
 ## 现有专题怎么分工
 
@@ -87,19 +87,17 @@ internal-spec-driven/
   → 按问题进入 spec_cli/schema/internal-spec-driven/mechanisms
 ```
 
-## 当前版本里最重要的变化
+## 当前版本里最重要的变化（v1.5.0）
 
-和旧消化材料相比，当前源码里多了一个必须进入总体模型的轴：workspace / context-store / initiative。
+和旧消化材料相比，v1.5.0 把 v1.4.0 的 workspace/context-store/initiative 三概念统一为 store 模型：
 
-这个轴带来的核心变化是：
+- `PlanningHome` 简化为只有 `repo`，不再有 workspace 分支。
+- 多仓库上下文不再走 `.openspec-workspace/view.yaml`，而是全局 store registry + 项目 `references:` 声明 + working set 组装。
+- 新增 `openspec store`、`openspec context`、`openspec workset`、`openspec doctor` 四个命令。
+- `actionContext.mode` 始终为 `repo-local`，旧 workspace guard 不再需要。
+- Initiative 作为概念已废弃（`--initiative` flag 隐藏，提示不再支持）。
 
-- `PlanningHome` 会判断当前规划家在哪里：repo 还是 workspace。
-- repo-local 默认 schema 是 `spec-driven`。
-- workspace 默认 schema 是 `workspace-planning`。
-- workspace 是本机视图，不是远端协作服务，也不替 linked repo 做实现归属。
-- context store 和 initiative 承担更持久的团队协调上下文。
-
-所以新的总体专题不能只讲 `openspec/specs/` 和 `openspec/changes/`，还必须讲清楚 workspace 这层和 repo-local 之间的边界。
+更详细的对比见 `03-planning-home-与-store-模型.md`。
 
 ## 源码入口
 
@@ -112,6 +110,10 @@ internal-spec-driven/
 | global config/profile/delivery | `src/core/global-config.ts`、`src/core/profiles.ts` |
 | init/update 投递 | `src/core/init.ts`、`src/core/update.ts` |
 | tool command adapters | `src/core/command-generation/` |
-| workspace 状态 | `src/core/workspace/` |
-| context store | `src/core/context-store/` |
-| initiative collection | `src/core/collections/initiatives/` |
+| store 状态 | `src/core/store/` |
+| root 选择 | `src/core/root-selection.ts` |
+| references 索引 | `src/core/references.ts` |
+| working set 组装 | `src/core/working-set.ts` |
+| workset 管理 | `src/core/worksets.ts` |
+| doctor 健康检查 | `src/core/relationship-health.ts` |
+| openspec root 判定 | `src/core/openspec-root.ts` |

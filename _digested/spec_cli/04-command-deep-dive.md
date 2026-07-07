@@ -105,59 +105,41 @@
 - 核心对象：schema.yaml、template 文件、来源优先级、shadowing。
 - 影响：workflow 运行时如何解释 artifact 与 apply phase。
 
-## 六、workspace 命令族
+## 六、store / context / workset / doctor 命令族（v1.5.0）
 
-Workspace 命令族是 OpenSpec 从单仓库扩展到多仓库的核心接口。设计原则：**规划在 workspace 层，实现在 linked repo 层**。
+v1.5.0 用 store 模型替代了 v1.4.0 的 workspace/context-store/initiative。四条新命令各有独立职责。
 
-### `workspace setup`
+### `store register`
 
-- 角色：workspace 创建器。
-- 核心对象：workspace 名称、link 列表、preferred opener、tool 选择。
-- 边界：创建 `.openspec-workspace/view.yaml`，注册到本地 registry，不修改任何 linked repo 内容。
+- 角色：全局注册一个仓库 checkout。
+- 核心对象：store id、backend（git type + local_path + remote + branch）。
+- 产出：在 `~/.openspec/stores/registry.yaml` 中写入条目，在 checkout 下创建 `.openspec-store/store.yaml`。
+- 边界：只记录已有目录，不 clone、不 init。
 
-### `workspace list` / `ls`
+### `store list` / `unregister` / `info`
 
-- 角色：workspace 发现接口。
-- 边界：列出已知 workspace 及其 links，纯查询，不改状态。
+- 角色：store 发现与注销。
+- 边界：纯 registry 操作，不改 store checkout 内容。
 
-### `workspace link`
+### `context`
 
-- 角色：仓库关联器。
-- 边界：将现有目录关联到 workspace（按 basename 推断或 `name=path` 显式命名），不创建、不初始化被链接目录。
+- 角色：working set 查看器。
+- 核心对象：root + referenced stores 的 spec 索引。
+- 产出：human listing、JSON brief、或 `--code-workspace` 文件。
+- 边界：纯查询，不 clone、不 sync、不写任何 repo。
 
-### `workspace relink`
+### `workset save` / `open` / `list`
 
-- 角色：链接路径修改器。
-- 边界：修改已有 link 的本地路径（例如在另一台机器上 checkout 到了不同位置）。
+- 角色：个人本地多仓库视图管理。
+- 核心对象：workset（name + members + optional tool）。
+- 产出：`~/.openspec/worksets/worksets.yaml` + `.code-workspace` 文件。
+- 边界：纯本地，不共享，不提交。
 
-### `workspace open`
+### `doctor`
 
-- 角色：workspace 启动器。
-- 核心对象：workspace、agent/editor 选择、initiative 绑定。
-- 产出：生成或刷新 `AGENTS.md`（workspace 级 agent 指导）和 `.code-workspace`（VS Code 多根工作区）。
-- 支持 opener：VS Code（`code`）、Codex CLI（`codex`）、Claude（`claude`）、GitHub Copilot（VS Code + copilot）。
-
-### `workspace update`
-
-- 角色：workspace 级 skill 同步器。
-- 边界：与 repo-local `update` 不同——此命令在 workspace root 生成 skills（skills-only），并通过 `workspace_skills` 状态跟踪 profile drift。
-
-### `workspace doctor`
-
-- 角色：workspace 诊断器。
-- 边界：检查当前机器的 link 路径是否存在、报告缺失、建议修复。
-
-### `context-store setup`
-
-- 角色：团队共享上下文初始化器。
-- 核心对象：context store 目录、Git 初始化。
-- 边界：创建团队协调数据目录，不绑定到具体 workspace。
-
-### `initiative create`
-
-- 角色：跨仓库使命创建器。
-- 核心对象：initiative（含 requirements、design、decisions 等协调文件）。
-- 边界：在 context store 中创建协调单元，workspace 可通过 `--initiative` 绑定。
+- 角色：store reference 健康检查。
+- 核心对象：项目 `references:` 中的 store id 到实际 checkout 的对应。
+- 边界：诊断 report，不自动修复。
 
 ## 七、旧命令与兼容层
 
@@ -198,11 +180,11 @@ Workspace 命令族是 OpenSpec 从单仓库扩展到多仓库的核心接口。
 
 如果只逐条看命令，你会得到很多零散功能。如果按角色来看，会更清楚：
 
-- `init` / `update` / `workspace update` 负责装配系统。
+- `init` / `update` 负责装配系统。
 - `config` / `schema` 负责定义系统。
-- `list` / `show` / `view` / `workspace list` / `workspace doctor` 负责观察系统。
+- `list` / `show` / `view` / `doctor` 负责观察系统。
 - `validate` / `archive` 负责治理系统。
 - `new change` / `status` / `instructions` 负责驱动系统。
-- `workspace setup` / `workspace open` / `context-store setup` / `initiative create` 负责跨仓库协调系统。
+- `store` / `context` / `workset` 负责跨仓库上下文引用系统。
 
 这才是 OpenSpec CLI 的整体结构。

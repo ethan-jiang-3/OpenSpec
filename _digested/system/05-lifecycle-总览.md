@@ -2,14 +2,14 @@
 
 ## 先分清两条生命周期
 
-OpenSpec 当前至少有两条相关但不同的生命周期：
+OpenSpec 当前有两条相关但不同的生命周期：
 
 | 生命周期 | 主体 | 典型状态 |
 |----------|------|----------|
 | repo-local change lifecycle | 一个 repo 里的 `openspec/changes/<name>/` | propose → apply/sync → archive |
-| workspace coordination lifecycle | workspace + initiative + linked repos | explore context → identify owning repo → create repo-local plan |
+| store coordination（v1.5.0） | store registry + references + working set | register stores → declare references → inspect context → create repo-local plan in owning repo |
 
-两者可以衔接，但不能混成一条自动流水线。workspace 帮你打开跨 repo 上下文；repo-local change 仍然是具体实现和 archive 的主要承载。
+两者可以衔接，但不能混成一条自动流水线。store 提供跨仓库的上下文引用；repo-local change 仍然是具体实现和 archive 的主要承载。
 
 ## repo-local workflow 地图
 
@@ -74,25 +74,25 @@ status 判断的核心不是“阶段字段”，而是 artifact output 是否�
 
 `sync` 进入 core profile 后，repo-local 生命周期里多了一个重要能力：可以在不 archive change 的情况下更新主 specs。这对长生命周期 change 或需要先同步 specs 再继续实现的场景有用。
 
-## workspace coordination lifecycle
+## store coordination（v1.5.0）
 
-workspace 侧更像这样：
+store 侧的上下文流：
 
 ```text
-context-store setup
-  → initiative create / open
-  → workspace open
-  → inspect linked repos/folders
-  → explore scope and ownership
-  → from owning repo: openspec new/propose ...
+openspec store register <path> --id <id>
+  → openspec/config.yaml 加 references: [<id>]
+  → openspec context（查看 working set）
+  → openspec doctor（健康检查）
+  → 从 owning repo: openspec new/propose ...
 ```
 
 关键点：
 
-- workspace 是本机工作台。
-- initiative 是可持久保存的协调上下文。
-- linked repo/folder 是探索和实现候选。
-- durable repo-local change 应从 owning repo 创建。
+- store 是全局注册的仓库 checkout。
+- reference 是项目声明的"我还关心这些仓库的 specs"。
+- working set 是本机组装出来的上下文视图（纯查询，不写）。
+- durable repo-local change 仍应从 owning repo 创建。
+- workset 是个人本地保存的多仓库打开视图，不共享。
 
 ## 从这里跳到专题细节
 
@@ -101,7 +101,7 @@ context-store setup
 | `status` / `instructions` 的 JSON 和调用链 | `../spec_cli/03-workflow-runtime-api.md` |
 | schema 如何定义 artifact DAG | `../schema/01-schema-到底是什么.md` |
 | `spec-driven` 的 proposal/specs/design/tasks | `../schema/02-内置-spec-driven-详解.md` |
-| `workspace-planning` schema | `../schema/03-内置-workspace-planning-详解.md` |
+| `workspace-planning` schema | （v1.5.0 已删除） |
 | explore/propose/apply/archive 精确机制 | `../internal-spec-driven/00-四条命令的共有机制.md` |
 
 ## 源码入口
@@ -114,4 +114,6 @@ context-store setup
 | apply gate 状态 | `src/core/change-status-policy.ts`、`src/commands/workflow/instructions.ts` |
 | sync 模板 | `src/core/templates/workflows/sync-specs.ts` |
 | archive CLI | `src/core/archive.ts` |
-| workspace CLI | `src/commands/workspace.ts` |
+| store CLI | `src/commands/store.ts`、`src/commands/context.ts` |
+| workset CLI | `src/commands/workset.ts` |
+| doctor CLI | `src/commands/doctor.ts` |
