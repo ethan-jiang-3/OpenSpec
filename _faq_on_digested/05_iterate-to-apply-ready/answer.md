@@ -6,14 +6,43 @@ Propose 的 mechanical apply gate（tasks.md 存在）只是一个文件系统�
 
 ```text
 Propose 产出 artifacts（mechanical apply-ready）
-  → Explore stance 审视 artifacts + 真实代码
-  → 发现 gap（scope 不准 / specs 漏 scenario / design 被代码推翻 / tasks 太粗）
-  → 更新 artifacts（/opsx:continue 或直接编辑）
-  → 再审
+  → 切换 stance：从 produce 到 critique
+  → 批判性阅读 artifacts（proposal/specs/design/tasks）
+  → 真实代码校验（artifact 声称 ⇔ 代码事实）
+  → 发现 + 分类 gap
+  → 修 gap → 重审 → 循环
   → 真正 apply-ready
 ```
 
-## 先分清两个 "apply-ready"
+这个迭代不是四条核心命令中的任何一条。工具上用的是 Explore 的 stance + Propose/Continue 的更新机制。它是 Explore 和 Propose 之间的迭代组合。
+
+![Iterate 到真正 apply-ready 的流程](figures/iterate-to-apply-ready.svg)
+
+图中编号说明：
+
+| 编号 | 名称 | 在流程里做什么 |
+|---|---|---|
+| ITR-01 | mechanical apply-ready | propose 刚完成，artifacts 存在，apply gate 通过，但内容未必可实施。 |
+| ITR-02 | 进入 Explore stance | 从 produce 切换到 critique——不生成新 artifact，严格审视已有内容。 |
+| ITR-03 | 批判性阅读 artifacts | 读 proposal/specs/design/tasks，逐个检查 scope 准吗、scenario 可测吗、tasks 可执行吗。 |
+| ITR-04 | 真实代码校验 | rg 搜索 + 读入口/模块/测试/数据模型，逐项对照：artifact 声称 ⇔ 代码事实。 |
+| ITR-05 | 发现 + 分类 gap | 识别 scope 偏差、specs 不完整、design 假设被推翻、tasks 太粗、artifacts 不一致、遗漏 artifact。 |
+| ITR-06 | 修 gap | 按 gap 类型选策略：直接编辑 / `/opsx:continue` / 回 Explore / 拆 change。 |
+| ITR-07 | 重审循环 | 修完回到 ITR-03 再审；有 gap 继续循环，无 gap 进入 ITR-08。通常 1-3 轮。 |
+| ITR-08 | 真正 apply-ready gate | scope 和代码一致、specs 可测、design 明确、tasks 具体、无矛盾。 |
+| ITR-09 | 交棒 apply | `/opsx:apply` 可以开始，artifacts 已经过代码校验。 |
+
+关键节点的细节单独展开在：
+
+- [`answer-itr03.md`](answer-itr03.md) — 如何批判性阅读每种 artifact（proposal/specs/design/tasks），审视重点和红灯信号。
+- [`answer-itr04.md`](answer-itr04.md) — 如何从 artifacts 提取可验证声称，去真实代码里逐项核对（文件→符号→行为→结构→测试）。
+- [`answer-itr05.md`](answer-itr05.md) — 六种 gap 类型的分类、严重程度、修复策略和回环机制。
+
+另外，从 MD/TS 交替协作的视角重新组织了整个流程：[`answer-sequence.md`](answer-sequence.md)。
+
+## Step 1：先分清两个 "apply-ready"
+
+在开始迭代之前，必须搞清楚为什么需要这一步：
 
 | | Mechanical apply-ready | 真正的 apply-ready |
 |---|---|---|
@@ -22,204 +51,93 @@ Propose 产出 artifacts（mechanical apply-ready）
 | 典型 gap | 无（文件存在就过） | proposal scope 和代码事实冲突、specs 漏边界场景、design 假设被代码推翻、tasks 太粗无法执行 |
 | 不满足时 | apply instructions 返回 `state: blocked`（仅限缺文件/无 checkbox） | apply instructions 返回 `state: ready`，但实施时会频繁暂停 |
 
-关键的坑在这里：**mechanical apply-ready 通过了，apply instructions 返回 `state: ready`，但一实施就发现 artifacts 对不上真实代码。** 这个 FAQ 要解决的就是 mechanical ready 到真正 ready 之间的这段路。
+关键的坑：**mechanical apply-ready 通过了，apply instructions 返回 `state: ready`，但一实施就发现 artifacts 对不上真实代码。** 这个 FAQ 要解决的就是这一段路。
 
-## 为什么这段路不是 Propose 也不是 Apply
+## Step 2：切换 stance——从 produce 到 critique
 
-Propose 的目标是生成 artifacts、满足 DAG。它的 stance 是"按 schema 产出"，不是"严格审视产出的质量"。Propose skill 本身也会读代码、也会检查一致性，但它没有把"审出 gap 然后迭代"作为显式步骤。
+Propose 阶段 agent 的姿态是"产出"——按 schema DAG 和 template 写内容，满足 apply gate。
 
-Apply 的目标是按 tasks 改代码。它遇到 gap 会暂停，但暂停后建议的操作通常是"回 Explore 或更新 artifacts"——也就是说，Apply 阶段发现的 gap，实际修复发生在 Apply 之外。
+ITR-02 把姿态切换到"审视"——假设 artifacts 可能有问题，逐项找。关键心态转变：
 
-所以这段迭代路本质上是一个 **Explore 动作**，只是 Explore 的对象不是"用户的一个模糊意图"，而是"已存在的 proposed artifacts"。
+| 产出姿态（Propose） | 审视姿态（ITR-02） |
+|---|---|
+| "我需要写一个 proposal" | "这个 proposal 的 scope 说清楚了吗？" |
+| "specs 要覆盖 proposal 的 capabilities" | "每个 requirement 的 scenario 真的可测吗？" |
+| "tasks 按依赖排序" | "task 3.1 具体到 agent 看到就能执行吗？" |
 
-## 迭代循环
+这一步不碰文件，只是 mindset shift。
+
+## Step 3：批判性阅读 artifacts
+
+逐个 artifact 做结构化审视。不是"看一遍"，而是从"能指导实施吗"的角度逐一检查。
+
+详细方法见 [`answer-itr03.md`](answer-itr03.md)。要点：
+
+- **proposal**：scope 精确吗？Impact 列的文件真实存在吗？有显式 Not included 吗？
+- **specs**：每个 requirement 至少一个可测 scenario？有正常 + 边界？MODIFIED 是完整 block 不是 patch？
+- **design**（若存在）：技术假设在真实代码里成立吗？提到的 abstraction 存在吗？
+- **tasks**：每个 task 具体到 agent 看到就知道改哪个文件？粒度合理吗？
+- **一致性**：proposal ↔ specs ↔ tasks scope 一致吗？
+
+输出是一份审视摘要，标注 ✓/⚠/✗，直接喂给 Step 4。
+
+## Step 4：拿真实代码逐项校验
+
+从 artifacts 里提取可验证的声称，去真实代码里核对。详细方法见 [`answer-itr04.md`](answer-itr04.md)。
+
+校验顺序（从便宜到贵）：
 
 ```text
-┌─────────────────────────────────────────┐
-│                                         │
-│  1. 读 artifacts（proposal/specs/design/tasks）
-│     ↓                                   │
-│  2. 拿真实代码校验                       │
-│     ↓                                   │
-│  3. 发现 gap？                          │
-│     ├─ 没有 → 真正 apply-ready，退出     │
-│     └─ 有  → 4. 更新 artifacts           │
-│                  ↓                      │
-│               5. 回到 1                 │
-└─────────────────────────────────────────┘
+1. 文件存在性  → artifact 里列的文件路径真实存在吗？
+2. 符号存在性  → artifact 里提到的 class/function/interface 存在吗？
+3. 行为一致性  → artifact 里描述的系统行为是否和代码事实匹配？
+4. 结构一致性  → artifact 里假设的架构/模块划分是否和代码一致？
+5. 测试覆盖    → artifact 里声称的测试是否存在？
 ```
 
-### Step 1：把 artifacts 当成 Explore 的调查对象
+输出是一份对照表，每行标注 ✓/⚠/✗。
 
-和初始 Explore 不同，这次不是从用户一句话开始。已经有完整的 proposal/specs/design/tasks。Explore 的姿态是**批判性阅读**：
+## Step 5：发现 + 分类 gap + 修复
 
-- proposal：scope 描述是否和 specs 一致？有没有写了但 specs 没覆盖的能力？
-- specs：每个 requirement 是否至少有一个可测试 scenario？ADDED/MODIFIED/REMOVED 的 delta 操作是否语义清楚？有没有漏边界情况（error、empty、concurrent、permission）？
-- design：技术决策的假设在真实代码里是否成立？有没有提到具体模块/文件/接口？migration 策略是否写了？
-- tasks：每个 task 是否具体到"知道该改哪个文件"的程度？checkbox 顺序是否反映真实依赖？
+ITR-03 和 ITR-04 的输出汇总后，按六种类型分类。详细方法见 [`answer-itr05.md`](answer-itr05.md)。
 
-### Step 2：拿真实代码校验
+六种 gap 类型：
 
-这是 Explore 的老本行（EXP-05）。但这次有明确的校验目标：
-
-| artifact 里的声称 | 真实代码里查什么 |
-|---|---|
-| proposal Impact: "src/auth/session.ts" | 这个文件真的存在吗？里面真的有 session 逻辑吗？ |
-| design: "使用现有 token store" | token store 的接口是什么？和 design 里假设的一致吗？ |
-| specs: "用户可以用 GitHub 登录" | 现有 auth route 是否已经预留了 provider 扩展点？ |
-| tasks: "2.1 Add OAuth callback route" | 现有 route 注册方式是什么？需要改哪些文件？ |
-
-这一步经常发现：proposal 里写的文件名是猜的、design 假设的 abstraction 在代码里不存在、specs 的 scenario 在现有测试框架下没法写。
-
-### Step 3：发现 gap
-
-常见 gap 类型：
-
-| gap 类型 | 表现 | 例子 |
+| 类型 | 典型表现 | 高严重度例子 |
 |---|---|---|
-| scope 偏差 | proposal 说影响 A，代码事实显示影响 B+C | proposal 写 "改 session.ts"，实际 session 逻辑分散在 3 个文件 |
-| specs 不完整 | requirement 没有 scenario 或漏边界情况 | "用户可以用 GitHub 登录"但没有写 "GitHub API 返回错误时怎么办" |
-| design 假设被推翻 | design 提到的 abstraction 在代码里不存在或形态不同 | design 假设有 `TokenStore` class，代码里是三个独立函数 |
-| tasks 不可执行 | task 太粗，不知道从哪下手 | "Implement OAuth login" — 是一个 task 还是十个？ |
-| artifacts 之间不一致 | proposal 的 scope 和 tasks 的范围对不上 | proposal 说只做 GitHub OAuth，tasks 里出现了 Google OAuth |
-| 遗漏 artifact | DAG 允许某 artifact 缺失，但实际需要 | spec-driven 的 design 不是 required，但这个 change 确实需要 design |
+| scope 偏差 | proposal Impact 和代码不一致 | scope 根本性错误——需回 Explore |
+| specs 不完整 | 缺 scenario、缺 requirement | MODIFIED 不完整——archive 时会丢数据 |
+| design 假设被推翻 | abstraction 在代码里不存在 | 架构假设根本性错误——需回 Explore |
+| tasks 不可执行 | 太粗、太模糊、顺序错 | "Implement OAuth login"（实际是 5-10 步） |
+| artifacts 不一致 | proposal 和 specs scope 不同 | proposal 写只做 GitHub OAuth，tasks 出现 Google OAuth |
+| 遗漏 artifact | DAG 允许缺失但实际需要 | 复杂 change 缺 design |
 
-### Step 4：更新 artifacts
+修复策略取决于 gap 严重度：小修直接编辑文件，中修用 `/opsx:continue` 补 artifact，大修回 Explore 重新讨论 scope。
 
-修 gap 的方式取决于 gap 的性质：
+## Step 6：重审循环
 
-| 修法 | 适用场景 |
-|---|---|
-| 直接编辑 artifact 文件 | 小修：补一个 scenario、修正文件名、细化一个 task |
-| `/opsx:continue` | 需要按 schema 规则补充缺失 artifact |
-| 回到 Explore 重新讨论 | scope 需要重新定义、design 需要推翻重来 |
-| 拆 change | 发现 scope 太大，一个 change 装不下 |
+修完 gap 后回到 Step 3 再审一轮。因为修一个 gap 可能引入新 gap。
 
-修完后，回到 Step 1 再审一轮。通常 1-3 轮就够了。如果超过 3 轮还在大改，说明最初的 Explore→Propose 收敛不够，可能需要回到 03 的流程重新做问题地图。
+```text
+ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
+  → ITR-06 修 gap
+  → ITR-07 回到 ITR-03
+```
 
-### Step 5：确认真正 apply-ready
+通常 1-3 轮。超过 3 轮还在大改 → 最初的 Explore→Propose 收敛不够，可能需要回到 03 的问题地图重做。
+
+## Step 7：确认真正 apply-ready
 
 真正 apply-ready 的最低条件：
 
 - proposal 的 scope、impact 和真实代码一致
 - specs 的每个 requirement 至少有 1 个可测试 scenario（含正常 + 至少 1 个边界）
 - 如果 change 涉及跨模块、新依赖、数据迁移或安全——design 存在且技术决策明确
-- 每个 task 具体到 agent 看到就能执行
+- 每个 task 具体到 agent 看到就能执行（知道改哪个文件、改成什么样）
 - artifacts 之间没有矛盾（proposal scope = specs 覆盖 = tasks 范围）
 - 用真实代码校验过，没有"artifact 说存在但代码里不存在"的文件或接口
 
-## 时序图
-
-```mermaid
-sequenceDiagram
-    actor User as 用户
-    participant MD as MD<br/>智力层<br/>Agent 工程判断
-    participant TS as TS<br/>机械层<br/>OpenSpec CLI
-    participant FS as 文件系统<br/>artifacts + 源码
-
-    %% ===== Phase 0: 入口 =====
-    rect rgb(240, 248, 255)
-        Note over User,FS: ══════ Phase 0 · 入口 ══════
-        MD->>MD: propose 刚完成<br/>mechanical apply gate 通过<br/>但 agent 判断 artifacts 需要审视
-    end
-
-    %% ===== Phase 1: 读 artifacts =====
-    rect rgb(255, 250, 240)
-        Note over User,FS: ══════ Phase 1 · 批判性阅读 artifacts ══════
-        MD->>FS: 读 proposal.md<br/>（scope/why/capabilities/impact）
-        FS-->>MD: proposal 内容
-        MD->>FS: 读 specs/**/*.md<br/>（requirements + scenarios）
-        FS-->>MD: specs 内容
-        MD->>FS: 读 design.md（若存在）<br/>（technical decisions/constraints）
-        FS-->>MD: design 内容
-        MD->>FS: 读 tasks.md<br/>（implementation checklist）
-        FS-->>MD: tasks 内容
-        MD->>MD: 批判性阅读：<br/>scope 清楚吗？scenario 可测吗？<br/>design 假设成立吗？tasks 可执行吗？<br/>artifacts 之间一致吗？
-    end
-
-    %% ===== Phase 2: 代码校验 =====
-    rect rgb(255, 240, 255)
-        Note over User,FS: ══════ Phase 2 · 拿真实代码校验 ══════
-        MD->>MD: 从 artifacts 提取校验目标：<br/>proposal impact → 声称影响的文件<br/>design → 声称存在的 abstraction<br/>specs scenarios → 需要验证的行为<br/>tasks → 声称要改的模块
-        MD->>TS: rg 搜索相关符号/文件
-        TS-->>MD: 匹配结果
-        MD->>FS: 读入口文件、相关模块、<br/>测试、数据模型
-        FS-->>MD: 真实代码事实
-        MD->>MD: 逐项对照：<br/>"proposal 说改 session.ts，<br/>但代码里 session 逻辑在 3 个文件"<br/>"design 假设 TokenStore class，<br/>代码里是 3 个独立函数"
-    end
-
-    %% ===== Phase 3: 发现 gap =====
-    rect rgb(255, 255, 240)
-        Note over User,FS: ══════ Phase 3 · 发现 + 分类 gap ══════
-        MD->>MD: 列出所有 gap，分类：<br/>① scope 偏差<br/>② specs 不完整<br/>③ design 假设被推翻<br/>④ tasks 不可执行<br/>⑤ artifacts 间不一致<br/>⑥ 遗漏 artifact
-    end
-
-    %% ===== Branch: 有/无 gap =====
-    alt 有 gap
-        rect rgb(255, 248, 248)
-            Note over User,FS: ══════ Phase 4 · 更新 artifacts ══════
-            MD-->>User: "发现 N 个 gap：<br/>- specs 漏了 OAuth callback 失败场景<br/>- design 的 TokenStore 在代码里不存在<br/>- task 2.1 太粗，需要拆成 3 步<br/>建议修完后我再审一轮。"
-
-            alt 小修（补 scenario/细化 task/改文件名）
-                MD->>FS: 直接编辑 artifact 文件
-            else 补缺失 artifact
-                MD->>TS: /opsx:continue<br/>（按 schema 规则补充）
-                TS-->>MD: instructions + 操作包
-                MD->>FS: 写新 artifact
-            else scope 需要重定义
-                MD->>MD: 回到 Explore stance<br/>重新讨论 scope<br/>可能需要更新 proposal
-            else scope 太大
-                MD-->>User: "建议拆成 N 个 changes"
-            end
-
-            Note over MD,FS: 修完后回到 Phase 1，再审一轮
-        end
-    else 无 gap（或 gap 已全部修复）
-        rect rgb(240, 255, 240)
-            Note over User,FS: ══════ 真正 apply-ready ══════
-            MD->>MD: 确认：<br/>✓ scope 和代码一致<br/>✓ specs 每个 requirement 有可测 scenario<br/>✓ design（如需）技术决策明确<br/>✓ tasks 具体可执行<br/>✓ artifacts 间无矛盾
-            MD-->>User: "artifacts 已审核通过。<br/>可以进入 /opsx:apply。"
-        end
-    end
-```
-
-## 关键交替模式
-
-### 模式 1：MD 内循环（TS 几乎不参与）
-
-和 Propose 的密集 MD↔TS 交替不同，本阶段的大部分工作是 MD 的内循环：
-
-```text
-MD 读 artifact → MD 读代码 → MD 对照 → MD 发现 gap → MD 修 artifact → MD 再审
-```
-
-TS 只在需要确认 artifact 状态（`openspec status`）或补充 artifact（`openspec instructions`）时才被调用。因为 artifacts 已经存在，不需要 TS 每轮重新计算 DAG。
-
-### 模式 2：代码事实是最终裁判
-
-```text
-artifact 声称：session 逻辑在 src/auth/session.ts
-代码事实：session 创建分散在 routes/auth.ts + core/session.ts + middleware/session.ts
-结论：proposal impact 不准确，需要更新
-```
-
-这和初始 Explore 的 EXP-05 逻辑完全一致，只是这次的起点不是用户意图，而是 artifact 里的具体声称。
-
-### 模式 3：迭代深度取决于 change 复杂度
-
-```text
-简单 change（加一个按钮、改一个配置）：
-  1 轮审视就够了
-
-中等 change（新增 OAuth login）：
-  1-2 轮：第一轮通常发现 specs 漏 scenario、tasks 不够细
-
-复杂 change（跨模块重构、数据迁移）：
-  2-3 轮：第一轮看 scope 和 design，第二轮看 specs 和 tasks，
-  第三轮确认修复
-```
-
-超过 3 轮还在大改 → 说明最初的 Explore→Propose 收敛不够。
+满足所有条件后→ ITR-09：交棒 `/opsx:apply`。
 
 ## 和四个阶段的衔接
 
@@ -235,7 +153,16 @@ artifact 声称：session 逻辑在 src/auth/session.ts
 07_archive-ready-to-archived    Archive 收束
 ```
 
-它处于 propose 和 apply 之间，但工具上用的是 Explore 的 stance + Propose/Continue 的更新机制。它不是一条新命令，而是对现有命令的组合使用。
+它处于 propose 和 apply 之间。不是一条新命令——工具上用的是 Explore 的 stance + Propose/Continue 的更新机制。
+
+## 三方分工
+
+| 角色 | 在 iterate 中负责什么 |
+|---|---|
+| Agent（MD 智力层） | 切换 stance、批判性阅读、代码校验、发现 gap、决定修复策略、写文件。 |
+| OpenSpec CLI（TS 机械层） | 只在需要确认 artifact 状态或补 artifact 时被调用（`openspec status`、`openspec instructions`）。本阶段 TS 参与度低。 |
+| 文件系统 | 保存 artifacts 和真实代码；文件存在性和内容就是校验的事实源。 |
+| 用户 | 确认 gap 修复方向（尤其是 scope 级 gap），确认最终 apply-ready。 |
 
 ## 常见误区
 
@@ -245,7 +172,7 @@ artifact 声称：session 逻辑在 src/auth/session.ts
 
 ### 误区 2：在 Apply 阶段边实施边修 artifacts
 
-可以，但效率低。Apply 每次暂停都会丢上下文（"当前做到哪了"）。不如在 Apply 之前花 10-20 分钟把 artifacts 审一遍。
+可以，但效率低。Apply 每次暂停都会丢上下文。不如在 Apply 之前花 10-20 分钟把 artifacts 审一遍。
 
 ### 误区 3：审 artifacts 就是再跑一遍 Propose
 
@@ -254,6 +181,10 @@ artifact 声称：session 逻辑在 src/auth/session.ts
 ### 误区 4：所有 change 都需要这个迭代
 
 不需要。简单 change（改文案、加一个配置项、修一个明显 bug）通常 propose 产出就够用了。需要迭代的主要是中等以上复杂度的 change。
+
+### 误区 5：审视 = 重新读一遍
+
+不是。审视需要有方法——从 artifacts 提取可验证声称，拿代码逐项核对。只"读一遍"会漏掉同样的 gap。
 
 ## 参考来源
 
@@ -266,6 +197,12 @@ artifact 声称：session 逻辑在 src/auth/session.ts
 | `src/core/templates/workflows/continue-change.ts` | `/opsx:continue` 的 artifact 补充机制 |
 | `src/core/artifact-graph/outputs.ts` | mechanical apply-ready 的判定（文件存在性） |
 | `src/commands/workflow/instructions.ts` | apply instructions 的 state 判定和 contextFiles |
-| [`../03_explore-to-propose-change/answer.md`](../03_explore-to-propose-change/answer.md) | Explore 的 EXP-05（真实代码调查）和分流判断 |
+| `schemas/spec-driven/schema.yaml` | proposal/specs/design/tasks 的 template 和 instruction 定义 |
+| [`../03_explore-to-propose-change/answer.md`](../03_explore-to-propose-change/answer.md) | Explore 的 stance 和分流判断 |
+| [`../03_explore-to-propose-change/answer-exp05.md`](../03_explore-to-propose-change/answer-exp05.md) | EXP-05 真实项目调查方法 |
 | [`../04_propose-to-apply-ready/answer.md`](../04_propose-to-apply-ready/answer.md) | Propose 的 artifact DAG 和 apply gate |
 | [`../04_propose-to-apply-ready/answer-prp10.md`](../04_propose-to-apply-ready/answer-prp10.md) | apply-ready 的两层定义 |
+| [`answer-itr03.md`](answer-itr03.md) | 批判性阅读每种 artifact 的方法 |
+| [`answer-itr04.md`](answer-itr04.md) | 代码校验的五个层次 |
+| [`answer-itr05.md`](answer-itr05.md) | 六种 gap 类型和修复策略 |
+| [`answer-sequence.md`](answer-sequence.md) | MD/TS 交替协作时序 |
