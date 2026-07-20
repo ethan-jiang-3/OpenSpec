@@ -59,6 +59,7 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 - [`answer-exp05.md`](answer-exp05.md) — 真实项目调查怎么从用户词汇、artifacts、代码入口、测试和 patterns 找到 implementation context。
 - [`answer-exp06.md`](answer-exp06.md) — OpenSpec 状态和代码事实怎么合成 pre-proposal 问题地图。
 - [`answer-exp07-11.md`](answer-exp07-11.md) — 最终怎么分流到继续 Explore、更新已有 change、propose 一个、propose 多个或不创建 change。
+- [`answer-sequence.md`](answer-sequence.md) — **MD/TS 交替协作时序**：把整个流程画成 MD（智力层）和 TS（机械 CLI）两条 swimlane 的交替推进，含分支和完整 Mermaid 时序图。
 
 ## Step 1：先接住用户意图，但不要立刻命名 change
 

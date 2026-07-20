@@ -20,4 +20,4 @@
 - [`../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md`](../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md) —— 看到 `archive ... not found` 怎么排错。
 - [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md) —— handbook 里讲清"capability 目录名=身份、specs 为什么会漂、怎么守"的一章（用户向，比 specs_truth 通俗）。
 
-边界：本篇只回答"平时的习惯 / 怎么发现 / 最常见的修法"，**不重复** `specs_truth/` 的全量分类，也**不和** [`../archive-ready-to-archived/question.md`](../archive-ready-to-archived/question.md)（讲 archive 那一刻 delta 怎么并进 specs）混为一谈——那是"一次性合并"，本篇讲的是"长期的 specs↔代码漂移"。
+边界：本篇只回答"平时的习惯 / 怎么发现 / 最常见的修法"，**不重复** `specs_truth/` 的全量分类，也**不和** [`../07_archive-ready-to-archived/question.md`](../07_archive-ready-to-archived/question.md)（讲 archive 那一刻 delta 怎么并进 specs）混为一谈——那是"一次性合并"，本篇讲的是"长期的 specs↔代码漂移"。

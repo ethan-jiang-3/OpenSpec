@@ -45,6 +45,8 @@
 - [`answer-arc-opsx.md`](answer-arc-opsx.md) — `/opsx:archive` 与 CLI 的区别。
 - [`answer-arc-guards.md`](answer-arc-guards.md) — 停止、warning、跳过和风险条件。
 
+另外，从 MD/TS 交替协作的视角重新组织了整个流程，含双路径（CLI + OPSX）Mermaid 时序图：[`answer-sequence.md`](answer-sequence.md)。
+
 ## Step 1：选择 active change
 
 CLI 可以直接接收 change name：
@@ -427,4 +429,4 @@ delta spec sync assessment
 | `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板层行为 |
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven sync 模板 |
 | [`../../_digested/internal-spec-driven/04-archive-归档合并.md`](../../_digested/internal-spec-driven/04-archive-归档合并.md) | archive validate/merge/move 机制消化 |
-| [`../apply-ready-to-archive-ready/answer.md`](../apply-ready-to-archive-ready/answer.md) | archive-ready 的前置状态 |
+| [`../06_apply-ready-to-archive-ready/answer.md`](../06_apply-ready-to-archive-ready/answer.md) | archive-ready 的前置状态 |

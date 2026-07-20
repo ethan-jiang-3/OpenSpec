@@ -44,6 +44,8 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、t
 - [`answer-app06.md`](answer-app06.md) — task 实施循环和 checkbox 更新。
 - [`answer-app-guards.md`](answer-app-guards.md) — blocked/all_done/暂停条件。
 
+另外，从 MD/TS 交替协作的视角重新组织了整个流程，含完整 Mermaid 时序图：[`answer-sequence.md`](answer-sequence.md)。
+
 ## Step 1：选择 change
 
 `/opsx:apply` 的输入可以带 change name：
@@ -285,4 +287,4 @@ Completed this session:
 | `src/core/change-status-policy.ts` | `actionContext`（repo-local）的语义 |
 | `schemas/spec-driven/schema.yaml` | 默认 `apply.requires: [tasks]`、`tracks: tasks.md` 和 apply instruction |
 | [`../../_digested/internal-spec-driven/03-apply-实施执行.md`](../../_digested/internal-spec-driven/03-apply-实施执行.md) | apply gate、checkbox、实施循环、暂停条件 |
-| [`../propose-to-apply-ready/answer.md`](../propose-to-apply-ready/answer.md) | apply-ready 的前置状态 |
+| [`../04_propose-to-apply-ready/answer.md`](../04_propose-to-apply-ready/answer.md) | apply-ready 的前置状态 |

@@ -12,7 +12,7 @@
 |---|---|---|
 | 什么时候发生 | 一次 `archive` 的瞬间 | 日子久了慢慢攒出来的 |
 | 谁和谁对 | change 的 delta → 主 spec | 主 spec ↔ 真实代码 |
-| 归谁管 | [`../archive-ready-to-archived/`](../archive-ready-to-archived/question.md) | **本篇** |
+| 归谁管 | [`../07_archive-ready-to-archived/`](../07_archive-ready-to-archived/question.md) | **本篇** |
 | 一句话 | "这一次改动怎么进 specs" | "specs 整体还对不对得上代码" |
 
 本篇只讲后者。前者（archive 那一刻 delta 怎么并进 specs）已经有专门一篇了。
