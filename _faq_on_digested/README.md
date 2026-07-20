@@ -32,19 +32,20 @@ _faq_on_digested/
 - `config-schema-boundary/`
 - `openspec-vs-opsx-prefix/`
 
-不建议加数字前缀（没有固定阅读顺序）。
+`NN_` 数字前缀按创建时间排序（01 最早），方便了解问题是按什么次序产生和探究的。
 
 ## 已有问题
 
-- [`explore-to-propose-change/`](explore-to-propose-change/question.md) — Explore 如何基于用户意图、OpenSpec 状态和真实代码判断是否应该 propose change，以及应该 propose 一个还是多个。
-- [`propose-to-apply-ready/`](propose-to-apply-ready/question.md) — Propose 动作出现后，OpenSpec 如何创建 change、生成 artifacts，并走到 `/opsx:apply` 可以开始。
-- [`apply-ready-to-archive-ready/`](apply-ready-to-archive-ready/question.md) — `/opsx:apply` 开始后，agent 如何读取上下文、实施 tasks、更新 checkbox，并走到可以 archive。
-- [`archive-ready-to-archived/`](archive-ready-to-archived/question.md) — Implementation 已完成后，`openspec archive` 如何验证、合并 specs、移动 change，并收束到 archived。
-- [`schema-article-driven/`](schema-article-driven/question.md) — OpenSpec 的 schema 系统能不能脱离代码实现，用来管理文章内容生产流水线？概念验证：定义一个 article-driven schema，不改源码。
-- [`schema-agent-dev/`](schema-agent-dev/question.md) — OpenSpec 的 schema 能不能用来开发 AI Agent 本身？概念验证：和 spec-driven 同框架（proposal/specs/design/tasks），只改 instruction 内容，不改源码。
-- [`openspec-executable/`](openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的。
-- [`config-yaml-growth/`](config-yaml-growth/question.md) — 熟悉 SDD 的人能手动调 config.yaml，但普通程序员怎么搞？有没有交互式工具或 agent 辅助——还是现状就是个缺口？
-- [`keep-specs-aligned/`](keep-specs-aligned/question.md) — 怎么别让 main specs 和代码对不上：平时的习惯 / 怎么发现要修 / 最常见的几种修法。
+- [`01_openspec-executable/`](01_openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的。
+- [`02_schema-article-driven/`](02_schema-article-driven/question.md) — OpenSpec 的 schema 系统能不能脱离代码实现，用来管理文章内容生产流水线？概念验证：定义一个 article-driven schema，不改源码。
+- [`03_explore-to-propose-change/`](03_explore-to-propose-change/question.md) — Explore 如何基于用户意图、OpenSpec 状态和真实代码判断是否应该 propose change，以及应该 propose 一个还是多个。
+- [`04_propose-to-apply-ready/`](04_propose-to-apply-ready/question.md) — Propose 动作出现后，OpenSpec 如何创建 change、生成 artifacts，并走到 `/opsx:apply` 可以开始。
+- [`05_apply-ready-to-archive-ready/`](05_apply-ready-to-archive-ready/question.md) — `/opsx:apply` 开始后，agent 如何读取上下文、实施 tasks、更新 checkbox，并走到可以 archive。
+- [`06_archive-ready-to-archived/`](06_archive-ready-to-archived/question.md) — Implementation 已完成后，`openspec archive` 如何验证、合并 specs、移动 change，并收束到 archived。
+- [`07_config-yaml-growth/`](07_config-yaml-growth/question.md) — 熟悉 SDD 的人能手动调 config.yaml，但普通程序员怎么搞？有没有交互式工具或 agent 辅助——还是现状就是个缺口？
+- [`08_schema-agent-dev/`](08_schema-agent-dev/question.md) — OpenSpec 的 schema 能不能用来开发 AI Agent 本身？概念验证：和 spec-driven 同框架（proposal/specs/design/tasks），只改 instruction 内容，不改源码。
+- [`09_schema-requirement/`](09_schema-requirement/question.md) — OpenSpec 的 schema 能不能做需求工程？用原生 `proposal → specs → tasks` 承载 PRD 流程，把反复沟通打磨编码进 instruction。
+- [`10_keep-specs-aligned/`](10_keep-specs-aligned/question.md) — 怎么别让 main specs 和代码对不上：平时的习惯 / 怎么发现要修 / 最常见的几种修法。
 
 ## 引用规范
 
