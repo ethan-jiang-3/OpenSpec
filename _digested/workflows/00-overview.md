@@ -1,0 +1,109 @@
+# Workflow Templates · 总览
+
+## 位置
+
+workflow templates 是 OpenSpec 的内核。它们不是 TypeScript 里的硬编码执行流程，而是投递给 coding agent 的**操作手册源码**。
+
+```text
+OpenSpec CLI runtime API          ← TS 机械层
+  → status/instructions/validate/new change
+workflow template                 ← MD 智力层的操作手册
+  → 告诉 agent 如何串这些 API
+宿主 coding agent                 ← 推理、写文件、跑测试
+```
+
+CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 怎么操作（策略性的），agent 负责实际执行（智能的）。三层分离让行为可解释但不完全硬编码。
+
+## 全部 workflow 一览
+
+源码目录：`src/core/templates/workflows/`
+
+| 文件 | workflow id | 类型 | 一句话 |
+|---|---|---|---|
+| `explore.ts` | `explore` | 发现 | stance，非 workflow；探索想法、调查问题、澄清需求 |
+| `propose.ts` | `propose` | 规划 | 快速路径：创建 change + 生成全部 artifact 直到 apply-ready |
+| `new-change.ts` | `new` | 规划 | 只创建 change scaffold，不生成 artifact 内容 |
+| `continue-change.ts` | `continue` | 规划 | 增量路径：每次只推进一个 ready artifact |
+| `ff-change.ts` | `ff` | 规划 | fast-forward：批量生成剩余 artifact |
+| `apply-change.ts` | `apply` | 实施 | 按 tasks.md checkbox 逐项实施代码 |
+| `sync-specs.ts` | `sync` | 同步 | agent-driven 智能合并 delta specs 到主 specs |
+| `verify-change.ts` | `verify` | 验证 | 检查实现与 artifacts 的一致性 |
+| `archive-change.ts` | `archive` | 收尾 | agent 层收尾：sync assessment + 移动 change 到 archive |
+| `bulk-archive-change.ts` | `bulk-archive` | 收尾 | 批量归档多个 completed changes |
+| `onboard.ts` | `onboard` | 引导 | 引导式端到端体验 |
+
+`feedback.ts` 和 `store-selection.ts` 也在 workflows 目录下，但不在 profile selection 里，属于辅助模块。
+
+## 四类 workflow
+
+### 发现类（1 个）
+
+**explore** — 和其他所有 workflow 不同，它是 stance 不是 workflow。没有固定步骤、没有强制输出。agent 被要求好奇、可视化、扎根代码。
+
+### 规划类（4 个）
+
+**propose / new / continue / ff** — 四个模板共享同一套 artifact DAG（来自 schema），区别在于**操作粒度**：
+
+| workflow | 创建 change | 生成 artifact | 粒度 |
+|---|---|---|---|
+| `propose` | 会 | 会，直到 apply-ready | 快速完整 |
+| `new` | 会 | 不会 | scaffold |
+| `continue` | 不创建 | 一次一个 | 增量 |
+| `ff` | 可用于已有 change | 多个 | 批量推进 |
+
+这就是 OPSX "动作而非阶段" 的体验基础：用户可以从不同粒度切入同一条 artifact DAG。
+
+### 实施类（1 个）
+
+**apply** — 唯一真正修改业务代码的 workflow。消费 `openspec instructions apply --json`，逐项执行 tasks.md 的 checkbox。
+
+### 收尾与同步类（3 个）
+
+**sync / archive / bulk-archive** — 处理 delta specs → main specs 的合并和 change 目录的归档。
+
+## 每个 template 的统一结构
+
+读任何 workflow template 源码时，关注这六个区域：
+
+| 区域 | 内容 |
+|---|---|
+| **Input** | 接受什么参数（change name、描述、空） |
+| **Steps** | 按顺序做的动作（CLI 命令 + agent 行为） |
+| **Output** | 成功/暂停/失败时输出什么格式 |
+| **Guardrails** | 绝对不能做的事 |
+| **Artifact Creation Guidelines** | （仅规划类）怎么写 artifact |
+| **Fluid Workflow Integration** | （仅 apply）和其他 workflow 怎么交织 |
+
+## 和 CLI runtime API 的关系
+
+每个 template 调用的 CLI 命令是有限的、固定的集合：
+
+| CLI 命令 | 被哪些 workflow 调用 |
+|---|---|
+| `openspec list --json` | explore, continue, apply, archive, sync, verify |
+| `openspec status --change X --json` | **全部**（除 onboard） |
+| `openspec new change "<name>"` | propose, new, ff |
+| `openspec instructions <artifact> --json` | propose, continue, ff |
+| `openspec instructions apply --json` | apply |
+| `openspec schemas --json` | new（可选） |
+| `openspec validate` | verify |
+
+template 不直接操作文件系统——它通过 CLI 命令获取路径，再由 agent 用自己的文件工具去读写。
+
+## 和 `_faq_on_digested/` 的关系
+
+FAQ 里的四条核心命令（explore→propose→apply→archive）是从**问题驱动**的视角分析的。本目录是从**模板源码**的视角分析的。两者互补：
+
+- FAQ 回答 "这个阶段发生了什么，MD 和 TS 怎么交替"
+- 本目录回答 "template 里写了什么指令，agent 看到后会做什么"
+
+## 源码锚点
+
+| 机制 | 路径 |
+|---|---|
+| workflow 模板源码 | `src/core/templates/workflows/*.ts` |
+| skill/command 外壳 | `src/core/templates/skill-templates.ts` |
+| 类型定义 | `src/core/templates/types.ts` |
+| skill generation | `src/core/shared/skill-generation.ts` |
+| profile 选择 | `src/core/profiles.ts` |
+| runtime API | `src/commands/workflow/` |
