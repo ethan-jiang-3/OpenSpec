@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/propose.ts` → `getOpsxProposeSkillTemplate()` + `getOpsxProposeCommandTemplate()`
 
+> **用户怎么调**：`/opsx:propose <change-name 或描述>`
+> **agent 看到的名字**：`openspec-propose`（skill）/ `OPSX: Propose`（command）
+> **独立 CLI 命令**：无——propose 内调 `openspec new change`，但 propose 本身没有对应的 CLI 命令。
+> **profile**：core（大多数用户默认可见）
+
 ## 一句话
 
 propose 是**默认快速路径**：从 change name/description 出发，创建 change 容器，然后循环 status → instructions → write → status，直到 schema 的 `apply.requires` 全部满足。它是规划类四个 workflow 里最"全自动"的一个。

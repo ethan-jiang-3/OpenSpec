@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/apply-change.ts` → `getApplyChangeSkillTemplate()` + `getOpsxApplyCommandTemplate()`
 
+> **用户怎么调**：`/opsx:apply [change-name]`
+> **agent 看到的名字**：`openspec-apply-change`（skill）/ `OPSX: Apply`（command）
+> **独立 CLI 命令**：无——apply 没有对应的 `openspec apply` CLI 命令，它是纯 agent 模板，消费 `openspec instructions apply --json` 的运行时输出。
+> **profile**：core（大多数用户默认可见）
+
 ## 一句话
 
 apply 是**唯一真正修改业务代码的 workflow**。它消费 `openspec instructions apply --json` 的 runtime 输出，按 tasks.md checkbox 逐项实施，每完成一个 task 就勾掉一个 checkbox。它是 "actions on a change" 模型的核心——可以在任何时候被调用，不强制 phase lock。

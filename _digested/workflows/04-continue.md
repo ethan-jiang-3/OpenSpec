@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/continue-change.ts` → `getContinueChangeSkillTemplate()` + `getOpsxContinueCommandTemplate()`
 
+> **用户怎么调**：`/opsx:continue [change-name]`
+> **agent 看到的名字**：`openspec-continue-change`（skill）/ `OPSX: Continue`（command）
+> **独立 CLI 命令**：无——continue 没有对应的 `openspec continue` CLI 命令。
+> **profile**：custom（需显式启用，不在默认 core 里）
+
 ## 一句话
 
 continue 是**增量路径**：每次调用只推进一个 ready artifact。它体现 artifact DAG 的逐步工作流——先 `status --json` 找 ready artifact，再 `instructions <artifact> --json` 获取执行包，写完一个 **STOP**。

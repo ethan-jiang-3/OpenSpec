@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/sync-specs.ts` → `getSyncSpecsSkillTemplate()` + `getOpsxSyncCommandTemplate()`
 
+> **用户怎么调**：`/opsx:sync [change-name]`
+> **agent 看到的名字**：`openspec-sync-specs`（skill）/ `OPSX: Sync`（command）
+> **独立 CLI 命令**：无——sync 是纯 agent-driven merge，和 `openspec archive` CLI 的 programmatic merge 是两条独立路径。sync 也被 `/opsx:archive` 内部调用（sync assessment 阶段）。
+> **profile**：core（大多数用户默认可见）
+
 ## 一句话
 
 sync 是 **agent-driven spec merge**，不是 CLI 的 programmatic merge。agent 读 delta spec 和 main spec，用自己的智能判断做合并——可以只加一个 scenario 而不复制完整 requirement block。这和 `openspec archive` CLI 的 `buildUpdatedSpec()` 是完全不同的合并路径。

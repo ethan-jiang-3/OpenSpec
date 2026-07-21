@@ -34,6 +34,27 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 
 `feedback.ts` 和 `store-selection.ts` 也在 workflows 目录下，但不在 profile selection 里，属于辅助模块。
 
+## 用户可见的调用方式
+
+每个 workflow 有两种投递形态——skill（agent 自动调）和 slash command（用户手动输入）。部分还有独立的 CLI 命令：
+
+| workflow | 用户输入 | skill 名 | 独立 CLI？ | profile |
+|---|---|---|---|---|
+| explore | `/opsx:explore [想法]` | `openspec-explore` | 无 | **core** |
+| propose | `/opsx:propose <name>` | `openspec-propose` | 无 | **core** |
+| new | `/opsx:new <name>` | `openspec-new-change` | `openspec new change` 存在，但模板围绕其做了更多 | custom |
+| continue | `/opsx:continue [name]` | `openspec-continue-change` | 无 | custom |
+| ff | `/opsx:ff <name>` | `openspec-ff-change` | 无 | custom |
+| apply | `/opsx:apply [name]` | `openspec-apply-change` | 无 | **core** |
+| sync | `/opsx:sync [name]` | `openspec-sync-specs` | 无（也被 archive 内部调用） | **core** |
+| verify | `/opsx:verify [name]` | `openspec-verify-change` | `openspec validate` 类似但不同 | custom |
+| archive | `/opsx:archive [name]` | `openspec-archive-change` | **有**：`openspec archive`（路径不同） | **core** |
+| bulk-archive | `/opsx:bulk-archive` | `openspec-bulk-archive-change` | 无 | custom |
+| onboard | `/opsx:onboard` | `openspec-onboard` | 无 | custom |
+
+> **core profile**（默认）：propose, explore, apply, sync, archive —— 5 个。大多数用户只看到这些。
+> **custom profile**：需在 `customWorkflows` 中显式启用，才能解锁全部 11 个。
+
 ## 四类 workflow
 
 ### 发现类（1 个）

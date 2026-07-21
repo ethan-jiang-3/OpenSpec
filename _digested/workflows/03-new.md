@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/new-change.ts` → `getNewChangeSkillTemplate()` + `getOpsxNewCommandTemplate()`
 
+> **用户怎么调**：`/opsx:new <change-name 或描述>`
+> **agent 看到的名字**：`openspec-new-change`（skill）/ `OPSX: New`（command）
+> **独立 CLI 命令**：有——`openspec new change "<name>"` 是 CLI 命令，`/opsx:new` 是围绕它的 agent 模板。两者不同：CLI 只创建目录；template 创建后还展示 instructions。
+> **profile**：custom（需在 `customWorkflows` 中显式启用，不在默认 core 里）
+
 ## 一句话
 
 new 是**最轻量的规划 workflow**：只创建 change scaffold（目录 + `.openspec.yaml`），不生成任何 artifact 内容。创建完后展示第一个 artifact 的 instructions，然后 **STOP**。

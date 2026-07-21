@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/onboard.ts` → `getOnboardSkillTemplate()` + `getOpsxOnboardCommandTemplate()`
 
+> **用户怎么调**：`/opsx:onboard`
+> **agent 看到的名字**：`openspec-onboard`（skill）/ `OPSX: Onboard`（command）
+> **独立 CLI 命令**：无——onboard 是纯教学体验，编排 explore + propose + apply + archive 的完整流程，每个步骤附教学叙述。
+> **profile**：custom（需显式启用，不在默认 core 里）
+
 ## 一句话
 
 onboard 是**引导式端到端体验**，不是普通业务命令。它同时包含教学叙述和实际 workflow 操作，目标是带用户走完一次完整的 explore→propose→apply→archive 循环，并在过程中解释每个概念。维护它时应当把它当作 prompt 和产品 onboarding 文案的组合体。

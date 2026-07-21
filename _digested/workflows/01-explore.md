@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/explore.ts` → `getExploreSkillTemplate()` + `getOpsxExploreCommandTemplate()`
 
+> **用户怎么调**：`/opsx:explore [想法|change名|空]`
+> **agent 看到的名字**：`openspec-explore`（skill）/ `OPSX: Explore`（command）
+> **独立 CLI 命令**：无——explore 没有对应的 `openspec explore` CLI 命令，它是纯 agent 模板。
+> **profile**：core（大多数用户默认可见）
+
 ## 一句话
 
 explore 是**唯一不是 workflow 的 workflow**。它是 stance（姿态），不是 process（流程）。没有固定步骤、没有强制输出、没有 "done" 状态。agent 被要求做一个好奇的、可视化的、扎根代码的思考伙伴。

@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/archive-change.ts` → `getArchiveChangeSkillTemplate()` + `getOpsxArchiveCommandTemplate()`
 
+> **用户怎么调**：`/opsx:archive [change-name]`（agent 模板）或 `openspec archive <name>`（CLI 命令）
+> **agent 看到的名字**：`openspec-archive-change`（skill）/ `OPSX: Archive`（command）
+> **独立 CLI 命令**：**有**——`openspec archive <name>` 是独立的 CLI 命令，做 programmatic validate → merge → move。`/opsx:archive` 是 agent 模板，做 pre-flight checks + agent-driven sync + 手动 mv。**两条路径不同**：CLI 做完整替换式合并，OPSX 做智能合并。
+> **profile**：core（大多数用户默认可见）
+
 ## 一句话
 
 archive 是 agent 层的收尾操作手册。它和 `openspec archive` CLI 命令不同——template 做的是 pre-flight checks（artifact 完成度、task 完成度、delta spec sync assessment），然后由 agent 执行 `mv` 移动 change 目录。它不调用 CLI 的 programmatic merge。

@@ -4,6 +4,11 @@
 
 `src/core/templates/workflows/verify-change.ts` → `getVerifyChangeSkillTemplate()` + `getOpsxVerifyCommandTemplate()`
 
+> **用户怎么调**：`/opsx:verify [change-name]`
+> **agent 看到的名字**：`openspec-verify-change`（skill）/ `OPSX: Verify`（command）
+> **独立 CLI 命令**：有类似功能的 `openspec validate`，但两者不同——`validate` 检查 OpenSpec 文档结构（CLI 程序化），verify 检查代码实现是否与 artifacts 一致（agent 智能审查）。
+> **profile**：custom（需显式启用，不在默认 core 里）
+
 ## 一句话
 
 verify 检查实现是否与 planning artifacts 一致。它不是 `openspec validate` 的替代——`validate` 检查 OpenSpec 文档结构，verify 让 agent 审查代码实现、测试、任务完成度和 artifact 一致性。
