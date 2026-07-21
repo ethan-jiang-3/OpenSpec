@@ -66,7 +66,7 @@ sequenceDiagram
         loop 每轮：status → instructions → write → status
             MD->>TS: openspec instructions <artifact> --json
             TS-->>MD: dependencies, template, instruction,<br/>context, rules, resolvedOutputPath
-            MD->>FS: 读依赖文件
+            MD->>FS: 从磁盘重读依赖文件<br/>（不用内存中的旧版本——<br/>用户可能已编辑过）
             MD->>MD: 按 template 组织 + instruction 约束<br/>context/rules 不写入文件！
             MD->>FS: 写 artifact 到 resolvedOutputPath
             MD->>TS: openspec status --change X --json
@@ -100,7 +100,7 @@ These guide what you write, but should never appear in the output
 | Guardrail | 含义 |
 |---|---|
 | 创建 ALL artifacts（满足 apply.requires） | 不半途而废 |
-| 写之前读依赖 | 不凭记忆写 |
+| 写之前重读依赖（从磁盘，不从内存） | 用户可能已编辑过 |
 | context 不清时问用户 | 但优先保持 momentum |
 | change 同名时问用户 | 避免覆盖 |
 | 写完后验证文件存在 | 不假称完成 |

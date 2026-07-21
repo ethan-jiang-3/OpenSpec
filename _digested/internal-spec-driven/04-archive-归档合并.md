@@ -268,15 +268,22 @@ openspec/specs/theme/spec.md    ← 已更新（如果有 delta spec）
 
 `/opsx:archive` skill 模板 (`archive-change.ts`) 在移动之前会做一个额外检查：delta spec 是否已经合并到主 spec。这个检查属于 **agent 模板层**，不是 `ArchiveCommand.execute()` 的内部步骤。
 
-```
+```text
 if delta specs exist:
    对比 change 中的 delta spec 和主 spec
-   提示用户：
-     - "Sync now (recommended)"  → 调用 openspec-sync-specs skill
-     - "Archive without syncing" → 直接 archive（delta 丢失但 change 保留在 archive 中）
+   提示用户四选一：
+     - "Sync now (recommended)"  → inline 执行 sync → 验证全部 capability → 通过后才 mv
+     - "Archive without syncing" → 直接 archive
+     - "Cancel"                  → 停止，changeRoot 完整
+     - 其他输入                  → 重新询问
 ```
 
-这是一个**安全网**——如果用户在archive 前忘了同步 spec，agent 会提醒。但用户可以选择跳过。
+**v1.6.0 加固**：
+- sync 必须 **inline** 执行（不等完成绝不 mv——防止 changeRoot 被移走后 sync 读不到 delta spec）
+- sync 完成后对 `artifactPaths.specs.existingOutputPaths` 中**每个 capability** 重新验证：ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名
+- 任何 mismatch 都停止 archive，changeRoot 保持完整
+- main spec 路径改用 store-aware `planningHome.root`，不硬编码当前 repo 路径
+- 新增 **Cancel** 选项
 
 ---
 
@@ -295,3 +302,16 @@ if delta specs exist:
 archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活跃工作流中消失了。如果 spec 合并出问题，只能手动修正主 spec 文件然后重新提交。
 
 这也是为什么验证阶段如此严格 —— 一旦写入主 spec，错误的 requirement 就会成为系统的正式基线。
+
+---
+
+## 8. v1.6.0 变更摘要
+
+| 变更 | 影响位置 | 说明 |
+|---|---|---|
+| date prefix 防堆叠 | `archive.ts`：move 前检测 change name 是否已有 `YYYY-MM-DD-` 前缀 | 已有前缀则不再叠加，避免 `2026-07-21-2026-06-14-xxx` |
+| RENAMED no-op | `specs-apply.ts`：已 sync 的 RENAMED delta 不再报错 | 之前 archive 遇到已 sync 的 RENAMED 会失败 |
+| scenario-drift multiplicity | `specs-apply.ts`：多个 change 对同一 capability 的场景漂移检测 | 之前只考虑单一 change 的场景 |
+| 已 sync specs 不失败 | `archive.ts`：archive 前 specs 已 sync 时不再报错 | 减少误报 |
+| 递归 spec 发现 | `spec-discovery.ts`：支持嵌套 spec 目录（`specs/auth/oauth/spec.md`） | 之前只支持一级 capability 目录 |
+| 统一 requirement reader | `requirement-text.ts`：消除多处重复的 markdown 解析逻辑 | 重构，不影响行为 |

@@ -8,6 +8,7 @@
 > **agent 看到的名字**：`openspec-sync-specs`（skill）/ `OPSX: Sync`（command）
 > **独立 CLI 命令**：无——sync 是纯 agent-driven merge，和 `openspec archive` CLI 的 programmatic merge 是两条独立路径。sync 也被 `/opsx:archive` 内部调用（sync assessment 阶段）。
 > **profile**：core（大多数用户默认可见）
+> **v1.6.0 变更**：main spec 路径改用 store-aware `planningHome.root`（`<planningHome.root>/openspec/specs/`），不再硬编码为当前 repo 路径。当 store 指向非当前 repo 时，main specs 在 store 位置而不是 repo 位置。
 
 ## 一句话
 
@@ -60,7 +61,7 @@ sequenceDiagram
         loop 每个 delta spec
             MD->>FS: 读 change/specs/<capability>/spec.md
             FS-->>MD: ADDED/MODIFIED/REMOVED/RENAMED
-            MD->>FS: 读 openspec/specs/<capability>/spec.md
+            MD->>FS: 读 openspec/specs/<capability>/spec.md<br/>（路径用 <planningHome.root>，store-aware）
             FS-->>MD: main spec（或不存在）
             MD->>MD: 智能合并：<br/>• ADDED → 追加或更新<br/>• MODIFIED → 只改提到的部分<br/>  保留未提及的 scenario<br/>• REMOVED → 删除整个 block<br/>• RENAMED → FROM→TO
             MD->>FS: 写回 main spec

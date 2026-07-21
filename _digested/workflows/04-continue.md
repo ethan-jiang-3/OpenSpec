@@ -76,7 +76,7 @@ sequenceDiagram
             Note over MD,FS: Step 3 · 创建 ONE artifact
             MD->>TS: openspec instructions <first-ready> --json
             TS-->>MD: dependencies, template, instruction,<br/>context, rules, resolvedOutputPath
-            MD->>FS: 读依赖文件
+            MD->>FS: 从磁盘重读依赖文件<br/>（即使用户可能已编辑过）
             MD->>MD: 按 template + instruction 写内容<br/>context/rules 不写入！
             MD->>FS: 写 artifact 到 resolvedOutputPath
         end
@@ -104,7 +104,7 @@ STOP after creating ONE artifact
 | Guardrail | 含义 |
 |---|---|
 | Create ONE artifact per invocation | 核心约束 |
-| Always read dependency artifacts first | 不凭记忆 |
+| Always read dependency artifacts — re-read from disk, not memory | 用户可能已编辑过（v1.6.0） |
 | Never skip artifacts or create out of order | 遵守 DAG |
 | context unclear → ask before creating | 不猜 |
 | Verify artifact file exists after writing | 确认写入 |

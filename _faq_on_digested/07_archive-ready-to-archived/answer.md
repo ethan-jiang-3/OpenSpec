@@ -328,6 +328,8 @@ Archive 'YYYY-MM-DD-<changeName>' already exists.
 
 这时不会覆盖已有 archive。
 
+> **v1.6.0 变更**：CLI 现在会检测 change name 是否已有 `YYYY-MM-DD-` 前缀——如果有就不再叠加一层（防止 `2026-07-21-2026-06-14-add-oauth` 这种堆叠）。同时也修复了已 sync 的 RENAMED delta 被误判为错误、scenario-drift 在多个 change 同时修改同一 capability 时的检测遗漏等问题。
+
 ## Step 12：移动 change 目录
 
 最后 CLI 创建 `archive/` 目录，并移动：
@@ -372,6 +374,8 @@ delta spec sync assessment
 ```
 
 它还可能调用 `openspec-sync-specs` 做 agent-driven sync。这个 sync 路径和 CLI 的 programmatic `buildUpdatedSpec()` 不同：agent 会读 delta spec 和 main spec，然后智能合并。
+
+> **v1.6.0 变更**：OPSX archive template 有重要加固——① sync 必须 **inline** 执行（不等完成绝不 mv，防止 changeRoot 被移走后 sync 读不到文件）；② sync prompt 新增 **Cancel** 选项；③ sync 完成后必须对**全部 capability** 重新验证（ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名），任何 mismatch 都停止 archive。main spec 路径也改用 store-aware `planningHome.root`。
 
 所以读源码时要分层：
 

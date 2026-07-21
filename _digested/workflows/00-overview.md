@@ -31,6 +31,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | `archive-change.ts` | `archive` | 收尾 | agent 层收尾：sync assessment + 移动 change 到 archive |
 | `bulk-archive-change.ts` | `bulk-archive` | 收尾 | 批量归档多个 completed changes |
 | `onboard.ts` | `onboard` | 引导 | 引导式端到端体验 |
+| `update-change.ts` | `update` | 修订 | 修订已有 planning artifacts，保持 artifact 间一致。**不改代码。**（v1.6.0 新增） |
 
 `feedback.ts` 和 `store-selection.ts` 也在 workflows 目录下，但不在 profile selection 里，属于辅助模块。
 
@@ -51,9 +52,10 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | archive | `/opsx:archive [name]` | `openspec-archive-change` | **有**：`openspec archive`（路径不同） | **core** |
 | bulk-archive | `/opsx:bulk-archive` | `openspec-bulk-archive-change` | 无 | custom |
 | onboard | `/opsx:onboard` | `openspec-onboard` | 无 | custom |
+| **update** | `/opsx:update [name]` | `openspec-update-change` | 无 | custom（v1.6.0 新增） |
 
 > **core profile**（默认）：propose, explore, apply, sync, archive —— 5 个。大多数用户只看到这些。
-> **custom profile**：需在 `customWorkflows` 中显式启用，才能解锁全部 11 个。
+> **custom profile**：需在 `customWorkflows` 中显式启用，才能解锁全部 12 个。
 
 ## 四类 workflow
 
@@ -73,6 +75,10 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | `ff` | 可用于已有 change | 多个 | 批量推进 |
 
 这就是 OPSX "动作而非阶段" 的体验基础：用户可以从不同粒度切入同一条 artifact DAG。
+
+### 修订类（1 个，v1.6.0 新增）
+
+**update** — 修订已有 planning artifacts，保持 artifact 间一致。**绝不改代码。** 和 continue 的区别：continue 按 DAG 推进 build frontier（创建新 artifact），update 在已有 frontier 内修订（编辑已有 artifact）。
 
 ### 实施类（1 个）
 
@@ -101,10 +107,10 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 
 | CLI 命令 | 被哪些 workflow 调用 |
 |---|---|
-| `openspec list --json` | explore, continue, apply, archive, sync, verify |
+| `openspec list --json` | explore, continue, apply, archive, sync, verify, update |
 | `openspec status --change X --json` | **全部**（除 onboard） |
 | `openspec new change "<name>"` | propose, new, ff |
-| `openspec instructions <artifact> --json` | propose, continue, ff |
+| `openspec instructions <artifact> --json` | propose, continue, ff, update（仅大改时） |
 | `openspec instructions apply --json` | apply |
 | `openspec schemas --json` | new（可选） |
 | `openspec validate` | verify |

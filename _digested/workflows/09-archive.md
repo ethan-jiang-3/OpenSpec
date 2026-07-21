@@ -8,6 +8,7 @@
 > **agent 看到的名字**：`openspec-archive-change`（skill）/ `OPSX: Archive`（command）
 > **独立 CLI 命令**：**有**——`openspec archive <name>` 是独立的 CLI 命令，做 programmatic validate → merge → move。`/opsx:archive` 是 agent 模板，做 pre-flight checks + agent-driven sync + 手动 mv。**两条路径不同**：CLI 做完整替换式合并，OPSX 做智能合并。
 > **profile**：core（大多数用户默认可见）
+> **v1.6.0 变更**：① sync 前 main spec 路径改用 store-aware `planningHome.root`；② sync prompt 新增 Cancel 选项；③ sync 必须 inline 执行且完成后**验证全部 capability** 才允许 archive；④ guardrail 新增 "Never archive while sync is still in flight"。
 
 ## 一句话
 
@@ -29,6 +30,9 @@ archive 是 agent 层的收尾操作手册。它和 `openspec archive` CLI 命�
 2. openspec status --change "<name>" --json        # 检查 artifact 完成度
 3. [agent 读 tasks.md]                             # 统计 checkbox
 4. [agent 读 delta specs + main specs 对比]         # sync assessment
+   → main spec 路径用 <planningHome.root>/openspec/specs/（store-aware）
+   → 用户可选 Cancel / Archive without syncing / Sync now / Sync anyway
+   → 若选 sync：inline 执行 → 验证全部 capability → 通过后才继续
 5. mkdir -p "<changesDir>/archive"                 # 创建 archive 目录
 6. mv "<changeRoot>" "<archiveDir>/YYYY-MM-DD-<name>"  # 移动
 ```
@@ -70,12 +74,21 @@ sequenceDiagram
     rect rgb(255, 240, 255)
         Note over MD,FS: Step 4 · delta spec sync assessment
         MD->>FS: 读 change/specs/*/spec.md（delta）
-        MD->>FS: 读 openspec/specs/*/spec.md（main）
+        MD->>FS: 读 <planningHome.root>/openspec/specs/*/spec.md（main）
         MD->>MD: 对比：哪些 ADDED/MODIFIED/REMOVED/RENAMED
         alt 需要 sync
-            MD-->>User: "Sync now (recommended) / Archive without syncing"
-            opt 用户选 sync
-                MD->>MD: 调 openspec-sync-specs skill<br/>（agent-driven 智能合并）
+            MD-->>User: "Sync now (recommended) /<br/>Archive without syncing / Cancel"
+            alt 用户选 Cancel
+                MD-->>User: 停止，不 archive
+            else 用户选 Archive without syncing
+                Note over MD: 继续 archive
+            else 用户选 Sync now / Sync anyway
+                MD->>MD: 调 openspec-sync-specs **inline**<br/>（不等同步完成绝不 mv）
+                MD->>FS: sync 后重新对比**全部 capability**
+                MD->>MD: 验证：ADDED 存在、MODIFIED 含变更、<br/>REMOVED 消失、RENAMED 用新名
+                alt sync 失败或验证不通过
+                    MD-->>User: "Sync mismatch detected.<br/>停止，不 archive。<br/>changeRoot 完整，可重试。"
+                end
             end
         end
     end
@@ -89,17 +102,18 @@ sequenceDiagram
     end
 ```
 
-## sync assessment 的四种选项
+## sync assessment 的选项和路由
 
-template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然后给用户选项：
+template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然后给用户选项。v1.6.0 的关键变化：sync **必须 inline 执行**，且完成后必须重新对比全部 capability 做验证。
 
-| 场景 | 选项 |
+| 用户选择 | agent 行为 |
 |---|---|
-| delta 和 main 有差异 | "Sync now (recommended)", "Archive without syncing" |
-| delta 和 main 已一致 | "Archive now", "Sync anyway", "Cancel" |
-| 没有 delta specs | 直接跳过，无 sync 提示 |
+| **Cancel** | 停止，不 archive。changeRoot 完整保留。 |
+| **Archive without syncing** / **Archive now** | 跳过 sync，直接进入 mv |
+| **Sync now** / **Sync anyway** | ① 调 `openspec-sync-specs` **inline**（不委托后台——step 5 的 mv 会移走 changeRoot，后台 sync 读不到文件）；② 等待 sync 完成；③ 对 `artifactPaths.specs.existingOutputPaths` 中的**每个 capability** 重新验证——ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名；④ 验证全部通过才继续 archive；⑤ 任何 mismatch 都停止并报告 |
+| 其他输入 | 重新询问，不 archive |
 
-如果用户选 sync，agent 调 `openspec-sync-specs` skill（agent-driven merge），不是 CLI 的 `buildUpdatedSpec()`。
+> **为什么必须 inline**：step 5 会 `mv changeRoot`。如果 sync 在后台运行而 mv 先执行了，sync 读不到 delta spec，结果是 change 已 archived 但 main specs 从未更新。inline 执行 + 完成后验证避免了这种竞态。
 
 ## 四种输出格式
 
@@ -118,8 +132,10 @@ template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然�
 | Use artifact graph for completion checking | 不猜 |
 | Don't block archive on warnings | warning 只是确认 |
 | Preserve .openspec.yaml when moving | 随目录移动 |
-| If sync requested, use openspec-sync-specs | agent-driven，非 CLI |
+| If sync requested, run openspec-sync-specs **inline** | 不等同步完成绝不 mv |
+| Never archive while spec sync is still in flight | inline sync + verify before mv（v1.6.0 新增 guardrail） |
 | If delta specs exist, always run sync assessment | 不跳过对比 |
+| Route Cancel as stop | 不 archive，changeRoot 完整（v1.6.0 新增） |
 
 ## 和 FAQ 的衔接
 
@@ -131,10 +147,10 @@ FAQ `07_archive-ready-to-archived/` 从 CLI 主线视角分析了 programmatic m
 
 | 内容 | 行号范围（archive-change.ts） |
 |---|---|
-| SkillTemplate 定义 | L10-L123 |
-| CommandTemplate 定义 | L126-L286 |
+| SkillTemplate 定义 | L10-L131 |
+| CommandTemplate 定义 | L134-L312 |
 | Step 2: artifact 检查 | L31-L43 |
 | Step 3: task 检查 | L45-L56 |
-| Step 4: sync assessment | L58-L71 |
-| Step 5: 移动目录 | L73-L88 |
-| Guardrails | L112-L119 |
+| Step 4: sync assessment + inline verify | L58-L85 |
+| Step 5: 移动目录 | L87-L102 |
+| Guardrails | L120-L131 |
