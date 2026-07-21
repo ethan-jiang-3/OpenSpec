@@ -26,7 +26,7 @@
 | `cli-list`、`cli-show`、`cli-view`、`cli-validate` | `../mechanisms/03-spec-model.md` |
 | `cli-change`、`cli-spec` | `../spec_cli/04-command-deep-dive.md`、`../mechanisms/03-spec-model.md` |
 | `legacy-cleanup` | `../mechanisms/02-tool-delivery.md` |
-| `opsx-archive-skill`、`opsx-verify-skill`、`opsx-onboard-skill` | `../mechanisms/04-workflow-templates.md` |
+| `opsx-archive-skill`、`opsx-verify-skill`、`opsx-onboard-skill`、`opsx-update-skill` | `../mechanisms/04-workflow-templates.md` |
 
 ## 待后续评估（stores 设计文档）
 

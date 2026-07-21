@@ -27,9 +27,10 @@ archive
 bulk-archive
 verify
 onboard
+update
 ```
 
-可以按职责分成五组：
+可以按职责分成六组：
 
 | 组 | workflow | 作用 |
 |----|----------|------|
@@ -38,6 +39,7 @@ onboard
 | 实施 | `apply` | 根据 tasks 实施，并更新 task 状态 |
 | spec 同步 | `sync` | agent-driven 把 delta specs 同步到主 specs，但不 archive |
 | 校验/收尾/引导 | `verify`、`archive`、`bulk-archive`、`onboard` | 验证、归档、批量归档或引导式端到端流程 |
+| 修订 | `update` | 修订已有 planning artifacts，保持一致性，不改代码（v1.6.0） |
 
 ## 快速路径和拆分路径
 
@@ -49,7 +51,7 @@ onboard
   explore → new → continue/ff → apply → verify? → sync? → archive
 ```
 
-`propose` 倾向一次把进入实施所需的规划 artifact 做齐。`new` 和 `continue` 更适合逐个 artifact 推进。`ff` 是加速生成剩余规划 artifact 的入口。
+`propose` 倾向一次把进入实施所需的规划 artifact 做齐。`new` 和 `continue` 更适合逐个 artifact 推进。`ff` 是加速生成剩余规划 artifact 的入口。`update`（v1.6.0）在任意阶段修订已有 artifacts——Explore 中做了决策 → update artifacts；Apply 中发现 design 问题 → 回修 artifacts——不改代码。
 
 ## artifact lifecycle
 

@@ -29,7 +29,7 @@
 - `sync`
 - `archive`
 
-系统里可用的全部 workflows 则更广（11 个），包括：
+系统里可用的全部 workflows 则更广（12 个），包括：
 
 - `propose`
 - `explore`
@@ -42,6 +42,7 @@
 - `bulk-archive`
 - `verify`
 - `onboard`
+- `update`（v1.6.0）
 
 所以，profile 回答的是：
 
