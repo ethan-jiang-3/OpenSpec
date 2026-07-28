@@ -17,28 +17,19 @@
 
 所以长 context 的坏处不只是 token 多：它把 apply/runtime/Explore 专属知识交给了不需要它的 artifact，同时没有保证真正需要它的阶段收到。
 
-## A. 怎样从 internal-spec-driven 深挖这个问题
+## A. 已确认的机制边界
 
-不是只重读 `06-config-yaml-机制与约束.md`。要把 `00` 到 `06` 改按“上下文从哪里来、何时被谁消费、何时丢失”重新串起来：
+这不是一份待执行的研究计划。源码深挖已经汇总在 [`07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md)，它给出设计和诊断时必须接受的边界：
 
-| 材料 | 要追的问题 | 对 config 设计的产出 |
-|---|---|---|
-| `00-四条命令的共有机制` | `status`、instructions、schema、dependency 各承担什么？ | 画出 workflow × context consumer 矩阵，分清 global prompt 与 artifact handoff。 |
-| `01-explore-探索模式` | Explore 是否真的会得到 config 提示？ | 找出 Explore 的空洞，避免把 discovery 指导误放 context。 |
-| `02-propose-提案生成` | proposal 如何成为下游 specs/design 的依赖？ | 确认 change classification 和决策应写入 proposal，而不是全局 config。 |
-| `03-apply-实施执行` | apply 读什么，没读什么？ | 发现 `context`/`rules` 不会进入 apply；确定 tasks/schema/checker 的正确边界。 |
-| `04-archive-归档合并` | archive 靠什么完成验证和同步？ | 将归档纪律放入 tasks/checker/workflow，而不是假设 config 会参与。 |
-| `05-schema-driven-控制面` | 什么需求已经超出 config 的表达能力？ | 给出升级阈值：新 artifact、依赖、apply 行为必须进入 schema。 |
-| `06-config-yaml-机制与约束` | parser、注入、大小、warning、fail-open 的真实边界是什么？ | 明确 context/rules 能做什么、不能做什么，并以当前源码校正资料版本。 |
+| 事实 | 对配置决策的影响 |
+|---|---|
+| `context` 与 `rules` 只进入 `openspec instructions <artifact>` | 它们只能服务 planning artifacts，不能当作所有阶段的通用 guidance。 |
+| Apply 只收到 schema 的 `apply.instruction`、change artifacts、tasks/progress 和可选 references | apply 必须遵守的稳定规则要进入 schema；本次实施事实要进入 artifacts/tasks。 |
+| Explore、Sync、Archive 不调用 artifact instructions | 这些阶段的专属行为要进入 workflow skill、`AGENTS.md`、playbook 或 checker。 |
+| `schema` 在 new change 时会被写入 change 的 `.openspec.yaml` | 修改项目默认值不会迁移已在进行的 change。 |
+| `store` 是 root 选择机制，不是 guidance 字段 | 先确认命令最终选中了哪个 root，再判断正在编辑的 config 是否会被读取。 |
 
-深挖的交付物应是四张表，而不只是一篇解释文：
-
-1. **消费表面账本**：每个 command/workflow 实际读取哪些 config 字段。
-2. **信息归位审计**：每段规则的 scope、owner、lifetime、evidence 和 canonical source。
-3. **fixture 验证矩阵**：用 `instructions proposal/specs/design/tasks/apply --json` 验证真实注入结果。
-4. **升级决策表**：什么时候留在 config，什么时候转 artifact、schema、skill 或 checker。
-
-当前仓库源码比已有消化文档多了 `references` 和 `store` 等能力，因此深挖必须以源码复核为准，不能把旧的字段表当成永久 API。完整的工作计划在 [`03-deep-dive-plan.md`](03-deep-dive-plan.md)。
+因此，排查顺序也应固定为：**生效 root -> 生效 schema -> 目标消费者 -> rendered instructions -> artifacts / deterministic check**。跳过其中任一步，通常只会继续向 `context` 增加无效正文。
 
 ## B. 由机制推导出的 config 设计与维护方法
 
@@ -55,6 +46,8 @@
 ```
 
 对每句话先问：谁消费、在何时消费、是否需要在 artifact 中留痕、是否应由机器证明。答案会自然决定位置。
+
+在写第一版前，再问“下游运行时谁拥有 Flow”：传统程序、MD/Agent 控制 Flow，或程序/Graph 控制 Flow。这个分类决定 project profile 应描述哪张 authority map；它不是新的 config 字段。两种混合模型的边界和初稿分别见 [`00-initial-config-baselines.md`](00-initial-config-baselines.md)。
 
 ## 实际写法
 
@@ -81,9 +74,9 @@
 
 这会让 specs、design、tasks 和 apply 从真实 change artifacts 读取准确结论，而不是每一步重新从全局 context 猜测。
 
-## 两个样例的核心问题
+## 三个样例的核心问题
 
-两份样例的 rules 已经包含很多高质量、artifact-specific 的约束；问题主要在长 `context` 混入了：
+三个样例的 rules 都已经包含很多高质量、artifact-specific 的约束；问题主要在长 `context` 混入了：
 
 - proposal/design 才适用的长政策；
 - 单次 change 应记录的分类与决定；
@@ -91,7 +84,7 @@
 - 应由 registry/checker/CI 保证的硬规则；
 - 完整目录树和 capability 索引等按需才需读取的资料。
 
-处理方式不是删掉治理意图，而是将其改为：短 profile、artifact rule、canonical policy 指针、change context card、schema/playbook 或确定性检查。
+处理方式不是删掉治理意图，而是将其改为：短 profile、artifact rule、canonical policy 指针、change context card、schema/playbook 或确定性检查。前两个样例是 B1：MD/Agent 控制 Flow；DeerFlow Deep Research 是 B2：graph 拥有 node 顺序、route 和 checkpointed state，智能能力只在 node contract 内工作。因此 B2 配置尤其不能让 prompt、review 或 config 冒充 graph/state/node contract 的运行时权威。
 
 ## 何时不该继续改 config
 
@@ -107,8 +100,11 @@
 
 ## 延伸材料
 
-- 完整的设计/维护方法：[`02-design-maintain-guide.md`](02-design-maintain-guide.md)
-- 两份真实 config 的归位审计：[`01-placement-audit.md`](01-placement-audit.md)
-- 如何继续深挖 `internal-spec-driven`：[`03-deep-dive-plan.md`](03-deep-dive-plan.md)
-- 持续研究日志：[`00-research-log.md`](00-research-log.md)
+- 从下游项目类型选择初稿：[`00-initial-config-baselines.md`](00-initial-config-baselines.md)
+- 信息归位与 rule 设计：[`01-design-config-yaml.md`](01-design-config-yaml.md)
+- 配置不生效、schema 切换与维护：[`02-diagnose-maintain-config-yaml.md`](02-diagnose-maintain-config-yaml.md)
+- Deep Research Tool 审计：[`10-deep-research-tool-config-audit.md`](10-deep-research-tool-config-audit.md)
+- Agentic PPT workflow 审计：[`11-agentic-ppt-workflow-config-audit.md`](11-agentic-ppt-workflow-config-audit.md)
+- DeerFlow Deep Research 的程序/Graph 控制 Flow 审计：[`12-deerflow-deep-research-config-audit.md`](12-deerflow-deep-research-config-audit.md)
+- 源码深挖与阶段路由证据：[`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md)
 - 源码与材料索引：[`sources.md`](sources.md)

@@ -6,7 +6,7 @@
 
 | 来源 | 支撑的结论 |
 |---|---|
-| [`src/core/project-config.ts`](../../src/core/project-config.ts) | 解析的 `schema`、`context`、`rules`、`references`、`store`；50KB context；逐字段 fail-open；未知顶层字段不会进入返回 config。 |
+| [`src/core/project-config.ts`](../../src/core/project-config.ts) | 解析的 `schema`、`context`、`rules`、`references`、`store`；`config.yaml` 优先于 `.yml`；50KB context；逐字段 fail-open；未知顶层字段不会进入返回 config。 |
 | [`src/core/artifact-graph/instruction-loader.ts`](../../src/core/artifact-graph/instruction-loader.ts) | `generateInstructions()` 读取 project config，只取全局 context 与当前 `rules[artifactId]`，并校验 rules key。 |
 | [`src/commands/workflow/instructions.ts`](../../src/commands/workflow/instructions.ts) | artifact instructions 的渲染顺序；`generateApplyInstructions()` 使用 schema apply instruction、artifacts contextFiles 和 references，但不携带 context/rules。 |
 | [`schemas/spec-driven/schema.yaml`](../../schemas/spec-driven/schema.yaml) | 默认 artifact DAG、artifact instruction、dependencies、template 与 `apply` 的结构。 |
@@ -15,6 +15,8 @@
 | [`src/core/templates/workflows/archive-change.ts`](../../src/core/templates/workflows/archive-change.ts) | archive 使用 status、tasks、delta specs 的 workflow 行为。 |
 | [`src/utils/change-metadata.ts`](../../src/utils/change-metadata.ts) | schema 解析优先级：显式参数 → `.openspec.yaml` → project config → default。 |
 | [`src/utils/change-utils.ts`](../../src/utils/change-utils.ts) | new change 对 `config.schema` 的读取与 metadata 固化。 |
+| [`src/core/root-selection.ts`](../../src/core/root-selection.ts) | `store:` 仅对 config-only 目录充当 pointer；本地 planning shape 优先，pointer 配置字段不会成为有效项目配置。 |
+| [`src/commands/schema.ts`](../../src/commands/schema.ts) | `schema init --default` 当前写入 `defaultSchema`，而它不是有效 project config 字段。 |
 | [`src/core/references.ts`](../../src/core/references.ts) | references 组装为 store/spec 索引，按需 fetch，且有独立 50KB rendered index budget。 |
 | [`test/core/project-config.test.ts`](../../test/core/project-config.test.ts) | parser 的 references、50KB、warning 和 unknown rule key 行为的回归证据。 |
 
@@ -29,6 +31,7 @@
 | [`../../_digested/internal-spec-driven/04-archive-归档合并.md`](../../_digested/internal-spec-driven/04-archive-归档合并.md) | archive 的验证、同步与移动语义。 |
 | [`../../_digested/internal-spec-driven/05-schema-driven-控制面.md`](../../_digested/internal-spec-driven/05-schema-driven-控制面.md) | schema 是结构性升级路径的依据。 |
 | [`../../_digested/internal-spec-driven/06-config-yaml-机制与约束.md`](../../_digested/internal-spec-driven/06-config-yaml-机制与约束.md) | 传统 config 模型、50KB、rules key、fail-open 的消化说明。该文未覆盖当前源码新增的 references/store，需按当前源码复核。 |
+| [`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md) | 当前源码的 workflow × config consumer 边界、root/store 行为、schema 快照与 `defaultSchema` 陷阱；本 FAQ 的主要机制补充。 |
 
 ## 既有项目内指导
 
@@ -43,5 +46,6 @@
 
 | 样例 | 用法 |
 |---|---|
-| `/Users/bowhead/ai_tool_deepresearch/openspec/config.yaml` | 分析“长全局 context + 已有 artifact rules”的典型。 |
-| `/Users/bowhead/ai_tool_ppt_maker/openspec/config.yaml` | 分析“多工作域、长政策正文、阶段化/条件化指导”的典型。 |
+| `/Users/bowhead/ai_tool_deepresearch/openspec/config.yaml` | MD/Agent 控制 Flow、Engine 做 Gate/状态/receipt 的 B1 样例；也用于分析长全局 context + 已有 artifact rules。 |
+| `/Users/bowhead/ai_tool_ppt_maker/openspec/config.yaml` | Markdown-first Agent controller、JS/CLI 做确定性控制面的 B1 样例；也用于分析多工作域、长政策正文与条件化指导。 |
+| `/Users/bowhead/ai_deerflow_deep_research/openspec/config.yaml` | 程序/Graph 控制 Flow 的 B2 样例；配合 `agent/README.md`、`agent/src/deerflow_deep_research/graph/builder.py`、`domain/state.py` 与 Agent Charter 的 node policy，审计 config、graph/state/node contract 的 authority boundary。 |

@@ -7,8 +7,8 @@
 1. 不同阶段（Explore、proposal、specs、design、tasks、apply、archive）到底会消费哪些 config 信息？
 2. 什么应留在 `context`，什么应写成 `rules.<artifact>`，什么应该进入 change artifacts、schema、playbook 或 checker？
 3. 当一个项目有多种 change domain、长政策文档、复杂 gate 或 runtime 时，如何让真正需要它的阶段得到准确指导？
-4. 两份真实配置（Deep Research Tool 与 Agentic PPT workflow）哪里已经做对了，哪里是“内容正确但注入位置不对”？
-5. 从 `internal-spec-driven` 的现有机制说明出发，还应该补哪些研究和资料，才能让 config 的设计/维护变成可复用的方法？
+4. 三份真实配置（Deep Research Tool、Agentic PPT workflow 与 DeerFlow Deep Research）哪里已经做对了，哪里是“内容正确但注入位置不对”？B1 的 MD/Agent 控制 Flow 与 B2 的程序/Graph 控制 Flow 又分别应把指导路由到哪里？
+5. 当配置看起来已经写对却没有生效时，如何按真实的 root、schema、instructions 和 change artifacts 诊断问题？
 
 # 背景
 
@@ -18,6 +18,7 @@
 
 - `/Users/bowhead/ai_tool_deepresearch/openspec/config.yaml`
 - `/Users/bowhead/ai_tool_ppt_maker/openspec/config.yaml`
+- `/Users/bowhead/ai_deerflow_deep_research/openspec/config.yaml`
 
 它们都包含了大量高质量的项目知识和工程纪律；难点不是“删掉约束”，而是让每条约束由正确的 owner、在正确时机、通过正确的路径消费。
 
@@ -37,4 +38,4 @@
 
 最容易漏掉的事实：当前 `apply` 不会接收 `context`/`rules`；Explore 和 Archive 也不会通过 artifact instructions 自动接收它们。要实现阶段精确指导，首先应利用 artifact DAG 传递 change-local context；若仍不够，再升级 schema 或 workflow，而不是发明未支持的 config 字段。
 
-完整答案见 [`answer.md`](answer.md)；样例逐块审计见 [`01-placement-audit.md`](01-placement-audit.md)，进一步深挖计划见 [`03-deep-dive-plan.md`](03-deep-dive-plan.md)。
+完整答案见 [`answer.md`](answer.md)。从下游项目类型选择初稿见 [`00-initial-config-baselines.md`](00-initial-config-baselines.md)；信息归位见 [`01-design-config-yaml.md`](01-design-config-yaml.md)；配置诊断与维护见 [`02-diagnose-maintain-config-yaml.md`](02-diagnose-maintain-config-yaml.md)；B1 的两个样例审计见 [`10-deep-research-tool-config-audit.md`](10-deep-research-tool-config-audit.md) 与 [`11-agentic-ppt-workflow-config-audit.md`](11-agentic-ppt-workflow-config-audit.md)，B2 的程序/Graph 控制 Flow 样例见 [`12-deerflow-deep-research-config-audit.md`](12-deerflow-deep-research-config-audit.md)。底层源码边界见 [`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md)。

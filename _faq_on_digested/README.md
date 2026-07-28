@@ -48,7 +48,7 @@ _faq_on_digested/
 - [`10_schema-requirement/`](10_schema-requirement/question.md) — OpenSpec 的 schema 能不能做需求工程？用原生 `proposal → specs → tasks` 承载 PRD 流程，把反复沟通打磨编码进 instruction。
 - [`11_keep-specs-aligned/`](11_keep-specs-aligned/question.md) — 怎么别让 main specs 和代码对不上：平时的习惯 / 怎么发现要修 / 最常见的几种修法。
 - [`12_upstream-roadmap-and-issues/`](12_upstream-roadmap-and-issues/question.md) — 以 GitHub Issues/Discussions、官方文档、Release Notes 为源，归纳上游项目的 1) roadmap（已交付/近期/workspace 四阶段/context store），2) 最主要问题（结构性限制/高频 bug/迁移痛点），3) 社区最常见问题，并与我们在 `_digested/` 中的研究交叉对照。
-- [`13_how_to_design_maintain_config_yaml/`](13_how_to_design_maintain_config_yaml/question.md) — 如何让 config.yaml 在正确阶段提供准确指导：区分全局 profile、artifact rules、change artifacts、schema/workflow 与 deterministic checks，并审计两个长 context 样例。
+- [`13_how_to_design_maintain_config_yaml/`](13_how_to_design_maintain_config_yaml/question.md) — 如何按下游运行时的 Flow owner 选择传统确定性、MD/Agent 控制或程序/Graph 控制的 config 初始基线，让 config.yaml 在正确阶段提供准确指导，并按生效 root、schema、instructions 与 artifacts 诊断“配置没有生效”。
 
 ## 引用规范
 
