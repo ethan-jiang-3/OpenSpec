@@ -47,6 +47,7 @@ _faq_on_digested/
 - [`09_schema-agent-dev/`](09_schema-agent-dev/question.md) — OpenSpec 的 schema 能不能用来开发 AI Agent 本身？概念验证：和 spec-driven 同框架（proposal/specs/design/tasks），只改 instruction 内容，不改源码。
 - [`10_schema-requirement/`](10_schema-requirement/question.md) — OpenSpec 的 schema 能不能做需求工程？用原生 `proposal → specs → tasks` 承载 PRD 流程，把反复沟通打磨编码进 instruction。
 - [`11_keep-specs-aligned/`](11_keep-specs-aligned/question.md) — 怎么别让 main specs 和代码对不上：平时的习惯 / 怎么发现要修 / 最常见的几种修法。
+- [`12_upstream-roadmap-and-issues/`](12_upstream-roadmap-and-issues/question.md) — 以 GitHub Issues/Discussions、官方文档、Release Notes 为源，归纳上游项目的 1) roadmap（已交付/近期/workspace 四阶段/context store），2) 最主要问题（结构性限制/高频 bug/迁移痛点），3) 社区最常见问题，并与我们在 `_digested/` 中的研究交叉对照。
 
 ## 引用规范
 
