@@ -4,12 +4,12 @@ document_kind: "case-audit"
 case_source: "/Users/bowhead/ai_tool_ppt_maker/openspec/config.yaml"
 applies_to:
   - "Agentic PPT workflow at case_source"
-  - "that project's framework-maintenance and run-bundle-production domains"
+  - "that project's framework-maintenance scope and affected run-bundle contracts"
 read_when:
   - "正在维护或复核 case_source 对应的 Agentic PPT workflow 配置。"
-  - "需要理解该项目如何分类 framework maintenance 与 run-bundle production，并路由长 policy。"
+  - "需要区分 framework maintenance 的 OpenSpec 范围与 run-bundle production 的实际入口，并路由长 policy。"
 focus:
-  - "将该项目的 framework-maintenance / run-bundle-production 分类写入 proposal，再按触发条件给 specs/design/tasks 路由 policy。"
+  - "将 OpenSpec 限定为 framework maintenance；把 run-bundle production 路由到它自己的 controller/playbook。"
   - "避免把该项目的 controller playbook、CLI protocol 和 bundle 操作说明塞进所有 planning artifacts。"
 not_for:
   - "不要把本项目的 B1 判断当作其他 Markdown-first、PPT 或 Agentic 项目的分类依据或配置模板。"
@@ -38,18 +38,20 @@ Agentic PPT workflow 是一个 AI 驱动的演示文稿生产系统：Agent 阅�
 
 > 目的不是批评配置“写得太长”，而是识别每段信息的正确 owner、消费时机和验证方式。建议去处是设计方向，最终仍应以项目实际文件结构为准。
 
+> **先看这一结论：**本文前两张“归位”表是诊断与未来整理候选，**不是当前要把整份 context 批量移动的清单**。当前可直接执行的是一次范围明确的混合修改：保留三份 policy 文件和 `rules.proposal` 235–246；只删除 `context` 91–125 中复制的三段 policy 摘要；替换 `rules.design` 294–302；修改 `rules.proposal` 228–233，使其只描述 framework maintenance 及对 run-bundle contract 的影响。除此之外的 context/rules 本次不动。
+
 ## Context 归位
 
 | 现有块 | 现有位置 | 判断 | 建议去处 |
 |---|---:|---|---|
 | 项目本质与控制面所有权 | 4-19 | 是项目最重要的稳定模型，但可以更短。 | `context`：保留 Markdown-first、MD/JS/human ownership 摘要。 |
-| 工作域与对象边界 | 20-45 | “framework maintenance vs run-bundle production”是 proposal 需要的 change classification；详细目录/读法不需要每次注入。 | context 留双域事实；proposal rule 要求分类和记录；详细 map 放 charter/layout docs。 |
+| 工作域与对象边界 | 20-45 | “framework maintenance vs run-bundle production”首先是 OpenSpec scope boundary，不是两个 proposal 的平行分类；详细目录/读法不需要每次注入。 | context 留 scope boundary；proposal 只记录 framework change 对 run-bundle contract 的影响；详细 map 放 charter/layout docs。 |
 | 权威源与查找顺序 | 46-61 | 有用的 source-of-record 索引，但 full table 应按任务需求读取。 | context 留总原则 + 入口；proposal/specs/design rules 指向相关 authority docs。 |
 | 技术栈与运行时铁律 | 62-77 | 技术栈是稳定背景；禁止的生产路径主要是 design/tasks 约束。 | context 仅栈/主入口；design/tasks rules 或 executable check 承担细则。 |
 | CLI 失败回执 | 78-90 | 只与 CLI / controller protocol 变更相关。 | `rules.design`（条件触发）+ `cli-surface` / `node-specification` spec；不放 context。 |
 | Gates、Agent control、simple reliable control | 91-126 | 是重要但条件化的政策；当前对所有 artifact 全量投放会淹没普通 PPT change。 | proposal/specs/design rules 加“涉及 X 时读 Y”的短指针；完整政策留在 `openspec/policies/`。 |
 | Capability 注册表和完整 capability 表 | 127-173 | 它是 proposal/specs 做归属判断的索引，不是所有 stages 的背景。 | proposal/specs rules 指向 `openspec/specs/`；由实际 main specs 作为权威；完整表可移至 capability index。 |
-| Workflow 术语、生产语义、refresh paths | 174-200 | 专属 run-bundle production / implementation 的知识。 | proposal 先分类；run-bundle design/tasks guidance pack；不是 context。 |
+| Workflow 术语、生产语义、refresh paths | 174-200 | 专属 run-bundle production / implementation 的知识。 | 指定 deck 的 controller/playbook 拥有；framework change 仅在影响 runtime contract 时在 proposal/design 记录兼容性，不放 context。 |
 | Agent 入口与 OpenSpec 开发循环 | 201-212 | 这是行动 playbook。尤其 Apply/Explore 不自动读 context，放在这里不能保证实际执行者看见。 | `AGENTS.md` / playbook / schema `apply.instruction`；change 的 tasks 写明实际步骤。 |
 
 ## Rules 归位
@@ -63,9 +65,11 @@ Agentic PPT workflow 是一个 AI 驱动的演示文稿生产系统：Agent 阅�
 
 ## 可行的渐进收缩目标
 
-1. `context` 只保留“项目是何物、两种工作域、Flow/Gate owner、去哪里找权威”的短导航。
+本节仅列出后续治理 change 可逐项验证的方向；它不扩大上文已经界定的当前修改范围。
+
+1. `context` 只保留“项目是何物、OpenSpec framework-maintenance 范围、Flow/Gate owner、去哪里找权威”的短导航。
 2. 将 gate/control/quality 三套长政策改成 canonical 文档；在 proposal/specs/design 中仅留下有触发条件的阅读与留痕要求。
-3. 把 framework-maintenance / run-bundle-production 分类作为 proposal 的显式输出，而不是让每个后续 artifact 从全局 context 自行猜测。
+3. 在 proposal 明确本次是 framework maintenance，并记录对 run-bundle contract 的影响；指定 deck 的 production 不创建 OpenSpec artifacts，也不让后续 artifact 从 context 猜测入口。
 4. run-bundle 的真实执行入口和 Gate 规则放入 playbook / `AGENTS.md` / schema `apply.instruction`；不要期待 config 在实际 Apply 中出现。
 
 ## 对本文建议的复核

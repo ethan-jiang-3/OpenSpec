@@ -38,6 +38,8 @@ Agentic Business Simulation 是商业决策模拟 framework。运行时由 Agent
 
 因此，config 应保留这张稳定 authority map 和四份 maintenance policy 的短入口；它不应把完整 node graph、runtime vocabulary、Gate procedure、repair catalog、capability planning table 或 simulation 操作手册重复注入 proposal、specs、design、tasks。
 
+> **先看这一结论：**本案例的当前建议是**混合修改**，不是“只添加”、不是“删掉四份 policy”，也不是整份 config replacement。四个 `openspec/policies/*.md` 文件必须原样保留；`context` 中四份 policy 的长解释要替换成仍列出四个精确路径与固定顺序的短 map；其他 context 只压缩重复的运行时说明，不能删除 authority profile、maintenance/runtime 边界或 policy injection。随后修改既有 proposal/design rule，让它们在触发时记录结论；`rules.specs` 与 `rules.tasks` 基本保留。下面的表会逐项列明范围。
+
 ## Context 归位
 
 | 现有块 | 现有位置 | 判断 | 建议去处 |

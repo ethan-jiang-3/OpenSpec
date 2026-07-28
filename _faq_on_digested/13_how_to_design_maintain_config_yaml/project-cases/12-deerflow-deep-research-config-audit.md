@@ -38,6 +38,8 @@ DeerFlow Deep Research 是建立在 DeerFlow 2.1 上的下游深度研究产品�
 
 > 目的不是压缩文字本身，而是让每段信息由正确的 owner 在正确阶段消费。对 B2 而言，尤其不能把 graph、state 或 node contract 的运行时权威误放进 `openspec/config.yaml`。
 
+> **先看这一结论：**前面的归位分析是未来 context-budget/governance change 的诊断材料，**不是当前配置的删除或搬迁清单**。本次建议严格是 additions-only：`context` 6–54、`rules.proposal` 58–62、`rules.specs` 64–65、现有 `rules.design` 67–68 和 `rules.tasks` 70–71 全部原样保留；只在 `rules.design` 数组追加后文的一条 rule。policy 名称、触发条件、`## Workflow Outcome Review`、`## Node Agent Review` 和 `Change Focus` 都不改。
+
 ## Context 归位
 
 | 现有块 | 现有位置 | 判断 | 建议去处 |
@@ -75,6 +77,8 @@ DeerFlow Deep Research 是建立在 DeerFlow 2.1 上的下游深度研究产品�
 `openspec/config.yaml` 在这张表中的工作只是让 change author 在正确 artifact 回答这些问题。它不是第四个 runtime controller，也不能充当 `ResearchState`、graph builder 或 runtime bridge 的替身。
 
 ## 可行的渐进收缩目标
+
+本节只说明未来独立治理 change 可以验证的方向，不扩大上文已经界定的 additions-only 范围。
 
 1. 将 `context` 收敛为“downstream/mirror 边界 + B2 authority map + canonical source locator”；保留短路由，删除会在普通 planning artifact 中重复出现的运行时操作细节。
 2. 在 proposal 中把 Change Focus、触发的 charter policy、受影响 graph/node/state boundary 和 evidence seam 写成一次 change 的事实；完整 review table 格式只在触发时从 charter 读取。

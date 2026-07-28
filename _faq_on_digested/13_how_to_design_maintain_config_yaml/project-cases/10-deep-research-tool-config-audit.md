@@ -9,8 +9,8 @@ read_when:
   - "正在维护或复核 case_source 对应的 Deep Research Tool 配置。"
   - "需要理解该项目中哪些 runtime/playbook 细节被过早注入所有 planning artifacts。"
 focus:
-  - "把该项目的 Flow/Gate authority profile 留在 context，把条件化 policy、verification 与 registry 路由到正确 artifact 或 deterministic owner。"
-  - "在该项目中用 Change Context Card 让下游 artifacts 继承本次分类，而不是从全局 context 反复猜测。"
+  - "区分可在后续治理 change 中归位的信息，与当前已受 accepted spec 和 regression test 约束、必须继续留在 context 的 Evolution Directions 路由。"
+  - "为本项目给出一项可直接实施的、带精确 policy 路径的 design rule 修改建议。"
 not_for:
   - "不要把本项目的 B1 判断当作其他 MD/Agent 项目的分类依据或配置模板。"
   - "不要复制此项目的 capability、bundle、实验或验证细节到无关项目。"
@@ -37,20 +37,22 @@ Deep Research Tool 是一个把宽泛研究问题转化为证据支撑、多波�
 
 > 目的不是批评配置“写得太长”，而是识别每段信息的正确 owner、消费时机和验证方式。建议去处是设计方向，最终仍应以项目实际文件结构为准。
 
+> **阅读边界：**下面的“归位”两表是未来治理重构时可逐项验证的候选清单，**不是当前可以批量移动或删除的改动清单**。本次经 spec/test 复核后，唯一可直接实施的 YAML 改动见后文“可直接实施的 YAML 改写”。
+
 ## Context 归位
 
 | 现有块 | 现有位置 | 判断 | 建议去处 |
 |---|---:|---|---|
-| 项目一句话、Agent / Engine / 文件的基本分工 | 4-10 | 跨 artifact 的稳定理解，值得保留；当前细节可压缩。 | `context`，保留为 5-8 行 authority profile。 |
-| 核心原则与 JS/MD 边界 | 12-21、30-44 | “谁拥有决策”是稳定背景；具体错误处理、env/routing 规则不是所有 artifact 都需要。 | context 留 ownership 摘要；详细边界移至 charter；proposal/design rules 用条件化指针。 |
-| 技术栈及允许依赖 | 23-28 | 对 design/tasks 有强影响，对 proposal/specs 价值较低。 | `rules.design` / `rules.tasks`；context 只留一句技术栈摘要。 |
-| Evolution Directions | 51-60 | 明确标为 proposal/design 评审顺序，却在所有 artifact 注入，是典型作用域错配。 | `rules.proposal`、`rules.design`；完整正文留在现有 guidelines。 |
-| 命名规范 | 62-65 | UI 语言/路径语言可能全局；capability prefix 与 bundle 命名是条件性规则。 | context 只留全局语言约定；capability 命名进 proposal/specs；bundle 命名进 design/tasks 或 runtime playbook。 |
-| Requirement Traceability | 67-77 | 每条要求有不同消费者：分配 ID、写 spec header、写实现标记、收尾检查。 | proposal / specs / tasks 各自短 rule；registry 与 checks 保持 canonical；可执行检查继续承担验证。 |
-| Governance 工具与 registry 组织细则 | 79-91 | 详细的登记格式不是 proposal、design、tasks 都需要。 | `rules.specs` / `rules.tasks` 的指针；正文只留 registry 文档/validator。 |
-| Verification routing | 93-109 | 是 change-level verification policy；“本次计划”应该进入 change 的 `verification-plan.yaml` 和 tasks。 | proposal 触发创建计划；tasks 生成具体动作；分类定义留 policy/checker，不进 context。 |
-| 实验体系 | 111-128 | 主要面向 experiment/run 的设计与实施，不是所有 spec artifact 的背景。 | policy/runbook；相关 design/tasks rule 指针；必要硬约束交给 supervisor/engine。 |
-| 根目录与 framework/bundle 详细地图 | 130-165 | 有少量全局导向价值，但完整树是静态索引，重复注入性价比低。 | context 保留 3-5 条 root/ownership 摘要；完整地图放 README/charter。 |
+| 项目一句话、Agent / Engine / 文件的基本分工 | 4-10 | 跨 artifact 的稳定理解，值得保留；当前细节未来可审计。 | 后续治理 change 才能评估是否压缩为 authority profile。 |
+| 核心原则与 JS/MD 边界 | 12-21、30-44 | “谁拥有决策”是稳定背景；具体错误处理、env/routing 规则未必由所有 artifact 消费。 | 后续治理 change 中，先查 consumer、spec 与测试，再决定是否保留摘要或改为条件化指针。 |
+| 技术栈及允许依赖 | 23-28 | 对 design/tasks 有强影响，对 proposal/specs 价值较低。 | 后续治理 change 中，确认没有隐含 consumer 后，再考虑移到 `rules.design` / `rules.tasks`。 |
+| Evolution Directions | 51-60 | 从信息归位角度看，它们主要服务 proposal/design；**但本项目的 accepted spec 与 regression test 明确要求 OpenSpec `context` 以此顺序路由三条 Directions**。 | 当前不得移走。保留此处的有序路径与摘要；在 `rules.design` 增强“何时深入阅读、结论落在哪里”的要求。 |
+| 命名规范 | 62-65 | UI 语言/路径语言可能全局；capability prefix 与 bundle 命名是条件性规则。 | 后续治理 change 中，按实际 consumer 决定是否拆分到 proposal/specs、design/tasks 或 runtime playbook。 |
+| Requirement Traceability | 67-77 | 每条要求有不同消费者：分配 ID、写 spec header、写实现标记、收尾检查。 | 后续治理 change 中，确认 proposal / specs / tasks 与 checks 的现有契约后再拆分。 |
+| Governance 工具与 registry 组织细则 | 79-91 | 详细的登记格式未必是所有 artifact 都需要的上下文。 | 后续治理 change 中，先验证 registry/checker consumer，再决定能否改为 `rules.specs` / `rules.tasks` 指针。 |
+| Verification routing | 93-109 | 是 change-level verification policy；“本次计划”应该进入 change 的 `verification-plan.yaml` 和 tasks。 | 后续治理 change 中，确认 lifecycle tests 后，才可考虑把分类定义交给 policy/checker。 |
+| 实验体系 | 111-128 | 主要面向 experiment/run 的设计与实施，不是所有 spec artifact 的背景。 | 后续治理 change 中，确认 playbook/supervisor 的实际读取路径后，再审计是否可改为 policy/runbook 指针。 |
+| 根目录与 framework/bundle 详细地图 | 130-165 | 有少量全局导向价值，但完整树是静态索引。 | 后续治理 change 中，确认 agent 是否依赖该地图后，再评估 README/charter 的替代方案。 |
 
 ## Rules 归位
 
@@ -63,71 +65,58 @@ Deep Research Tool 是一个把宽泛研究问题转化为证据支撑、多波�
 | `tasks`（184-200） | done condition、依赖排序、requirement ID、收尾验证都能转化为可读任务。 | Apply 本身不重新注入 config；必须让生成出的 `tasks.md` 写出收尾验证，且由 CI/checker 复核。 |
 | `specs`（201-227） | Capability / requirement 的约束有明确 artifact owner。 | 主 spec 结构与 ID 格式最好由现有 governance checker 保障；长的边界测试可从 inline rule 移为 policy 指针。 |
 
-## 可行的渐进收缩目标
+## 对本文 Evolution Directions 建议的复核（以当前项目契约为准）
 
-1. 将 `context` 缩成“项目 profile + Flow/Gate authority + 最高优先级”摘要，不复制流程、目录树、检查器细节。
-2. 每个 artifact 保留 3-6 条真正稳定的 rule；一条 rule 应能回答“何时触发、做什么、在哪留下证据”。
-3. 用 proposal 的 Change Context Card 记录是否涉及 framework、version、experiment、verification plan；下游 artifacts 从 proposal 读这一结论。
-4. 将不可协商的 registry / spec / verification 规则继续放入 checker；真正的 Agent-flow 顺序留在 Markdown controller/playbook，而非 config。
+此前本文把三条 Evolution Directions 归为“从 `context` 移到 `rules.proposal` / `rules.design`”的内容。这个判断从减少重复注入的角度可以理解，**但对这个项目不能直接执行，故在此撤回为当前配置建议**。
 
-## 对本文 Evolution Directions 建议的复核
+原因不是偏好，而是该项目已有两项明确约束：
 
-这里的建议**方向正确，但还不够精确**。把三条 Evolution Directions 从全局 `context` 的长正文，迁到 `rules.proposal` 与 `rules.design`，能解决真正的问题：它们不是所有 planning artifact 都要反复携带的项目事实，而是一套在设计相关 change 上被触发的思考顺序。
+1. `openspec/specs/guidance-constitution/spec.md` 的 `Current evolution directions route relevant design through ordered reviews` 要求 Project Charter、Guidelines Index 和 **OpenSpec proposal/design context** 都路由当前顺序：semantic precision → simple reliable control → helper-oriented action responsibility。
+2. `tests/integration/md/evolution-direction-governance.test.mjs` 会解析 `openspec/config.yaml` 的 `context`，断言三个完整 guideline 路径都在那里，且顺序正确；同时断言 `rules.proposal` 和 `rules.design` 分别保有相应的路由语句。
 
-这也正好服务本项目想要的效果：每个有实质设计内容的 change，在形成方案时先想清楚三件事——新概念是否让某个读者能更精确地推理；控制形状是否仍是最短合法闭环；以及用户、Agent、Engine 的决定/执行/verdict 边界是否诚实。三者的 canonical source 已经是 `guidelines/evolution-*.md`；`config.yaml` 的职责只是把正确的人在正确的 artifact 阶段路由过去，并要求留下简短、可审查的结论。
+因此，当前 `config.yaml` 的 51–60 行并非可自由压缩的重复文字。删掉它们，或把 context 从 3–165 行整体压为 5–8 行而不保留这个路由，会使 accepted spec 和回归测试同时失效。要改变这一点，必须另开一个**治理契约变更**：先修改 accepted spec、相应测试和相关 guidance，再讨论新的注入模型；不能把它混入一次普通的 config 整理。
 
-### 原建议哪里还差一步
+### 这次建议到底改什么
 
-| 问题 | 为什么是问题 | 应怎样调整 |
-|---|---|---|
-| 只写“移到 `rules.proposal`、`rules.design`”，没有区分两者职责。 | proposal 负责说明要改什么与为什么；design 才负责选语义层、控制形状和责任边界。两处都要求完整 review，会造成两份近似反思；只留 proposal 又会让真正的技术取舍没有稳定落点。 | 把 `design` 定为三条 Directions 的**主审查与证据 owner**；proposal 只记录本 change 是否触发、哪些 surface 可能受影响，以及 design 必须完成 review 的承诺。 |
-| 说“proposal/design 必须按顺序 review”容易被实现成：每个微小 change 都重新通读三份长指南。 | 这样既浪费注意力，也会把严肃审查变成机械打勾；但完全只靠条件判断，又会让作者跳过本该考虑的层。 | 每份 design 都先经过同一个轻量路由：`semantic precision → simple reliable control → helper responsibility`。只有对应 surface 被新增或实质改变时，才读取并应用该条 canonical guideline，写出实质结论；不适用时可简短说明“本 change 不改变此层”。 |
-| 现有 `rules.design` 要“按顺序阅读”并在 `apply target manifest` 标 control surface，但没有指定结论写到哪里、下游如何消费。 | 这不满足“触发 → 动作 → canonical source → evidence 落点”。而且 `apply target manifest` 虽然在历史 `design.md` 中已有惯例，却不是 config 中定义的独立文件，容易被误写成一个临时、无人读取的文件。 | 在 `design.md` 固定一个简短的 `## Evolution review`，并把 control-surface 的增删并入同一份 `## Apply target manifest`。`tasks.md` 只把其中已经决定的实现/验证动作具体化，不再重新猜或重做三条 review。若希望每个 change 都稳定拥有这些小节，应更新 proposal/design template，而不是只依赖 config prompt。 |
-| 本文提出 Change Context Card，但没有把它与三条 Directions 的职责接上。 | Card 若只登记 framework、version、experiment、verification，会遗漏最重要的“这次设计为什么要进行这套 review”。 | Card 应有一行 `Evolution review`：列出触发的 surface、适用的三层 review，以及结论将落在 `design.md`。它是下游路由信息，不复制三条 guideline 的正文，也不替代 design 的论证。 |
+这是一个非常窄的建议，编辑类型如下：
 
-### 建议采用的归位形状
+| 位置 | 编辑类型 | 具体动作 | 不做什么 |
+|---|---|---|---|
+| `context` 51–60 | **保留** | 保持三条 Directions 的完整路径、顺序和基础摘要。 | 不删除、不搬迁、不把 context 压到 5–8 行。 |
+| `rules.proposal` 172–174 | **保留** | 保持现有 semantic reflection、net simplification、责任边界三项要求。 | 不新增 Change Context Card，不要求 proposal 再写一份完整 review。 |
+| `rules.design` 183 | **修改一条现有 rule** | 将笼统的“三条 Directions”改成三个精确路径，并说明何时深入阅读、结论写到 `design.md` 的何处。 | 不增加第二个 rule，不新建 `Apply target manifest` 文件，不强制固定标题或表格。 |
+| 其余 `context` / `rules` | **不动** | 保持项目当前的 traceability、verification、实验和目录约束。 | 不进行本次审计最初设想的全局清理。 |
 
-```text
-guidelines/evolution-*.md
-  = 三条方向的唯一完整正文与判断标准
+换句话说：这不是“只往 config 里添几条”的 additions-only 修改，而是**把 `rules.design` 的第 183 行替换成更可执行的一条 rule**；没有删除 context，也没有其他结构性改动。
 
-proposal.md / Change Context Card
-  = 本 change 是否触发、影响哪些 surface、design 必须完成什么 review
-       ↓
-design.md / Evolution review + Apply target manifest
-  = 按 semantic → control → responsibility 的顺序写出实际取舍和增删的 control surface
-       ↓
-tasks.md
-  = 将已确定的删除、实现、测试与收尾证据拆成可执行任务
-```
+### 为什么只改 design rule
 
-因此，`context` 不必保留目前 51–60 行那样的三段摘要；即使缩短后仍会被 specs、tasks 等不需要完整设计审查的 artifact 重复注入。项目 profile 中保留 Agent / Markdown / Engine 的稳定 authority split 即可。Directions 的“何时读、读完留下什么”应由 artifact rule 表达。
+现有 proposal rules 已经分别要求：语义反思、控制的净简化、以及 user / Agent / Engine 边界。它们回答“这个 change 为什么值得做、预期不破坏什么”。
 
-### 对 `config.yaml` 的具体改写建议
+真正需要加强的是 design：作者在选数据结构、控制闭环、恢复方式和职责边界时，需要被明确带到三份 canonical policy 的原文，并把实际取舍留在设计产物。`context` 负责让正确顺序始终可见；proposal 负责提出变化；design 负责给出技术取舍。这样不会要求同一段论证在 proposal 和 design 中抄两遍。
 
-下面不是要求把 guideline 正文复制进 config，而是建议把现有宽泛 rule 改成带触发条件与留痕位置的短路由。字段名和模板标题可按项目现有格式微调。
+也不建议立即把 `## Evolution review` 或 `## Apply target manifest` 设成硬编码标题。当前项目的 config、模板和 checker 没有定义它们；只改 prompt 就把它们变成硬门槛，会制造“写了但无人消费”的伪结构。将来若希望稳定强制这两个小节，应单独修改 template/checker/spec，明确其 consumer 和验证方式。
+
+### 可直接实施的 YAML 改写
+
+只替换 `rules.design` 当前第 183 行；其他 YAML 原样保留：
 
 ```yaml
 rules:
-  proposal:
-    - >
-      当 change 可能新增或实质改变具名概念/state/projection/status/view、
-      control/recovery/mutation，或 user/Agent/Engine 责任边界时，在 Change Context Card
-      写明受影响 surface 与 `Evolution review: required`；design.md 必须按
-      semantic precision → simple reliable control → helper-oriented responsibility
-      留下结论。完整判断标准只读对应的 guidelines/evolution-*.md。
-
   design:
     - >
-      每份 design 先用 `## Evolution review` 按 semantic precision → simple reliable control
-      → helper-oriented responsibility 检查本 change；对被新增或实质改变的层，阅读对应
-      guidelines/evolution-*.md 并记录简短结论：读者/有界问题与必要区别；direct Source of
-      Record、最短合法闭环和净简化；以及 user decision、authorized Agent execution、Engine verdict
-      的边界。未改变的层可明确标为不适用。
-    - >
-      在 design.md 的 `## Apply target manifest` 列出新增、删除或合并的 control surface，
-      各自的 Source of Record 与验证证据；tasks 依据此处生成实现和验证动作，不重新创造
-      第二份 review 或 authority。
+      architecture、recovery、mutation、Agent/user responsibility 或具名概念/状态/view 变更，
+      必须按顺序考虑 semantic precision → simple reliable control → helper-oriented responsibility。
+      对实际新增或实质改变的层，阅读并应用
+      guidelines/evolution-abstraction-semantic-precision.md、
+      guidelines/evolution-simple-reliable-control.md、
+      guidelines/evolution-helper-oriented-agent.md；在 design.md 的相应设计论证中简短记录
+      语义边界、direct Source of Record / 最短合法闭环 / net simplification，以及
+      user decision / authorized Agent execution / Engine verdict 的边界。未改变的层可说明不适用。
 ```
 
-这比“每次都完整读三份文件”更能达到你要的前置思考：三层顺序对每个设计都可见，真正相关的原则才被深入加载，且结论会沿 proposal → design → tasks 传下去。它也保留三条 guideline 明确反对的做法：不把反思硬化为固定表格或 Engine verdict，不用“更可靠”作为叠加控制层的理由，也不把 `human-directed` 误写成新的 permission 或 runtime capability。
+这里完整列出三个路径，是为了让 config 在 design 阶段有可审查、可导航的明确引用，而不是把三份 guideline 正文复制进 YAML。它也保留了现有测试所要求的短语 `semantic precision → simple reliable control → helper-oriented responsibility`。
+
+### 后续可以另开讨论、但不是当前改动的事项
+
+`context` 里其他很长的内容，例如 registry 组织细则、verification routing、实验体系和目录树，仍值得逐段做 consumer/owner 审计；其中一部分未来可能适合改成短指针并交给 checker、policy 或 runtime playbook。这是另一项有风险的治理重构：每一段都要先确认是否有 spec、测试或 agent workflow 读取它，不能因“看起来太长”而一并删除。
