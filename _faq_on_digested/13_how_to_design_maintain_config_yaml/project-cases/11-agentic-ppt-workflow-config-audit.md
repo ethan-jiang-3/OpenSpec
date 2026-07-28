@@ -15,7 +15,7 @@ not_for:
   - "不要把本项目的 B1 判断当作其他 Markdown-first、PPT 或 Agentic 项目的分类依据或配置模板。"
   - "不要把 PPT 或 run-bundle 的具体术语、路径和 Gates 视为通用 config 规则。"
 next_read:
-  - "案例边界与三个项目介绍：README.md"
+  - "案例边界与四个项目介绍：README.md"
   - "通用归位规则：../01-design-config-yaml.md"
   - "配置不生效或 Apply 需要稳定指导：../02-diagnose-maintain-config-yaml.md"
 ---
@@ -117,38 +117,65 @@ Agentic PPT workflow 是一个 AI 驱动的演示文稿生产系统：Agent 阅�
 
 若希望这个 review 每次稳定出现，应更新 proposal/design template；仅在 config 中写一条长 rule 不能保证有一致的 evidence landing，也不能在 Apply 时自动重现。
 
-### 对 `config.yaml` 的具体改写建议
+### 对 `config.yaml` 的明确编辑说明
 
-下面的形状刻意不复制 policy 正文，也不在 config 中编排 deck production。它只让正确的 planning artifact 在 framework change 中加载正确的判断标准。
+**PPT 的建议不是 additions-only，也不是整份 config replacement。** 它是三种操作混合：保留已有 policy 引用、删除 `context` 中重复的 policy 摘要、修改 design 的已有规则以显式引用同一份 policy。下面的表就是实际应执行的范围。
 
-```yaml
-context: |-
-  这是 Markdown-first 的 Agentic PPT framework：MD Controller / Agent 拥有流程与创意判断，
-  JS / CLI 拥有确定性解析、校验、状态、证据和诊断，人类拥有内容与风险判断。
-  OpenSpec 只管理 framework maintenance 的源码域；deck_*、dpt_* 与 _generated/ 是运行时生产/输入数据。
-  指定 deck 的生产从 BOOTSTRAP.md、AGENT_CONTRACT.md 与当前 controller playbook 进入；
-  framework change 的当前行为以 openspec/specs/<capability>/spec.md 为准。
+| 现有位置 | 操作 | 为什么 |
+|---|---|---|
+| `openspec/policies/human-centered-gates.md` | **保留，不改。** | 它是 `guide` / `confirm` / `hard-stop`、waiver 和 protected invariant 的唯一完整 policy。 |
+| `openspec/policies/agent-assistance-and-control.md` | **保留，不改。** | 它是 direct authority、Agent/human/runtime responsibility、evaluator 与 recovery shape 的唯一完整 policy。 |
+| `openspec/policies/simple-reliable-control.md` | **保留，不改。** | 它是 quality-control complexity、one truth path、negative test 等判断标准的唯一完整 policy。 |
+| `context` 91–100：`## Human-centered gates` | **删除这段 context 摘要。** | 不是删除 policy；相同 policy 已在 proposal rule 235–237 明确引用。它不需要被 specs、tasks 等所有 artifact 重复注入。 |
+| `context` 101–115：`## Agent assistance and control paths` | **删除这段 context 摘要。** | 不是删除 policy；相同 policy 已在 proposal rule 239–241 明确引用。这里的 policy precedence 也应由两个 policy 文件自己拥有。 |
+| `context` 116–125：`## Simple reliable control` | **删除这段 context 摘要。** | 不是删除 policy；相同 policy 已在 proposal rule 243–246 明确引用，design 也应显式引用。 |
+| `rules.proposal` 235–246 | **原样保留。** | 这三条正是 config 对三份 policy 的明确引用：有触发条件、有 policy 路径、有 proposal evidence；不能删。 |
+| `rules.design` 294–302 | **替换为下方三条明确引用的 design rule。** | 原规则已表达大部分正确义务，但前两条没有指出 canonical policy。替换后不增加新 policy，只让 design 从与 proposal 相同的 source 作决定。 |
+| `rules.specs` 267–276、`rules.tasks` 321–325 | **本次原样保留。** | 它们分别把已确定的契约写成 observable requirement、把已确定的 proof 落为 task；不需要重新加载或复述三份完整 policy。 |
+| `rules.proposal` 228–233 | **修改为 framework-maintenance scope boundary。** | 不再把 named-deck production 写成 OpenSpec 的平行 change domain；只记录 framework change 对 run-bundle contract 的影响。 |
 
-rules:
-  proposal:
-    - >
-      Framework maintenance proposal 必须列出源码范围、MD/JS/MD⇔JS protocol control owner，
-      以及对 run-bundle contract 的 none / compatible / migration impact；不得把 production deck
-      当源码、夹具或待自动迁移对象。若涉及 gate、control path 或 quality control，记录触发的
-      canonical policy 与 design.md 必须完成的 review。
+因此，引用关系是下面这样。所谓“删除”，只删除 config context 中复制出来的解释；每一份 policy 仍有文件、仍有 proposal 的明确路径、仍在 design 被实际使用。
 
-  design:
-    - >
-      当 change 涉及 gate/readiness/validation/override、controller/state/recovery/diagnostic，
-      或新的/修改的 quality-control path 时，读取对应 openspec/policies/*.md，并在 design.md
-      的 `## Control-policy review` 记录：direct Source of Record、outcome/invariant、最短合法
-      evaluator/recovery path、human/Agent/JS responsibility，以及新增控制面删除、合并或避免的复杂度。
-      具体 schema、CLI 字段和 permission 仍以 owning capability spec 为准。
+```text
+human-centered-gates.md
+  <- proposal: gate/readiness/validation/diagnostic/override 触发时明确引用
+  <- design: 决定 guide / confirm / hard-stop、invariant、waiver/recovery 时明确引用
 
-  tasks:
-    - >
-      tasks 必须把 design 已决定的 contract migration、implementation、focused negative coverage
-      和验证证据落为可验收动作；不得重新创造 competing authority、recovery path 或 waiver semantics。
+agent-assistance-and-control.md
+  <- proposal: controller/state/recovery/check/diagnostic 触发时明确引用
+  <- design: 决定 SoR、evaluator、Agent/human/runtime responsibility、recovery 时明确引用
+
+simple-reliable-control.md
+  <- proposal: quality-control path 触发时明确引用
+  <- design: 新/改 control layer 时明确引用并给出 net-simplification 与 negative proof
 ```
 
-这样修改后，`config.yaml` 给每个 framework change 的设计过程提供了足够早的 policy 提醒，却不会把一整套 controller/run-bundle 操作规则重复注入 proposal、specs、design、tasks，更不会误导 Agent 在真正制作 PPT 时先走 OpenSpec。
+### 应替换的 `rules.design` 三条规则
+
+这里是对现有 design 294–302 行的替换，不是追加在旧三条后面；其他 design rules 279–292 原样保留。
+
+```yaml
+rules:
+  design:
+    - >
+      当 change 涉及 gate/readiness/validation/diagnostic/override 时，读取
+      `openspec/policies/human-centered-gates.md`；在 design 说明每种结果的
+      guide/confirm/hard-stop 分类、protected invariant、确认记录 owner 和 hard-stop 的合法恢复。
+      不得把 force/waive 设计成跨越 identity、integrity、security、authorization 或 recovery 边界。
+    - >
+      当 change 涉及 controller handoff、Agent 自动执行、state/recovery、deterministic check
+      或 diagnostic control path 时，读取 `openspec/policies/agent-assistance-and-control.md`；
+      说明 direct Source of Record、evaluator、human/Agent/runtime responsibility、writer/reader、
+      失效规则与同一 checkpoint 的最近合法下一动作，不得创建第二 controller 或 authority。
+    - >
+      当新增或修改 quality-control layer 时，读取
+      `openspec/policies/simple-reliable-control.md`；说明 direct fact、现有 checkpoint 的不足、
+      删除或合并的逻辑、唯一失败动作和 focused negative test。无法说明 net simplification 时缩 scope
+      或降为 advisory。
+```
+
+### `rules.proposal` 的 scope 修改
+
+现有 228–233 行应改为一条 framework-maintenance rule：列出源码范围、MD/JS/MD⇔JS protocol control owner，以及对 run-bundle contract 的 `none` / `compatible` / `migration` impact；不得把 production `deck_*` 当源码、fixture 或待自动迁移对象。指定 deck 的制作仍从 `BOOTSTRAP.md`、`AGENT_CONTRACT.md` 和 controller playbook 进入，不经 OpenSpec proposal。
+
+这样改完后，PPT config 的 policy 不是“少了”，而是从“所有 artifact 都带着一份摘要”变成“proposal 和 design 在真正触发时直接读同一份 canonical policy”；specs/tasks 只继承已作出的合同和 proof 决定。

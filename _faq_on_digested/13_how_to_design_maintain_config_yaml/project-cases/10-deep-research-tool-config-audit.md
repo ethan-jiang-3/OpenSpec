@@ -15,7 +15,7 @@ not_for:
   - "不要把本项目的 B1 判断当作其他 MD/Agent 项目的分类依据或配置模板。"
   - "不要复制此项目的 capability、bundle、实验或验证细节到无关项目。"
 next_read:
-  - "案例边界与三个项目介绍：README.md"
+  - "案例边界与四个项目介绍：README.md"
   - "通用归位规则：../01-design-config-yaml.md"
 ---
 
