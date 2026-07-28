@@ -15,12 +15,13 @@
 | 4 | `04-archive-归档合并.md` | 三阶段流程（验证→合并→移动）、RENAMED→REMOVED→MODIFIED→ADDED 合并算法的精确步骤与操作顺序原理、不可逆性 |
 | 5 | `05-schema-driven-控制面.md` | schema.yaml 即源码、图算法的完整细节、completion detection 机制、核心数据结构总览、关键源文件速查表 |
 | 6 | `06-config-yaml-机制与约束.md` | config.yaml 的技术约束（Zod schema、50KB 限制、artifact ID 验证）、context/rules 注入的精确代码路径、与 schema.yaml 的交互细节、技术层面的推荐 |
+| 7 | `07-config-yaml-上下文路由源码深挖.md` | 基于当前源码补足 config 的真实上下文路由：Apply/Explore/Sync/Archive 的注入边界、`references`/`store` 新字段、schema 固化与 `defaultSchema` 漂移、维护验证方法 |
 
 ## 阅读建议
 
 - **只想搞清楚一条命令怎么运作** → 直接跳到对应那篇
 - **想理解四条命令之间的共同基础设施** → 先读 `00`，再读其他
-- **想彻底理解 OpenSpec 的 meta 本质** → `00` → `05` → `06`
+- **想彻底理解 OpenSpec 的 meta 本质** → `00` → `05` → `06` → `07`
 - **想自己写 schema 或 fork 一个** → `05` 是必读，然后去读 `../schema/` 目录
 
 ## 与上游源码的对应
