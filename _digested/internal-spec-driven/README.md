@@ -13,9 +13,9 @@
 | 2 | `02-propose-提案生成.md` | 完整 5 步流程、每个 artifact 的模板与 instruction 详解、DAG 拓扑排序保证、schema 解析优先级 |
 | 3 | `03-apply-实施执行.md` | Apply gate 三种状态、checkbox 解析正则、实施循环、流体工作流理念、与 archive 的衔接 |
 | 4 | `04-archive-归档合并.md` | 三阶段流程（验证→合并→移动）、RENAMED→REMOVED→MODIFIED→ADDED 合并算法的精确步骤与操作顺序原理、不可逆性 |
-| 5 | `05-schema-driven-控制面.md` | schema.yaml 即源码、图算法的完整细节、completion detection 机制、核心数据结构总览、关键源文件速查表 |
+| 5 | `05-schema-driven-控制面.md` | 内置 `spec-driven` 的四 artifact、真实 DAG、文件存在式 completion、Apply gate、schema 名称固定边界与源码自洽性风险 |
 | 6 | `06-config-yaml-机制与约束.md` | config.yaml 的技术约束（Zod schema、50KB 限制、artifact ID 验证）、context/rules 注入的精确代码路径、与 schema.yaml 的交互细节、技术层面的推荐 |
-| 7 | `07-config-yaml-上下文路由源码深挖.md` | 基于当前源码补足 config 的真实上下文路由：Apply/Explore/Sync/Archive 的注入边界、`references`/`store` 新字段、schema 固化与 `defaultSchema` 漂移、维护验证方法 |
+| 7 | `07-config-yaml-上下文路由源码深挖.md` | 基于当前源码补足内置 `spec-driven` 的真实上下文路由：四 artifact DAG、Apply/Explore/Archive 注入边界、schema 名称固定与维护验证方法 |
 
 ## 阅读建议
 

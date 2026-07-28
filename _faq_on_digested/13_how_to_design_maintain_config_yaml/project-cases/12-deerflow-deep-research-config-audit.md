@@ -3,27 +3,38 @@ title: "12 — DeerFlow Deep Research：程序/Graph 控制 Flow 的 config 归�
 document_kind: "case-audit"
 case_source: "/Users/bowhead/ai_deerflow_deep_research/openspec/config.yaml"
 applies_to:
-  - "B2: program/Graph-controlled Flow with bounded intelligence nodes"
-  - "LangGraph-style stateful orchestration with node contracts and deterministic admission"
+  - "DeerFlow Deep Research at case_source"
+  - "that project's audited StateGraph/state/node-contract boundary"
 read_when:
-  - "可执行 graph / state machine 决定节点、转移、状态、重试和恢复，模型能力只在 node 内完成有界工作。"
-  - "需要审计 config 是否把 graph、state、node contract、tool permission 或 recovery 的运行时权威放错位置。"
+  - "正在维护或复核 case_source 对应的 DeerFlow Deep Research 配置。"
+  - "需要理解该项目是否把 graph、state、node contract、tool permission 或 recovery 的运行时权威放错位置。"
 focus:
-  - "保留短的 B2 authority map；把 graph/state/node contract 交还给 executable runtime，把 review 仅作为 proposal/design 的路由。"
-  - "用 graph transition、state writer ownership、candidate admission 与 deterministic evidence 判断谁真正拥有 Flow。"
+  - "保留该项目简短的 B2 authority map；把 graph/state/node contract 交还给 executable runtime，把 review 仅作为 proposal/design 的路由。"
+  - "用该项目的 graph transition、state writer ownership、candidate admission 与 deterministic evidence 判断谁真正拥有 Flow。"
 not_for:
-  - "不要把本案例套到 MD/Agent 总控制 Flow；那类项目应读 10 或 11。"
+  - "不要把本项目的 B2 判断当作其他 DeerFlow、LangGraph 或 Agentic 项目的分类依据或配置模板。"
   - "不要把 config、prompt 或 review record 当作 node role、route、state write、tool permission 或 recovery 的权威来源。"
 next_read:
-  - "通用归位规则：01-design-config-yaml.md"
-  - "运行时/配置未按预期生效：02-diagnose-maintain-config-yaml.md"
+  - "案例边界与三个项目介绍：README.md"
+  - "通用归位规则：../01-design-config-yaml.md"
+  - "运行时/配置未按预期生效：../02-diagnose-maintain-config-yaml.md"
 ---
 
 # 12 — DeerFlow Deep Research：程序/Graph 控制 Flow 的 config 归位审计
 
 来源：`/Users/bowhead/ai_deerflow_deep_research/openspec/config.yaml`。
 
-这个项目属于 [`00-initial-config-baselines.md`](00-initial-config-baselines.md) 的 **B2：程序/Graph 控制 Flow，智能能力受限于 Node**，不是 B1 的“MD/Agent 控制 Flow，程序做 Gate”。`agent/README.md` 明确将 controller 定义为嵌套 Python `StateGraph`；`graph/builder.py` 登记节点与每条条件转移；`domain/state.py` 则用带 writer ownership 的 reducer 拒绝未授权状态写入。模型/Agent 可以在 node 内完成有界的认知工作，但不能凭 prompt、proposal review 或 config 获得 graph route、state write、tool permission、retry 或 recovery 权限。
+## 项目是什么
+
+DeerFlow Deep Research 是建立在 DeerFlow 2.1 上的下游深度研究产品，主要实现位于 `agent/`；仓库中的 `backend/` 与 `frontend/` 是上游 DeerFlow mirror。它用嵌套 Python `StateGraph` 编排研究节点，以 typed state、writer ownership、node contract 和 evaluator 限制智能 node 的权限。
+
+## 使用边界
+
+本文只审计这个项目在上述来源路径中的 `config.yaml` 及其 `agent/` runtime boundary，不是 LangGraph、DeerFlow 或 B2 项目的通用模板。其他项目最多借鉴“运行时 authority 必须落回 graph/state/node contract”的审计方法；不能复制这里的 mirror 边界、Change Focus、charter policy、node review 表、验证命令、模块路径或 state owner。
+
+## 审计判断
+
+这个项目属于 [`00-initial-config-baselines.md`](../00-initial-config-baselines.md) 的 **B2：程序/Graph 控制 Flow，智能能力受限于 Node**，不是 B1 的“MD/Agent 控制 Flow，程序做 Gate”。`agent/README.md` 明确将 controller 定义为嵌套 Python `StateGraph`；`graph/builder.py` 登记节点与每条条件转移；`domain/state.py` 则用带 writer ownership 的 reducer 拒绝未授权状态写入。模型/Agent 可以在 node 内完成有界的认知工作，但不能凭 prompt、proposal review 或 config 获得 graph route、state write、tool permission、retry 或 recovery 权限。
 
 > 目的不是压缩文字本身，而是让每段信息由正确的 owner 在正确阶段消费。对 B2 而言，尤其不能把 graph、state 或 node contract 的运行时权威误放进 `openspec/config.yaml`。
 

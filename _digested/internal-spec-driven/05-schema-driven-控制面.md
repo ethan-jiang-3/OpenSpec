@@ -1,380 +1,207 @@
-# 05 — schema-driven 控制面
+# 05 - spec-driven schema 控制面
 
-前面四篇分别讲了每条命令怎么运作。这篇从"元"的视角看整个 spec-driven 的控制面 —— 也就是 schema 本身如何成为工作流的"源码"。
+本文只讨论仓库内置的 [`schemas/spec-driven/schema.yaml`](../../schemas/spec-driven/schema.yaml)，不把自定义 schema 的可能性混入默认工作流的事实描述。它回答的是：四个 artifact 如何组成 DAG、什么时候被视为完成，以及独立的 Apply block 实际约束什么。
 
----
+`config.yaml` 的字段、root 选择和阶段注入边界由 [`07-config-yaml-上下文路由源码深挖.md`](07-config-yaml-上下文路由源码深挖.md) 负责。这里先把 schema 的结构契约钉牢，避免把 schema、config 和 workflow skill 的职责混成一个“控制器”。
 
-## 1. schema.yaml 即源码
+## 1. 先固定四个 artifact
 
-`schemas/spec-driven/schema.yaml` —— 约 153 行 —— 定义了 spec-driven 工作流的全部行为。它是 OpenSpec "meta" 本质的集中体现：
+内置 `spec-driven` schema 只有四个 artifact ID：
 
-- **artifact 是什么、先后顺序谁说了算** → schema
-- **每个 artifact 应该包含什么内容** → schema 的 `instruction` 字段
-- **输出文件的结构骨架** → schema 引用的 `templates/*.md`
-- **什么时候允许实施** → schema 的 `apply.requires`
-- **实施进度怎么跟踪** → schema 的 `apply.tracks`
+| Artifact ID | 产物 | 直接依赖 | 主要职责 |
+|---|---|---|---|
+| `proposal` | `proposal.md` | 无 | 说明为什么改、改什么、涉及哪些 capability 与影响面。 |
+| `specs` | `specs/**/*.md` | `proposal` | 记录可观察、可验证的需求 delta。 |
+| `design` | `design.md` | `proposal` | 记录实现方法、技术决定、风险与迁移。 |
+| `tasks` | `tasks.md` | `specs`、`design` | 把实现拆成可追踪、可验证的 checkbox。 |
 
-改变这约 153 行 YAML（以及 4 个模板文件），就能改变整套工作流的行为。
+`apply` 不是第五个 artifact。它是 schema 中与 `artifacts` 并列的独立 block，因此：
 
-这就是 schema 系统的设计目标 —— 其定位是 "artifact DAG definition file"（`_digested/schema/01-schema-到底是什么.md`）。它不定义"怎么实现"（那是 AI agent 的事），只定义"什么的什么东西在什么条件下产生"。
+- `rules.proposal`、`rules.specs`、`rules.design`、`rules.tasks` 才是这个 schema 的合法 artifact rules。
+- `rules.apply` 无效；Apply 的稳定 instruction 来自 `schema.apply.instruction`。
+- Explore、Sync 和 Archive 也不是 artifact ID，不能通过同名 `rules` 获得指导。
 
----
+## 2. schema 拥有什么，不拥有什么
 
-## 2. Artifact DAG 的图算法
+把 `schema.yaml` 称为控制面是有边界的。它是 artifact DAG 与 Apply contract 的声明源，不是整个 OpenSpec 生命周期的全部源码。
 
-### 2.1 数据结构
+| schema 直接拥有 | schema 不直接拥有 |
+|---|---|
+| artifact ID、输出 pattern、description | 项目级 `context`、`rules`、`references` |
+| artifact 的 `requires` 依赖边 | change 中已经写下的业务决定 |
+| 每个 artifact 的 instruction 与 template 路径 | Explore、Propose、Apply、Sync、Archive skill 的步骤 |
+| Apply 的直接前置项、tracking file 与 instruction | artifact 内容的完整语义质量与项目硬约束 |
 
-`src/core/artifact-graph/types.ts` 用 Zod 定义：
+结构定义由 [`src/core/artifact-graph/types.ts`](../../src/core/artifact-graph/types.ts) 的 `ArtifactSchema`、`ApplyPhaseSchema` 和 `SchemaYamlSchema` 约束；加载时，[字符解析与结构验证](../../src/core/artifact-graph/schema.ts) 还会拒绝重复 artifact ID、无效的 artifact `requires` 引用和循环依赖。
 
-```typescript
-const ArtifactSchema = z.object({
-  id: z.string(),
-  generates: z.string(),          // 输出文件路径（支持 glob）
-  description: z.string(),
-  template: z.string(),           // 模板文件相对路径
-  instruction: z.string().optional(),
-  requires: z.array(z.string()).default([]),
-});
+模板决定输出骨架，instruction 决定生成时的语义指导。二者必须一起读：
 
-const SchemaYamlSchema = z.object({
-  name: z.string(),
-  version: z.number().positive(),
-  description: z.string().optional(),
-  artifacts: z.array(ArtifactSchema).min(1),
-  apply: z.object({
-    requires: z.array(z.string()).min(1),
-    tracks: z.string().nullable().optional(),
-    instruction: z.string().optional(),
-  }).optional(),
-});
+- [`templates/proposal.md`](../../schemas/spec-driven/templates/proposal.md)
+- [`templates/spec.md`](../../schemas/spec-driven/templates/spec.md)
+- [`templates/design.md`](../../schemas/spec-driven/templates/design.md)
+- [`templates/tasks.md`](../../schemas/spec-driven/templates/tasks.md)
+
+## 3. 真实 DAG 不是文件中的箭头文案
+
+`schema.yaml` 的 description 写作 `proposal -> specs -> design -> tasks`，artifact 的声明顺序也是 `proposal`、`specs`、`design`、`tasks`。但真正控制 ready/blocked 的只有每个 artifact 的 `requires`：
+
+```text
+             +-> specs --+
+proposal ---+            +-> tasks
+             +-> design -+
 ```
 
-### 2.2 图构建
+因此当前结构是：
 
-`ArtifactGraph.fromSchema()` (`src/core/artifact-graph/graph.ts`)：
+1. 初始只有 `proposal` ready。
+2. `proposal` 完成后，`specs` 与 `design` 同时 ready。
+3. `specs` 与 `design` 都完成后，`tasks` ready。
 
-1. 从解析后的 SchemaYaml 创建 `Map<id, Artifact>`
-2. 验证所有 `requires` 引用指向存在的 artifact ID
-3. DFS 检测循环依赖（`schema.ts`）
+[`ArtifactGraph.getBuildOrder()`](../../src/core/artifact-graph/graph.ts) 使用 Kahn 拓扑排序，并按 artifact ID 排序 ready queue。因此它给当前 schema 的确定性总序是：
 
-### 2.3 拓扑排序 —— Kahn's Algorithm
-
-`graph.ts:72-113`：
-
-```
-1. 计算每个节点的 in-degree = requires 数组长度
-2. 所有 in-degree = 0 的节点进入 ready 队列
-3. 排序 ready 队列（确保确定性输出）
-4. 弹出第一个节点，加入 buildOrder
-5. 遍历该节点的所有后继（requires 中包含该节点的 artifact）
-   → 后继 in-degree 减 1
-   → 如果变为 0，加入 ready 队列
-6. 重复直到 ready 队列为空
+```text
+proposal -> design -> specs -> tasks
 ```
 
-对于 spec-driven DAG：
-```
-proposal     in-degree=0  →  第一轮
-specs        in-degree=1  →  等 proposal 完成
-design       in-degree=1  →  等 proposal 完成
-tasks        in-degree=2  →  等 specs 和 design 完成
+这只是合法拓扑序，不表示 `design` 依赖 `specs`。要区分三个概念：
 
-buildOrder: [proposal, design, specs, tasks]
-             (design 和 specs 的先后是确定性排序，和依赖顺序无关)
-```
+- **声明顺序**：YAML 中列出的 `proposal, specs, design, tasks`。
+- **依赖偏序**：`proposal` 后 `specs/design` 可并行，二者之后才是 `tasks`。
+- **CLI 的确定性展示/选择顺序**：拓扑排序把同时 ready 的 `design` 排在 `specs` 前。
 
-### 2.4 Ready/Blocked 检测
+### 当前 schema 内部的两个张力
 
-```typescript
-// graph.ts:118-134
-getNextArtifacts(completed: CompletedSet): string[] {
-  // 所有不在 completed 中、且所有 requires 都在 completed 中的 artifact
-}
+第一，`design.instruction` 要求“Reference the proposal for motivation and specs for requirements”，但 `design.requires` 只有 `proposal`。生成 design instructions 时，`dependencies` 不会提供 change specs；正常 CLI 顺序还可能先选择 `design`。
 
-// graph.ts:151-166
-getBlocked(completed: CompletedSet): Record<string, string[]> {
-  // 返回 { artifactId: [unmetDep1, unmetDep2] }
-  // 只包含未完成且有未满足依赖的 artifact
-}
-```
+第二，`design.instruction` 写着“create only if any apply”，但 `tasks.requires` 固定包含 `design`。在当前 DAG 中，不创建 `design.md` 就无法让 `tasks` 进入 ready，因此 design 实际上是结构必需项。
 
----
+维护 schema 前应先决定目标语义：
 
-## 3. Completion Detection 的精确机制
+- 若希望 specs 与 design 并行，应修改 description 和 design instruction，不要让 design 假设 change specs 已存在。
+- 若希望严格 `proposal -> specs -> design -> tasks`，应让 `design.requires` 包含 `specs`，并补相应图与 workflow 测试。
+- 若 design 真正可选，当前 schema 数据模型没有 conditional artifact；不能只靠 instruction 中的“可选”实现结构可选。
 
-`detectCompleted()`（`src/core/artifact-graph/state.ts`）：
+## 4. 完成判定只是文件存在
 
-```typescript
-export function detectCompleted(graph: ArtifactGraph, changeDir: string): CompletedSet {
-  const completed = new Set<string>();
-  for (const artifact of graph.getAllArtifacts()) {
-    if (artifactOutputExists(changeDir, artifact.generates)) {
-      completed.add(artifact.id);
-    }
-  }
-  return completed;
-}
-```
+[`detectCompleted()`](../../src/core/artifact-graph/state.ts) 遍历四个 artifact，并通过 [`resolveArtifactOutputs()`](../../src/core/artifact-graph/outputs.ts) 判断输出是否存在：
 
-`artifactOutputExists()`（`src/core/artifact-graph/outputs.ts`）本身只是委托 `resolveArtifactOutputs()`：
+| Artifact | 当前 done 条件 |
+|---|---|
+| `proposal` | `proposal.md` 是文件。 |
+| `specs` | `specs/**/*.md` 至少匹配一个文件。 |
+| `design` | `design.md` 是文件。 |
+| `tasks` | `tasks.md` 是文件。 |
 
-```typescript
-export function artifactOutputExists(changeDir: string, generates: string): boolean {
-  return resolveArtifactOutputs(changeDir, generates).length > 0;
-}
-```
+这里没有内容质量、数量完整性或依赖闭包验证：
 
-`resolveArtifactOutputs()` 的关键语义：
+- 空文件也会让对应 artifact 变成 done。
+- proposal 声明多个 capability 时，一个 specs 文件就足以让 `specs` 变成 done。
+- 手工先创建下游文件，会直接把下游标为 done；completion detector 不会因上游缺失而撤销这个状态。
 
-- 非 glob 输出：拼出 `changeDir + generates`，要求目标存在且 `statSync(...).isFile()` 为真；目录不会让 artifact 变成 done。
-- glob 输出：把 pattern 转为 POSIX 路径后交给 `fast-glob`，以 `cwd: changeDir`、`onlyFiles: true` 匹配现有文件；匹配结果 canonicalize 后去重排序。
-- `artifactOutputExists()` 只关心是否有至少一个 resolved output。
+`getNextArtifacts(completed)` 和 `getBlocked(completed)` 只约束“尚未完成的 artifact 现在是否可创建”，不会证明已存在文件是按 DAG 顺序、按 instruction 或按 template 产生的。
 
-**这意味着**：
-- `proposal` done = `proposal.md` 文件存在
-- `specs` done = `specs/` 下至少有一个 `.md` 文件
-- `design` done = `design.md` 文件存在
-- `tasks` done = `tasks.md` 文件存在
+Archive 的 validation 也不能被概括成“保证四个 artifact 的内容质量”：[归档实现](../../src/core/archive.ts)对 proposal 的问题只作非阻塞提示，重点阻塞 delta specs 的结构错误；未完成 tasks 可经确认继续，design 没有通用语义 validator。需要不可绕过的不变量时，仍要使用项目自己的 checker、test、lint 或 CI。
 
-没有内容检验 —— 空文件也算"done"。内容质量由 validation 阶段（archive 时）保证。
+## 5. artifact instructions 的四层与依赖交接
 
----
+创建 artifact 时，[`generateInstructions()`](../../src/core/artifact-graph/instruction-loader.ts) 组装四个 authoring layers：
 
-## 4. 四层注入的精确代码路径
+| 层 | 来源 | 对 spec-driven 的作用 |
+|---|---|---|
+| `context` | `openspec/config.yaml` | 同样注入四个 artifact 的稳定项目背景。 |
+| `rules` | `config.rules[artifactId]` | 只注入当前 `proposal/specs/design/tasks` 的长期约束。 |
+| `instruction` | `schema.yaml` 当前 artifact | 说明该 artifact 应表达什么。 |
+| `template` | `schemas/spec-driven/templates/*.md` | 给出输出结构骨架。 |
 
-### 4.1 loadChangeContext (`src/core/artifact-graph/instruction-loader.ts`)
+`dependencies` 和 `references` 也会出现在完整 instruction payload 中，但它们不是上述四层的同类信息：
 
-```
-1. 计算 changeDir
-2. 读 .openspec.yaml → ChangeMetadata（schema, created, goal, etc.）
-3. resolveSchemaForChange()：
-   优先级：显式参数 > .openspec.yaml > config.yaml > 'spec-driven'
-4. resolveSchema()：
-   优先级：project/ > user/ > package/
-5. ArtifactGraph.fromSchema(schema) → 构建 DAG
-6. detectCompleted(graph, changeDir) → 扫描文件系统
-7. 返回 ChangeContext { graph, completed, schemaName, changeDir, ... }
+- `dependencies` 来自 schema 的直接 `requires`，负责把本次 change 已完成的上游 artifact 路由给下游。
+- `references` 来自 project config，负责提供外部 store specs 的只读发现索引。
+
+当前四个 artifact 的直接 dependency payload 是：
+
+```text
+proposal.dependencies = []
+specs.dependencies    = [proposal]
+design.dependencies   = [proposal]
+tasks.dependencies    = [specs, design]
 ```
 
-### 4.2 generateInstructions (`src/core/artifact-graph/instruction-loader.ts`)
+它不会自动展开传递依赖。例如 `tasks.dependencies` 没有 `proposal`；proposal 中的重要分类必须先被 specs/design 继承，或由执行者按 change artifacts 的整体上下文读取。
 
-```
-1. graph.getArtifact(artifactId)
-2. loadTemplate(schemaName, artifact.template) → 读模板文件
-3. getDependencyInfo() → 依赖项状态列表
-4. getUnlockedArtifacts() → 完成后解锁哪些
-5. readProjectConfig() → 读 config.yaml（失败则跳过）
-6. validateConfigRules() → 检查 config 的 rules key 是否有效
-7. 组装 ArtifactInstructions：
-     context = config.context
-     rules = config.rules[artifactId]
-     instruction = artifact.instruction
-     template = 模板文件内容
-```
+`context` 与 `rules` 只属于 artifact instructions，不会因为 schema 中有 Apply block 就自动进入 Apply。完整阶段边界见 [`07-config-yaml-上下文路由源码深挖.md`](07-config-yaml-上下文路由源码深挖.md)。
 
-### 4.3 printInstructionsText (`src/commands/workflow/instructions.ts`)
+## 6. Apply block 的精确语义
 
-将 `ArtifactInstructions` 格式化为人类可读（和 agent 可解析）的 XML-tagged 文本。
-
----
-
-## 5. 三级解析优先级
-
-### 5.1 Schema 目录解析（哪里找 schema 文件）
-
-`src/core/artifact-graph/resolver.ts`：
-
-```
-1. <projectRoot>/openspec/schemas/<name>/schema.yaml   ← 项目本地
-2. $XDG_DATA_HOME/openspec/schemas/<name>/schema.yaml  ← 用户全局覆盖
-3. <package>/schemas/<name>/schema.yaml                 ← 包内置
-```
-
-**先找到的先用**。project 覆盖 user 覆盖 package。
-
-### 5.2 Change 的 Schema 名称解析（用哪个 schema）
-
-`src/utils/change-metadata.ts`：
-
-```
-1. 显式 --schema <name> CLI 参数
-2. .openspec.yaml 中的 schema 字段
-3. openspec/config.yaml 中的 schema 字段
-4. 硬编码 'spec-driven'
-```
-
-### 5.3 两级解析的区别
-
-- **"用哪个 schema"**：先确定 schema 名，然后去三个位置找同名 schema 目录
-- **"从哪里加载"**：一个 schema 名可能存在于三个位置，按优先级选
-
-这意味着用户可以：
-1. 在项目级 fork 一个 schema：`openspec schema fork spec-driven my-workflow`
-2. 在用户级全局覆盖：在 `~/.local/share/openspec/schemas/spec-driven/` 放自己的版本
-3. 或者在 config.yaml 里切换项目默认 schema
-
----
-
-## 6. config.yaml 与 schema 的交互
-
-`openspec/config.yaml` 是 schema 的"项目级配置补丁"：
+内置 schema 的 Apply block 是：
 
 ```yaml
-schema: spec-driven         # 选择用哪个 schema
-
-context: |                 # 注入到所有 artifact 指令中
-  Tech stack: TypeScript, React
-  We use conventional commits.
-
-rules:                     # 按 artifact ID 注入特定约束
-  proposal:
-    - Keep proposals under 500 words
-    - Always include a "Non-goals" section
-  tasks:
-    - Each task should be completable in under 2 hours
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Read context files, work through pending tasks, mark complete as you go.
+    Pause if you hit blockers or need clarification.
 ```
 
-**关键交互**：
+[`generateApplyInstructions()`](../../src/commands/workflow/instructions.ts) 对它的消费方式如下：
 
-1. `config.schema` 决定了加载哪个 schema 的 artifact DAG
-2. `config.context` 注入到**所有** artifact 指令中（50KB 上限，见 `src/core/project-config.ts`）
-3. CLI 会检查 `config.rules` 的 key 是否对应 schema 中真实存在的 artifact ID（未知 ID 产生 warning，每个 session 只警告一次，见 `validateConfigRules()` / `generateInstructions()` in `src/core/artifact-graph/instruction-loader.ts`）
-4. config 读取失败不会阻止指令生成 —— resilient 设计
+1. 只直接检查 `apply.requires` 中的 `tasks` 输出是否存在。
+2. 读取 `tasks.md` 的 checkbox，计算 total、complete 与 remaining。
+3. 收集 schema 中**所有已经存在**的 artifact 输出，形成 `contextFiles`。
+4. 有待办任务且前置条件成立时，使用 `apply.instruction`；缺 artifact、缺 tracking file、没有 checkbox 或全部完成时，返回相应的诊断/结束 instruction。
 
----
+“正常生成路径”与“硬保证”必须分开：
 
-## 7. 超越 spec-driven：Schema 的领域无关性
+- 正常路径中，`tasks` 只有在 specs/design done 后才 ready，所以通常四个 artifact 都已存在。
+- Apply 实现本身只检查 `tasks`，不会计算其传递依赖闭包。若有人手工创建了含 checkbox 的 `tasks.md`，缺少 proposal/specs/design 不一定使 Apply blocked，`contextFiles` 也只包含实际存在的文件。
+- `apply.requires` 是可用性 gate，不是 artifact 语义 validator，也不证明实现正确。
 
-spec-driven 只是内置的默认 schema。同一套基础设施可以驱动完全不同领域的工作流。
+因此，不应把“`apply.requires: [tasks]`”表述成无条件保证四个 artifact 都完整。更准确的说法是：DAG 的正常 authoring 路径要求先完成上游，而 Apply 当前直接以 `tasks` 和 tracking file 作为准入检查。
 
-`_digested/schema/07-超越-spec-driven-的应用场景.md` 展示了四种可能：
+## 7. schema 名称被固定，不等于 schema 内容被快照
 
-1. **文章写作 pipeline**：outline → draft → review → publish
-2. **故事/剧本创作**：characters → plot → scenes → script
-3. **Agent/Skill 开发**：requirements → tool-design → implementation → testing
-4. **TDD 驱动开发**：test-spec → red-tests → implementation → green-report
+创建 change 时，[`createChange()`](../../src/utils/change-utils.ts) 把解析出的 schema **名称**写入 `.openspec.yaml`；后续 [`resolveSchemaForChange()`](../../src/utils/change-metadata.ts) 优先使用这个名称。因此修改 `config.schema` 不会让已有 change 自动切换到另一个 schema 名称。
 
-每种只需要：
-- 写一个新的 `schema.yaml`（定义 artifact DAG）
-- 写对应的 `templates/*.md`（定义输出骨架）
-- `config.yaml` 中 `schema: <新名字>`
+但 `.openspec.yaml` 没有保存 `schema.yaml` 内容、hash 或 version。每次命令仍通过 [schema resolver](../../src/core/artifact-graph/resolver.ts) 读取当前同名 schema：
 
-**TypeScript 代码零改动。**
-
-这就是 OpenSpec 的 meta 本质：它不是一个 speccing 工具，而是一个 **workflow runtime**。spec-driven 恰好是第一个（也是默认的）built-in workflow。
-
----
-
-## 8. 核心数据结构总览
-
-### ArtifactInstructions（agent 创建 artifact 的完整指令包）
-
-```typescript
-interface ArtifactInstructions {
-  changeName: string;
-  artifactId: string;
-  schemaName: string;
-  changeDir: string;                    // change 目录绝对路径
-  planningHome?: PlanningHomeSummary;
-  initiative?: InitiativeLink;
-  outputPath: string;                   // 如 "proposal.md"
-  resolvedOutputPath: string;           // 如 "/project/openspec/changes/foo/proposal.md"
-  existingOutputPaths: string[];        // 已存在的输出文件
-  description: string;                  // artifact 描述
-  instruction: string | undefined;      // schema 的指导（来自 schema.yaml）
-  context: string | undefined;          // config 背景（来自 config.yaml）
-  rules: string[] | undefined;          // config 约束（来自 config.yaml）
-  template: string;                     // 模板文件内容
-  dependencies: DependencyInfo[];       // 需先读的完成文件
-  unlocks: string[];                    // 完成后解锁的 artifact
-}
+```text
+project-local spec-driven
+  -> user override spec-driven
+  -> package built-in spec-driven
 ```
 
-### ChangeStatus（agent 了解 DAG 状态的快照）
+所以“已有 change 锁定 schema”只应理解为**锁定名称**：
 
-```typescript
-interface ChangeStatus {
-  changeName: string;
-  schemaName: string;
-  planningHome?: PlanningHomeSummary;
-  initiative?: InitiativeLink;
-  changeRoot: string;
-  artifactPaths: Record<string, ArtifactPathSummary>;
-  affectedAreas?: AffectedAreasSummary;
-  nextSteps: string[];                  // 纯文本建议
-  actionContext: ActionContext;         // 机器可读约束
-  isComplete: boolean;                  // 所有 artifact done?
-  applyRequires: string[];              // 哪些 artifact 全部 done 才能 apply
-  artifacts: ArtifactStatus[];          // 每个的状态
-}
-```
+- 修改 `config.schema`：已有 change 仍选择 metadata 中的 `spec-driven`。
+- 修改或覆盖同名 `spec-driven/schema.yaml`：已有 change 的 DAG/instructions 可能随当前解析结果变化。
+- `version: 1` 目前不是 change metadata 中的内容快照。
 
-### DeltaPlan（delta spec 的解析结果）
+本文的结构结论专指仓库内 [package built-in 文件](../../schemas/spec-driven/schema.yaml)。诊断实际项目时，仍要确认没有同名的 project/user override；具体步骤见 `07`。
 
-```typescript
-interface DeltaPlan {
-  added: RequirementBlock[];            // { headerLine, name, raw }
-  modified: RequirementBlock[];
-  removed: string[];                    // 只有 requirement 名
-  renamed: Array<{ from: string; to: string }>;
-  sectionPresence: {                    // 哪些 section 在文件中出现
-    added: boolean;
-    modified: boolean;
-    removed: boolean;
-    renamed: boolean;
-  };
-}
-```
+## 8. 修改 spec-driven 前的验证清单
 
-### ChangeContext（工作流引擎的内部上下文）
+1. 四个 artifact ID、输出 pattern 和 template 是否仍一一对应。
+2. description、instruction 与真实 `requires` 是否表达同一顺序和可选性。
+3. `getBuildOrder()`、`getNextArtifacts()`、`getBlocked()` 的预期是否有图测试。
+4. 每个 done 条件是否只需要文件存在；需要更强保证时，validator 在哪里。
+5. `apply.requires` 是否表达直接 gate；是否需要额外检查传递依赖闭包。
+6. `apply.tracks` 与 tasks template 的 checkbox 格式是否一致。
+7. artifact instructions、status 与 Apply JSON 的契约测试是否一起更新。
+8. `config.rules` 仍只使用 `proposal`、`specs`、`design`、`tasks`。
 
-```typescript
-interface ChangeContext {
-  graph: ArtifactGraph;                 // DAG
-  completed: Set<string>;              // 已完成的 artifact ID 集合
-  schemaName: string;
-  changeName: string;
-  changeDir: string;
-  projectRoot: string;
-  planningHome?: PlanningHome;         // repo 还是 workspace
-  metadata?: ChangeMetadata;            // .openspec.yaml 内容
-  initiative?: InitiativeLink;
-}
-```
+## 9. 关键源码
 
-### ArtifactGraph（对外 API）
-
-```typescript
-class ArtifactGraph {
-  static fromSchema(schema: SchemaYaml): ArtifactGraph;
-  getArtifact(id: string): Artifact | undefined;
-  getAllArtifacts(): Artifact[];
-  getBuildOrder(): string[];              // Kahn 拓扑排序
-  getNextArtifacts(completed: Set): string[];  // 哪些 ready
-  isComplete(completed: Set): boolean;
-  getBlocked(completed: Set): Record<string, string[]>;  // 谁被什么卡住
-}
-```
-
----
-
-## 9. 关键源文件速查
-
-| 组件 | 文件 | 核心函数/类 |
-|------|------|------------|
-| Schema 定义 | `schemas/spec-driven/schema.yaml` | 全部 |
-| 模板文件 | `schemas/spec-driven/templates/*.md` | - |
-| 图算法 | `src/core/artifact-graph/graph.ts` | `ArtifactGraph`, `getBuildOrder()` (Kahn) |
-| Completion 检测 | `src/core/artifact-graph/state.ts` | `detectCompleted()` |
-| Glob 解析 | `src/core/artifact-graph/outputs.ts` | `artifactOutputExists()`, `resolveArtifactOutputs()` |
-| Schema 解析 | `src/core/artifact-graph/schema.ts` | `parseSchema()`, cycle detection (DFS) |
-| Schema 查找 | `src/core/artifact-graph/resolver.ts` | `getSchemaDir()`, `resolveSchema()`, `listSchemas()` |
-| 指令生成 | `src/core/artifact-graph/instruction-loader.ts` | `loadChangeContext()`, `generateInstructions()`, `formatChangeStatus()` |
-| 指令格式化 | `src/commands/workflow/instructions.ts` | `printInstructionsText()`, `applyInstructionsCommand()` |
-| Delta 解析 | `src/core/parsers/requirement-blocks.ts` | `parseDeltaSpec()`, `extractRequirementsSection()` |
-| Delta 合并 | `src/core/specs-apply.ts` | `buildUpdatedSpec()`, `findSpecUpdates()`, `writeUpdatedSpec()` |
-| 归档执行 | `src/core/archive.ts` | `ArchiveCommand.execute()` |
-| 项目配置 | `src/core/project-config.ts` | `readProjectConfig()`, `validateConfigRules()` |
-| Skill 模板 | `src/core/templates/workflows/*.ts` | 每个 workflow 的 skill/command 模板 |
-| Profile 定义 | `src/core/profiles.ts` | `CORE_WORKFLOWS`, `getProfileWorkflows()` |
-| Change 元数据 | `src/utils/change-metadata.ts` | `readChangeMetadata()`, `writeChangeMetadata()`, `resolveSchemaForChange()` |
+| 主题 | Primary source |
+|---|---|
+| 内置四 artifact 与 Apply contract | [`schemas/spec-driven/schema.yaml`](../../schemas/spec-driven/schema.yaml) |
+| 四个输出模板 | [`schemas/spec-driven/templates/`](../../schemas/spec-driven/templates/proposal.md) |
+| schema 数据结构 | [`src/core/artifact-graph/types.ts`](../../src/core/artifact-graph/types.ts) |
+| schema 解析与图合法性 | [`src/core/artifact-graph/schema.ts`](../../src/core/artifact-graph/schema.ts) |
+| DAG 查询与拓扑排序 | [`src/core/artifact-graph/graph.ts`](../../src/core/artifact-graph/graph.ts) |
+| 文件存在式 completion | [`src/core/artifact-graph/state.ts`](../../src/core/artifact-graph/state.ts)、[`outputs.ts`](../../src/core/artifact-graph/outputs.ts) |
+| artifact instruction 与 status | [`src/core/artifact-graph/instruction-loader.ts`](../../src/core/artifact-graph/instruction-loader.ts) |
+| Apply instruction、tracking 与 contextFiles | [`src/commands/workflow/instructions.ts`](../../src/commands/workflow/instructions.ts) |
+| schema 名称选择与 change metadata | [`src/utils/change-metadata.ts`](../../src/utils/change-metadata.ts)、[`change-utils.ts`](../../src/utils/change-utils.ts) |
+| 同名 schema 的解析优先级 | [`src/core/artifact-graph/resolver.ts`](../../src/core/artifact-graph/resolver.ts) |
+| Archive 的实际 validation 边界 | [`src/core/archive.ts`](../../src/core/archive.ts) |

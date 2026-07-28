@@ -44,6 +44,8 @@ OpenSpec 的 Host Agent 存在于所有项目的开发过程，因而**不是**�
 
 无论选择哪条基线，都先保持以下事实：
 
+在默认 `spec-driven` schema 中，四个 planning artifacts 是 `proposal`、`specs`、`design` 和 `tasks`；使用自定义 schema 时，则以该 schema 的实际 artifact ID 为准。
+
 ```text
 稳定、短、所有 planning artifacts 都需要的事实 -> context
 一个 artifact 的长期写作/审查约束             -> rules.<artifact-id>

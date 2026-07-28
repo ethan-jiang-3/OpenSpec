@@ -3,27 +3,38 @@ title: "11 — Agentic PPT workflow：MD/Agent 控制 Flow 的 config 归位审�
 document_kind: "case-audit"
 case_source: "/Users/bowhead/ai_tool_ppt_maker/openspec/config.yaml"
 applies_to:
-  - "B1: Markdown-first / Agent-controlled Flow with deterministic JS/CLI gates"
-  - "projects with distinct framework-maintenance and run-bundle-production domains"
+  - "Agentic PPT workflow at case_source"
+  - "that project's framework-maintenance and run-bundle-production domains"
 read_when:
-  - "项目由 Markdown controller / Agent 控制流程，但同时有确定性 CLI、Gate、状态和 evidence surface。"
-  - "一份 config 同时承载多个工作域、长 policy 与 run-bundle 操作知识，需要先做 change classification。"
+  - "正在维护或复核 case_source 对应的 Agentic PPT workflow 配置。"
+  - "需要理解该项目如何分类 framework maintenance 与 run-bundle production，并路由长 policy。"
 focus:
-  - "将 framework-maintenance / run-bundle-production 分类写入 proposal，再按触发条件给 specs/design/tasks 路由 policy。"
-  - "避免把 controller playbook、CLI protocol 和 bundle 操作说明塞进所有 planning artifacts。"
+  - "将该项目的 framework-maintenance / run-bundle-production 分类写入 proposal，再按触发条件给 specs/design/tasks 路由 policy。"
+  - "避免把该项目的 controller playbook、CLI protocol 和 bundle 操作说明塞进所有 planning artifacts。"
 not_for:
-  - "不要把本案例当作 B2 程序/Graph 控制 Flow 的模板；那类项目应读 12。"
+  - "不要把本项目的 B1 判断当作其他 Markdown-first、PPT 或 Agentic 项目的分类依据或配置模板。"
   - "不要把 PPT 或 run-bundle 的具体术语、路径和 Gates 视为通用 config 规则。"
 next_read:
-  - "通用归位规则：01-design-config-yaml.md"
-  - "配置不生效或 Apply 需要稳定指导：02-diagnose-maintain-config-yaml.md"
+  - "案例边界与三个项目介绍：README.md"
+  - "通用归位规则：../01-design-config-yaml.md"
+  - "配置不生效或 Apply 需要稳定指导：../02-diagnose-maintain-config-yaml.md"
 ---
 
 # 11 — Agentic PPT workflow：MD/Agent 控制 Flow 的 config 归位审计
 
 来源：`/Users/bowhead/ai_tool_ppt_maker/openspec/config.yaml`。
 
-这个项目也属于 [`00-initial-config-baselines.md`](00-initial-config-baselines.md) 的 **B1：MD/Agent 控制 Flow，传统程序做 Gate**：Markdown controller / Agent 拥有流程、节点、路径选择和创意判断；JS/CLI 拥有解析、校验、状态、证据和结构化诊断。审计重点是让 config 只保留这张稳定 authority map，而不把 playbook、控制政策和 run-bundle 操作手册重复投放给所有 planning artifacts。
+## 项目是什么
+
+Agentic PPT workflow 是一个 AI 驱动的演示文稿生产系统：Agent 阅读方法与项目资料、做内容和视觉判断，并通过 Markdown controller 推进 PPT 工作流；JavaScript/CLI 负责解析、校验、状态、证据和 Gate。项目同时包含 framework maintenance 与具体 deck 的 run-bundle production 两类工作域。
+
+## 使用边界
+
+本文只审计这个项目在上述来源路径中的 `config.yaml`，不是 Markdown-first、PPT 或 B1 项目的通用模板。其他项目最多借鉴“先分类 change domain、再按条件路由 policy”的方法；不能复制这里的 deck/run-bundle、refresh path、Gate 分类、capability 表、目录、命令或生产步骤。
+
+## 审计判断
+
+这个项目也属于 [`00-initial-config-baselines.md`](../00-initial-config-baselines.md) 的 **B1：MD/Agent 控制 Flow，传统程序做 Gate**：Markdown controller / Agent 拥有流程、节点、路径选择和创意判断；JS/CLI 拥有解析、校验、状态、证据和结构化诊断。审计重点是让 config 只保留这张稳定 authority map，而不把 playbook、控制政策和 run-bundle 操作手册重复投放给所有 planning artifacts。
 
 > 目的不是批评配置“写得太长”，而是识别每段信息的正确 owner、消费时机和验证方式。建议去处是设计方向，最终仍应以项目实际文件结构为准。
 

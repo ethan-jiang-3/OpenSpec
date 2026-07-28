@@ -42,7 +42,7 @@ next_read:
 实际操作：
 
 1. 确认编辑的是生效 root 中优先的 `config.yaml` 或 `.yml`。
-2. 检查当前 change 的 `.openspec.yaml`；它可能锁定了与 `config.schema` 不同的 schema。
+2. 检查当前 change 的 `.openspec.yaml`；它可能记录了与 `config.schema` 不同的 schema 名称。
 3. 确定需求的消费者是 planning artifact、Apply、Explore/Archive、references，还是 checker/test。
 4. 运行 `openspec instructions <artifact-id> --change <change> --json`，检查 `context`、`rules`、dependencies 和 references。
 5. 单独运行 `openspec instructions apply --change <change> --json`；Apply 不会重新收到 `context`/`rules`。
@@ -57,14 +57,14 @@ next_read:
 | `context` 或 rule 完全不出现 | 编辑了非生效 root、被 `.yaml` 覆盖的 `.yml`、字段被 parser 丢弃，或 rule key 不属于当前 schema | 按 root/schema/instructions JSON 定位后，再修改有效文件与合法 key。 |
 | `rules.tasks` 写得很好，但 Apply 没有遵守 | Apply 本来就不接收 `context`/`rules` | 稳定 Apply 行为移到 schema `apply.instruction`；这次 change 的动作和证据写入 tasks/artifacts。 |
 | Explore 或 Archive 没有遵守一条 config 规则 | 它们不调用 artifact instructions | 将专属行为移到 workflow skill、`AGENTS.md`、playbook 或 checker。 |
-| 改了 `config.schema`，活跃 change 仍走旧流程 | change metadata `.openspec.yaml` 的 schema 快照优先 | 新 change 使用新默认值；既有 change 要显式迁移并验证，不要期待隐式切换。 |
+| 改了 `config.schema`，活跃 change 仍选择旧名称 | change metadata `.openspec.yaml` 中记录的 schema 名称优先 | 新 change 使用新默认值；既有 change 要显式改名迁移并验证，不要期待隐式切换。注意 metadata 不保存 schema 内容；修改同名 schema 定义仍可能影响既有 change。 |
 | `openspec schema init --default` 后默认 schema 没变 | 当前命令写入的 `defaultSchema` 没有被 project config 消费者读取 | 手动写 `schema: <name>`，再以新 change 的 `.openspec.yaml` 验证。 |
 | `store:` 指向外部 store，但本地 guidance 仍被使用 | 本地 planning shape 让 local root 胜出 | 移除歧义：使用 config-only pointer，或把 guidance 放到真正选中的 local/store root。 |
 | 新增 `guidance:`、`apply_rules:` 等字段后没有效果 | 未支持的顶层 key 被静默忽略 | 使用现有 placement，或先实现可验证的 OpenSpec feature。 |
 
 ## schema 与多 schema 的维护规则
 
-1. `config.schema` 决定新 change 的默认 schema；已有 change 的 `.openspec.yaml` 优先。
+1. `config.schema` 决定新 change 的默认 schema 名称；已有 change 的 `.openspec.yaml` 中的名称优先。它不是 schema 内容、hash 或 version 的快照。
 2. `schema` 缺失或无效时，合法的 `context`/`rules` 仍可能被保留，schema 消费者则回退到默认值。能运行不等于显式选中了预期 workflow；应始终写有效 `schema: <name>`。
 3. `openspec schema init --default` 当前写入的 `defaultSchema` 是静默无效字段，上游修复前不能作为维护操作依赖。
 4. `rules` 对当前 schema 的 artifact IDs 有效。并行使用多个 schema 时，某个 schema 专属 key 在另一个 change 上可能 warning 且不注入。

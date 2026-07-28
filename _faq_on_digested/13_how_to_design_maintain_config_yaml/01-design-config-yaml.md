@@ -14,12 +14,12 @@ not_for:
   - "不要用本文排查为什么某条配置没有生效；那是 root/schema/instructions 的诊断问题。"
 next_read:
   - "配置不生效、schema 切换或多 schema 维护：02-diagnose-maintain-config-yaml.md"
-  - "需要借鉴真实项目边界：10、11 或 12 的对应审计案例"
+  - "需要观察归位方法如何用于特定项目：project-cases/README.md"
 ---
 
 # 如何设计 `config.yaml`
 
-本文件面向“新建配置”或“重新归位现有内容”。先用 [`00-initial-config-baselines.md`](00-initial-config-baselines.md) 选择项目运行时基线；这里回答每条稳定信息究竟应放在哪里。
+本文件面向“新建配置”或“重新归位现有内容”。先用 [`00-initial-config-baselines.md`](00-initial-config-baselines.md) 选择项目运行时基线；这里回答每条稳定信息究竟应放在哪里。默认 `spec-driven` schema 的四个 planning artifacts 是 `proposal`、`specs`、`design` 和 `tasks`，下文出现的 artifact-specific guidance 均先按这四个真实 ID 理解。
 
 ## 先接受配置的能力边界
 
@@ -35,24 +35,28 @@ next_read:
 | 跨团队上游 spec 的发现 | `references` | 生成可按需读取的索引，而不是内联正文。 |
 | 运行中的状态、receipt、授权或进度 | runtime-owned state / record | config 是项目级长期配置。 |
 
-默认 `spec-driven` 中，`proposal`、`specs`、`design`、`tasks` 是 artifact ID；`apply` 不是 rule key。项目使用自定义 schema 时，必须以它的实际 artifact ID 为准。
+在这个 schema 中，`apply` 是独立的实施阶段，不是第五个 artifact，也不是合法的 rule key。项目使用自定义 schema 时，必须改以它的实际 artifact ID 为准。
 
 ## 逐条做归位判断
 
 对准备写进 config 的每一句话，按这个顺序判断：
 
 ```text
-它是否必须被确定性地强制或证明？
-  是 -> checker / test / lint / CI；artifact/task 只记录如何运行它
-  否 -> 它是否改变 artifact、依赖、gate 或 Apply 行为？
-          是 -> schema / template / workflow skill
-          否 -> 它是否只属于一个 change？
-                  是 -> proposal / specs / design / tasks
-                  否 -> 它是否只服务一个 artifact？
-                          是 -> rules.<artifact-id>
-                          否 -> 它是否是所有 planning artifacts 都需要的稳定短背景？
-                                  是 -> context
-                                  否 -> canonical guide / playbook，由目标 rule 指向
+它是当前运行状态、receipt、授权或进度吗？
+  是 -> runtime-owned state / record
+  否 -> 它是已注册 store 中上游 spec 的发现入口吗？
+          是 -> references；需要时再读取正文
+          否 -> 它是否必须被确定性地强制或证明？
+                  是 -> owning spec/policy + checker / test / lint / CI；artifact/task 记录影响与证据
+                  否 -> 它是否改变 artifact、依赖、gate 或 Apply 行为？
+                          是 -> schema / template / workflow skill
+                          否 -> 它是否只属于一个 change？
+                                  是 -> proposal / specs / design / tasks
+                                  否 -> 它是否只服务一个 artifact？
+                                          是 -> rules.<artifact-id>
+                                          否 -> 它是否是四个 planning artifacts 都需要的稳定短背景？
+                                                  是 -> context
+                                                  否 -> canonical guide / playbook，由目标 rule 指向
 ```
 
 这个顺序的重要性在于：不要用 `context` 填补缺失的 schema、state 或 validator。内容写得正确但消费者不对，仍然不会在需要时出现。
@@ -114,7 +118,19 @@ rules:
 - Required verification evidence: ...
 ```
 
-之后 specs、design、tasks 从依赖 artifact 读取这张 card，Apply 再从 artifacts 的 `contextFiles` 读取具体事实。若这张 card 对每个 change 都是硬性前置条件，应把它固化到 proposal template 或独立 schema artifact，而不是长期依赖 agent 自觉添加。
+内置 `spec-driven` 的实际交接链是：
+
+```text
+proposal: 保存 Context Card
+  -> specs: 读取 proposal，落实行为、capability 与验证后果
+  -> design: 读取 proposal，落实技术、owner、风险与证据后果
+specs + design
+  -> tasks: 读取这两个直接依赖，生成具体实施与验证动作
+所有当前已存在的 artifacts
+  -> Apply: 通过 contextFiles 读取
+```
+
+`tasks` 不直接依赖 `proposal`，所以 Context Card 不会被 CLI 自动穿透注入 tasks instructions。需要交给实施的分类结论，必须先由 specs/design 落成各自负责的合同、决定或证据要求，再由 tasks 具体化；不要指望 tasks 作者重新猜 proposal，也不要把整张 card 原样复制到每个 artifact。若这张 card 对每个 change 都是硬性前置条件，应把它固化到 proposal template，而不是长期依赖 agent 自觉添加。若它需要独立状态、独立审查或不同依赖，再升级为单独的 schema artifact。
 
 ## 何时必须离开 config
 

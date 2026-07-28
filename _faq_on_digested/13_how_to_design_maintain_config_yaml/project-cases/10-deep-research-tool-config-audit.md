@@ -3,26 +3,37 @@ title: "10 — Deep Research Tool：MD/Agent 控制 Flow 的 config 归位审计
 document_kind: "case-audit"
 case_source: "/Users/bowhead/ai_tool_deepresearch/openspec/config.yaml"
 applies_to:
-  - "B1: MD/Agent-controlled Flow with deterministic gates"
+  - "Deep Research Tool at case_source"
+  - "that project's audited B1 runtime boundary"
 read_when:
-  - "项目由 Markdown / Runtime Agent 选择流程、语义路由与恢复，传统程序只做 Gate、状态、receipt 或诊断。"
-  - "需要审计一份 B1 配置中哪些 runtime/playbook 细节被过早注入所有 planning artifacts。"
+  - "正在维护或复核 case_source 对应的 Deep Research Tool 配置。"
+  - "需要理解该项目中哪些 runtime/playbook 细节被过早注入所有 planning artifacts。"
 focus:
-  - "把 Flow/Gate authority profile 留在 context，把条件化 policy、verification 与 registry 路由到正确 artifact 或 deterministic owner。"
-  - "用 Change Context Card 让下游 artifacts 继承本次分类，而不是从全局 context 反复猜测。"
+  - "把该项目的 Flow/Gate authority profile 留在 context，把条件化 policy、verification 与 registry 路由到正确 artifact 或 deterministic owner。"
+  - "在该项目中用 Change Context Card 让下游 artifacts 继承本次分类，而不是从全局 context 反复猜测。"
 not_for:
-  - "不要把本案例当作 B2 程序/Graph 控制 Flow 的模板；那类项目应读 12。"
+  - "不要把本项目的 B1 判断当作其他 MD/Agent 项目的分类依据或配置模板。"
   - "不要复制此项目的 capability、bundle、实验或验证细节到无关项目。"
 next_read:
-  - "通用归位规则：01-design-config-yaml.md"
-  - "B2 程序/Graph 对照案例：12-deerflow-deep-research-config-audit.md"
+  - "案例边界与三个项目介绍：README.md"
+  - "通用归位规则：../01-design-config-yaml.md"
 ---
 
 # 10 — Deep Research Tool：MD/Agent 控制 Flow 的 config 归位审计
 
 来源：`/Users/bowhead/ai_tool_deepresearch/openspec/config.yaml`。
 
-这个项目属于 [`00-initial-config-baselines.md`](00-initial-config-baselines.md) 的 **B1：MD/Agent 控制 Flow，传统程序做 Gate**。配置中已经准确表达了 Agent 负责搜索、阅读、写作、综合、决策，Engine 负责 schema、状态机、receipt 和 Gate 校验；问题不在这套模型本身，而在过多 runtime/playbook 细节被重复注入每个 planning artifact。
+## 项目是什么
+
+Deep Research Tool 是一个把宽泛研究问题转化为证据支撑、多波次、带 Gate 研究报告的 Agentic framework。运行时由 Agent 执行搜索、阅读、写作、综合和语义判断；Markdown 提供 Agent-facing flow；JavaScript Engine 负责 schema、状态、receipt 与确定性 Gate。
+
+## 使用边界
+
+本文只审计这个项目在上述来源路径中的 `config.yaml`，不是 B1 项目的通用模板。其他项目最多借鉴“先识别 consumer、再归位信息、把硬约束交给确定性 owner”的审计方法；不能复制这里的 capability、bundle、实验体系、requirement registry、verification routing、目录、命令或行号结论。
+
+## 审计判断
+
+这个项目属于 [`00-initial-config-baselines.md`](../00-initial-config-baselines.md) 的 **B1：MD/Agent 控制 Flow，传统程序做 Gate**。配置中已经准确表达了 Agent 负责搜索、阅读、写作、综合、决策，Engine 负责 schema、状态机、receipt 和 Gate 校验；问题不在这套模型本身，而在过多 runtime/playbook 细节被重复注入每个 planning artifact。
 
 > 目的不是批评配置“写得太长”，而是识别每段信息的正确 owner、消费时机和验证方式。建议去处是设计方向，最终仍应以项目实际文件结构为准。
 

@@ -2,7 +2,7 @@
 
 ## 一句话
 
-把 `config.yaml` 当成**项目 profile + artifact-specific guidance**，不要当成项目百科或运行时控制器。真正的阶段化上下文主要由 schema 的 artifact DAG 和 change artifacts 承担：proposal 记录分类和决定，specs/design/tasks 通过依赖读取并细化，apply 再读取这些实际 artifacts。
+把 `config.yaml` 当成**项目 profile + artifact-specific guidance**，不要当成项目百科或运行时控制器。真正的阶段化上下文主要由 schema 的 artifact DAG 和 change artifacts 承担：proposal 记录分类和决定，specs/design 直接读取 proposal 并分别细化行为与技术后果，tasks 再读取 specs/design，Apply 最后读取当前已有的实际 artifacts。
 
 ## 先拆掉一个错误前提
 
@@ -12,19 +12,19 @@
 |---|---|---|
 | Explore | skill、`list/status`、按需读文件 | 否 |
 | proposal/specs/design/tasks | instructions + schema + dependency artifacts | 是，分别为全局 context 与当前 artifact rules |
-| apply | schema apply instruction + `contextFiles` + tasks | 否 |
+| apply | generated Apply instructions：ready 时使用 schema `apply.instruction`，并携带 `contextFiles`、task progress 与可选 references | 否 |
 | archive | workflow、status、tasks、delta specs | 否 |
 
 所以长 context 的坏处不只是 token 多：它把 apply/runtime/Explore 专属知识交给了不需要它的 artifact，同时没有保证真正需要它的阶段收到。
 
 ## A. 已确认的机制边界
 
-这不是一份待执行的研究计划。源码深挖已经汇总在 [`07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md)，它给出设计和诊断时必须接受的边界：
+这不是一份待执行的研究计划。内置 `spec-driven` 的 config 消费路径已经汇总在 [`07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md)；root/store 等通用诊断则由 [`02-diagnose-maintain-config-yaml.md`](02-diagnose-maintain-config-yaml.md) 与 [`sources.md`](sources.md) 索引。设计和诊断时必须接受以下边界：
 
 | 事实 | 对配置决策的影响 |
 |---|---|
 | `context` 与 `rules` 只进入 `openspec instructions <artifact>` | 它们只能服务 planning artifacts，不能当作所有阶段的通用 guidance。 |
-| Apply 只收到 schema 的 `apply.instruction`、change artifacts、tasks/progress 和可选 references | apply 必须遵守的稳定规则要进入 schema；本次实施事实要进入 artifacts/tasks。 |
+| Apply 由 schema Apply block、change artifacts、tasks/progress 和可选 references 组装；只有 ready 分支使用 `apply.instruction` | apply 期间必须可见的稳定规则要进入 schema/持久化 artifacts 或确定性检查；本次实施事实要进入 artifacts/tasks。 |
 | Explore、Sync、Archive 不调用 artifact instructions | 这些阶段的专属行为要进入 workflow skill、`AGENTS.md`、playbook 或 checker。 |
 | `schema` 在 new change 时会被写入 change 的 `.openspec.yaml` | 修改项目默认值不会迁移已在进行的 change。 |
 | `store` 是 root 选择机制，不是 guidance 字段 | 先确认命令最终选中了哪个 root，再判断正在编辑的 config 是否会被读取。 |
@@ -72,11 +72,13 @@
 哪些验证证据必须产生？
 ```
 
-这会让 specs、design、tasks 和 apply 从真实 change artifacts 读取准确结论，而不是每一步重新从全局 context 猜测。
+在内置 `spec-driven` 中，specs/design 会直接收到 proposal；tasks 只直接收到 specs/design，不会自动收到 proposal；Apply 的 `contextFiles` 则包含当前已有的各类 artifacts。因此必须让 specs/design 把分类落实成各自负责的合同、决定和证据要求，再让 tasks 具体化，而不是期待 Context Card 自动穿透整个 DAG，或让每一步重新从全局 context 猜测。
 
-## 三个样例的核心问题
+## 三个项目特定案例（非通用结论）
 
-三个样例的 rules 都已经包含很多高质量、artifact-specific 的约束；问题主要在长 `context` 混入了：
+[`project-cases/`](project-cases/README.md) 保存的是对 Deep Research Tool、Agentic PPT workflow 与 DeerFlow Deep Research 三个具体项目的审计，不是三套通用基线。以下判断只描述这些项目当时呈现的配置与 runtime boundary；其他项目只能借鉴“识别 consumer、owner、阶段和 evidence，再决定归位”的方法，不能复制其路径、policy、Gate、命令、capability 或结论。
+
+在这三份特定配置中，rules 已经包含很多高质量、artifact-specific 的约束；共同需要审查的是长 `context` 是否混入了：
 
 - proposal/design 才适用的长政策；
 - 单次 change 应记录的分类与决定；
@@ -84,7 +86,7 @@
 - 应由 registry/checker/CI 保证的硬规则；
 - 完整目录树和 capability 索引等按需才需读取的资料。
 
-处理方式不是删掉治理意图，而是将其改为：短 profile、artifact rule、canonical policy 指针、change context card、schema/playbook 或确定性检查。前两个样例是 B1：MD/Agent 控制 Flow；DeerFlow Deep Research 是 B2：graph 拥有 node 顺序、route 和 checkpointed state，智能能力只在 node contract 内工作。因此 B2 配置尤其不能让 prompt、review 或 config 冒充 graph/state/node contract 的运行时权威。
+处理方式不是删掉治理意图，而是将其改为：短 profile、artifact rule、canonical policy 指针、change context card、schema/playbook 或确定性检查。对这三个项目的源码边界复核结果是：Deep Research Tool 与 Agentic PPT workflow 属于 B1，DeerFlow Deep Research 属于 B2；这是案例结论，不代表其他 research、PPT、DeerFlow、LangGraph 或 Agentic 项目具有相同控制边界。
 
 ## 何时不该继续改 config
 
@@ -103,8 +105,6 @@
 - 从下游项目类型选择初稿：[`00-initial-config-baselines.md`](00-initial-config-baselines.md)
 - 信息归位与 rule 设计：[`01-design-config-yaml.md`](01-design-config-yaml.md)
 - 配置不生效、schema 切换与维护：[`02-diagnose-maintain-config-yaml.md`](02-diagnose-maintain-config-yaml.md)
-- Deep Research Tool 审计：[`10-deep-research-tool-config-audit.md`](10-deep-research-tool-config-audit.md)
-- Agentic PPT workflow 审计：[`11-agentic-ppt-workflow-config-audit.md`](11-agentic-ppt-workflow-config-audit.md)
-- DeerFlow Deep Research 的程序/Graph 控制 Flow 审计：[`12-deerflow-deep-research-config-audit.md`](12-deerflow-deep-research-config-audit.md)
+- 三个项目特定案例及其适用边界：[`project-cases/README.md`](project-cases/README.md)
 - 源码深挖与阶段路由证据：[`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md)
 - 源码与材料索引：[`sources.md`](sources.md)
