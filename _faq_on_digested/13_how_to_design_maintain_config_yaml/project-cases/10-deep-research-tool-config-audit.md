@@ -69,3 +69,65 @@ Deep Research Tool 是一个把宽泛研究问题转化为证据支撑、多波�
 2. 每个 artifact 保留 3-6 条真正稳定的 rule；一条 rule 应能回答“何时触发、做什么、在哪留下证据”。
 3. 用 proposal 的 Change Context Card 记录是否涉及 framework、version、experiment、verification plan；下游 artifacts 从 proposal 读这一结论。
 4. 将不可协商的 registry / spec / verification 规则继续放入 checker；真正的 Agent-flow 顺序留在 Markdown controller/playbook，而非 config。
+
+## 对本文 Evolution Directions 建议的复核
+
+这里的建议**方向正确，但还不够精确**。把三条 Evolution Directions 从全局 `context` 的长正文，迁到 `rules.proposal` 与 `rules.design`，能解决真正的问题：它们不是所有 planning artifact 都要反复携带的项目事实，而是一套在设计相关 change 上被触发的思考顺序。
+
+这也正好服务本项目想要的效果：每个有实质设计内容的 change，在形成方案时先想清楚三件事——新概念是否让某个读者能更精确地推理；控制形状是否仍是最短合法闭环；以及用户、Agent、Engine 的决定/执行/verdict 边界是否诚实。三者的 canonical source 已经是 `guidelines/evolution-*.md`；`config.yaml` 的职责只是把正确的人在正确的 artifact 阶段路由过去，并要求留下简短、可审查的结论。
+
+### 原建议哪里还差一步
+
+| 问题 | 为什么是问题 | 应怎样调整 |
+|---|---|---|
+| 只写“移到 `rules.proposal`、`rules.design`”，没有区分两者职责。 | proposal 负责说明要改什么与为什么；design 才负责选语义层、控制形状和责任边界。两处都要求完整 review，会造成两份近似反思；只留 proposal 又会让真正的技术取舍没有稳定落点。 | 把 `design` 定为三条 Directions 的**主审查与证据 owner**；proposal 只记录本 change 是否触发、哪些 surface 可能受影响，以及 design 必须完成 review 的承诺。 |
+| 说“proposal/design 必须按顺序 review”容易被实现成：每个微小 change 都重新通读三份长指南。 | 这样既浪费注意力，也会把严肃审查变成机械打勾；但完全只靠条件判断，又会让作者跳过本该考虑的层。 | 每份 design 都先经过同一个轻量路由：`semantic precision → simple reliable control → helper responsibility`。只有对应 surface 被新增或实质改变时，才读取并应用该条 canonical guideline，写出实质结论；不适用时可简短说明“本 change 不改变此层”。 |
+| 现有 `rules.design` 要“按顺序阅读”并在 `apply target manifest` 标 control surface，但没有指定结论写到哪里、下游如何消费。 | 这不满足“触发 → 动作 → canonical source → evidence 落点”。而且 `apply target manifest` 虽然在历史 `design.md` 中已有惯例，却不是 config 中定义的独立文件，容易被误写成一个临时、无人读取的文件。 | 在 `design.md` 固定一个简短的 `## Evolution review`，并把 control-surface 的增删并入同一份 `## Apply target manifest`。`tasks.md` 只把其中已经决定的实现/验证动作具体化，不再重新猜或重做三条 review。若希望每个 change 都稳定拥有这些小节，应更新 proposal/design template，而不是只依赖 config prompt。 |
+| 本文提出 Change Context Card，但没有把它与三条 Directions 的职责接上。 | Card 若只登记 framework、version、experiment、verification，会遗漏最重要的“这次设计为什么要进行这套 review”。 | Card 应有一行 `Evolution review`：列出触发的 surface、适用的三层 review，以及结论将落在 `design.md`。它是下游路由信息，不复制三条 guideline 的正文，也不替代 design 的论证。 |
+
+### 建议采用的归位形状
+
+```text
+guidelines/evolution-*.md
+  = 三条方向的唯一完整正文与判断标准
+
+proposal.md / Change Context Card
+  = 本 change 是否触发、影响哪些 surface、design 必须完成什么 review
+       ↓
+design.md / Evolution review + Apply target manifest
+  = 按 semantic → control → responsibility 的顺序写出实际取舍和增删的 control surface
+       ↓
+tasks.md
+  = 将已确定的删除、实现、测试与收尾证据拆成可执行任务
+```
+
+因此，`context` 不必保留目前 51–60 行那样的三段摘要；即使缩短后仍会被 specs、tasks 等不需要完整设计审查的 artifact 重复注入。项目 profile 中保留 Agent / Markdown / Engine 的稳定 authority split 即可。Directions 的“何时读、读完留下什么”应由 artifact rule 表达。
+
+### 对 `config.yaml` 的具体改写建议
+
+下面不是要求把 guideline 正文复制进 config，而是建议把现有宽泛 rule 改成带触发条件与留痕位置的短路由。字段名和模板标题可按项目现有格式微调。
+
+```yaml
+rules:
+  proposal:
+    - >
+      当 change 可能新增或实质改变具名概念/state/projection/status/view、
+      control/recovery/mutation，或 user/Agent/Engine 责任边界时，在 Change Context Card
+      写明受影响 surface 与 `Evolution review: required`；design.md 必须按
+      semantic precision → simple reliable control → helper-oriented responsibility
+      留下结论。完整判断标准只读对应的 guidelines/evolution-*.md。
+
+  design:
+    - >
+      每份 design 先用 `## Evolution review` 按 semantic precision → simple reliable control
+      → helper-oriented responsibility 检查本 change；对被新增或实质改变的层，阅读对应
+      guidelines/evolution-*.md 并记录简短结论：读者/有界问题与必要区别；direct Source of
+      Record、最短合法闭环和净简化；以及 user decision、authorized Agent execution、Engine verdict
+      的边界。未改变的层可明确标为不适用。
+    - >
+      在 design.md 的 `## Apply target manifest` 列出新增、删除或合并的 control surface，
+      各自的 Source of Record 与验证证据；tasks 依据此处生成实现和验证动作，不重新创造
+      第二份 review 或 authority。
+```
+
+这比“每次都完整读三份文件”更能达到你要的前置思考：三层顺序对每个设计都可见，真正相关的原则才被深入加载，且结论会沿 proposal → design → tasks 传下去。它也保留三条 guideline 明确反对的做法：不把反思硬化为固定表格或 Engine verdict，不用“更可靠”作为叠加控制层的理由，也不把 `human-directed` 误写成新的 permission 或 runtime capability。

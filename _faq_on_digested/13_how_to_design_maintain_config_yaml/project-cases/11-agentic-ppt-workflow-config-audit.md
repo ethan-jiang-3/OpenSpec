@@ -67,3 +67,88 @@ Agentic PPT workflow 是一个 AI 驱动的演示文稿生产系统：Agent 阅�
 2. 将 gate/control/quality 三套长政策改成 canonical 文档；在 proposal/specs/design 中仅留下有触发条件的阅读与留痕要求。
 3. 把 framework-maintenance / run-bundle-production 分类作为 proposal 的显式输出，而不是让每个后续 artifact 从全局 context 自行猜测。
 4. run-bundle 的真实执行入口和 Gate 规则放入 playbook / `AGENTS.md` / schema `apply.instruction`；不要期待 config 在实际 Apply 中出现。
+
+## 对本文建议的复核
+
+这份审计关于“收缩 `context`、把长 policy 改为条件化指针、不要期待 Apply 重读 config”的方向是对的。但它有一个需要先纠正的边界：**framework maintenance 与指定 deck 的 run-bundle production 不是 OpenSpec 中两个对等的 change domain。**
+
+本项目的 `AGENTS.md` 已经把四个 framework 源码目录与 `deck_*` 生产对象分开：维护 framework 时才走 OpenSpec；用户指定 deck 后，Agent 应进入 `BOOTSTRAP.md`、`AGENT_CONTRACT.md` 和当前 controller/playbook。run bundle 当然是 framework change 需要评估的兼容对象，但不是普通 deck 生产时要创建 proposal/specs/design/tasks 的理由。
+
+这一区分会直接影响 config 的写法：它不应把生产工作塞进 OpenSpec artifact 的分类选项；它应在项目 profile 中声明 OpenSpec 的维护范围，并把生产操作路由到真正的 controller/playbook。
+
+### 原建议哪里还不够准确
+
+| 问题 | 为什么是问题 | 应怎样调整 |
+|---|---|---|
+| 把 `framework maintenance` 和 `run-bundle production` 都称为 proposal 的 `change domain`。 | 这会暗示“用户要改一个指定 deck”也应开启 OpenSpec change。实际上 deck 是 production data，framework 在该路径下只读；其流程、状态与 Gate 都由 run-bundle/controller 持有。 | proposal 只处理 **framework maintenance**。它需要记录的是：本次框架 change 是否影响 run-bundle contract、已有 deck 的兼容/迁移策略、以及生产数据绝不能被当作 fixture。指定 deck 的操作从 `BOOTSTRAP.md` / playbook 进入，不经过 proposal 分类。 |
+| 建议在 `context` 保留“两种工作域”的事实，却没有写明 OpenSpec 的适用边界。 | “双域”若只是一条平行事实，后续 Agent 仍须猜现在是在维护 framework，还是应去运行 deck。最容易发生的错误正是把 `deck_*` 当源码或测试夹具。 | `context` 保留一条短而硬的 scope boundary：OpenSpec 管四个 framework 源码域；`deck_*`、`dpt_*` 和 `_generated/` 是生产/输入数据，只有用户指定 deck 时由 production playbook 消费。完整目录表留在 `AGENTS.md` 或 layout document。 |
+| 三份 control policy 的建议只说“按条件路由”，没有指定谁完成实质审查、结论落在哪里。 | 同一段长 policy 现在同时散落在 context、proposal、specs、design 和 tasks。若只把它们搬成数个短 pointer，仍可能出现 proposal、specs、design 各自写一套近似解释，或 Apply 时完全看不到已作出的取舍。 | `proposal` 只登记触发的 policy 与风险/authority owner；`design` 是 gate/control/quality policy 的主审查和证据 owner；`specs` 只在行为契约确实变化时定义可观察的 outcome/invariant；`tasks` 只落实已决定的实现和 proof，不重新复述 policy。 |
+| 本文把完整 capability 表“移至 capability index”说得太轻。 | 如果 index 需要人工维护，它会成为 `openspec/specs/` 之外第二份 capability registry，和本项目“main spec 是当前行为权威”的原则冲突。 | 优先让 `openspec/specs/<capability>/spec.md` 保持唯一权威；如确实需要快速发现入口，index 必须是从 specs 生成或只含路径链接的薄索引，不能复制责任、schema 或行为描述。 |
+| “run-bundle 的真实执行入口放到 playbook/AGENTS/schema apply instruction”仍混合了两条流程。 | `schema apply.instruction` 只适用于 framework change 的 Apply；它不会也不应成为用户制作某个 deck 的入口。 | production routing 归 `AGENTS.md` + `BOOTSTRAP.md` + MD controller/playbook；framework Apply 的固定实施约束才考虑 schema `apply.instruction`。两者不要共用一个“执行入口”表述。 |
+
+### 建议采用的路由形状
+
+```text
+用户指定 deck，要生产或迭代 PPT
+  -> BOOTSTRAP.md / AGENT_CONTRACT.md / 当前 controller playbook
+  -> run-bundle state、Gate 与生成物规则拥有事实
+  -> 不创建 OpenSpec planning artifacts
+
+要修改 framework 的持久行为、contract、CLI、controller 或测试
+  -> OpenSpec proposal
+  -> 记录 framework 源码范围、control owner、run-bundle compatibility impact
+  -> specs 定义改变的 observable contract
+  -> design 完成 policy review 与验证取舍
+  -> tasks 落实实现、迁移和 proof
+```
+
+这里不是否认 run bundle 的重要性。相反，框架 change 只要会读、写、解释或迁移 run-bundle contract，就应把它写入 proposal/design；区别在于它是**受影响的 runtime contract**，不是 OpenSpec workflow 中与 framework maintenance 对等的工作域。
+
+### 三份 policy 的正确承接
+
+三份 canonical policy 都应离开全局 `context` 的长正文，但不能只留下“遇到相关情况请阅读”的口号。推荐的分工如下：
+
+| 阶段 | 应留下的最小信息 |
+|---|---|
+| proposal | 此 change 是否触发 `human-centered-gates`、`agent-assistance-and-control`、`simple-reliable-control`；涉及的 direct authority、control owner 与 protected runtime contract。 |
+| specs | 仅当改变行为契约时，定义 `guide` / `confirm` / `hard-stop` 的可观察结果、protected invariant 或 deterministic contract；不复制 CLI schema，也不把 policy prose 当 requirement。 |
+| design | 在一个简短 `## Control-policy review` 中，说明适用 policy 的实际选择：outcome/invariant、direct Source of Record、最短 evaluator/recovery path、用户/Agent/JS 的责任、以及新增控制面删除或合并了什么。 |
+| tasks | 从 design 拆出实现、迁移、negative test 和验证任务；不要要求实施者重新读 policy 后自行决定另一套 owner 或 recovery path。 |
+
+若希望这个 review 每次稳定出现，应更新 proposal/design template；仅在 config 中写一条长 rule 不能保证有一致的 evidence landing，也不能在 Apply 时自动重现。
+
+### 对 `config.yaml` 的具体改写建议
+
+下面的形状刻意不复制 policy 正文，也不在 config 中编排 deck production。它只让正确的 planning artifact 在 framework change 中加载正确的判断标准。
+
+```yaml
+context: |-
+  这是 Markdown-first 的 Agentic PPT framework：MD Controller / Agent 拥有流程与创意判断，
+  JS / CLI 拥有确定性解析、校验、状态、证据和诊断，人类拥有内容与风险判断。
+  OpenSpec 只管理 framework maintenance 的源码域；deck_*、dpt_* 与 _generated/ 是运行时生产/输入数据。
+  指定 deck 的生产从 BOOTSTRAP.md、AGENT_CONTRACT.md 与当前 controller playbook 进入；
+  framework change 的当前行为以 openspec/specs/<capability>/spec.md 为准。
+
+rules:
+  proposal:
+    - >
+      Framework maintenance proposal 必须列出源码范围、MD/JS/MD⇔JS protocol control owner，
+      以及对 run-bundle contract 的 none / compatible / migration impact；不得把 production deck
+      当源码、夹具或待自动迁移对象。若涉及 gate、control path 或 quality control，记录触发的
+      canonical policy 与 design.md 必须完成的 review。
+
+  design:
+    - >
+      当 change 涉及 gate/readiness/validation/override、controller/state/recovery/diagnostic，
+      或新的/修改的 quality-control path 时，读取对应 openspec/policies/*.md，并在 design.md
+      的 `## Control-policy review` 记录：direct Source of Record、outcome/invariant、最短合法
+      evaluator/recovery path、human/Agent/JS responsibility，以及新增控制面删除、合并或避免的复杂度。
+      具体 schema、CLI 字段和 permission 仍以 owning capability spec 为准。
+
+  tasks:
+    - >
+      tasks 必须把 design 已决定的 contract migration、implementation、focused negative coverage
+      和验证证据落为可验收动作；不得重新创造 competing authority、recovery path 或 waiver semantics。
+```
+
+这样修改后，`config.yaml` 给每个 framework change 的设计过程提供了足够早的 policy 提醒，却不会把一整套 controller/run-bundle 操作规则重复注入 proposal、specs、design、tasks，更不会误导 Agent 在真正制作 PPT 时先走 OpenSpec。
