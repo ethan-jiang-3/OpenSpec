@@ -10,9 +10,16 @@ import {
   MAX_REQUIREMENT_TEXT_LENGTH,
   VALIDATION_MESSAGES
 } from './constants.js';
-import { parseDeltaSpec, normalizeRequirementName, extractRequirementsSection } from '../parsers/requirement-blocks.js';
+import { parseDeltaSpec, foldRequirementName, normalizeRequirementName, extractRequirementsSection } from '../parsers/requirement-blocks.js';
+import {
+  extractRequirementBody as extractRequirementBodyShared,
+  containsShallOrMust as containsShallOrMustShared,
+  countScenarios as countScenariosShared,
+} from '../parsers/requirement-text.js';
 import { findMainSpecStructureIssues } from '../parsers/spec-structure.js';
 import { FileSystemUtils } from '../../utils/file-system.js';
+import { discoverSpecFiles, hasAnyFileUnder } from '../../utils/spec-discovery.js';
+import { METADATA_FILENAME, readSkipSpecsMarker } from '../../utils/change-metadata.js';
 
 export class Validator {
   private strictMode: boolean;
@@ -79,13 +86,28 @@ export class Validator {
       const content = readFileSync(filePath, 'utf-8');
       const changeDir = path.dirname(filePath);
       const parser = new ChangeParser(content, changeDir);
-      
+
       const change = await parser.parseChangeWithDeltas(changeName);
-      
+
       const result = ChangeSchema.safeParse(change);
-      
+
+      const marker = readSkipSpecsMarker(changeDir);
+      if (marker.invalidReason) {
+        issues.push({ level: 'ERROR', path: METADATA_FILENAME, message: this.formatInvalidMarkerMessage(marker.invalidReason) });
+      }
+
       if (!result.success) {
-        issues.push(...this.convertZodErrors(result.error));
+        let zodIssues = this.convertZodErrors(result.error);
+        // Only the no-deltas error is marker-aware here: the marker+files
+        // conflict is validateChangeDeltaSpecs's job, and every caller of
+        // this proposal-level pass (archive's non-blocking warnings) pairs
+        // it with that gate.
+        if (marker.declared) {
+          zodIssues = zodIssues.filter(
+            issue => !issue.message.startsWith(VALIDATION_MESSAGES.CHANGE_NO_DELTAS)
+          );
+        }
+        issues.push(...zodIssues);
       }
       
       issues.push(...this.applyChangeRules(change, content));
@@ -116,15 +138,34 @@ export class Validator {
     const issues: ValidationIssue[] = [];
     const specsDir = path.join(changeDir, 'specs');
     let totalDeltas = 0;
+    let hasRootLevelSpec = false;
     const missingHeaderSpecs: string[] = [];
     const emptySectionSpecs: Array<{ path: string; sections: string[] }> = [];
 
     try {
-      // Discover delta specs at any depth so the nested multi-area layout
-      // (specs/<area>/<capability>/spec.md) is validated, not just the
-      // one-level specs/<capability>/spec.md layout (#1182b). The spec-driven
-      // specs glob is specs/**/*.md; delta files are always named spec.md.
-      const specFiles = await this.findDeltaSpecFiles(specsDir);
+      // Discover delta specs through the same helper the change parser, show,
+      // apply, and archive use, so validate never accepts a layout the merge
+      // path silently skips (#1385). It finds spec.md at any depth, covering
+      // both specs/<capability>/spec.md and the nested multi-area
+      // specs/<area>/<capability>/spec.md layout (#1182b).
+      const specFiles = (await discoverSpecFiles(specsDir)).map(spec => spec.specFile);
+
+      // A spec.md directly at the specs/ root has no capability folder, so the
+      // merge path drops it: without this error the change validates clean and
+      // archives while its requirements never reach openspec/specs/ (#1385).
+      // Only a regular file counts — a *directory* named spec.md is a capability
+      // folder like any other, and discoverSpecFiles reads it normally.
+      const rootSpecStat = await fs.stat(path.join(specsDir, 'spec.md')).catch(() => null);
+      hasRootLevelSpec = rootSpecStat?.isFile() === true;
+      if (hasRootLevelSpec) {
+        issues.push({
+          level: 'ERROR',
+          path: 'spec.md',
+          message:
+            'Delta spec found at specs/spec.md. Delta specs must live in a capability folder (e.g. specs/<capability>/spec.md) — a file at the specs/ root is ignored when the change is applied or archived.',
+        });
+      }
+
       for (const specFile of specFiles) {
         let content: string | undefined;
         try {
@@ -135,6 +176,25 @@ export class Validator {
 
         const plan = parseDeltaSpec(content);
         const entryPath = FileSystemUtils.toPosixPath(path.relative(specsDir, specFile));
+
+        // Surface (as INFO, never a failure) the non-canonical level-3 headers
+        // the delta reader skipped while parsing ADDED/MODIFIED sections —
+        // without this note a stray divider like "### Documentation
+        // Requirements" would pass validate <change> while failing
+        // archive/validate <spec>. The list comes from the parse itself, so it
+        // reflects exactly what the reader skipped.
+        for (const stray of plan.skippedHeaders) {
+          const nameless = /^requirement:?$/i.test(stray.header);
+          issues.push({
+            level: 'INFO',
+            path: entryPath,
+            line: stray.line,
+            message: nameless
+              ? `Header "### ${stray.header}" in ${stray.section} is missing a requirement name and is ignored by validation. Add a name, e.g. "### Requirement: <name>".`
+              : `Header "### ${stray.header}" in ${stray.section} is not a "### Requirement:" header and is ignored by validation. Use "### Requirement: ${stray.header}" if it should be validated as a requirement.`,
+          });
+        }
+
         const sectionNames: string[] = [];
         if (plan.sectionPresence.added) sectionNames.push('## ADDED Requirements');
         if (plan.sectionPresence.modified) sectionNames.push('## MODIFIED Requirements');
@@ -164,7 +224,13 @@ export class Validator {
           }
           const requirementText = this.extractRequirementText(block.raw);
           if (!requirementText) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `ADDED "${block.name}" is missing requirement text` });
+            issues.push({
+              level: 'ERROR',
+              path: entryPath,
+              message: this.containsShallOrMust(block.name)
+                ? this.buildMissingShallOrMustMessage(`ADDED "${block.name}"`, block.name)
+                : `ADDED "${block.name}" is missing requirement text`,
+            });
           } else if (!this.containsShallOrMust(requirementText)) {
             issues.push({ level: 'ERROR', path: entryPath, message: this.buildMissingShallOrMustMessage(`ADDED "${block.name}"`, block.name) });
           }
@@ -185,7 +251,13 @@ export class Validator {
           }
           const requirementText = this.extractRequirementText(block.raw);
           if (!requirementText) {
-            issues.push({ level: 'ERROR', path: entryPath, message: `MODIFIED "${block.name}" is missing requirement text` });
+            issues.push({
+              level: 'ERROR',
+              path: entryPath,
+              message: this.containsShallOrMust(block.name)
+                ? this.buildMissingShallOrMustMessage(`MODIFIED "${block.name}"`, block.name)
+                : `MODIFIED "${block.name}" is missing requirement text`,
+            });
           } else if (!this.containsShallOrMust(requirementText)) {
             issues.push({ level: 'ERROR', path: entryPath, message: this.buildMissingShallOrMustMessage(`MODIFIED "${block.name}"`, block.name) });
           }
@@ -246,10 +318,32 @@ export class Validator {
           if (addedNames.has(toKey)) {
             issues.push({ level: 'ERROR', path: entryPath, message: `RENAMED TO collides with ADDED for "${to}"` });
           }
+          // Folded comparison: a case/whitespace variant of the FROM header
+          // in REMOVED is the same contradiction, not a different name.
+          const removedFoldMatch = [...removedNames].find(
+            (r) => foldRequirementName(r) === foldRequirementName(fromKey)
+          );
+          if (removedFoldMatch !== undefined) {
+            issues.push({
+              level: 'ERROR',
+              path: entryPath,
+              message:
+                `Requirement present in both RENAMED and REMOVED: "${from}"` +
+                (removedFoldMatch === fromKey ? '' : ` (REMOVED spells it "${removedFoldMatch}")`),
+            });
+          }
         }
       }
-    } catch {
-      // If no specs dir, treat as no deltas
+    } catch (error) {
+      // A missing specs dir (or a stray `specs` file) means no deltas;
+      // anything else (EACCES, EIO) must stay loud — discoverSpecFiles
+      // documents that silently dropping an unreadable capability recreates
+      // the data-loss class it prevents, and archive lets the same error
+      // propagate.
+      const code = (error as NodeJS.ErrnoException)?.code;
+      if (code !== 'ENOENT' && code !== 'ENOTDIR') {
+        throw error;
+      }
     }
 
     for (const { path: specPath, sections } of emptySectionSpecs) {
@@ -267,39 +361,48 @@ export class Validator {
       });
     }
 
-    if (totalDeltas === 0) {
-      issues.push({ level: 'ERROR', path: 'file', message: this.enrichTopLevelError('change', VALIDATION_MESSAGES.CHANGE_NO_DELTAS) });
+    const marker = readSkipSpecsMarker(changeDir);
+    if (marker.invalidReason) {
+      issues.push({ level: 'ERROR', path: METADATA_FILENAME, message: this.formatInvalidMarkerMessage(marker.invalidReason) });
+    }
+
+    // ANY file under specs/ contradicts the marker - not just parsed deltas.
+    // Headerless or stray files would be silently dropped at archive time (and
+    // some still satisfy the artifact graph's specs/**  glob) while the change
+    // claims to have nothing, so they must surface as an explicit conflict.
+    // Probed only when the marker is declared, and unreadable specs/ (a stray
+    // `specs` file, permission errors) fails closed as a conflict: the marker
+    // claims nothing is there, and validate must not crash where the
+    // historical path degraded to "no deltas".
+    const skipSpecs = marker.declared;
+    let specsDirHasFiles = false;
+    if (skipSpecs) {
+      try {
+        specsDirHasFiles = await hasAnyFileUnder(specsDir);
+      } catch {
+        specsDirHasFiles = true;
+      }
+    }
+    if (skipSpecs && specsDirHasFiles) {
+      issues.push({ level: 'ERROR', path: 'file', message: VALIDATION_MESSAGES.CHANGE_SKIP_SPECS_CONFLICT });
+    }
+
+    // The root-level error already names the file and the fix; adding "No
+    // deltas found" on top would contradict it, since the deltas are sitting in
+    // the file just reported.
+    if (totalDeltas === 0 && !hasRootLevelSpec) {
+      if (skipSpecs && !specsDirHasFiles) {
+        issues.push({ level: 'INFO', path: 'file', message: VALIDATION_MESSAGES.CHANGE_SKIP_SPECS_ACCEPTED });
+      } else if (!skipSpecs) {
+        issues.push({ level: 'ERROR', path: 'file', message: this.enrichTopLevelError('change', VALIDATION_MESSAGES.CHANGE_NO_DELTAS) });
+      }
     }
 
     return this.createReport(issues);
   }
 
-  /**
-   * Recursively collect every delta `spec.md` under a change's specs directory,
-   * so both the one-level (specs/<capability>/spec.md) and nested multi-area
-   * (specs/<area>/<capability>/spec.md) layouts are discovered (#1182b).
-   * Returns absolute paths, sorted for deterministic issue ordering.
-   */
-  private async findDeltaSpecFiles(specsDir: string): Promise<string[]> {
-    const results: string[] = [];
-    const walk = async (dir: string): Promise<void> => {
-      let entries;
-      try {
-        entries = await fs.readdir(dir, { withFileTypes: true });
-      } catch {
-        return;
-      }
-      for (const entry of entries) {
-        const full = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-          await walk(full);
-        } else if (entry.isFile() && entry.name === 'spec.md') {
-          results.push(full);
-        }
-      }
-    };
-    await walk(specsDir);
-    return results.sort();
+  private formatInvalidMarkerMessage(invalidReason: string): string {
+    return `${VALIDATION_MESSAGES.CHANGE_SKIP_SPECS_INVALID_METADATA} (${invalidReason})`;
   }
 
   private convertZodErrors(error: ZodError): ValidationIssue[] {
@@ -460,35 +563,17 @@ export class Validator {
   }
 
   private extractRequirementText(blockRaw: string): string | undefined {
-    const lines = blockRaw.split('\n');
-    // Skip header line (index 0)
-    let i = 1;
-
-    // Find the first substantial text line, skipping metadata and blank lines
-    for (; i < lines.length; i++) {
-      const line = lines[i];
-
-      // Stop at scenario headers
-      if (/^####\s+/.test(line)) break;
-
-      const trimmed = line.trim();
-
-      // Skip blank lines
-      if (trimmed.length === 0) continue;
-
-      // Skip metadata lines (lines starting with ** like **ID**, **Priority**, etc.)
-      if (/^\*\*[^*]+\*\*:/.test(trimmed)) continue;
-
-      // Found first non-metadata, non-blank line - this is the requirement text
-      return trimmed;
-    }
-
-    // No requirement text found
-    return undefined;
+    // Delegate to the shared, fence-/metadata-/multi-line-aware body reader.
+    // Validation intentionally does not use the parser/display header-title
+    // fallback for canonical `### Requirement:` blocks: #1280 requires a
+    // SHALL/MUST that appears only in the header to receive the body-keyword
+    // hint. Line 0 is the `### Requirement: ...` header.
+    const [, ...bodyLines] = blockRaw.split('\n');
+    return extractRequirementBodyShared(bodyLines) || undefined;
   }
 
   private containsShallOrMust(text: string): boolean {
-    return /\b(SHALL|MUST)\b/.test(text);
+    return containsShallOrMustShared(text);
   }
 
   /**
@@ -510,8 +595,9 @@ export class Validator {
   }
 
   private countScenarios(blockRaw: string): number {
-    const matches = blockRaw.match(/^####\s+/gm);
-    return matches ? matches.length : 0;
+    // Fence-aware count via the shared reader: a `#### Scenario:` inside a fenced
+    // example is not a real scenario. Drop the header line (index 0).
+    return countScenariosShared(blockRaw.split('\n').slice(1));
   }
 
   private formatSectionList(sections: string[]): string {

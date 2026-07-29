@@ -9,6 +9,7 @@ import {
 } from '../../src/core/index.js';
 import { writeStoreMetadataState } from '../../src/core/store/foundation.js';
 import { runCLI, type RunCLIResult } from '../helpers/run-cli.js';
+import { cleanupTempPath } from '../helpers/temp-cleanup.js';
 
 const VALID_DELTA_SPEC = `## ADDED Requirements
 
@@ -69,7 +70,7 @@ describe('store root selection for normal commands', () => {
   });
 
   afterEach(() => {
-    fs.rmSync(tempDir, { recursive: true, force: true });
+    cleanupTempPath(tempDir);
   });
 
   function createOpenSpecRoot(rootDir: string): void {
@@ -180,6 +181,37 @@ describe('store root selection for normal commands', () => {
       expect(json.root.store_id).toBe('team-context');
     });
 
+    it('lists an empty team store before any changes exist', async () => {
+      const blankStoreRoot = path.join(tempDir, 'stores', 'blank-context');
+      fs.mkdirSync(path.join(blankStoreRoot, 'openspec'), { recursive: true });
+      fs.writeFileSync(
+        path.join(blankStoreRoot, 'openspec', 'config.yaml'),
+        'schema: spec-driven\n'
+      );
+      await writeStoreMetadataState(blankStoreRoot, {
+        version: 1,
+        id: 'blank-context',
+      });
+      const registered = await runCLI(
+        ['store', 'register', blankStoreRoot, '--json'],
+        { cwd: appRepo, env }
+      );
+      expect(registered.exitCode).toBe(0);
+
+      const result = await runCLI(['list', '--json', '--store', 'blank-context'], {
+        cwd: appRepo,
+        env,
+      });
+      expect(result.exitCode).toBe(0);
+      const json = parseJson(result);
+      expect(json.changes).toEqual([]);
+      expect(json.root).toEqual({
+        path: fs.realpathSync.native(blankStoreRoot),
+        source: 'store',
+        store_id: 'blank-context',
+      });
+    });
+
     it('reads, validates, shows, and reports status in the selected store', async () => {
       createChange(storeRoot, 'store-change');
 
@@ -226,6 +258,46 @@ describe('store root selection for normal commands', () => {
       expect(validateJson.items[0]).toMatchObject({ id: 'store-change', valid: true });
       expect(validateJson.root.store_id).toBe('team-context');
 
+      expectNoLocalOpenSpec();
+    });
+
+    it('loads apply and archive operation inputs from the selected store root', async () => {
+      createChange(storeRoot, 'store-change');
+      fs.writeFileSync(
+        path.join(storeRoot, 'openspec', 'config.yaml'),
+        `schema: spec-driven
+context: Store context
+operations:
+  apply:
+    guidance:
+      - Store apply guidance
+  archive:
+    guidance:
+      - Store archive guidance
+`
+      );
+
+      const applyResult = await runCLI(
+        ['instructions', 'apply', '--change', 'store-change', '--store', 'team-context', '--json'],
+        { cwd: appRepo, env }
+      );
+      const archiveResult = await runCLI(
+        ['instructions', 'archive', '--change', 'store-change', '--store', 'team-context', '--json'],
+        { cwd: appRepo, env }
+      );
+
+      expect(applyResult.exitCode).toBe(0);
+      expect(parseJson(applyResult)).toMatchObject({
+        context: 'Store context',
+        operationGuidance: ['Store apply guidance'],
+        root: { path: storeRoot, store_id: 'team-context' },
+      });
+      expect(archiveResult.exitCode).toBe(0);
+      expect(parseJson(archiveResult)).toMatchObject({
+        context: 'Store context',
+        operationGuidance: ['Store archive guidance'],
+        root: { path: storeRoot, store_id: 'team-context' },
+      });
       expectNoLocalOpenSpec();
     });
 
@@ -503,6 +575,37 @@ describe('store root selection for normal commands', () => {
       const json = parseJson(result);
       expect(json.archive).toBeNull();
       expect(json.status[0].code).toBe('archive_change_name_required');
+    });
+
+    it('reports no active changes for a selected empty store without init guidance', async () => {
+      const blankStoreRoot = path.join(tempDir, 'stores', 'archive-blank-context');
+      fs.mkdirSync(path.join(blankStoreRoot, 'openspec'), { recursive: true });
+      fs.writeFileSync(
+        path.join(blankStoreRoot, 'openspec', 'config.yaml'),
+        'schema: spec-driven\n'
+      );
+      await writeStoreMetadataState(blankStoreRoot, {
+        version: 1,
+        id: 'archive-blank-context',
+      });
+      const registered = await runCLI(
+        ['store', 'register', blankStoreRoot, '--json'],
+        { cwd: appRepo, env }
+      );
+      expect(registered.exitCode).toBe(0);
+
+      const result = await runCLI(
+        ['archive', 'missing-change', '--store', 'archive-blank-context', '--json', '--yes'],
+        { cwd: appRepo, env }
+      );
+
+      expect(result.exitCode).toBe(1);
+      const json = parseJson(result);
+      expect(json.archive).toBeNull();
+      expect(json.status[0]).toEqual(expect.objectContaining({
+        code: 'archive_change_not_found',
+        message: "Change 'missing-change' not found. No active changes exist in this root.",
+      }));
     });
 
     it('reports validation failures as diagnostics without stdout prose', async () => {
