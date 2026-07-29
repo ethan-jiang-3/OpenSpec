@@ -90,6 +90,39 @@ git push
 - 各自的 change 修改不同的 spec 文件
 - archive 顺序无所谓（因为没有依赖）
 
+### 并行的真正边界是 capability path，不是 Git 分支名
+
+“两个人各有一条分支”只能隔离 Git 文件修改，不能保证两份 delta 都基于兼容的行为基线。协作前把 change 按完整 capability path 分成下面三类：
+
+| 两个 change 的关系 | 能否并行实施 | archive 前必须做什么 |
+|---|---|---|
+| 不同 path，且没有跨域行为耦合 | 可以 | 各自 validation；正常 archive |
+| 不同 path，但共享身份、权限、兼容性或事件语义 | 可以有限并行 | proposal 写 impact matrix；彼此至少 verify relevant spec |
+| 同一 path，或会改同一 requirement | 实现可并行，spec 基线不能各自独立推进 | 指定顺序；前一个 archive 后，后一个重读 main spec、重写 delta 并验证 |
+| taxonomy 本身要改（拆分/合并/移动 path） | 不应当作普通 feature 并行 | 单独 rebaseline，先盘点所有 active changes |
+
+例如 Alice 改 `identity/session` 的 refresh，Bob 改 `identity/session` 的 expiry。如果 Bob 的 delta 是从 Alice archive 前的 requirement block 写的，Bob 不应直接 archive。正确节奏是：
+
+```text
+Alice archive identity/session
+  → Bob 更新 main
+  → Bob 读取最新 requirement + scenarios
+  → Bob 重新基线自己的 MODIFIED delta
+  → Bob strict validate
+  → Bob archive
+```
+
+已由独立 sync 写入的**完全一致** delta 在 v1.7.0 可成为 archive no-op；这只是降低了“已正确同步”的重复写入风险。它不等于两个不同改动自动合并，更不能代替上面的重读、review 和 rebaseline。
+
+团队可以在 PR 描述中固定一张小表，让这种协调显式可见：
+
+```markdown
+| capability path | action | coordination |
+|---|---|---|
+| identity/session | MODIFIED | archive after #123; rebaseline against its main spec |
+| identity/login | verify only | confirm login does not issue an invalid refresh token |
+```
+
 ### 可视化：并行开发的正确姿势
 
 ```mermaid

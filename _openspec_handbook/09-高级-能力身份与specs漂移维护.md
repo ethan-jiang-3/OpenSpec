@@ -1,6 +1,6 @@
-# 09 · Capability 身份与 specs 漂移维护
+# 09 · Capability 规划、身份与 specs 漂移维护
 
-> **适用 OpenSpec v1.7.0** · 高级篇。这一章按三层递进回答一个问题——根子是同一个，拆成三问：**specs 凭什么值得你维护、漂移会怎样反噬后续工作？** → **specs 到底按什么组织、靠什么定位？** → **用久了为什么和代码对不上、怎么守？**
+> **适用 OpenSpec v1.7.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
 
 ## 先回答：为什么这事值得你操心
 
@@ -73,6 +73,53 @@ openspec/specs/
 
 目录层次只是一种命名空间，不带父子继承、自动聚合或依赖推导；`identity` 和 `identity/session` 是两个独立 capability。archive 能把 delta 合并进主 spec，靠的就是**相对路径寻址**——不是魔法，是契约。这也意味着：**改一个 capability path，是个大事**（见下文）。
 
+## 先把 capability 切对：它是行为合同，不是代码文件夹
+
+一个 capability 最实用的定义是：**它能独立说明用途、独立承受行为变化，并由一组 requirements/scenarios 独立验证。** 这一定义故意不按源文件、数据库表、页面或团队分工来切——一份真正的行为合同经常横跨这些实现层。
+
+| 候选切法 | 应问的问题 | 判断 |
+|---|---|---|
+| 按 UI 页面或 `src/` 目录 | 这个实现位置改变时，用户合同一定独立吗？ | 通常不是；别把实现结构直接当 taxonomy |
+| 一个新的用户/调用方行为 | 它能否有自己的场景、失败路径和演进节奏？ | 是，适合独立 capability |
+| 两组 requirement | 它们是否总要同改、同测、同读才能解释？ | 是，先留在同一 capability，别为树形漂亮而碎片化 |
+| 新 adapter、换库、纯重构 | 可观察行为是否没有变？ | 通常不是新 capability；必要时用 `skip_specs: true` |
+
+推荐从**一层 domain + 一层 capability**开始：
+
+```text
+identity/login
+identity/session
+billing/invoices
+data-export
+```
+
+只有第三层本身也长期稳定、并能帮助未来读者导航时才继续加深，例如 `platform/observability/audit-events`。segment 用语义明确的 kebab-case；避免 `common`、`misc`、`utils`、`core` 这类“边界没想清楚”的垃圾桶名。domain 只承担命名和 discovery，不是父合同。
+
+在建新 path 前，先搜索既有 path、Purpose 和 requirement 标题。能修改已有行为合同，就不要创建近义 capability；只有确有独立合同与独立演进节奏时才新建。新 capability 的 delta 请写可读的 `## Purpose`，v1.7.0 在 archive 创建 main spec 时会把它带入，而不是一律写成 `TBD`。
+
+## specs 很多以后：catalog 帮你找，main spec 才能定
+
+recursive discovery 让 OpenSpec 能识别任意深度的 `spec.md`，却**不会**自动完成“找相关 spec → 读够上下文 → 记录选择理由”这条链。不要把所有 main specs 塞进 prompt，也不要把完整 requirements 复制到 `config.context`。
+
+项目可在 `openspec/specs/README.md` 或独立文档保留一张薄 catalog：
+
+```markdown
+| path | Purpose | keywords | boundary / neighbor |
+|---|---|---|---|
+| identity/session | 建立、刷新、失效用户会话 | JWT, refresh, expiry | 不负责授权策略；相邻 identity/login |
+| billing/invoices | 创建、投递、查询发票 | invoice, tax, PDF | 不负责订阅扣款 |
+```
+
+catalog 只能导航，不能成为第二份行为规范；任何冲突都以 main spec 为准。一个局部 change 的最小 discovery 协议是：
+
+1. 先读短小项目 context，知道全局不能破坏什么。
+2. 读 catalog 或运行 `openspec list --specs --json`，列出候选 path，而不是把正文全读进来。
+3. 用用户意图、关键术语和代码调查缩小候选；在 proposal 中标记每个 path 是 New、Modified、verify only 还是排除，并写一句理由。
+4. 用 `openspec show <path> --type spec --json --requirements` 先看 requirement 标题；只有要 MODIFIED/REMOVED/RENAMED 时才读完整 block 与 scenarios。
+5. delta 使用 proposal 中声明的**同一完整相对 path**；不确定边界就回 Explore，不要临时发明近义名称。
+
+这是一条项目治理协议，而非 v1.7.0 已自动保证的 retrieval 功能。把 path convention、catalog 位置和这几个步骤写进项目 `AGENTS.md` 或 `rules.proposal`；只把跨所有 change 都成立的短原则留在 config。详细模板见 [`_digested/spec-driven-capability/capability-governance-template.md`](../_digested/spec-driven-capability/capability-governance-template.md)。
+
 ## 两层「以名字为身份」模型（无稳定 ID）
 
 OpenSpec 的身份模型是**「以名字为身份」（name-as-identity），分两层，都没有稳定 ID**：
@@ -126,18 +173,49 @@ graph TD
 - **偶尔巡检**：`openspec list` / `openspec validate --all` 能抓结构坏死（僵尸 change）；但**别把"validate 干净"当成"specs 对齐"**——它查不出 capability/requirement 的名字失配和 specs↔代码漂移。
 - **别手改主 spec 文件**。要改就写 change（delta）再 archive；手改没有任何工具追踪，下次 delta 一撞就 `not found`。
 
+## 真要拆分、合并或改 path：把它当成 rebaseline，不是普通 archive
+
+requirement 有 `RENAMED` 操作，capability 没有。把 `auth` 改为 `identity/login`、将一个大 spec 拆成两个 path、或合并两个 path，都会改变 capability ID；archive 只会看到旧 ID 和新 ID，不会自动迁移 active delta、catalog、文档或调用方约定。
+
+因此结构变化必须单开一项受控 rebaseline。最小顺序是：
+
+1. 写出旧 path → 新 path 的映射，以及每个 requirement 最终归属和迁移理由。
+2. 列出所有触及旧/新 path 的 active changes；完成、取消、冻结或逐个重基线，不能让它们继续指向旧地址。
+3. 以当前 main specs 为共同基线，人工审阅后移动或重建 main spec；不要仅靠历史 delta 猜内容。
+4. 同步更新仍需保留的 active delta、catalog、AGENTS/config 约定、文档链接和外部引用。
+5. 用 `openspec list --specs --json` 核对 identity；对 main specs 与每个受影响 change 做 strict validation；最后人工 review 后再恢复正常 archive。
+
+```bash
+openspec list --specs --json
+openspec validate --specs --strict
+openspec validate <affected-change> --type change --strict
+```
+
+同样地，两个 active changes 同时改同一 capability path 时，后 archive 的 change 必须基于前一个 archive 后的 main spec 重新核对 requirement block。可完全一致的 early sync 在 v1.7.0 可以成为 no-op，但它不是用来绕过并发协调、review 或结构迁移的捷径。
+
+### 一个够用的维护节奏
+
+| 时机 | 至少检查什么 |
+|---|---|
+| 每个 proposal | 查过 catalog/既有 path；New 或 Modified 有理由；近义 capability 已排除 |
+| 每个 archive | delta path 与 main path 一致；新 capability 有可读 Purpose；没有遗留 active change 指向旧 path |
+| 跨 domain change | 用 impact matrix 说明哪些 path 修改、仅验证或明确排除 |
+| 定期巡检 | 是否有过粗 spec、同义 path、`TBD` Purpose、失效 catalog 条目或长期 active delta |
+| taxonomy 重构前 | rebaseline 计划、active-change inventory、迁移验证与明确 owner |
+
 ## 压缩结论
 
-1. specs 是事实层契约，不是 archive 文档——漂移即地基松动。
-2. capability 身份 = 相对路径，没有 ID 兜底，改路径是裸操作——当稳定性契约对待。
-3. requirement 身份 = 标题文本，改名有 RENAMED 手续——走正规手续，别"删旧加新"。
-4. 漂移会复利，且无工具自动对账（validate 只查结构）。
+1. capability 是可独立演化、验证的行为合同；domain 只是浅 taxonomy 的导航名称。
+2. path 是 capability 的稳定身份；proposal、delta、archive 必须使用同一完整相对 path。
+3. catalog 只帮你缩小阅读范围，main spec 才是行为真相；nested path 不会自动 retrieval。
+4. requirement 改名有 RENAMED，capability 改 path 没有正规操作；拆分、合并、移动必须做受控 rebaseline。
+5. 漂移会复利，且 validate 只查结构；每次 proposal/archive 都应留下最小 discovery 与对齐证据。
 
 ## 下一步
 
 - [`02-中级-把核心概念真正串起来`](02-中级-把核心概念真正串起来.md)——`specs/`、`changes/`、delta、archive 合并的基础（本章的根）。
 - [`04-高级-config-schema-与项目边界`](04-高级-config-schema-与项目边界.md)——schema 是什么、怎么选；本章的 `spec-driven` 就是默认那套。
 - [`12-实战-如何正确修改-artifacts`](12-实战-如何正确修改-artifacts.md)——动手改 artifact 时怎么不踩格式契约的坑（4 个 `#`、精确名字等）。
-- [`07-高级-store-跨仓库协同`](07-高级-store-跨仓库协同.md)——多仓库时 capability / area 目录怎么组织。
+- [`07-高级-store-跨仓库协同`](07-高级-store-跨仓库协同.md)——多仓库时如何发现引用 store 的 spec 索引；它不负责自动读取相关 capability。
 
-> 想看源码级深挖——schema 字段逐项、合并算法、六类噪声的完整机理——仓库里 `_digested/specs_truth/` 专题接住；本章只给你判断锚点和最低守住动作。
+> 想看更完整的 capability 专题——taxonomy、runtime path 契约、catalog 协议、治理模板——读 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md)。源码级的 archive 修复、六类噪声与 specs 对账则由 `_digested/specs_truth/` 专题接住；本章只保留能直接用于项目判断和行动的版本。

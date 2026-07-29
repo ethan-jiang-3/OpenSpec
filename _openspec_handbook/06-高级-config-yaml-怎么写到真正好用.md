@@ -240,6 +240,29 @@ context: |
 - design 怎么取舍
 - regression 怎么想
 
+### `context` 不是 capability 总目录
+
+当项目已经有几十份 main specs 时，很容易想把所有 capability path、摘要和依赖关系抄进 `context`，希望 agent 每次都“全知道”。这通常会让 `context` 变成过期、冗长的第二基线；nested path 也不会自动把相关 spec 检索进来。
+
+更稳的做法是把信息分成三层：
+
+```text
+config.context      = 跨所有 change 的短原则，例如兼容性、安全、path 必须稳定
+catalog             = path + Purpose + keywords 的薄导航表，可搜索、按需读
+main spec           = 完整 requirements / scenarios，唯一行为真相
+```
+
+例如，`context` 可以只写：
+
+```yaml
+context: |
+  Capability paths follow the project convention in AGENTS.
+  Treat a capability path as stable identity; structural migrations require an explicit rebaseline.
+  Main specs are the behavior source of truth. The catalog is navigation only.
+```
+
+随后把 catalog 放在 `openspec/specs/README.md` 或项目文档中，让 agent 在 propose 前按需读取。不要把完整 catalog 或 spec 正文复制进这段 YAML。
+
 ---
 
 ## `rules` 到底该怎么写
@@ -290,6 +313,39 @@ rules:
 - 哪些逻辑最好 test-first
 - 哪类 regression 绝不能掉
 - 哪种实现方式属于架构违规
+
+对 capability discovery，还可以加入两条真正可执行的 artifact rules：
+
+```yaml
+rules:
+  proposal:
+    - Classify every affected capability as New or Modified and record discovery evidence.
+  specs:
+    - Use the exact capability path declared in the proposal.
+    - Do not create a near-duplicate capability without checking the catalog and existing main specs.
+```
+
+这些 rules 只约束 proposal/specs 生成；Apply 不会重新收到它们。需要 Apply/Archive 的稳定检查，仍放 `operations.apply/archive.guidance`；需要不可绕过的约束，仍要靠 schema、测试或 CI。
+
+### 条件化知识不要靠长 context 猜，先在 proposal 留一张 Context Card
+
+风险等级、policy、runtime owner 或跨域影响往往不是每个 change 都适用。把它们全部写进 context，会让不相关的 artifact 也背负长提示；只写短 rule 又可能让后续作者不知道这次到底命中了什么。
+
+正确做法是：`rules.proposal` 只要求**分类并留痕**，由 proposal 保存本次的 Context Card：
+
+```markdown
+## Change Context Card
+
+- Change class: <domain / risk class>
+- Affected capabilities and authority owners: ...
+- Applicable policies / canonical sources read: ...
+- Excluded domains and why: ...
+- Required verification evidence: ...
+```
+
+随后让各 artifact 承接自己的部分：specs/design 会直接读取 proposal，分别把行为合同、技术 owner、风险和证据要求落地；tasks 只直接读取 specs/design，因此必须把要实施的分类结论具体化到这两份文件和 tasks，不能期待 Context Card 自动穿透 DAG。Apply 最终读取当前已落盘的 artifacts；这比让它重新从全局 context 猜一次可靠得多。
+
+如果每个 change 都必须有这张 card，把它写入 proposal template；如果需要独立审查状态或不同依赖关系，再升级为自定义 schema artifact。不要发明没有 consumer 的 `stage_context:` 字段。
 
 ---
 
@@ -680,6 +736,21 @@ rules:
 
 如果这三问都答不上来，说明这份配置还太空。
 
+### 第 6 步：用真实 instructions 验证“写到了正确阶段”
+
+配置不是看到 YAML 能解析就算成功。选一个代表性 active change，运行：
+
+```bash
+openspec instructions proposal --change <change> --json
+openspec instructions apply --change <change> --json
+openspec instructions archive --change <change> --json
+openspec status --change <change> --json
+```
+
+你应该看到：artifact instructions 只有自己的 `rules`；Apply/Archive 分别只有 `context` 和对应 operation guidance；`status` 显示的 schema 与你认为的 schema 一致。若不一致，先查生效 root、`.yaml` 是否覆盖 `.yml`、以及 active change 的 `.openspec.yaml`，不要把更多文字继续塞进 config。
+
+最后把真正不可妥协的规则交给 test/checker/CI。“prompt 已出现”只证明 agent 看得到，不证明系统一定守住。
+
 ---
 
 ## 给 4 类项目各来一份"好用版"配置
@@ -934,7 +1005,7 @@ rules:
 
 ## 最后的压缩结论
 
-如果把整篇压成 7 句话，大概就是：
+如果把整篇压成 9 句话，大概就是：
 
 1. `config.yaml` 不能只是个形式，它还必须写得有判断力
 2. 好的 `context` 提供长期稳定背景，不提供临时需求碎片
@@ -943,6 +1014,8 @@ rules:
 5. 写完配置后，最好用几个真实 change 反推它是否真有帮助
 6. 轻配置可以短，但不能空
 7. 强配置可以更重，但不能变成垃圾桶
+8. 条件化知识先由 proposal Context Card 分类，再沿 artifacts 落成决定和任务；不要靠长 context 穿透 DAG
+9. YAML 可解析不等于配置生效；必须用代表性 change 的 instructions/status 验证 consumer，并让硬规则落到 checker/test/CI
 
 ---
 

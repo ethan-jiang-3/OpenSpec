@@ -1,6 +1,6 @@
 # 计划 4/4：以 OpenSpec v1.7.0 更新当前资料
 
-**状态**：已完成（2026-07-29；当前结论、旧断言扫描和定向验证均已完成）
+**状态**：补充阶段完成（2026-07-29；纳入本提交）
 **当前基线**：OpenSpec `v1.7.0`，upstream tag/commit `4e16790`  
 **覆盖目录**：`_digested/`、`_faq_on_digested/`、`_openspec_handbook/`
 
@@ -81,6 +81,25 @@
 - 收尾扫描确认：没有把 `/opsx:*` 作为 Codex 或通用入口的未说明断言；所有命中均明确为 Claude/command-adapter 示例或历史记录；Apply/Archive 的 config 结论也都收窄为 artifact rules 边界。
 - 与本次文档结论对应的 v1.7.0 测试均通过：`spec-discovery`（9）、`change-metadata`（28）、`workflow-instructions-skipped`（6）、`artifact-workflow`（74）、`archive`（85），共 202 个测试。
 - 本计划、`0004` 和 `_v1.7.0-impact-audit.md` 共同保留了 tag `4e16790`、源码锚点、修改范围和验证证据；后续升级时应从它们复制流程而不是重新从旧 FAQ 推断版本基线。
+
+### 2026-07-29 — 重新打开：capability 专题的 handbook 落地
+
+复查后确认，上一轮 handbook 只有 108 行级别的修订，其中多数是版本边界提示；这不足以把新建的 [`../spec-driven-capability/`](../spec-driven-capability/README.md) 专题转化为用户能实际采用的能力规划方法。该专题带来的不是“允许嵌套目录”这一条 API 信息，而是一条完整主线：**行为合同切分 → 浅 taxonomy → path identity → discovery/catalog → 同路径 delta/archive → 结构迁移与并发治理**。同时，[FAQ 13 的 config 归位/诊断材料](../../_faq_on_digested/13_how_to_design_maintain_config_yaml/answer.md) 必须回灌 handbook：它补充了“谁消费哪条 guidance、如何让条件化知识沿 artifact DAG 留痕、何时改 schema/AGENTS/CI、配置为何看似不生效”的实践主线。
+
+本补充阶段将直接改正文和案例，重点不是重复专题细节：
+
+- [x] `00-index`、01、02：把 capability 定义、nested taxonomy、`skip_specs` 判断和 host workflow/CLI 的最小闭环纳入初学者主线。
+- [x] 04、05、06、07、08：明确 catalog/AGENTS/config 的分层、workflow × consumer 路由、Change Context Card、operation guidance 与 schema gate 的边界，以及 store/root 只提供按需读取入口而非自动 main-spec retrieval。
+- [x] 09：从“路径脆弱性提示”扩展为 handbook 的 capability 工作章，给出切分信号、命名/目录约定、catalog discovery、rebaseline 与日常维护节奏。
+- [x] 11、13、15、99：把 brownfield、greenfield、多人协作和 FAQ 案例改为完整 capability path、Purpose、选择证据、同 path 并发和结构迁移的可执行做法。
+- [x] handbook 完成后复核与 `spec-driven-capability` 的链接、示例路径、术语和“不自动 retrieval”边界；运行 diff、Markdown 链接检查与定向测试，并提交独立补充 commit。
+
+### 2026-07-29 — handbook capability 回灌与 Store 收敛完成
+
+- 已将 capability 专题的完整主线回灌 handbook：行为合同切分、浅 taxonomy、相对 path identity、catalog discovery、同路径 delta/archive、rebaseline 和并发治理均有用户可执行的落点；09 是本地 main specs 扩张的主章。
+- FAQ 13 的 config 路由已回灌：`context`、artifact `rules` 与 Apply/Archive operation guidance 各自的消费者、Change Context Card、条件化知识的落点和 schema/AGENTS/CI 的升级边界均已进入相关章节。
+- 07 已从“跨仓库协同方案”收敛为可选的跨仓库 OpenSpec 引用。它明确不是本地 spec scaling、自动 retrieval 或多 repo change 协调；v1.7.0 命令以 `context` 的工作集和 `show --store` 的按需读取为准，workset 也改为实际的 `create --member` 接口。
+- 已通过 `git diff --check`、变更 Markdown 的本地链接检查，以及 `pnpm test -- test/utils/spec-discovery.test.ts test/commands/artifact-workflow.test.ts`（83 tests）；在最终 diff 后复跑格式与链接检查也通过。
 
 ## 1. `_digested/`：源码机制与运行时契约
 

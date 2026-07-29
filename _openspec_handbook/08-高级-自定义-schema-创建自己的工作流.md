@@ -40,6 +40,19 @@ graph LR
 
 **一句话**：config 是在已有结构上写备注，schema 是换结构本身。
 
+### 不要因为“项目很复杂 / 用了 agent”就立刻 fork schema
+
+项目是传统 Web 服务、MD/Agent 控制流程，还是程序/Graph 控制流程，会影响你该在 `context` 里写哪些稳定 authority owner、在 design/specs 中记录哪些证据；**它本身不是**新建 schema 的理由。先按实际需求归位：
+
+| 你真正想要的能力 | 先用什么 | 何时才需要 schema |
+|---|---|---|
+| Apply / Archive 总要收到一条短稳定项目步骤 | `operations.apply/archive.guidance` | 这条步骤必须变成新的 gate、节点或输出结构时 |
+| proposal/specs/design/tasks 的写作要求不同 | `rules.<artifact-id>` 或 template 小改 | 需要新增、删除或重排 artifact 依赖时 |
+| 一次 change 的分类、owner、policy、证据 | proposal 的 Context Card，再由 specs/design/tasks 具体化 | 分类必须有独立状态/审查、且现有 proposal 无法承担时 |
+| 运行时不变量、权限、注册表、验证结果必须成立 | checker / test / CI / runtime contract | schema 不能替代确定性 owner |
+
+默认 `spec-driven` 已有 proposal → specs/design → tasks 的交接链；只有 lifecycle 真正缺少 artifact、依赖、Apply gate 或输出契约时，才升级为 schema。不要在 config 中发明 `operations.explore`、`stage_context` 等字段来假装已有新阶段。
+
 ---
 
 ## 核心思维：四级递进，从"勉强用"到"自己造"

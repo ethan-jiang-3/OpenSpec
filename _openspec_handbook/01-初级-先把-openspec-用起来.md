@@ -141,6 +141,19 @@ openspec/changes/add-dark-mode/
 
 所以 archive 不是"删掉"，而是"结案归档"。
 
+### 别把三个动作误解成三条终端命令
+
+`propose / apply / archive` 是宿主 agent 的工作流动作。Claude 可能把它们显示为 `/opsx:*`，Codex 则显示为 `$openspec-*` skill；它们会按步骤读取和写入文件。终端 CLI 是你随时可以拿来核对状态的确定性工具。
+
+| 你想确认什么 | 先用什么 | 它不会替你做什么 |
+|---|---|---|
+| 这次 change 还缺哪些 artifacts | `openspec status --change <name> --json` | 不会替 agent 写内容 |
+| 某个 capability 现在承诺了什么 | `openspec show <path> --type spec --json --requirements` | 不会猜本次到底该改哪一个 path |
+| archive 前结构是否有效 | `openspec validate <name> --type change --strict` | 不会证明实现和需求语义已经完全一致 |
+| 真正推进 proposal / 实现 / 收尾 | 宿主 workflow | 不同宿主的调用名不相同 |
+
+这层区别很实用：workflow 帮你把多步工作跑顺，CLI 帮你检查“现在磁盘上究竟是什么”。遇到 agent 输出不对、多人并行或 archive 前心里没底时，先看 `status` / `show` / `validate`，而不是再让 agent 凭记忆继续写。
+
 ---
 
 ## 先看目录，别先看机制
@@ -164,6 +177,32 @@ my-project/
 - `openspec/config.yaml`：补一些项目级背景和默认设置
 
 到这里就够了。
+
+### 但在 propose 前，要先判断“这次碰的是哪份行为合同”
+
+不要从代码目录或页面名字直接猜 spec 文件。一个 **capability** 是能独立解释、独立修改、独立验证的行为合同；它往往跨 UI、服务和存储。v1.7.0 允许把这种合同放在嵌套 path：
+
+```text
+openspec/specs/
+├── identity/login/spec.md        ← capability = identity/login
+├── identity/session/spec.md      ← capability = identity/session
+└── data-export/spec.md           ← capability = data-export
+```
+
+`identity` 在这里仅是帮助导航的 domain，并不是会自动包含、继承或加载两个子 spec 的“父能力”。开始一个 change 前，只要做三个判断：
+
+1. 新需求能否自然落在已有 capability 的 requirement 上？能，就修改它。
+2. 它是否有独立的用户/调用方行为、场景和演进节奏？有，才考虑新建 capability。
+3. 它只是重构、换库、改文档等没有可观察行为变化吗？是，就在 change 的 `.openspec.yaml` 写 `skip_specs: true`，不要虚构 delta spec。
+
+第三种写法是正式的“没有 spec-level 行为变化”声明：
+
+```yaml
+schema: spec-driven
+skip_specs: true
+```
+
+它不能和任何非隐藏的 `specs/` delta 文件共存。拿不准时先 explore，别用 `skip_specs` 跳过“行为到底有没有变”的判断。
 
 ### 新手最常问：openspec init 之后会发生什么？
 
@@ -261,6 +300,8 @@ my-project/
 | "archive 是删除 change" | 不是。是把 delta spec 合并回 specs/，并把 change 移到 archive/ 保留历史 |
 | "specs/ 是我手动维护的文档" | 不是。它是 archive 后自动更新的正式基线 |
 | "不用 archive 也没关系" | 不 archive 的话，specs/ 基线不会更新，下一个 change 就没有正确的基线可以参考。**后果**：你会不知道系统现在到底是什么样的，多人协作时会乱套 |
+| "目录层级会自动帮 agent 找相关 specs" | 不会。nested path 让合同可分片、可寻址；仍要由人或项目约定先列候选，再按需读取 |
+| "没有写 delta 就说明不需要 specs" | 只有确认没有 spec-level 行为变化时才可用 `skip_specs: true`；漏写不是合法理由 |
 
 ---
 

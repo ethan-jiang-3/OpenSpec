@@ -112,12 +112,64 @@ operations:
 不要把这些东西硬塞进 `config.yaml`：
 
 - 某一次 change 的临时说明
-- 项目当前完整能力清单
+- 项目当前完整能力清单、完整 taxonomy 或 main spec 正文
 - artifact 依赖关系
 - 模板正文
 - 工具入口配置
 
 这些都不是它的职责。
+
+### capability catalog 放哪里，AGENTS 和 config 又各做什么？
+
+当 main specs 开始变多时，常见的错误是把所有 capability path、完整 Purpose 和 requirement 摘要塞进 `context`。这样每次生成都会带一份会过期的“第二基线”，既浪费上下文，也会和真正的 `specs/` 争夺权威。
+
+正确分层如下：
+
+| 内容 | 推荐位置 | 谁消费 | 不能替代什么 |
+|---|---|---|---|
+| 当前行为合同与 scenarios | `openspec/specs/<path>/spec.md` | 人、agent、archive | catalog 或 config 不是行为真相 |
+| path、Purpose、关键词、边界的薄索引 | `openspec/specs/README.md` 或专门 catalog | Explore/Propose 的 discovery | 不复制完整 requirements |
+| 如何命名 path、先查 catalog、何时可迁移 | `AGENTS.md` | 项目中的 agent 与 reviewer | 不替代 schema/validator |
+| 跨全部 change 的短原则 | `config.yaml` 的 `context` / artifact `rules` | artifact 生成；operation guidance 另给 Apply/Archive | 不放全量 capability 列表 |
+
+一个团队真正需要写进 config 的不是“我们的所有 capabilities 是 A、B、C”，而是类似“capability path 遵循 AGENTS 中的约定；main spec 是行为真相，catalog 只用于导航；结构迁移必须单独 rebaseline”这样的稳定原则。有关 catalog 的最小格式和 discovery 流程，看 [09](09-高级-能力身份与specs漂移维护.md)。
+
+### 写一条配置前，先说出“谁会消费它”
+
+`config.yaml` 不是所有阶段共享的万能 prompt。把正确内容放进错误 consumer，效果仍等于没有配置。内置 `spec-driven` 在 v1.7.0 的路由是：
+
+| 阶段 | 自动拿到什么 | 这意味着什么 |
+|---|---|---|
+| Explore | project `context` + artifact `rules` | 没有 `operations.explore`；复杂探索步骤放 workflow skill、AGENTS 或 playbook |
+| proposal / specs / design / tasks | `context` + 当前 artifact ID 的 `rules` + schema 依赖 artifacts | rule key 必须是当前 schema 的真实 artifact ID |
+| Apply | `context` + `operations.apply.guidance` + 当前落盘 artifacts | 不会收到 `rules.tasks` 等 artifact rules；结构 gate 仍由 schema / task / check 负责 |
+| Archive | `context` + `operations.archive.guidance` + tasks/delta/status | 不会收到 artifact rules；prompt 不能改变确定性 merge |
+
+因此，写配置时可用这条归位顺序：
+
+```text
+所有 planning artifact 都需要的短稳定事实  -> context
+一个 artifact 的长期写作/审查约束          -> rules.<artifact-id>
+Apply / Archive 的短稳定步骤                 -> operations.<operation>.guidance
+本次分类、范围、决定、证据                   -> change artifacts
+新的 artifact、依赖、gate、输出结构          -> schema / template / workflow skill
+必须不可绕过的事实                            -> validator / test / lint / CI
+```
+
+别发明 `operations.explore`、`apply_rules` 或通用顶层 `guidance`：当前 parser 不会把这些字段变成新的运行时能力。
+
+### “我改了 config，为什么没生效？”的最短排查
+
+在继续加规则前，按固定顺序查：**生效 root → 生效 config 文件 → 当前 change schema → 目标 consumer → rendered instructions → artifacts / 确定性检查**。
+
+```bash
+openspec instructions proposal --change <change> --json
+openspec instructions apply --change <change> --json
+openspec instructions archive --change <change> --json
+openspec status --change <change> --json
+```
+
+前三条分别用来确认 artifact `rules`、apply guidance、archive guidance 是否出现在正确位置；最后一条确认实际 schema 和 artifact 状态。还要记住：同根同时有 `config.yaml` 与 `config.yml` 时前者优先；已有 change 的 `.openspec.yaml` 中 schema 名称优先于后来改掉的项目默认 schema。完整诊断表见 FAQ 13 的 [`02-diagnose-maintain-config-yaml.md`](../_faq_on_digested/13_how_to_design_maintain_config_yaml/02-diagnose-maintain-config-yaml.md)。
 
 ### 常见配置错误示例
 
@@ -321,11 +373,11 @@ schema 管的是：
 
 当你遇到的是：
 
-- 一个需求跨多个仓库
-- 单仓库 `openspec/` 已经不足以表达系统级计划
-- 你需要本地 coordination view，而不是把多个 repo 硬塞进一个 spec
+- 当前 repo 的 change 需要发现另一个**已 checkout**仓库的正式 specs
+- 项目希望以 `references:` 声明这个跨 repo 的只读引用
+- 你需要确认 root/store 解析到哪里，而不是把外部 spec 复制进本地 `context`
 
-这时才需要看 store。
+这时才需要看 store。它不创建系统级 planning home、不会管理跨 repo change，也不是本地 specs 变多后的默认答案；后者先看 [09](09-高级-能力身份与specs漂移维护.md)。
 
 ---
 

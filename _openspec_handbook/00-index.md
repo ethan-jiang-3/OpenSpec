@@ -10,13 +10,13 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.3** |
+| **手册版本** | **v1.4** |
 | **对齐 OpenSpec** | 1.7.0 |
 | **本版日期** | 2026-07 |
 
 **两个版本维度（别混）**：
 
-- **手册版本**（v1.3）：本手册自身的版次。理解加深、内容大修时升版。
+- **手册版本**（v1.4）：本手册自身的版次。理解加深、内容大修时升版。
 - **对齐 OpenSpec**（1.7.0）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
@@ -33,6 +33,7 @@
 | v1.1 | 2026-06 | 1.4.1 | `explore` 地位补全（贯穿 02/03/11/13）：02 状态机补 explore 两处、03 新增 explore 深层机制（反复打磨 proposal / 对抗 LLM 幻觉 / change 作围栏）+ 生命周期补全四动词 `explore→propose→apply→archive`、11/13 实战织入 explore（change 出来后反复打磨保质量）；宪章「三层递进梯度」原则微调（高级可作精炼对照锚点）。 |
 | v1.2 | 2026-07 | 1.5.0 | 07 章重写：workspace → store 模型（跨仓库上下文引用）；00-index 版本/术语/命令表/阅读路径更新；workspace/initiative/context-store 概念全部删除。 |
 | v1.3 | 2026-07 | 1.7.0 | 对齐 v1.7：nested capability path 完整生命周期、`skip_specs`、Apply/Archive operation guidance、工具投递与 Codex skills-only、store/default 与 archive/sync 可靠性更新。 |
+| v1.4 | 2026-07 | 1.7.0 | 将 capability 专题正式纳入手册主线：按行为合同切分、浅 taxonomy、path identity、catalog discovery、同路径 delta/archive、rebaseline 与并发治理；不再只把 nested path 当目录技巧。 |
 
 ---
 
@@ -95,7 +96,7 @@ OpenSpec = 整套机制
 
 1. **初级**：先把 OpenSpec 用起来，知道日常怎么走
 2. **中级**：把 `specs`、`changes`、artifact、delta spec 这些概念真正连起来
-3. **高级**：理解生命周期思想、config/schema、全局约束、store 跨仓库协同、自定义 schema、capability 身份与 specs 漂移维护
+3. **高级**：理解生命周期思想、config/schema、全局约束、store 跨仓库协同、自定义 schema，以及 capability 的切分、发现、身份与治理
 
 ### B. 面向落地的实战场景
 
@@ -159,13 +160,15 @@ graph LR
     A[主线] --> B[90-附录<br/>机器协议]
 ```
 
-### 路径 5：我要管理多仓库（store 模型）
+### 路径 5：我明确需要引用另一个已 checkout 仓库的 specs（store，可选）
 
 ```mermaid
 graph LR
     A[01-初级] --> B[02-中级] --> C[04-高级<br/>config/schema]
-    C --> D[07-高级<br/>store 跨仓库协同]
+    C --> D[07-高级<br/>可选 store 引用]
 ```
+
+先确认问题不是“本地 specs 太大、不知道该读哪份”；后者应走路径 7 的 capability catalog/discovery，而不是引入 store。
 
 ### 路径 6：我要自定义工作流（创建自己的 schema）
 
@@ -174,6 +177,17 @@ graph LR
     A[04-高级<br/>config/schema] --> B[06-高级<br/>config写法]
     B --> C[08-高级<br/>自定义schema]
 ```
+
+### 路径 7：我的 main specs 已经很多，怎么仍然选对要改的合同？
+
+```mermaid
+graph LR
+    A[02-中级<br/>specs 与 delta] --> B[09-高级<br/>capability 规划与治理]
+    B --> C[11 / 13-实战<br/>brownfield / greenfield]
+    C --> D[专题<br/>spec-driven-capability]
+```
+
+先在 09 建立“行为合同切片、稳定 path、catalog 只导航”的判断，再按需要深入 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md)。嵌套目录可被 v1.7.0 完整处理，但它不会替 agent 自动挑选相关 specs。
 
 ---
 
@@ -185,7 +199,7 @@ graph LR
 | **artifact** | change 内部的文档产物类型 | proposal.md、specs/*.md、design.md、tasks.md |
 | **delta spec** | 描述"这次改了哪里"的增量 spec | `## ADDED Requirements` / `## MODIFIED Requirements` |
 | **specs/** | 项目当前正式 spec 基线 | `openspec/specs/auth/spec.md` |
-| **capability / 能力** | specs 的组织单位，身份 = `specs/` 下的相对路径 | `auth`、`identity/session`（详见 [09](09-高级-能力身份与specs漂移维护.md)） |
+| **capability / 能力** | 可独立解释、独立改变、独立验证的行为合同切片；身份 = `specs/` 下的相对路径 | `auth`、`identity/session`；domain 只用于导航，不是父合同（详见 [09](09-高级-能力身份与specs漂移维护.md)） |
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
 | **profile** | 选择安装哪些工作流命令 | core（5个命令，v1.4.0 起）vs custom（自选命令） |
@@ -229,7 +243,9 @@ graph LR
 | `openspec init` | 初始化项目 |
 | `openspec new change <name>` | 新建一个 change 目录（脚手架；`/opsx:new` 的 CLI 形态） |
 | `openspec list` | 列出所有 changes |
+| `openspec list --specs --json` | 列出 main-spec capability path，作为 discovery 的起点，不会自动读取全文 |
 | `openspec show <name>` | 查看某个 change 详情 |
+| `openspec show <capability> --type spec --json --requirements` | 查看某个 capability 的 requirement 标题；确实要改时再读取完整 block/scenarios |
 | `openspec validate` | 验证 artifacts 结构；只验证格式和结构，不验证内容质量 |
 | `openspec archive <name>` | 归档 change |
 | `openspec config profile` | 切换工作流 profile |
@@ -254,7 +270,7 @@ graph LR
 | [06-高级-config-yaml-怎么写到真正好用.md](06-高级-config-yaml-怎么写到真正好用.md) | 讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
 | [07-高级-store-跨仓库协同.md](07-高级-store-跨仓库协同.md) | store 跨仓库上下文引用 | 需要管理多个关联仓库的人 |
 | [08-高级-自定义-schema-创建自己的工作流.md](08-高级-自定义-schema-创建自己的工作流.md) | 自定义 schema——从 fork 到完全自定义 DAG | config.yaml 不够用、想创建自己工作流的人 |
-| [09-高级-能力身份与specs漂移维护.md](09-高级-能力身份与specs漂移维护.md) | capability 身份模型（capability=specs 相对 path）+ specs 漂移维护 | 想搞懂 specs 怎么组织、为什么会漂、怎么守的人 |
+| [09-高级-能力身份与specs漂移维护.md](09-高级-能力身份与specs漂移维护.md) | capability 规划、path identity、catalog discovery、结构迁移与 specs 漂移维护 | 想搞懂 specs 怎么切、怎么选对、为什么会漂、怎么守的人 |
 | [10-实战-claude-code-里的-openspec-到底怎么落地.md](10-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
 | [11-实战-从一个真实-change-走完整条主线.md](11-实战-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
 | [12-实战-如何正确修改-artifacts.md](12-实战-如何正确修改-artifacts.md) | artifact 修改指南 | 想知道 artifacts 该怎么改、怎么验证的人 |

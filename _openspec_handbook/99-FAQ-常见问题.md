@@ -137,6 +137,8 @@ v1.7.0 也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为
 
 两者各自该装什么、边界在哪，详见 [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)。
 
+如果“我明明写了 config，agent 却没遵守”，别先追加更多文字。按这个顺序排：生效 root → `config.yaml` 是否覆盖 `.yml` → 当前 change 的 `.openspec.yaml` schema → 目标 consumer → `openspec instructions ... --json` 的实际输出。`rules.<artifact>` 只给该 artifact；Apply/Archive 要用各自 `operations.*.guidance`；必须强制的约束要交给 schema、test、checker 或 CI。
+
 ### Q19: profile 和 schema 有什么区别？
 **A**:
 - **profile**：你能用哪些命令（core/custom）
@@ -176,24 +178,32 @@ profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schem
 （proposal/specs/design 这些 artifact 具体怎么改，见 [12 实战·如何正确修改 artifacts](12-实战-如何正确修改-artifacts.md)。）
 
 ### Q24: specs/ 的目录结构怎么组织？
-**A**: 推荐按能力域组织：
+**A**: 推荐按**行为合同**组织，而不是按 models/services/controllers、页面或数据库表组织。大多数增长型项目可从“一层 domain + 一层 capability”开始：
+
 ```text
 specs/
-├── auth/spec.md
-├── tasks/spec.md
-├── inspections/spec.md
-└── materials/spec.md
+├── identity/login/spec.md
+├── identity/session/spec.md
+├── billing/invoices/spec.md
+└── data-export/spec.md
 ```
 
-不推荐按技术层（models/services/controllers）。
+一个 path 值得独立，通常因为它有自己的可观察行为、scenarios 和演进节奏；若两组 requirements 总是一起改变、一起验证，就别为了“层次感”硬拆。domain 只是导航 namespace，不是父 spec、继承关系或自动聚合。
 
-**关键**：每个 capability 的身份是它在 `specs/` 下的相对 path。可以组织成 `identity/session/spec.md`；proposal、delta 和 archive 都依靠同一完整 path 寻址。不要随便搬改 path：requirement 改名还有 `RENAMED`，capability path 没有独立 rename 操作，改了会让旧 path 的 delta 悬空。它只是路径 namespace，不是继承或自动 retrieval。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
+**关键**：每个 capability 的身份是它在 `specs/` 下的完整相对 path。proposal、delta 和 archive 都依靠同一 path 寻址。不要随便搬改 path：requirement 改名还有 `RENAMED`，capability path 没有独立 rename 操作，改了会让 active delta 悬空。nested path 也不会自动 retrieval；spec 多时维护薄 catalog（path、Purpose、关键词、边界）并按需读取。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
 
 ### Q25: 一个功能涉及多个域怎么办？
-**A**: 
-- 在多个域的 spec 文件里都写 delta spec
-- 每个域写自己负责的部分
-- 在 design 里说明跨域协作方式
+**A**: 先别把所有 specs 全读一遍。先用 catalog 或 `openspec list --specs --json` 找候选，再在 proposal/design 留一张小 impact matrix：
+
+```markdown
+| capability path | action | why |
+|---|---|---|
+| identity/session | MODIFIED | token 生命周期改变 |
+| billing/subscriptions | verify only | 依赖 token claim |
+| data-export | excluded | 没有调用该 claim |
+```
+
+真正变化的 path 各写自己的 delta；仅验证的 path 不伪造 delta；明确排除的 path 留理由。身份、权限、兼容性或事件语义跨 domain 时必须扩大阅读范围，不能把全局影响伪装成局部 change。
 
 ---
 
@@ -239,7 +249,8 @@ specs/
 **A**: 可以。比如：
 - 简单 change 可以不写 design
 - 单人项目可以简化 proposal
-- 但 specs 和 tasks 通常都需要
+- 有可观察行为变化时，specs delta 和 tasks 通常都需要
+- 确认只是重构、换实现、工具或文档工作而没有 spec-level 行为变化时，可在 `.openspec.yaml` 用 `skip_specs: true`；它不能与 delta specs 共存
 
 ---
 

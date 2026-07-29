@@ -79,7 +79,7 @@ buildflow/
     └── config.yaml
 ```
 
-而当前 `openspec/specs/tasks/spec.md` 里，已经存在一些正式 spec，比如：
+而当前 `openspec/specs/orders/spec.md` 里，已经存在一些正式 spec，比如：
 
 ```markdown
 # Orders Specification
@@ -136,6 +136,27 @@ OpenSpec 的思路不是这样。
 
 在发起 change 之前，你可以先 `/opsx:explore` 探一下现状——施工任务页现有 spec 写了什么、过滤逻辑在哪、谁有导出权限。这是选做，但能让 proposal 的 Scope 写得更准。
 
+## 第 0.5 步：先证明该改 `orders`，而不是临时造一个 `export` capability
+
+“CSV 导出”听起来像一个新功能，但 capability 的切分不是按按钮、接口或代码目录决定的。这里先做一次很小的 discovery：
+
+```bash
+openspec list --specs --json
+openspec show orders --type spec --json --requirements
+```
+
+读到 `orders` 已有“任务列表可见”和“筛选”两个 requirement 后，可以做出可 review 的判断：本次导出复用当前订单/任务过滤语义，只是在同一份可观察合同上新增一种输出。因此它是 **Modified `orders`**，不是新建 `export`、`csv` 或 `ui/export-button` capability。
+
+如果项目有 catalog，这个判断应该在 catalog 和 proposal 中都留下简短证据：
+
+| candidate path | 判断 | 原因 |
+|---|---|---|
+| `orders` | Modified | 导出继承现有筛选、权限与订单语义 |
+| `auth` | verify only | 需确认导出权限，但不改变认证合同 |
+| `data-export` | excluded | 项目当前没有独立的通用导出合同；本次不创建近义 path |
+
+这一步不会由 nested directory 自动完成。它的价值是：后面 delta、archive、未来 agent 的阅读范围都会稳定地落在 `orders`，而不是把同一行为散到近义目录。
+
 ---
 
 ## 第 1 步：`/opsx:propose`，让 change 成形
@@ -157,7 +178,7 @@ OpenSpec 的思路不是这样。
 ```text
 openspec/
 ├── specs/
-│   └── tasks/spec.md
+│   └── orders/spec.md
 └── changes/
     └── add-task-csv-export/
         ├── proposal.md
@@ -571,9 +592,19 @@ openspec/changes/add-task-csv-export/
 /opsx:archive add-task-csv-export
 ```
 
+宿主 archive workflow 在真正移动目录前，应先读取当前项目输入并核对磁盘状态：
+
+```bash
+openspec instructions archive --change add-task-csv-export --json
+openspec status --change add-task-csv-export --json
+openspec validate add-task-csv-export --type change --strict
+```
+
+第一条会给 workflow project `context` 与 `operations.archive.guidance`；它们是项目级提醒，不会替代 delta、tasks 或 validator。最后一条通过后，archive 才有一个确定的 `orders` delta 可以同步。若团队已通过独立 sync 把**完全一致**的 delta 写入 `orders` main spec，v1.7.0 会把它视作 no-op；只要 requirement 标题、正文或 scenario 有差异，仍必须先重新核对，而不会被静默吞掉。
+
 这一步最核心的事，不是挪目录，而是两件事：
 
-1. 把 delta spec merge 回主 `openspec/specs/tasks/spec.md`
+1. 把 delta spec merge 回主 `openspec/specs/orders/spec.md`
 2. 把 change 文件夹移入 `openspec/changes/archive/`
 
 所以 archive 的真正含义是：
@@ -589,10 +620,10 @@ openspec/changes/add-task-csv-export/
 ```text
 openspec/
 ├── specs/
-│   └── tasks/spec.md              ← 旧基线
+│   └── orders/spec.md             ← 旧基线
 └── changes/
     └── add-task-csv-export/
-        └── specs/tasks/spec.md    ← 本次 change 的 delta
+        └── specs/orders/spec.md   ← 本次 change 的 delta
 ```
 
 ### archive 之后
@@ -600,14 +631,14 @@ openspec/
 ```text
 openspec/
 ├── specs/
-│   └── tasks/spec.md              ← 已包含 CSV 导出能力
+│   └── orders/spec.md             ← 已包含 CSV 导出能力
 └── changes/
     └── archive/
         └── 2026-04-20-add-task-csv-export/
             ├── proposal.md
             ├── design.md
             ├── tasks.md
-            └── specs/tasks/spec.md
+            └── specs/orders/spec.md
 ```
 
 这里最容易忽略的一点是：

@@ -67,6 +67,29 @@ openspec update
 
 如果你使用 **core profile**（默认），请参考每个场景下的"Core Profile 替代方案"。
 
+## 改 spec 前的第一步：先定位 capability path，再动 requirement
+
+手改 artifact 的最大风险不只是少写一个 `#`，还包括“改对了文字、改错了合同”。spec-driven 把 capability 的完整相对 path 当 identity：`changes/<change>/specs/<path>/spec.md` 只会同步到 `openspec/specs/<path>/spec.md`。
+
+因此每次准备修改 specs 时，先按这个顺序：
+
+```bash
+openspec list --specs --json
+openspec show <candidate-path> --type spec --json --requirements
+openspec show <candidate-path> --type spec --json --requirement <n>
+```
+
+先列候选 path，查看 requirement 标题；只有要 `MODIFIED`、`REMOVED` 或 `RENAMED` 时才读取完整 block 与 scenarios。不要因为“页面上有一个导出按钮”就新建 `export-button` path：先判断它是已有合同的修改，还是有独立行为、场景和演进节奏的新 capability。
+
+| 这次实际变化 | 应编辑什么 |
+|---|---|
+| 已有 capability 的可观察行为改变 | 同 path 下的 delta，`MODIFIED`/`ADDED` 等操作写完整 requirement contract |
+| 新的独立行为合同 | 新 path 的 delta，并写可读 `## Purpose` |
+| 纯重构、换实现、工具/文档工作 | `.openspec.yaml` 的 `skip_specs: true`，且移除所有 delta spec 文件 |
+| 要拆分、合并或移动 capability path | 停止把它当普通 artifact 编辑；做受控 rebaseline，先处理 active changes |
+
+目录层次不提供继承或自动 retrieval；catalog 只能帮助你找到 path，main spec 才是行为真相。完整规划方法见 [09](09-高级-能力身份与specs漂移维护.md)。
+
 ---
 
 ## 为什么需要这一篇
@@ -184,7 +207,7 @@ for offline reconciliation and sharing with the finance department.
 # 场景：specs 里的 scenarios 不够完整
 
 # 在 Claude Code 里说：
-"请帮我在 specs/tasks/spec.md 的 'Task CSV Export' requirement 里，
+"请帮我在 specs/orders/spec.md 的 'Task CSV Export' requirement 里，
 添加以下 scenarios：
 1. 导出空列表时的处理
 2. 导出超过 10000 条记录时的限制
