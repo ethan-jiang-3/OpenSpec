@@ -179,13 +179,3 @@ sequenceDiagram
 3. OpenSpec 的输出之所以更稳定，正是因为它把 AI 放进了一个有状态、有边界的运行时框架
 
 ---
-
-## 下一步
-
-如果你是在研究宿主集成，推荐回到这些主题篇检验理解：
-
-- [`10` 实战·Claude Code 落地](10-实战-claude-code-里的-openspec-到底怎么落地.md) — 二层架构与入口投递
-- [`04` 高级·config/schema 边界](04-高级-config-schema-与项目边界.md) — schema 与 workflow 的关系
-- [`03` 高级·生命周期思想](03-高级-openspec-的软件开发生命周期思想.md) — 为什么 OpenSpec 把 AI 放进有边界的运行时
-
-如果是第一次上手，这篇不该先读——从 [`01`](01-初级-先把-openspec-用起来.md) 初级篇开始更顺。

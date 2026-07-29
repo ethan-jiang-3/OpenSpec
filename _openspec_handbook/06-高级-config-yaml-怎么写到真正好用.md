@@ -5,6 +5,8 @@
 
 > **v1.7.0 配置路由。** `context` 进入 artifact instructions，也进入 Apply/Archive；`rules.<artifact>` 只进入同名 artifact；Apply/Archive 专属的短稳定步骤写到 `operations.apply/archive.guidance`。Explore 读取 context/rules，但没有 `operations.explore`。
 
+本章是手册内唯一维护**可复制 YAML、字段消费者和验证命令**的配置写法页；[05](05-高级-项目级全局约束到底放哪.md) 只负责先判断一条信息该不该进入项目层。
+
 ---
 
 ## 这一篇解决什么问题
@@ -1018,12 +1020,3 @@ rules:
 9. YAML 可解析不等于配置生效；必须用代表性 change 的 instructions/status 验证 consumer，并让硬规则落到 checker/test/CI
 
 ---
-
-## 下一步
-
-如果你想继续看：
-
-- 多仓库场景下，单个 repo 的 `config.yaml` 为什么还不够
-- store 怎样给多仓库项目提供跨仓库上下文引用
-
-下一篇看 `07`，进入 store 跨仓库协同。

@@ -210,12 +210,3 @@ openspec validate <affected-change> --type change --strict
 3. catalog 只帮你缩小阅读范围，main spec 才是行为真相；nested path 不会自动 retrieval。
 4. requirement 改名有 RENAMED，capability 改 path 没有正规操作；拆分、合并、移动必须做受控 rebaseline。
 5. 漂移会复利，且 validate 只查结构；每次 proposal/archive 都应留下最小 discovery 与对齐证据。
-
-## 下一步
-
-- [`02-中级-把核心概念真正串起来`](02-中级-把核心概念真正串起来.md)——`specs/`、`changes/`、delta、archive 合并的基础（本章的根）。
-- [`04-高级-config-schema-与项目边界`](04-高级-config-schema-与项目边界.md)——schema 是什么、怎么选；本章的 `spec-driven` 就是默认那套。
-- [`12-实战-如何正确修改-artifacts`](12-实战-如何正确修改-artifacts.md)——动手改 artifact 时怎么不踩格式契约的坑（4 个 `#`、精确名字等）。
-- [`07-高级-store-跨仓库协同`](07-高级-store-跨仓库协同.md)——多仓库时如何发现引用 store 的 spec 索引；它不负责自动读取相关 capability。
-
-> 想看更完整的 capability 专题——taxonomy、runtime path 契约、catalog 协议、治理模板——读 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md)。源码级的 archive 修复、六类噪声与 specs 对账则由 `_digested/specs_truth/` 专题接住；本章只保留能直接用于项目判断和行动的版本。

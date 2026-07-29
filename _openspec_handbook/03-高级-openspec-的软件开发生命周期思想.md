@@ -459,17 +459,3 @@ OpenSpec 不是万能方案，它偏向的是"让增量开发可解释、可沉�
 ```
 
 ---
-
-## 下一步
-
-如果你已经读到这里，下一步更适合看 OpenSpec 把这些思想落成了哪些项目边界。
-
-继续看 `04`，它会把 config、schema 和项目边界拆开讲。
-
-那里会进一步拆开：
-
-- `openspec/specs/`
-- `openspec/config.yaml`
-- `openspec/schemas/`
-- `openspec/changes/<name>/.openspec.yaml`
-- profile 和 schema 的关系

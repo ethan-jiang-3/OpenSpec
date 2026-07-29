@@ -12,10 +12,10 @@ OpenSpec 的设计天然支持多人协作，但如果不了解最佳实践，�
 
 | 问题 | 表现 | 后果 |
 |------|------|------|
-| **并行修改同一个 spec** | 两个 change 都修改 `specs/auth/spec.md` | archive 时冲突，需要手动合并 |
+| **并行修改同一个 spec** | 两个 change 都修改同一 capability path | archive 中止；后者必须基于最新 main spec 重写 delta |
 | **change 依赖关系不清** | change B 依赖 change A 的结果 | B 先 archive 会导致基线不一致 |
 | **Git 分支策略混乱** | 不知道 change 和 Git 分支怎么对应 | 代码和 specs 不同步 |
-| **archive 顺序错误** | 后 archive 的覆盖了先 archive 的 | 丢失已完成的工作 |
+| **archive 顺序错误** | 后者仍基于旧基线 archive | archive 拒绝不匹配 delta；需要 rebaseline，而不是覆盖先前结果 |
 
 ---
 
@@ -23,7 +23,7 @@ OpenSpec 的设计天然支持多人协作，但如果不了解最佳实践，�
 
 **最佳实践**：
 
-```
+```text
 Git 分支                    OpenSpec change
 ────────────────────────    ────────────────────────────
 feature/add-dark-mode  ←→  changes/add-dark-mode/
@@ -131,7 +131,7 @@ graph TB
     A1["main 分支"] --> B1[Alice: feature/dark-mode]
     A1 --> C1[Bob: feature/csv-export]
     B1 --> D1[修改 specs/ui/spec.md]
-    C1 --> E1[修改 specs/orders/spec.md]
+    C1 --> E1[修改 specs/requests/submission/spec.md]
     D1 --> F1[PR 合并]
     E1 --> G1[PR 合并]
     F1 --> H1[archive dark-mode]
@@ -147,8 +147,8 @@ graph TB
     subgraph 错误做法
     A2["main 分支"] --> B2[Alice: feature/dark-mode]
     A2 --> C2[Bob: feature/csv-export]
-    B2 --> D2[修改 specs/orders/spec.md]
-    C2 --> E2[修改 specs/orders/spec.md]
+    B2 --> D2[修改 specs/requests/submission/spec.md]
+    C2 --> E2[修改 specs/requests/submission/spec.md]
     D2 --> F2[冲突！]
     E2 --> F2
     end
@@ -286,7 +286,7 @@ sequenceDiagram
 **成员 A**：给施工任务列表加过滤功能
 **成员 B**：给施工任务列表加排序功能
 
-两个功能都要修改 `specs/orders/spec.md`。
+两个功能都要修改 `specs/requests/submission/spec.md`。
 
 #### 推荐做法：错开时间
 
@@ -294,27 +294,27 @@ sequenceDiagram
 # 团队协调：A 先做，B 后做
 
 # 成员 A
-git checkout -b feature/add-order-filter
-/opsx:propose add-order-filter
+git checkout -b feature/add-request-filter
+/opsx:propose add-request-filter
 /opsx:apply
 git add openspec/ src/
-git commit -m "Add order filter"
-git push -u origin feature/add-order-filter
-gh pr create --title "Add order filter"
+git commit -m "Add request filter"
+git push -u origin feature/add-request-filter
+gh pr create --title "Add request filter"
 
 # PR 合并后立即 archive
 git checkout main
 git pull
-/opsx:archive add-order-filter
+/opsx:archive add-request-filter
 git add openspec/
-git commit -m "Archive add-order-filter"
+git commit -m "Archive add-request-filter"
 git push
 
 # 成员 B 等 A 完成后再开始
 git checkout main
 git pull  # 拿到 A 的 specs 更新
-git checkout -b feature/add-order-sort
-/opsx:propose add-order-sort
+git checkout -b feature/add-request-sort
+/opsx:propose add-request-sort
 # ... 后续流程相同
 ```
 
@@ -324,31 +324,31 @@ git checkout -b feature/add-order-sort
 
 ```bash
 # 成员 A 和 B 同时开始
-# A: feature/add-order-filter
-# B: feature/add-order-sort
+# A: feature/add-request-filter
+# B: feature/add-request-sort
 
 # A 先完成并 archive
 # （A 的流程省略）
 
 # B 在 archive 前需要 sync
-git checkout feature/add-order-sort
+git checkout feature/add-request-sort
 git pull origin main  # 拉取 A 的更新
 
 # 运行 sync 命令（core profile 默认可用）
-/opsx:sync add-order-sort
+/opsx:sync add-request-sort
 
 # 手动处理冲突（当前做法）
 # 1. 查看 A 的 delta spec
-cat openspec/changes/archive/*-add-order-filter/specs/orders/spec.md
+cat openspec/changes/archive/*-add-request-filter/specs/requests/submission/spec.md
 
 # 2. 合并到自己的 delta spec
-# 编辑 openspec/changes/add-order-sort/specs/orders/spec.md
+# 编辑 openspec/changes/add-request-sort/specs/requests/submission/spec.md
 # 确保包含 A 的修改 + 自己的修改
 
 # 3. 提交并 archive
 git add openspec/
-git commit -m "Sync with add-order-filter changes"
-/opsx:archive add-order-sort
+git commit -m "Sync with add-request-filter changes"
+/opsx:archive add-request-sort
 ```
 
 **关键点**：
@@ -414,10 +414,12 @@ gitGraph
 
 ### Q1: 两个人同时 archive 了，怎么办？
 
+这里先区分两类问题：OpenSpec 的 delta 与最新 main spec 不匹配时，archive 自己会中止且不写文件，应按本章前面的 rebaseline 步骤处理；下面说的是两条**已经完成 archive 的 Git 提交**在合并分支时产生的 Git conflict，才会出现 marker。
+
 **场景**：
 - 成员 A archive 了 change-a
 - 成员 B 同时 archive 了 change-b
-- 两个 archive 都修改了 `specs/orders/spec.md`
+- 两个 archive 都修改了 `specs/requests/submission/spec.md`
 
 **解决**：
 ```bash
@@ -425,12 +427,12 @@ gitGraph
 git pull  # 会提示冲突
 
 # 手动解决冲突
-# 1. 打开 openspec/specs/orders/spec.md
+# 1. 打开 openspec/specs/requests/submission/spec.md
 # 2. 找到冲突标记（<<<<<<< ======= >>>>>>>）
 # 3. 合并两个 change 的修改
 # 4. 删除冲突标记
 
-git add openspec/specs/orders/spec.md
+git add openspec/specs/requests/submission/spec.md
 git commit -m "Resolve archive conflict between change-a and change-b"
 git push
 ```
@@ -557,7 +559,7 @@ git stash pop  # 恢复之前的工作
 
 ### 1. 建立 change 命名规范
 
-```
+```text
 功能类：feature/<name>  →  add-<feature>
 修复类：bugfix/<name>   →  fix-<issue>
 重构类：refactor/<name> →  refactor-<component>
@@ -603,10 +605,10 @@ git stash pop  # 恢复之前的工作
 
 **每日同步**：
 - 每天开始前 `git pull`，确保基于最新 specs
-- 每天结束前 archive 完成的 change
+- 只 archive 已合并到主分支、且按最新 main spec 验证通过的 change；未合并的 change 保持 active
 
 **沟通机制**：
-- 在团队频道宣布"我要修改 specs/orders/spec.md"
+- 在团队频道宣布"我要修改 `requests/submission` capability"
 - 避免多人同时修改同一个 spec
 
 **Code Review**：
@@ -661,20 +663,20 @@ Blocking rule:
 
 **第 1 周**：
 
-```
-Alice: feature/add-order-list     → 修改 specs/orders/spec.md
-Bob:   feature/add-payment-flow   → 修改 specs/payments/spec.md
-Carol: feature/add-email-notify   → 修改 specs/notifications/spec.md
+```text
+Alice: feature/add-request-list      → 修改 specs/requests/submission/spec.md
+Bob:   feature/add-decision-history  → 修改 specs/approvals/decision/spec.md
+Carol: feature/add-decision-notify   → 修改 specs/notifications/decision-events/spec.md
 ```
 
 三人完全并行，互不干扰。
 
 **第 2 周**：
 
-```
-Alice: feature/add-order-export   → 修改 specs/orders/spec.md
-Bob:   feature/add-refund         → 依赖 Alice 的订单状态
-Carol: feature/add-sms-notify     → 修改 specs/notifications/spec.md
+```text
+Alice: feature/add-request-export  → 修改 specs/requests/submission/spec.md
+Bob:   feature/add-approval-revoke → 依赖 Alice 新增的申请可见性规则
+Carol: feature/add-site-notify     → 修改 specs/notifications/decision-events/spec.md
 ```
 
 Bob 需要等 Alice 的 change archive 后再开始。
@@ -682,12 +684,12 @@ Bob 需要等 Alice 的 change archive 后再开始。
 **协作流程**：
 
 1. **周一早上**：团队站会，宣布本周计划
-   - Alice: "我要做订单导出，会修改 orders spec"
-   - Bob: "我要做退款，依赖 Alice 的订单状态"
+   - Alice: "我要做申请导出，会修改 `requests/submission`"
+   - Bob: "我要做审批撤回，依赖 Alice 的申请可见性规则"
    - Carol: "我要做短信通知，修改 notifications spec"
 
-2. **周三**：Alice 完成订单导出
-   - Alice archive 后在团队频道通知："订单导出已 archive，Bob 可以开始了"
+2. **周三**：Alice 完成申请导出
+   - Alice archive 后在团队频道通知："申请导出已 archive，Bob 可以开始了"
    - Bob 从 main 创建分支，开始退款功能
 
 3. **周五**：Code Review
@@ -726,7 +728,7 @@ Bob 需要等 Alice 的 change archive 后再开始。
 
 | 层 | 内容 | 谁参与 |
 |----|------|--------|
-| **Store/Reference 层** | 声明跨仓库依赖（`references:`），查看 referenced store 的 spec 索引 | 所有相关 repo 的开发者 |
+| **Store/Reference 层** | 声明跨仓库依赖（`references:`），取得 referenced store 的路径并按需读取 spec | 所有相关 repo 的开发者 |
 | **Repo 层** | 单个仓库的具体实现 | 该 repo 的开发者 |
 
 跨仓库协作原则：
@@ -734,14 +736,8 @@ Bob 需要等 Alice 的 change archive 后再开始。
 - **`references:` 声明「这个项目还关心哪些仓库的 specs」**，不包含跨仓库实现计划
 - **各 repo 各自创建 change 来实现自己的部分**，使用 `spec-driven` schema
 - **Change 生命周期不变** — 实现完成后，各 repo 各自 archive 自己的 change
-- **`openspec context` 提供 referenced store 的 spec 索引**，作为 agent 上下文
+- **`openspec context` 提供 referenced store 的 working set、路径和 `show --store` 入口**，作为按需读取的起点
 
 详细机制见 [07 高级·store 跨仓库协同](07-高级-store-跨仓库协同.md)。
 
 ---
-
-## 下一步
-
-- 多仓库协作的完整机制 → [07 高级·store 跨仓库协同](07-高级-store-跨仓库协同.md)
-- 部署验证、CI 怎么纳入 change 闭环 → [14 实战·用 openspec 管理 devops](14-实战-用-openspec-管理-devops-部署与验证.md)
-- 遇到具体疑问 → [99 FAQ](99-FAQ-常见问题.md)

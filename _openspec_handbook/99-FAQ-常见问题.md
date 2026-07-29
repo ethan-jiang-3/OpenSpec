@@ -113,14 +113,13 @@ v1.7.0 也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为
 宿主 archive workflow 在 v1.7.0 还会读取 `instructions archive` 的 context/guidance；已正确 early-sync 的完全一致 delta 会是 no-op，近似内容仍会报错。
 
 ### Q16: archive 时有冲突怎么办？
-**A**: 
-1. CLI 会提示冲突位置
-2. 手动打开冲突文件
-3. 找到冲突标记（类似 git）
-4. 决定保留哪个版本或合并
-5. 重新运行 archive
+**A**: OpenSpec 不会在 main spec 写入 Git 式 conflict marker。发生真实冲突时，archive 会中止，main spec 与 change 都保持原样。正确做法是：
 
-**最佳实践**：尽量让不同 change 修改不同的 spec 文件。
+1. 读取报错和最新 main spec，确认另一个 change 已经怎样改变了 requirement。
+2. 把当前 delta 按新基线重写；同 path 并行时，先完成前一个 archive，再做 rebaseline。
+3. 运行 `openspec validate <change> --type change --strict`，再 archive。
+
+完全相同、已 early-sync 的 delta 可以是 no-op；内容近似但不同仍必须人工重基线，不能期待自动合并。
 
 ### Q17: 不 archive 会怎样？
 **A**: specs/ 基线不会更新，下一个 change 就没有正确的基线。多人协作时会乱套。
@@ -205,6 +204,8 @@ specs/
 
 真正变化的 path 各写自己的 delta；仅验证的 path 不伪造 delta；明确排除的 path 留理由。身份、权限、兼容性或事件语义跨 domain 时必须扩大阅读范围，不能把全局影响伪装成局部 change。
 
+切片、catalog 和 rebaseline 的完整判断见 [09](09-高级-能力身份与specs漂移维护.md)；真正修改 proposal/specs/design/tasks 时看 [12](12-实战-如何正确修改-artifacts.md)。
+
 ---
 
 ## 工具集成
@@ -257,20 +258,20 @@ specs/
 ## Store 跨仓库协同
 
 ### Q32: store 是什么？和 repo 里的 OpenSpec 有什么关系？
-**A**: Store 是 OpenSpec 的跨仓库上下文引用机制。它不替代 repo 级 OpenSpec，而是让 agent 知道「还有哪些仓库的 specs 可以看」。单仓库项目不需要 store。所有 change 仍在具体 repo 下，使用 `spec-driven` schema。
+**A**: Store 是可选的跨仓库 OpenSpec 引用。它不替代 repo 级 OpenSpec，也不协调跨 repo change；它只让当前项目声明已 checkout 的其他 root，并给人或 agent 一个按需读取入口。单仓库项目不需要 store。所有 change 仍在具体 repo 下，使用 `spec-driven` schema。
 
 ### Q33: 我什么时候需要 store？
-**A**: 如果你同时维护多个关联仓库（如 API + Web + Mobile）且希望 agent 在做 change 时能参考其他仓库的 specs，就需要 store。单个仓库项目不需要。
+**A**: 只有当前 change 需要读取另一个已 checkout repo 的正式 specs 时才考虑 store。不要因为本地 specs 多、或仓库多就启用它；本地 context scaling 先走 capability taxonomy、catalog 和按需读取。
 
 ### Q34: store 会修改我 referenced 的仓库吗？
-**A**: 不会。`references:` 只是名称声明——agent 通过 `openspec context` 获取 referenced store 的 spec 索引（只读），不内联内容、不写入任何文件。
+**A**: 不会。`references:` 只是名称声明；不带 `--code-workspace` 的 `openspec context` 会显示 referenced store 的 working set、可用本地路径和按需 `show --store` 入口，不内联内容，也不写入 referenced repo。
 
 ### Q35: store、context、workset 有什么区别？
 **A**:
 - **store**：全局注册的仓库 checkout（`openspec store register`）
 - **reference**：项目声明的 store 依赖（`config.yaml` 的 `references:`）
-- **context**：working set 查询（`openspec context`）——root + referenced stores 的 spec 索引
-- **workset**：个人本地的多仓库打开视图（`openspec workset save/open/list`），不共享
+- **context**：working set 查询（`openspec context`）——root + referenced stores 的路径与按需读取入口
+- **workset**：个人本地的多目录打开视图（`openspec workset create/open/list/remove`），不从 `references:` 推导，也不共享
 
 ### Q36: 怎么开始使用 store？
 **A**:
@@ -278,14 +279,3 @@ specs/
 2. 在 `openspec/config.yaml` 加 `references: [other-repo]`
 3. `openspec context`（查看 working set）
 4. 正常创建 change：`openspec new change <name>`（change 仍在当前 repo 下）
-
-## 下一步
-
-如果这个 FAQ 没有回答你的问题：
-1. 概念类问题 → 回看对应的主题文档（用 [00-index 文件地图](00-index.md#文件地图) 定位）
-2. 实战类问题 → 从 [11](11-实战-从一个真实-change-走完整条主线.md)（brownfield 主线）或 [13](13-实战-从零开始设计一个较复杂系统.md)（greenfield）找相近场景
-3. 在 GitHub 提 issue 或查看 OpenSpec 官方文档
-
----
-
-**提示**：这个 FAQ 会持续更新。如果你有新的常见问题，欢迎反馈。

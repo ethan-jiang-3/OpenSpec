@@ -387,7 +387,7 @@ schema 管的是：
 
 - `openspec store register` 全局注册仓库 checkout
 - `openspec/config.yaml` 的 `references:` 声明依赖
-- `openspec context` 查看 working set（纯查询，不写）
+- `openspec context` 查看 working set（默认纯查询；只有显式传 `--code-workspace` 才写 workspace 文件）
 
 store 不创建新的 schema、不改变 change 生命周期。所有 change 仍在具体 repo 下，使用 `spec-driven`。跨仓库场景参考 [07](07-高级-store-跨仓库协同.md)。
 
@@ -402,14 +402,3 @@ store 不创建新的 schema、不改变 change 生命周期。所有 change 仍
 5. 判断力比记住所有字段重要：什么时候改 config、什么时候改 schema、什么时候看 store
 
 ---
-
-## 下一步
-
-如果你关心的是：
-
-- 长期项目规则到底该放在哪
-- 哪些信息该进 `config.yaml`
-- 哪些信息该进 `specs/` 或 change artifacts
-- 什么时候应该改 schema，而不是继续堆 rules
-
-下一篇看 `05`，它专门讲项目级全局约束到底该放在哪。

@@ -948,9 +948,3 @@ openspec status --change <change-name> --json
 前者检查 change/spec 结构，后者检查当前 artifact 状态和下一步运行时上下文。
 
 ---
-
-## 下一步
-
-- artifacts 会安全改了，想看复杂系统从零开始怎么用多个 spec + design 建第一版基线 → [13 实战·从零设计较复杂系统](13-实战-从零开始设计一个较复杂系统.md)
-- 想看一个 change 从头到尾走完整条主线 → [11 实战·从真实 change 走完整条主线](11-实战-从一个真实-change-走完整条主线.md)
-- 多人改同一份 spec / Git 协作时怎么不踩坑 → [15 实战·多人协作与 Git 工作流](15-实战-多人协作与Git工作流.md)

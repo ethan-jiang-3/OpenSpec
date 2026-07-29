@@ -408,8 +408,3 @@ agent 不需要你在 instruction 里教它怎么沟通、怎么审查——它�
 - **apply.instruction 保持简短**——只写执行循环和 done 标准，方法论留给 agent
 
 ---
-
-## 下一步
-
-- 理解了怎么创建 schema 之后，去看实战系列（[10](10-实战-claude-code-里的-openspec-到底怎么落地.md)–[15](15-实战-多人协作与Git工作流.md)）——把自定义 schema 放进真实的 Claude Code 工作流里
-- 想深入了解 schema 系统的底层约束？回到 [04](04-高级-config-schema-与项目边界.md) 看 artifact DAG 的设计原理，或者看 [90-附录](90-附录-给机器看的-agent-协议.md) 了解 agent 怎么消费 schema 产出的指令

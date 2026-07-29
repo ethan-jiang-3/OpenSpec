@@ -18,6 +18,17 @@
 
 只有当当前 repo 的 change 确实需要**发现另一个已 checkout repo 的正式 specs**，且人/agent 需要一个工作集与按需读取入口来找到它们时，store 才有价值。
 
+```mermaid
+flowchart LR
+    A[当前项目 root] -->|references| B[已注册 store]
+    A -->|openspec context| C[working set: id 与本地路径]
+    B --> C
+    C -->|按明确 capability ID| D[openspec show --store]
+    E[workset] -.个人手工目录视图，不参与 root 解析.-> A
+```
+
+这张图也划清了边界：`references:` 只声明已知 root，`context` 只报告工作集；真正读取哪份行为合同仍由人或 agent 根据当前 change 的 scope 决定。
+
 产品需求同时砸在 API、Web、Mobile 三个 repo 上——每个 repo 各自的 spec-driven 流程管好自己的代码没问题，但 agent 在做 API 的 change 时，如果能看一眼 Web 和 Mobile 的 specs，方案会考虑得更周全。
 
 v1.3.0 之前，OpenSpec 的所有操作都是 repo-local 的：
@@ -88,7 +99,7 @@ openspec context --json       # JSON
 openspec context --code-workspace ./related-specs.code-workspace  # 写出 VS Code 多根文件
 ```
 
-输出 working set：当前 root + `references:` 中声明的 store 的 spec 索引。纯查询，不写。
+不带 `--code-workspace` 时，输出只是 working set：当前 root、`references:` 中声明的 store、本地路径和按需读取入口；它不列出 spec 索引，也不写文件。带该 flag 时会显式写出指定的 workspace 文件。
 
 ### workset：个人工作视图
 
@@ -172,9 +183,9 @@ store 是可选扩展，不是必选项。
 
 | 类型 | 位置 | 例子 |
 |------|------|------|
-| 全局注册 | `~/.openspec/stores/registry.yaml` | store 注册（每台机器独立） |
+| 全局注册 | `<全局数据目录>/stores/registry.yaml` | store 注册（每台机器独立） |
 | 项目声明 | `openspec/config.yaml` `references:` | 项目依赖哪些 store（可提交到 Git） |
-| 个人视图 | `~/.openspec/worksets/worksets.yaml` | 多仓库打开视图（纯本地，不共享） |
+| 个人视图 | `<全局数据目录>/worksets/worksets.yaml` | 多仓库打开视图（纯本地，不共享） |
 
 ## 六、与单仓库 OpenSpec 的对比
 
@@ -211,9 +222,3 @@ store 不改变核心流程——它只是在 agent 探索时多了一个「可�
 3. Store 不改 change 生命周期——所有 change 仍在具体 repo 下，用 `spec-driven`。
 4. Store 不创建跨 repo change、协调视图或 initiative；它只是“注册 + 引用 + 查询”。
 5. Workset 是个人本地视图，不共享。
-
-## 下一步
-
-- 想知道 store 的配置层和 repo-local config.yaml 怎么共存 → [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)
-- 想自定义工作流 → [08 高级·自定义 schema](08-高级-自定义-schema-创建自己的工作流.md)
-- 多人 + 多 repo 时 store 协作怎么落地 → [15 实战·多人协作与 Git 工作流](15-实战-多人协作与Git工作流.md)

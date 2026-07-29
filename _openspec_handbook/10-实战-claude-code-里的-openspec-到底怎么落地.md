@@ -274,17 +274,3 @@ Claude Code 里的 OpenSpec 命令入口
 这时再去看 [`90` 附录](90-附录-给机器看的-agent-协议.md)。
 
 ---
-
-## 下一步
-
-如果你现在已经分清了：
-
-- `openspec/` 是事实层
-- `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
-- Claude Code 只是宿主，不是 OpenSpec 本体
-
-如果你还没有读过高级主线，可以回看 [`03`](03-高级-openspec-的软件开发生命周期思想.md) 和 [`04`](04-高级-config-schema-与项目边界.md)，把方法论和边界加深理解。
-
-如果你已经在实战区继续往后读，下一篇更适合看一个完整 change 怎样从 propose 走到 archive：
-
-接着读 [`11`](11-实战-从一个真实-change-走完整条主线.md) 即可。
