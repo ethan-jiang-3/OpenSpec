@@ -1,6 +1,6 @@
 # 09 · Capability 身份与 specs 漂移维护
 
-> 适用 openspec ≥ 1.4 · 高级篇。这一章按三层递进回答一个问题——根子是同一个，拆成三问：**specs 凭什么值得你维护、漂移会怎样反噬后续工作？** → **specs 到底按什么组织、靠什么定位？** → **用久了为什么和代码对不上、怎么守？**
+> **适用 OpenSpec v1.7.0** · 高级篇。这一章按三层递进回答一个问题——根子是同一个，拆成三问：**specs 凭什么值得你维护、漂移会怎样反噬后续工作？** → **specs 到底按什么组织、靠什么定位？** → **用久了为什么和代码对不上、怎么守？**
 
 ## 先回答：为什么这事值得你操心
 
@@ -25,10 +25,10 @@
 
 `schemas/spec-driven/schema.yaml` 这个文件定义了**每个 change 的骨架和契约**：
 
-- artifact 依赖图：`proposal → specs → (design) → tasks → apply`；
+- artifact 依赖图：`proposal → {specs, design} → tasks → apply`；在 `skip_specs: true` 的纯重构、工具或文档 change 中，specs artifact 会显式跳过；
 - delta 操作：`## ADDED / MODIFIED / REMOVED / RENAMED Requirements`；
 - 格式规则：每个 requirement 用 `### Requirement: <name>`、每个 scenario **必须** `#### Scenario:`（4 个 `#`，少了静默失败）、requirement 正文要含 `SHALL`/`MUST`；
-- **能力契约**：proposal 里列的每个 capability，specs 阶段都要生成对应的 `specs/<name>/spec.md`。
+- **capability 契约**：有 spec-level 行为改动时，proposal 列出的每个 capability 都应有对应的 `specs/<path>/spec.md`；`skip_specs: true` 只适用于没有此类改动的 change，且不能与 delta specs 共存。
 
 关键一句（schema 原文）：
 
@@ -38,38 +38,40 @@
 
 下面要讲的"capability 身份"，就是这个契约里最核心、又最容易被忽略的一条。
 
-**能力契约在 schema.yaml 中的样子**——proposal 宣布的每个 capability，specs 阶段必须产出同名 `specs/<capability>/spec.md`（简化自 `schemas/spec-driven/schema.yaml`）：
+**capability 契约在 schema.yaml 中的样子**——正常行为 change 的 proposal 宣布 capability，specs 阶段产出同路径 `specs/<capability-path>/spec.md`；纯非 spec change 则显式声明 `skip_specs: true`（简化自 `schemas/spec-driven/schema.yaml`）：
 
 ```yaml
 # schemas/spec-driven/schema.yaml（节选）
 artifacts:
   - id: specs
     requires: [proposal]
-    # ↑ proposal Capabilities 节列出的每个名字 → specs/<name>/spec.md
-    # 目录名即身份——同名才命中，改名即失配
+    # ↑ proposal Capabilities 节列出的每个 path → specs/<path>/spec.md
+    # 相对路径即身份——同路径才命中，改名即失配
 ```
 
-## capability 的身份 = 它的目录名
+## capability 的身份 = 它的相对路径
 
-很多人把 `openspec/specs/` 笼统当成"spec 基线"。但它**不是一堆平铺的文档，而是按 capability（能力）切成一个个目录**：
+很多人把 `openspec/specs/` 笼统当成"spec 基线"。但它不是一堆平铺的文档：v1.7.0 会递归发现任意深度的 `spec.md`，并按 capability 切分目录：
 
 ```text
 openspec/specs/
-├── auth/spec.md              ← "auth" 这个 capability 的合同
-├── data-export/spec.md       ← "data-export" 这个 capability 的合同
-└── notifications/spec.md
+├── auth/spec.md                    ← ID = "auth"
+├── identity/
+│   ├── login/spec.md               ← ID = "identity/login"
+│   └── session/spec.md             ← ID = "identity/session"
+└── data-export/spec.md
 ```
 
-**一个 capability 的身份，就是它在 `specs/` 下那个 kebab-case 目录名**（`auth`、`data-export`）。这个目录名同时承担四个角色：
+**一个 capability 的身份，就是它在 `specs/` 下的相对目录路径**（`auth`、`identity/session`）。路径同时承担四个角色：
 
 | 角色 | 说明 |
 |------|------|
-| **组织单位** | main specs = 一组 `specs/<capability>/spec.md`，按能力切分管理 |
-| **proposal↔specs 的契约** | proposal 列的每个 capability 名，specs 阶段必须生成同名 `specs/<name>/spec.md`（schema 写死的） |
-| **delta 的靶心** | delta 写在 `changes/<id>/specs/<capability>/spec.md`，archive 时打 `openspec/specs/<capability>/spec.md`——**目录名同名才命中** |
-| **没有别的身份** | capability **没有稳定 ID**，就靠这个目录名维系 |
+| **组织单位** | main specs = 一组 `specs/<capability-path>/spec.md`，按行为合同切分管理 |
+| **proposal↔specs 的契约** | proposal 列的每个 capability path，specs 阶段生成同路径 `specs/<path>/spec.md`；默认文案仍偏 flat，团队采用 nested layout 时应明确约定 |
+| **delta 的靶心** | delta 写在 `changes/<id>/specs/<path>/spec.md`，archive 时打 `openspec/specs/<path>/spec.md`——**相对路径相同才命中** |
+| **没有别的身份** | capability **没有稳定 ID**，就靠这个相对路径维系 |
 
-所以 archive 能把 delta 合并进主 spec，靠的就是**目录名寻址**——不是魔法，是契约。这也意味着：**改一个 capability 的目录名，是个大事**（见下文）。
+目录层次只是一种命名空间，不带父子继承、自动聚合或依赖推导；`identity` 和 `identity/session` 是两个独立 capability。archive 能把 delta 合并进主 spec，靠的就是**相对路径寻址**——不是魔法，是契约。这也意味着：**改一个 capability path，是个大事**（见下文）。
 
 ## 两层「以名字为身份」模型（无稳定 ID）
 
@@ -77,13 +79,13 @@ OpenSpec 的身份模型是**「以名字为身份」（name-as-identity），�
 
 | 层 | 身份 = | 怕什么 | 有没有 rename 操作 |
 |----|--------|--------|-------------------|
-| **capability** | **目录名**（`specs/<capability>/`，kebab-case） | 改目录名 / 目录没了 | **没有** |
+| **capability** | **相对路径**（`specs/<capability-path>/`，例如 `identity/session`） | 改路径 / 目录没了 | **没有** |
 | **requirement** | **标题文本**（`### Requirement: <Name>`） | 改标题 / 大小写 | 有（`## RENAMED Requirements`，FROM/TO） |
 
 ```mermaid
 graph TD
     subgraph capability["capability 层"]
-    C[身份 = 目录名<br/>specs/&lt;capability&gt;/] --> C1[怕：改目录名 / 目录没了]
+    C[身份 = 相对路径<br/>specs/&lt;capability-path&gt;/] --> C1[怕：改路径 / 目录没了]
     C1 --> C2["rename：没有操作<br/>（改名=裸搬目录）"]
     end
 ```
@@ -98,7 +100,7 @@ graph TD
 两个推论，直接关系到 specs 会不会漂：
 
 1. **都怕改名，且没有 ID 兜底。** 传统系统里改个名字，ID 不变，引用不断链。OpenSpec **没有 ID**——名字一改，所有指向旧名字的引用全部失配，而且**没有任何工具告诉你断了**。
-2. **capability 比 requirement 更脆。** requirement 至少有 `RENAMED` 操作（`FROM: ### Requirement: 旧` / `TO: ### Requirement: 新`），改名是个一等动作；**capability 没有任何 rename 操作**——改 capability 名只能靠你手动搬目录，然后所有指向旧目录名的 delta 默默变成"悬空目标"。
+2. **capability 比 requirement 更脆。** requirement 至少有 `RENAMED` 操作（`FROM: ### Requirement: 旧` / `TO: ### Requirement: 新`），改名是个一等动作；**capability 没有任何 rename 操作**——改 capability path 只能靠你手动搬目录，然后所有指向旧路径的 delta 默默变成"悬空目标"。
 
 > 一句话：**requirement 改名有"正规手续"（RENAMED）；capability 改名没有手续，是裸操作。** 所以 capability 目录名要当**稳定性契约**对待——能不改就不改。
 
@@ -108,7 +110,7 @@ graph TD
 
 漂移，就是**两层"名字身份"失配**：
 
-- **capability 层失配**：delta 指向的 capability 目录名，在 `openspec/specs/` 里对不上——要么"设计了没建"、要么"目录改名了"、要么"早删了"。**表现：archive 一个 change 时，目标 spec 不存在或对不上；或一堆 change 悬空挂在 active。**
+- **capability 层失配**：delta 指向的 capability 相对路径，在 `openspec/specs/` 里对不上——要么"设计了没建"、要么"路径改名了"、要么"早删了"。**表现：archive 一个 change 时，目标 spec 不存在或对不上；或一堆 change 悬空挂在 active。**
 - **requirement 层失配**：delta 的 `MODIFIED`/`REMOVED` 指向的标题，在当前主 spec 里找不到——标题被别的 archive 改写过、大小写变了、或手改过。**表现：archive 报 `... not found`，整批原子回滚。**
 
 两层是**同一个病**（名字身份失配），只是发生在不同层。再加上"有代码无 spec"（反向漂移：capability 上线了 specs 没记）、"废弃 change 仍挂 active"（噪声）等，specs 就慢慢配不上"source of truth"这个名号了——而 agent 还把它当事实读，于是被带偏。
@@ -119,7 +121,7 @@ graph TD
 
 - **做完一个 change 就 `archive`，别让它卡在 active 状态。** specs 只在 archive 那一刻更新；不 archive，specs 永远停在旧版本。
 - **requirement 改名走 `RENAMED`**，别"删旧 + 加新"（那会掐断历史，让老 delta 失配）。
-- **capability 目录名尽量别改。** 没有正规 rename 操作，改名=裸搬目录，要同步所有引用它的 delta——当稳定性契约对待。
+- **capability path 尽量别改。** 没有正规 rename 操作，改路径=裸搬目录，要同步所有引用它的 delta——当稳定性契约对待。
 - **apply 改代码时，顺手想一句"这段 spec 还准吗"。** 这是最廉价的对齐动作。
 - **偶尔巡检**：`openspec list` / `openspec validate --all` 能抓结构坏死（僵尸 change）；但**别把"validate 干净"当成"specs 对齐"**——它查不出 capability/requirement 的名字失配和 specs↔代码漂移。
 - **别手改主 spec 文件**。要改就写 change（delta）再 archive；手改没有任何工具追踪，下次 delta 一撞就 `not found`。
@@ -127,7 +129,7 @@ graph TD
 ## 压缩结论
 
 1. specs 是事实层契约，不是 archive 文档——漂移即地基松动。
-2. capability 身份 = 目录名，没有 ID 兜底，改名是裸操作——当稳定性契约对待。
+2. capability 身份 = 相对路径，没有 ID 兜底，改路径是裸操作——当稳定性契约对待。
 3. requirement 身份 = 标题文本，改名有 RENAMED 手续——走正规手续，别"删旧加新"。
 4. 漂移会复利，且无工具自动对账（validate 只查结构）。
 

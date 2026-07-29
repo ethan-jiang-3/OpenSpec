@@ -40,6 +40,8 @@ repo-local `init/update` 会根据 delivery：
 - `commands`：生成 command 文件。
 - `both`：两者都生成。
 
+但 delivery 是意图，工具能力才是上限。v1.7.0 的 Codex 没有 command surface：它始终接收 `.codex/skills/openspec-*/SKILL.md`，并以 `$openspec-*` skill 调用；旧的托管 Codex prompts 会在有 replacement skill 时由 `update` 清理。不要把 `/opsx:*` 当成 Codex 的调用语法。
+
 
 ## skills 与 commands 的区别
 
@@ -103,6 +105,7 @@ tool-agnostic CommandContent
 | 某个 change 到哪一步 | `openspec status --change "<name>" --json` |
 | 该写某个 artifact 时需要什么 | `openspec instructions <artifact> --change "<name>" --json` |
 | apply 阶段该怎么做 | `openspec instructions apply --change "<name>" --json` |
+| archive 阶段的项目 context / operation guidance | `openspec instructions archive --change "<name>" --json` |
 | 可用 schema/templates | `openspec schemas --json`、`openspec templates --json` |
 
 这组命令比具体 slash command 前缀更稳定。前缀只是工具交互习惯，runtime contract 是 CLI JSON。

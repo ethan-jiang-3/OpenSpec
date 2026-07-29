@@ -2,7 +2,7 @@
 
 ## 它解决的是 agent 生态差异
 
-OpenSpec 的核心 workflow 语义不应绑定在某个 AI Coding 工具上。Claude、Codex、Cursor、OpenCode、Gemini 等工具对“如何发现指令”的约定不同：有的看 skills，有的看 slash commands，有的用全局 prompt 目录，有的用项目内 command 文件。
+OpenSpec 的核心 workflow 语义不应绑定在某个 AI Coding 工具上。Claude、Codex、Cursor、OpenCode、Gemini 等工具对“如何发现指令”的约定不同：有的看 skills，有的看 slash commands，有的只支持 skills，有的把 command 文件放在项目内目录。
 
 Tool delivery 这一层的核心判断是：**稳定资产是 workflow 语义；skills 和 commands 只是投递外壳。**
 
@@ -14,7 +14,7 @@ profile/workflows
   → agent 可发现的入口文件
 ```
 
-这解释了为什么 OpenSpec 不把“Claude command 文件”或“Codex prompt 文件”当成项目事实。它们是生成物，可以随 profile、delivery、版本和工具支持变化而同步。
+这解释了为什么 OpenSpec 不把“Claude command 文件”或“Codex skill 文件”当成项目事实。它们是生成物，可以随 profile、delivery、版本和工具支持变化而同步。
 
 ## 三层对象
 
@@ -71,6 +71,8 @@ repo-local init/update 根据 global config 的 `delivery` 分流：
 | `skills` | 只生成 skills，并删除 managed commands |
 | `commands` | 只生成 commands，并删除 managed skills |
 | `both` | 两者都生成 |
+
+这张表描述的是投递策略，不是每个工具都必然支持三种形态。v1.7.0 的 Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.codex/skills/openspec-*/SKILL.md`，不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
 
 profile 决定安装哪些 workflow，delivery 决定以什么形态投递。两者组合起来回答两个不同问题：
 
@@ -132,7 +134,7 @@ formatFile(content: CommandContent): string
 | 工具 | command 位置 | 说明 |
 |------|--------------|------|
 | Claude | `.claude/commands/opsx/<id>.md` | 项目内 command 文件，带 frontmatter |
-| Codex | `<CODEX_HOME>/prompts/opsx-<id>.md` | 全局 prompt 位置，不是项目内文件 |
+| Codex | `.codex/skills/openspec-*/SKILL.md` | v1.7.0 skills-only；以 `$openspec-*` 调用，不再生成 `<CODEX_HOME>/prompts/opsx-<id>.md` |
 
 这个差异很重要：不是所有 command artifacts 都在 repo root 下。delivery 层要尊重每个工具的发现机制。
 

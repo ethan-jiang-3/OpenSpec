@@ -1,18 +1,20 @@
 # 主 specs 增长与上下文：上游现状核验（2026-07-29）
 
-> 范围：只核验 Fission-AI/OpenSpec 的 GitHub API 与 `main` 分支源码；这是 FAQ 的研究底稿，不是已交付功能清单。
+> 范围：只核验 Fission-AI/OpenSpec 正式发布的 `v1.7.0`（tag `4e16790`）源码与 GitHub API；这是 FAQ 的研究底稿，不是已交付功能清单。
+
+> **当前基线（2026-07-29）**：本 checkout 与 PATH CLI 均为 v1.7.0；下文所有源码链接均固定到该 release。关于 local main-spec catalog / 自动选择 / token-budget retrieval 的结论未变；nested path 是 v1.7.0 的正式能力，见 [`_research-nested-capability-paths.md`](_research-nested-capability-paths.md)。
 
 ## 先分开两个问题
 
-`archive` 不会把全体 main specs 送进一个 LLM 上下文。它先发现当前 change 下的 delta spec，再把每个 delta 映射到同相对路径的 main spec；随后只重建这些目标。[`archive.ts` L438](https://github.com/Fission-AI/OpenSpec/blob/9a937cb9b36fb1040bdbde3bab3fa3903944ef10/src/core/archive.ts#L438)；[`specs-apply.ts` L48-L77](https://github.com/Fission-AI/OpenSpec/blob/9a937cb9b36fb1040bdbde3bab3fa3903944ef10/src/core/specs-apply.ts#L48-L77)。所以 archive 的规模风险是被一次 change 触及的 capability 数量，不是仓库全部 specs 的总量。
+`archive` 不会把全体 main specs 送进一个 LLM 上下文。它先发现当前 change 下的 delta spec，再把每个 delta 映射到同相对路径的 main spec；随后只重建这些目标。[`archive.ts` L438](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/archive.ts#L438)；[`specs-apply.ts` L48-L77](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/specs-apply.ts#L48-L77)。所以 archive 的规模风险是被一次 change 触及的 capability 数量，不是仓库全部 specs 的总量。
 
-真正没有被产品化解决的是 proposal/explore 阶段的“从大量 specs 里找出该读哪几个”。当前默认 schema 只要求 agent “Check `openspec/specs/`”并“Research existing specs”；没有自动选出相关 spec 的步骤。[`schema.yaml` L15-L22](https://github.com/Fission-AI/OpenSpec/blob/9a937cb9b36fb1040bdbde3bab3fa3903944ef10/schemas/spec-driven/schema.yaml#L15-L22)。当前 propose workflow 也直接进入 artifact build order，没有 catalog/discovery 步骤。[`propose.ts` L30-L77](https://github.com/Fission-AI/OpenSpec/blob/9a937cb9b36fb1040bdbde3bab3fa3903944ef10/src/core/templates/workflows/propose.ts#L30-L77)。
+真正没有被产品化解决的是 proposal/explore 阶段的“从大量 specs 里找出该读哪几个”。当前默认 schema 只要求 agent “Check `openspec/specs/`”并“Research existing specs”；没有自动选出相关 spec 的步骤。[`schema.yaml` L15-L22](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/schemas/spec-driven/schema.yaml#L15-L22)。当前 propose workflow 也直接进入 artifact build order，没有 catalog/discovery 步骤。[`propose.ts` L30-L77](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/templates/workflows/propose.ts#L30-L77)。
 
 ## 现在已经有的窄读取能力
 
-- `openspec list --specs --json` 的当前输出只有 `id` 与 `requirementCount`，不是带 Purpose/overview 的本地 spec catalog。[`list.ts` L190-L208](https://github.com/Fission-AI/OpenSpec/blob/9a937cb9b36fb1040bdbde3bab3fa3903944ef10/src/core/list.ts#L190-L208)
-- 已经选定 ID 后，`spec show` 的 JSON 可以去掉 scenarios，或按 1-based requirement 取一条，因此可以按需读取，而非整库加载。[`spec.ts` L39-L58](https://github.com/Fission-AI/OpenSpec/blob/9a937cb9b36fb1040bdbde3bab3fa3903944ef10/src/commands/spec.ts#L39-L58)；[`spec.ts` L104-L122](https://github.com/Fission-AI/OpenSpec/blob/9a937cb9b36fb1040bdbde3bab3fa3903944ef10/src/commands/spec.ts#L104-L122)。
-- 上游 `main` 现在已能按相对路径发现/合并嵌套 spec；这不等于所有已安装版本都能使用嵌套布局，写 FAQ 时须以用户实际 CLI 版本为准。[`specs-apply.ts` L52-L58](https://github.com/Fission-AI/OpenSpec/blob/9a937cb9b36fb1040bdbde3bab3fa3903944ef10/src/core/specs-apply.ts#L52-L58)
+- `openspec list --specs --json` 的当前输出只有 `id` 与 `requirementCount`，不是带 Purpose/overview 的本地 spec catalog。[`list.ts` L190-L208](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/list.ts#L190-L208)
+- 已经选定 ID 后，`spec show` 的 JSON 可以去掉 scenarios，或按 1-based requirement 取一条，因此可以按需读取，而非整库加载。[`spec.ts` L39-L58](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/commands/spec.ts#L39-L58)；[`spec.ts` L104-L122](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/commands/spec.ts#L104-L122)。
+- v1.7.0 已能按相对路径发现/合并嵌套 spec；本 FAQ 即以这个正式发布版为准。[`specs-apply.ts` L52-L58](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/specs-apply.ts#L52-L58)
 
 ## 上游提案不是现有能力
 

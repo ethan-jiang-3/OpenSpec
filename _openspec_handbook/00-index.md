@@ -10,14 +10,14 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.2** |
-| **对齐 OpenSpec** | 1.5.0 |
+| **手册版本** | **v1.3** |
+| **对齐 OpenSpec** | 1.7.0 |
 | **本版日期** | 2026-07 |
 
 **两个版本维度（别混）**：
 
-- **手册版本**（v1.1）：本手册自身的版次。理解加深、内容大修时升版。
-- **对齐 OpenSpec**（1.4.1）：本手册当前对应的 openspec 上游版本。
+- **手册版本**（v1.3）：本手册自身的版次。理解加深、内容大修时升版。
+- **对齐 OpenSpec**（1.7.0）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
 
@@ -32,6 +32,7 @@
 | v1.0 | 2026-06 | 1.4.1 | 首版编号化；新增 `09-能力身份与specs漂移维护`（spec-driven 是 driver + capability=目录名身份 + 两层 name-as-identity + 漂移维护）；`02`/`04`/`99` 补 capability 身份与 RENAMED 前向指针。 |
 | v1.1 | 2026-06 | 1.4.1 | `explore` 地位补全（贯穿 02/03/11/13）：02 状态机补 explore 两处、03 新增 explore 深层机制（反复打磨 proposal / 对抗 LLM 幻觉 / change 作围栏）+ 生命周期补全四动词 `explore→propose→apply→archive`、11/13 实战织入 explore（change 出来后反复打磨保质量）；宪章「三层递进梯度」原则微调（高级可作精炼对照锚点）。 |
 | v1.2 | 2026-07 | 1.5.0 | 07 章重写：workspace → store 模型（跨仓库上下文引用）；00-index 版本/术语/命令表/阅读路径更新；workspace/initiative/context-store 概念全部删除。 |
+| v1.3 | 2026-07 | 1.7.0 | 对齐 v1.7：nested capability path 完整生命周期、`skip_specs`、Apply/Archive operation guidance、工具投递与 Codex skills-only、store/default 与 archive/sync 可靠性更新。 |
 
 ---
 
@@ -71,15 +72,16 @@
 OpenSpec = 整套机制
   ├── openspec/        项目里的文件事实层
   ├── openspec CLI     终端里的运行时 API
-  └── /opsx:*          投递到 agent 工具里的 workflow 入口
+  └── workflow skill / command  投递到 agent 工具里的入口
 ```
 
 - `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --json`、`openspec archive <name>`。
-- `/opsx:*` 是 Claude Code、Cursor、Codex 等宿主 agent 里的用户入口，比如 `/opsx:propose`、`/opsx:apply`。
-- `opsx` 这个名字只是 slash command 的命名空间或文件前缀，不是另一套独立系统。
+- `/opsx:*` 是有 command adapter 的宿主（例如 Claude Code）里的入口，比如 `/opsx:propose`、`/opsx:apply`；它不是所有工具的通用语法。
+- Codex 在 v1.7.0 使用 skills-only 投递，入口是 `$openspec-*` skill，而不是 `/opsx:*` command。
+- `opsx` 这个名字只是部分工具的 command 命名空间或文件前缀，不是另一套独立系统。
 - 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有与之完全对应的单一命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
 
-所以更准确的说法是：**`/opsx:*` 是 OpenSpec workflow 在 agent 工具里的入口，`openspec` CLI 是这些 workflow 读取状态和获取指令的运行时。**
+所以更准确的说法是：**workflow 的入口语法由宿主决定（`/opsx:*`、`$openspec-*` 或该工具自己的 command 名），`openspec` CLI 才是这些 workflow 读取状态和获取指令的运行时。**
 
 ---
 
@@ -183,7 +185,7 @@ graph LR
 | **artifact** | change 内部的文档产物类型 | proposal.md、specs/*.md、design.md、tasks.md |
 | **delta spec** | 描述"这次改了哪里"的增量 spec | `## ADDED Requirements` / `## MODIFIED Requirements` |
 | **specs/** | 项目当前正式 spec 基线 | `openspec/specs/auth/spec.md` |
-| **capability / 能力** | specs 的组织单位，身份 = 目录名（`specs/<capability>/`） | `auth`、`data-export`（详见 [09](09-高级-能力身份与specs漂移维护.md)） |
+| **capability / 能力** | specs 的组织单位，身份 = `specs/` 下的相对路径 | `auth`、`identity/session`（详见 [09](09-高级-能力身份与specs漂移维护.md)） |
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
 | **profile** | 选择安装哪些工作流命令 | core（5个命令，v1.4.0 起）vs custom（自选命令） |

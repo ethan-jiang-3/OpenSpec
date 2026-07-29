@@ -10,10 +10,6 @@
 
 这里的“main specs”指整个 `openspec/specs/` 当前 capability 基线，不是 `changes/archive/` 中的历史 change。后者只在需要回答“当时为什么这样改”时才是上下文来源。
 
-本问题特别要求区分三件事：
+本文以 **OpenSpec v1.7.0** 为唯一的当前行为基线：2026-07-29 已核验本 checkout 的源码为 upstream tag `4e16790`，PATH 中实际运行的全局 `openspec` 也为 v1.7.0。所有“现在是否支持”“当前 CLI 会做什么”的结论都以这个正式发布版为准。
 
-- 本 checkout 的实际代码（`HEAD d4f1903`，`package.json` 为 v1.5.0）；
-- `_digested/` 所记录、但本 checkout 尚未合入的后续 upstream 同步快照（其中包括 nested spec discovery）；
-- 2026-07-29 查询到的 upstream `main` 与公开 Issue/PR 状态。
-
-否则很容易把“上游已实现但本地没升级”“开放提案”“当前 CLI 真正会自动注入的内容”混成一件事。
+源码 checkout 与全局 npm CLI 是两条独立的更新路径；这里只记录它们当前已经对齐。较早版本何时缺少某项能力只保留在同步变更史中，不参与本 FAQ 的当前决策。
