@@ -10,11 +10,11 @@
 
 ```text
 openspec new change add-<capability>          # = propose，脚手架
-# 写 changes/add-<capability>/specs/<capability>/spec.md（## ADDED Requirements ...）
+# 写 changes/add-<capability>/specs/<capability-path>/spec.md（## Purpose + ## ADDED Requirements ...）
 openspec archive add-<capability> -y          # archive 发现目标 spec 不存在 → buildSpecSkeleton 建第一个 spec
 ```
 
-`archive` 在 `findSpecUpdates` 时发现 `openspec/specs/<capability>/` 不存在，就用 `buildSpecSkeleton` 生成一个带 `## Purpose`（占位 TBD，记得补）+ 你 ADDED 的 requirements 的全新 spec（机理见 `01`）。**所以"建 spec"就是"写一个全 ADDED 的 change 再 archive"。**
+`archive` 在 `findSpecUpdates` 时发现 `openspec/specs/<capability-path>/` 不存在，就用 `buildSpecSkeleton` 生成一个带 `## Purpose` + 你 ADDED requirements 的全新 spec（机理见 `01`）。v1.7.0 会优先复制 delta 的 `## Purpose`；只有 delta 没有可用 Purpose 时才写 TBD placeholder。**所以"建 spec"就是"写一个全 ADDED、带 Purpose 的 change 再 archive"。**
 
 ## greenfield 采用：给已有代码库补 spec
 
@@ -23,17 +23,18 @@ openspec archive add-<capability> -y          # archive 发现目标 spec 不存
 1. **按 capability切分**：把代码库切成若干"能力"——通常是用户可感知的功能单元或一组命令（如 `context-store`、`initiative`、`cli-view`）。**别按文件/目录切，按 capability切**（一个能力可能跨多个文件）。
 2. **逐个、增量地补**：每个 capability一个 change（`add-<capability>-spec`），写 `## ADDED Requirements`，如实描述**已发运**的行为，然后 archive。**别想一次把全库写成 spec**——那是注定失败的瀑布。
 3. **按优先级排**：先补最常被 agent 误读、最活跃的能力；边缘的、内部机制的后补或不补。
-4. **每个 archive 后补 `## Purpose`**（占位是 `TBD - ...`）。
+4. **在每个新 capability 的 delta 中先写 `## Purpose`**；archive 会带入 main spec。若历史 delta 已生成 TBD placeholder，再补 main spec 的 Purpose。
 
 模板（archive 自校验，不必单跑 validate）：
 
 ```bash
 openspec new change add-<capability>-spec
-# changes/add-<capability>-spec/specs/<capability>/spec.md：
+# changes/add-<capability>-spec/specs/<capability-path>/spec.md：
+#   ## Purpose（描述这个 capability 的用途）
 #   ## ADDED Requirements
 #   ### Requirement: <行为>   ← SHALL/MUST + ≥1 个 #### Scenario:，描述 src/ 里已发运的行为
 openspec archive add-<capability>-spec -y
-# 补 openspec/specs/<capability>/spec.md 的 ## Purpose
+# 若没写 delta Purpose，补 openspec/specs/<capability-path>/spec.md 的 fallback ## Purpose
 ```
 
 ## 关键判断：哪些该有 spec，哪些不该

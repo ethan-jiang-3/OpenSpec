@@ -13,6 +13,7 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 - completed set
 - change context
 - apply phase config
+- archive operation config
 
 其中最重要的逻辑是：
 
@@ -97,11 +98,12 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。
 - `done`: 输出已存在。
 - `ready`: 依赖已满足，可以开始创建。
 - `blocked`: 依赖未满足，暂时不应创建。
+- `skipped`: schema 的 specs artifact 被 change metadata 中的 `skip_specs: true` 显式跳过。该标记只适用于没有 spec-level 行为变化的 change，且不得与任何非隐藏 delta spec 文件共存。
 
 ### 它影响谁
 
 - 人类用户会据此决定下一步该写 proposal、spec、design 还是 tasks。
-- OPSX 会据此决定 `/opsx:continue` 该推进哪个 artifact。
+- 宿主 workflow 会据此决定下一步该推进哪个 artifact（例如 Claude 的 `/opsx:continue` 或 Codex 的 `$openspec-continue-change`）。
 - apply 阶段的入口判断也依赖这个状态背景。
 
 ### 它帮助什么
@@ -203,12 +205,13 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。
 - tracking file 路径
 - 当前已存在的 artifact 输出文件
 - tasks 文件内容
+- project `context` 和 `operations.apply.guidance`
 
 ### 内部处理
 
 它主要做六件事：
 
-1. 读取 schema 的 apply 配置。
+1. 读取 schema 的 apply 配置，以及 operation 层的 `context` / `operations.apply.guidance`。
 2. 确认 apply 前置要求需要哪些 artifacts。
 3. 检查这些 prerequisite artifacts 是否已经产生输出。
 4. 收集所有现存 artifact 输出文件作为 context files。
@@ -275,7 +278,11 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。
 
 `instructions apply` 不是“去执行 apply”，而是“编译 apply 的前置条件与实施上下文”。
 
-## 5. `openspec templates`
+## 5. `openspec instructions archive`
+
+v1.7.0 新增的 archive instruction endpoint 也遵循“编译而非执行”的边界：它读取当前 change、解析项目 `context` 和 `operations.archive.guidance`，把 archive workflow 应读的 operation input 交给宿主。它不调用 `archive()`、不写 main specs、也不移动 change。执行动作仍是 `openspec archive <name>` 或宿主 archive skill 在确认后的调用。
+
+## 6. `openspec templates`
 
 ### 本质想干什么
 
@@ -301,7 +308,7 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。
 
 模板系统是 workflow 定义的一部分，而不是隐藏实现细节。`templates` 把它公开了出来，便于观察和诊断。
 
-## 6. `openspec schemas`
+## 7. `openspec schemas`
 
 ### 本质想干什么
 
@@ -334,7 +341,7 @@ OpenSpec workflow 不是硬编码的单一流程，而是由 schema 定义驱动
 - `new change` 创建实例。
 - `status` 读取实例状态。
 - `instructions <artifact>` 编译单步说明。
-- `instructions apply` 编译实施说明。
+- `instructions apply` / `instructions archive` 分别编译实施与归档的 operation input。
 - `templates` 暴露模板解析结果。
 - `schemas` 暴露可用流程定义。
 

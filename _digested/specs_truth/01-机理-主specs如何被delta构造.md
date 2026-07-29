@@ -6,7 +6,7 @@
 
 本章讲清这个论点的前两个支柱（specs 怎么产生、身份是什么）；第三个支柱（没工具对账）在 `02`，修法在 `03`。
 
-主 specs（`openspec/specs/<capability>/spec.md`）不是手写的，是**一路由 delta spec 经 `archive` 累加**出来的；写入主 spec 的确定路径只有 `openspec archive` 一条。理解这一点，后面的失真和修法都是推论。
+主 specs（`openspec/specs/<capability-path>/spec.md`）通常由 delta spec 经 `archive` 累加而来；`openspec archive` 是唯一的**确定性**主 spec 写入 CLI。host 的 sync workflow 也能在 archive 前直接改 main spec，但那是 agent 驱动的智能 merge，随后 archive 会按当前基线做幂等检查。理解这个区分，后面的失真和修法才不会把两条路径混为一谈。
 
 ## 先定位：日常工作流圈里，archive 是哪一步
 
@@ -17,10 +17,10 @@
 ## 整条流水线
 
 ```text
-openspec/changes/<id>/specs/<capability>/spec.md   ← delta（提案要改什么）
+openspec/changes/<id>/specs/<capability-path>/spec.md   ← delta（提案要改什么）
         │   用 ## ADDED / MODIFIED / REMOVED / RENAMED Requirements 表达
         ▼
-   findSpecUpdates()        把每个 delta 文件配对到 openspec/specs/<cap>/spec.md
+   findSpecUpdates()        把每个 delta path 配对到 openspec/specs/<path>/spec.md
         ▼
    buildUpdatedSpec()       按顺序 RENAMED → REMOVED → MODIFIED → ADDED 重写主 spec
         │   匹配键 = normalizeRequirementName(标题) = 标题.trim()
@@ -35,22 +35,22 @@ openspec/changes/<id>/specs/<capability>/spec.md   ← delta（提案要改什�
 | 入口 | 性质 | 是否移动 change 到 archive |
 |------|------|----------------------------|
 | `openspec archive <change>` | **唯一的确定写入 CLI 动词**，原子、fail-fast | 是 |
-| `/opsx:sync`（agent skill） | LLM 读 delta + 主 spec 再对齐，非确定、幂等 | 否（它只改 spec） |
+| host 的 sync workflow（Codex: `$openspec-sync-specs`；Claude command adapter 常显示 `/opsx:sync`） | LLM 读 delta + 主 spec 再对齐，非确定、幂等 | 否（它只改 spec） |
 
-> 注意：**没有 `openspec apply` 命令**。`applySpecs()` 是 `archive` 内部调用的引擎函数，不是一个对外 CLI 动词（`src/cli/index.ts` 里 `.command('archive')` 有、`.command('apply')` 没有）。对外能"写主 spec"的，确定路径就 `archive` 一条；想跳过 archive 的 rigid 合并、做更灵活的整段重写，走 `/opsx:sync`（它本质是让 agent 手动改 spec）。
+> 注意：**没有 `openspec apply` 命令**。`applySpecs()` 是 `archive` 内部调用的引擎函数，不是一个对外 CLI 动词（`src/cli/index.ts` 里 `.command('archive')` 有、`.command('apply')` 没有）。对外能以确定规则写主 spec 的路径就 `archive` 一条；想在归档前做更灵活的整段重写，走 host 的 sync workflow（它本质是让 agent 手动改 spec）。
 
 ## 身份模型：两层「以名字为身份」，无稳定 ID
 
 这是整个模型最关键、也最容易被忽略的一点：OpenSpec 用**名字**当身份，分两层，**都没有稳定 ID**。它既是 `archive` 能可靠合并的根基，也是漂移的根源（见 `02`）。
 
-> 驱动这套契约的是 **spec-driven schema**（OpenSpec 默认、最常见的 schema，背后的 driver）——`schemas/spec-driven/schema.yaml` 把 capability 目录名定为 proposal↔specs 的 "critical contract"。结构字段级详解见 `../schema/02-内置-spec-driven-详解.md`；高手建议读一遍 schema 原文。
+> 驱动这套契约的是 **spec-driven schema**（OpenSpec 默认、最常见的 schema，背后的 driver）——`schemas/spec-driven/schema.yaml` 把 proposal↔specs 的 capability path 定为 "critical contract"。结构字段级详解见 `../schema/02-内置-spec-driven-详解.md`；需要采用 nested layout 时，建议同时读 v1.7.0 的 `src/utils/spec-discovery.ts`。
 
-### 第一层：capability 身份 = 目录名
+### 第一层：capability 身份 = `specs/` 下的相对路径
 
-一个 capability 的身份，是它在 `openspec/specs/` 下那个 **kebab-case 目录名**。它承担四个角色：main specs 的组织单位、proposal↔specs 的契约（schema 写死）、delta 的靶心（`changes/<id>/specs/<cap>/` 打 `specs/<cap>/`，**同名才命中**）、以及它唯一的"身份"。
+一个 capability 的身份，是它在 `openspec/specs/` 下的**相对目录路径**，例如 `auth` 或 `identity/session`。它承担四个角色：main specs 的组织单位、proposal↔specs 的契约、delta 的靶心（`changes/<id>/specs/<path>/` 打 `specs/<path>/`，**相对路径相同才命中**）、以及它唯一的"身份"。nested path 是 namespace，不含父子继承或自动 retrieval。
 
-- **没有 ID** ⇒ 一个 capability 全靠这行目录名维系。
-- **capability 没有 rename 操作**——requirement 有 `## RENAMED`，capability 没有任何对应物；改名只能裸搬目录，指向旧名的 delta 全悬空（见 `02` 信号①、`03` 纪律、`06` 缺口）。
+- **没有 ID** ⇒ 一个 capability 全靠这条相对路径维系。
+- **capability 没有 rename 操作**——requirement 有 `## RENAMED`，capability 没有任何对应物；改 path 只能裸搬目录，指向旧 path 的 delta 会失配（见 `02` 信号①、`03` 纪律、`06` 缺口）。
 
 ### 第二层：requirement 身份 = 标题文本
 
@@ -67,7 +67,7 @@ export function normalizeRequirementName(name: string): string {
 
 - **没有 ID** ⇒ 一个 requirement 的一生，全靠这行标题文本维系。
 - **只 trim** ⇒ 改一个字母的大小写、换个标点，规范化都"消化不掉"，会被当成**另一个** requirement。
-- delta 的 `MODIFIED`/`REMOVED`/`RENAMED` 要命中主 spec 里的 requirement，靠的就是用这行标题文本去 `Map` 里精确查找。找不到就失败（见 `04`）。
+- delta 的 `MODIFIED`/`REMOVED`/`RENAMED` 要命中主 spec 里的 requirement，靠的就是用这行标题文本去 `Map` 里精确查找。v1.7.0 只对已同步完成的 REMOVED/RENAMED 放宽为 no-op；其余找不到仍需诊断（见 `04`）。
 
 一个容易踩的细节：**delta 的段落标题大小写不敏感，但 requirement 名字的大小写敏感**。
 
@@ -86,16 +86,16 @@ delta 文件用 `##` 级段头声明操作，每个操作里用 `### Requirement
 
 | 操作 | 写法 | archive 时怎么作用 |
 |------|------|--------------------|
-| **ADDED** | 整个 `### Requirement:` 块（正文 + ≥1 个 `#### Scenario:`） | 按名字插入；同名已存在则报 `already exists` |
+| **ADDED** | 整个 `### Requirement:` 块（正文 + ≥1 个 `#### Scenario:`） | 按名字插入；同名且内容不同报 `already exists`，完全相同则视为已 early-sync 的 no-op |
 | **MODIFIED** | 整个 `### Requirement:` 块（完整新版本） | **整块替换**：丢掉旧块、在同名位置塞入新块。不是 diff/patch |
-| **REMOVED** | 只要名字（`### Requirement: <Name>` 或 bullet `- `### Requirement: <Name>``） | 按名字删除；找不到则报 `not found` |
+| **REMOVED** | 只要名字（`### Requirement: <Name>` 或 bullet `- `### Requirement: <Name>``） | 按名字删除；已不存在时以 warning 视为已 early-sync 的 no-op，大小写/空白 near-miss 仍报错 |
 | **RENAMED** | `FROM: `### Requirement: 旧```<br>`TO:   `### Requirement: 新``` | 改名；可配合一个指向**新名**的 MODIFIED。对**旧名**做 MODIFIED 是错的 |
 
 合并顺序是写死的：**RENAMED → REMOVED → MODIFIED → ADDED**（`src/core/specs-apply.ts` 的注释 `Apply operations in order: RENAMED → REMOVED → MODIFIED → ADDED`）。先改名、再删、再改、最后增，这样各操作不会互相踩。
 
 ## 原子性与 fail-fast
 
-`buildUpdatedSpec` 对**单个 spec** 是 fail-fast 的：任何一个 MODIFIED/REMOVED/RENAMED 找不到目标，立刻抛错；`archive` 捕获后打印错误、输出 `Aborted. No files were changed.`，**整次 archive 回滚**，change 不移动、spec 不改动。
+`buildUpdatedSpec` 对**真实冲突**是 fail-fast 的：MODIFIED 找不到目标、内容不同的 ADDED 重名、RENAMED 两端都不存在，或 requirement 只有大小写/空白近似但不精确，都会抛错；`archive` 会在写入前中止并输出 `Aborted. No files were changed.`，change 不移动、spec 不改动。v1.7.0 例外是已 early-sync 的完全一致操作：它们按 no-op 处理，不应被误诊为 archive 冲突。
 
 这是真实抓到的一次（本 repo 的 `simplify-skill-installation`）：
 
@@ -142,6 +142,8 @@ Aborted. No files were changed.
 | **唯一改写器** | `src/core/specs-apply.ts` — `buildUpdatedSpec` |
 | 合并顺序 RENAMED→REMOVED→MODIFIED→ADDED | `src/core/specs-apply.ts`（`Apply operations in order` 注释处） |
 | delta→主 spec 配对 | `src/core/specs-apply.ts` — `findSpecUpdates` |
+| recursive capability discovery | `src/utils/spec-discovery.ts` — `discoverSpecFiles` |
+| BOM / fenced code 解析边界 | `src/core/parsers/requirement-blocks.ts`、`src/core/parsers/code-fence.ts` |
 | 落盘 | `src/core/specs-apply.ts` — `writeUpdatedSpec` |
 | 内部引擎（被 archive 调用） | `src/core/specs-apply.ts` — `applySpecs` |
 | archive 流程（原子、移动 change） | `src/core/archive.ts` |

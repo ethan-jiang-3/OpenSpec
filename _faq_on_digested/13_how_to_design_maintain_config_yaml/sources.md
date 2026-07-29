@@ -6,13 +6,13 @@
 
 | 来源 | 支撑的结论 |
 |---|---|
-| [`src/core/project-config.ts`](../../src/core/project-config.ts) | 解析的 `schema`、`context`、`rules`、`references`、`store`；`config.yaml` 优先于 `.yml`；50 KiB context；逐字段 fail-open；未知顶层字段不会进入返回 config。 |
+| [`src/core/project-config.ts`](../../src/core/project-config.ts) | 解析的 `schema`、`context`、`rules`、`operations`、`references`、`store`；`config.yaml` 优先于 `.yml`；50 KiB context；逐字段 fail-open；未知顶层字段不会进入返回 config。 |
 | [`src/core/artifact-graph/instruction-loader.ts`](../../src/core/artifact-graph/instruction-loader.ts) | `generateInstructions()` 读取 project config，只取全局 context 与当前 `rules[artifactId]`，并校验 rules key。 |
-| [`src/commands/workflow/instructions.ts`](../../src/commands/workflow/instructions.ts) | artifact instructions 的渲染顺序；`generateApplyInstructions()` 使用 schema apply instruction、artifacts contextFiles 和 references，但不携带 context/rules。 |
+| [`src/commands/workflow/instructions.ts`](../../src/commands/workflow/instructions.ts) | artifact instructions 的渲染顺序；Apply/Archive instructions 使用 schema/artifacts 与 operation input：project context、`operations.apply/archive.guidance`；artifact rules 仍只属于 artifact instructions。 |
 | [`schemas/spec-driven/schema.yaml`](../../schemas/spec-driven/schema.yaml) | 默认 artifact DAG、artifact instruction、dependencies、template 与 `apply` 的结构。 |
-| [`src/core/templates/workflows/explore.ts`](../../src/core/templates/workflows/explore.ts) | Explore 是 stance；其常规路径使用 `list/status` 和按需 artifact 读取，而不是 artifact instructions 注入。 |
+| [`src/core/templates/workflows/explore.ts`](../../src/core/templates/workflows/explore.ts) | Explore 是 stance；其常规路径使用 `list/status` 和按需 artifact 读取，同时读取 project context/rules；没有 Explore operation guidance。 |
 | [`src/core/templates/workflows/apply-change.ts`](../../src/core/templates/workflows/apply-change.ts) | apply skill 要求依据 `contextFiles` 读取 change artifacts。 |
-| [`src/core/templates/workflows/archive-change.ts`](../../src/core/templates/workflows/archive-change.ts) | archive 使用 status、tasks、delta specs 的 workflow 行为。 |
+| [`src/core/templates/workflows/archive-change.ts`](../../src/core/templates/workflows/archive-change.ts) | archive 使用 status、tasks、delta specs 和 `instructions archive` 的 workflow 行为。 |
 | [`src/utils/change-metadata.ts`](../../src/utils/change-metadata.ts) | schema 解析优先级：显式参数 → `.openspec.yaml` → project config → default。 |
 | [`src/utils/change-utils.ts`](../../src/utils/change-utils.ts) | new change 对 `config.schema` 的读取，以及 schema 名称写入 metadata 的行为。 |
 | [`src/core/root-selection.ts`](../../src/core/root-selection.ts) | `store:` 仅对 config-only 目录充当 pointer；本地 planning shape 优先，pointer 配置字段不会成为有效项目配置。 |

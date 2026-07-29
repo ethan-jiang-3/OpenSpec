@@ -17,6 +17,8 @@
 
 主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。
 
+> **v1.7.0 当前边界。** capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`。
+
 ![Archive-ready 到 archived 的流程](figures/archive-ready-to-archived.svg)
 
 图中编号说明：
@@ -27,12 +29,12 @@
 | ARC-02 | verify change dirs | 检查 `openspec/changes/` 和目标 change 目录存在。 |
 | ARC-03 | validation pass | 验证 `proposal.md` 和 delta specs；delta spec ERROR 会阻塞 archive。 |
 | ARC-04 | task progress warning | 读取 `tasks.md`，统计 checkbox；未完成 tasks 会 warning 并要求确认。 |
-| ARC-05 | find spec updates | 扫描 `change/specs/*/spec.md`，映射到主 `openspec/specs/*/spec.md`。 |
+| ARC-05 | find spec updates | 递归扫描 `change/specs/<capability-path>/spec.md`，映射到主 `openspec/specs/<capability-path>/spec.md`。 |
 | ARC-06 | confirm spec updates | 如果有 spec updates，除 `--yes` 外会询问是否更新主 specs。 |
 | ARC-07 | prepare rebuilt specs | 对所有 delta specs 先调用 `buildUpdatedSpec()`，写入前完成预构建。 |
 | ARC-08 | apply delta operations | 按 RENAMED → REMOVED → MODIFIED → ADDED 合并 requirement blocks。 |
 | ARC-09 | validate rebuilt specs | 写入前调用 `validateSpecContent()` 验证 rebuilt 主 spec。 |
-| ARC-10 | write main specs | 把 rebuilt 内容写回 `openspec/specs/<capability>/spec.md`。 |
+| ARC-10 | write main specs | 把 rebuilt 内容写回 `openspec/specs/<capability-path>/spec.md`。 |
 | ARC-11 | archive target check | 生成 `YYYY-MM-DD-<change>`，检查目标 archive 目录是否已存在。 |
 | ARC-12 | move change dir | 创建 archive 目录并移动 active change；必要时 copy + remove fallback。 |
 | ARC-13 | archive summary | 输出 change 已归档和 spec update totals。 |
@@ -107,7 +109,7 @@ proposal validation 是信息性的：不通过会打印 warning，但不会阻�
 如果 change 下存在 delta-formatted specs：
 
 ```text
-openspec/changes/<change>/specs/<capability>/spec.md
+openspec/changes/<change>/specs/<capability-path>/spec.md
 ```
 
 并且内容里有：
@@ -164,13 +166,13 @@ findSpecUpdates(changeDir, mainSpecsDir)
 它扫描：
 
 ```text
-openspec/changes/<change>/specs/<capability>/spec.md
+openspec/changes/<change>/specs/<capability-path>/spec.md
 ```
 
 并映射到：
 
 ```text
-openspec/specs/<capability>/spec.md
+openspec/specs/<capability-path>/spec.md
 ```
 
 每个 `SpecUpdate` 记录：
@@ -181,7 +183,7 @@ target  main baseline spec
 exists  target 是否已存在
 ```
 
-如果没有 change specs，archive 仍然可以完成，只是不会更新主 specs。
+如果没有 change specs，archive 仍然可以完成，只是不会更新主 specs。v1.7.0 还允许 metadata 明确声明 `skip_specs: true` 来表达“没有 spec-level 行为变化”；它不得与非隐藏 delta spec 文件共存，不能拿来跳过真实行为变更。
 
 ## Step 6：确认是否更新主 specs
 
@@ -298,7 +300,7 @@ Applying changes to openspec/specs/user-auth/spec.md:
 
 多 capability change 会输出 totals。
 
-这一步之后，`openspec/specs/` 代表新的 formal baseline。后续 explore/propose 都应该以这里为当前 capability 基线。
+这一步之后，`openspec/specs/` 代表新的 formal baseline。对新 capability，delta 中可读的 `## Purpose` 会随 archive 写入新 main spec；只有缺失或不可读时才回退 TBD placeholder，既有 main spec 的 Purpose 不会被 delta 覆盖。后续 explore/propose 都应该以这里为当前 capability 基线。
 
 ## Step 11：生成 archive 目标并检查冲突
 
@@ -328,7 +330,7 @@ Archive 'YYYY-MM-DD-<changeName>' already exists.
 
 这时不会覆盖已有 archive。
 
-> **v1.6.0 变更**：CLI 现在会检测 change name 是否已有 `YYYY-MM-DD-` 前缀——如果有就不再叠加一层（防止 `2026-07-21-2026-06-14-add-oauth` 这种堆叠）。同时也修复了已 sync 的 RENAMED delta 被误判为错误、scenario-drift 在多个 change 同时修改同一 capability 时的检测遗漏等问题。
+> **v1.7.0 归档/同步边界。** 完全一致的 early-synced ADDED、MODIFIED、REMOVED、RENAMED 会作为幂等 no-op 被接受；近似命中（大小写、空白或不同内容）仍是错误。archive JSON 也可返回 warnings。已有日期前缀的 change 不会被再次叠加日期。
 
 ## Step 12：移动 change 目录
 
@@ -362,7 +364,7 @@ openspec/changes/archive/YYYY-MM-DD-<change>/
 
 ## Step 14：为什么 `/opsx:archive` 看起来不一样
 
-`/opsx:archive` 是 agent 模板，不是 `ArchiveCommand.execute()` 的逐字封装。
+Claude 的 `/opsx:archive` 是 agent 模板，不是 `ArchiveCommand.execute()` 的逐字封装；Codex 的对应入口是 `$openspec-archive-change`。
 
 模板会先做：
 
@@ -371,6 +373,7 @@ openspec status --change "<name>" --json
 artifact completion check
 
 delta spec sync assessment
+openspec instructions archive --change "<name>" --json
 ```
 
 它还可能调用 `openspec-sync-specs` 做 agent-driven sync。这个 sync 路径和 CLI 的 programmatic `buildUpdatedSpec()` 不同：agent 会读 delta spec 和 main spec，然后智能合并。
@@ -382,7 +385,7 @@ delta spec sync assessment
 | 路径 | 负责什么 |
 |---|---|
 | `openspec archive` CLI | 程序化 validate、merge、move。 |
-| `/opsx:archive` 模板 | 指导 agent 做 status/sync assessment/user confirmation/move。 |
+| 宿主 archive 模板 | 指导 agent 做 archive instructions、status/sync assessment/user confirmation/move。 |
 | `openspec-sync-specs` 模板 | agent-driven spec merge，可独立于 archive 调用。 |
 
 本 FAQ 的主线是 CLI；OPSX 差异见 [`answer-arc-opsx.md`](answer-arc-opsx.md)。
@@ -419,7 +422,7 @@ delta spec sync assessment
 
 ## 参考来源
 
-源码引用基于 commit `487ea92`：
+源码引用以 v1.7.0 tag `4e16790` 为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

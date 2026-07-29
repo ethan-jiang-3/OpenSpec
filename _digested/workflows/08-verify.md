@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/verify-change.ts` → `getVerifyChangeSkillTemplate()` + `getOpsxVerifyCommandTemplate()`
 
-> **用户怎么调**：`/opsx:verify [change-name]`
+> **调用方式**：command adapter 可为 `/opsx:verify [change-name]`；Codex v1.7.0 用 `$openspec-verify-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-verify-change`（skill）/ `OPSX: Verify`（command）
 > **独立 CLI 命令**：有类似功能的 `openspec validate`，但两者不同——`validate` 检查 OpenSpec 文档结构（CLI 程序化），verify 检查代码实现是否与 artifacts 一致（agent 智能审查）。
 > **profile**：custom（需显式启用，不在默认 core 里）
@@ -26,7 +26,7 @@ template 硬编码了三维验证结构：
 ## CLI 命令调用序列
 
 ```text
-1. [可选] openspec list --json              # 选 change
+1. [可选] 显式名称 → 对话推断 → 唯一 active change 自动选择；仅歧义时 `openspec list --json`
 2. openspec status --change "<name>" --json  # 读 schema 和 artifacts
 3. openspec instructions apply --change "<name>" --json  # 获取 contextFiles
 4. [agent 读全部 contextFiles]
@@ -48,7 +48,8 @@ sequenceDiagram
     rect rgb(240, 248, 255)
         Note over MD,FS: Step 1-3 · 加载上下文
         opt 无 name
-            MD->>TS: openspec list --json
+            MD->>MD: 若唯一 active change，自动选择
+            MD->>TS: 仅歧义时 openspec list --json
             TS-->>MD: active changes
             MD-->>User: 选择 change
         end

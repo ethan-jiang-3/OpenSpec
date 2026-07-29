@@ -184,7 +184,7 @@ Issue #901 / PR #902 已经覆盖了前两步和可选 sub-agent 的思路。它
 - [`../../_digested/specs_truth/03-手段清单-到底有多少种修法.md`](../../_digested/specs_truth/03-手段清单-到底有多少种修法.md) 与 [`06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md) — 没有 reconcile、全局审计、稳定 requirement ID 或 capability rename。
 - [`../../_digested/specs_truth/_research-main-spec-context-growth.md`](../../_digested/specs_truth/_research-main-spec-context-growth.md) — 对上游 `main`、#901、PR #700 / #902 与 #872 的逐项核验底稿。
 - [`../../_digested/_change_log/0004-v1.6.0-to-v1.7.0.md`](../../_digested/_change_log/0004-v1.6.0-to-v1.7.0.md) — v1.7.0 的正式发布与本 checkout 的源码合入；recursive spec discovery 已成为当前基线。
-- [`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md) — config、references 和各 workflow 的上下文路由边界（基线 `af94ff8`）。
+- [`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md) — config、references 和各 workflow 的上下文路由边界（基线 v1.7.0 tag `4e16790`）。
 - [`../../_digested/mechanisms/01-store-模型与仓库协同.md`](../../_digested/mechanisms/01-store-模型与仓库协同.md) — external references 的 index-not-inline 模型。
 - [`../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md) — config / specs / changes 三层分工。
 - `src/utils/spec-discovery.ts`、`src/utils/item-discovery.ts`、`src/commands/spec.ts`、`src/core/references.ts`、`src/core/project-config.ts` — 本 checkout 的 recursive spec 发现、指定 spec/requirement 读取、external reference index 和 50KB context cap。

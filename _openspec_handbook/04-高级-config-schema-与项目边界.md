@@ -85,16 +85,24 @@ rules:
     - Add unhappy-path scenarios
   design:
     - Explain migration risk
+
+operations:
+  apply:
+    guidance:
+      - Run the relevant checks before marking a task complete.
+  archive:
+    guidance:
+      - Review migration/rollback evidence before archive.
 ```
 
-**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类），不支持纯文本格式。
+**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类），不支持纯文本格式。v1.7.0 的 Apply/Archive 不是 artifact rule consumers：它们读取 project `context` 以及 `operations.apply/archive.guidance`；`rules.apply` / `rules.archive` 不会成为 operation 指令。
 
 ### config.yaml vs schema：对比表
 
 | 维度 | config.yaml | schema |
 |------|-------------|--------|
 | **改的是什么层** | 提示层（告诉 AI 项目背景） | 结构层（定义 change 骨架） |
-| **典型内容** | 技术栈、测试约定、编码规范 | artifact 种类、依赖关系、模板路径 |
+| **典型内容** | 技术栈、测试约定、artifact rules、Apply/Archive guidance | artifact 种类、依赖关系、模板路径 |
 | **影响范围** | 所有 change 的生成质量 | change 的结构和工作流 |
 | **修改频率** | 偶尔（项目技术栈变化时） | 很少（工作流模式变化时） |
 | **类比** | 项目的 README | 项目的 Makefile 或 package.json scripts |
@@ -159,7 +167,7 @@ schema 不是数据库 schema，也不只是 template。
 - 谁依赖谁
 - apply 追踪哪份文件
 
-默认的 **`spec-driven`** schema 看起来像这样。它就是 `config.yaml` 里 `schema: spec-driven` 指向的那个——定义 artifact DAG、delta 操作、以及 proposal↔specs 的能力契约，是背后的 driver。想看它怎么用"目录名"给 capability 定身份，见 [`09-高级-能力身份与specs漂移维护`](09-高级-能力身份与specs漂移维护.md)：
+默认的 **`spec-driven`** schema 看起来像这样。它就是 `config.yaml` 里 `schema: spec-driven` 指向的那个——定义 artifact DAG、delta 操作、以及 proposal↔specs 的能力契约，是背后的 driver。capability 身份是 `specs/` 下的相对 path（可嵌套），见 [`09-高级-能力身份与specs漂移维护`](09-高级-能力身份与specs漂移维护.md)：
 
 ```yaml
 artifacts:

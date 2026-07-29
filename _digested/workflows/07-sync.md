@@ -4,11 +4,11 @@
 
 `src/core/templates/workflows/sync-specs.ts` → `getSyncSpecsSkillTemplate()` + `getOpsxSyncCommandTemplate()`
 
-> **用户怎么调**：`/opsx:sync [change-name]`
+> **调用方式**：command adapter 可为 `/opsx:sync [change-name]`；Codex v1.7.0 用 `$openspec-sync-specs`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-sync-specs`（skill）/ `OPSX: Sync`（command）
-> **独立 CLI 命令**：无——sync 是纯 agent-driven merge，和 `openspec archive` CLI 的 programmatic merge 是两条独立路径。sync 也被 `/opsx:archive` 内部调用（sync assessment 阶段）。
+> **独立 CLI 命令**：无——sync 是纯 agent-driven merge，和 `openspec archive` CLI 的 programmatic merge 是两条独立路径。sync 也会被 host archive workflow inline 调用（sync assessment 阶段）。
 > **profile**：core（大多数用户默认可见）
-> **v1.6.0 变更**：main spec 路径改用 store-aware `planningHome.root`（`<planningHome.root>/openspec/specs/`），不再硬编码为当前 repo 路径。当 store 指向非当前 repo 时，main specs 在 store 位置而不是 repo 位置。
+> **v1.7.0 要点**：main spec 路径使用 store-aware `planningHome.root`（`<planningHome.root>/openspec/specs/`）；status 提供的 delta path 可为 nested capability path；sync 在写前读取一次 `openspec instructions specs`，把返回的 artifact rules 只用于被写入 main specs 的内容/形式。
 
 ## 一句话
 
@@ -59,9 +59,9 @@ sequenceDiagram
     rect rgb(255, 240, 255)
         Note over MD,FS: Step 4 · 逐 capability 智能合并
         loop 每个 delta spec
-            MD->>FS: 读 change/specs/<capability>/spec.md
+            MD->>FS: 读 change/specs/<capability-path>/spec.md
             FS-->>MD: ADDED/MODIFIED/REMOVED/RENAMED
-            MD->>FS: 读 openspec/specs/<capability>/spec.md<br/>（路径用 <planningHome.root>，store-aware）
+            MD->>FS: 读 openspec/specs/<capability-path>/spec.md<br/>（路径用 <planningHome.root>，store-aware）
             FS-->>MD: main spec（或不存在）
             MD->>MD: 智能合并：<br/>• ADDED → 追加或更新<br/>• MODIFIED → 只改提到的部分<br/>  保留未提及的 scenario<br/>• REMOVED → 删除整个 block<br/>• RENAMED → FROM→TO
             MD->>FS: 写回 main spec
@@ -96,6 +96,8 @@ Unlike programmatic merging, you can apply partial updates:
 | If something is unclear, ask for clarification | 不猜 |
 | Show what you're changing as you go | 透明 |
 | Should be idempotent | 跑两次结果一样 |
+| New capability Purpose | 将 delta `## Purpose` 复制到新 main spec；已有 main spec 的 Purpose 保持权威 |
+| Specs rules only constrain spec content | 不把 `rules.specs` 当 archive/selection guidance |
 
 ## 和 archive template 的关系
 

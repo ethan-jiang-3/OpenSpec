@@ -45,7 +45,7 @@ next_read:
 2. 检查当前 change 的 `.openspec.yaml`；它可能记录了与 `config.schema` 不同的 schema 名称。
 3. 确定需求的消费者是 planning artifact、Apply、Explore/Archive、references，还是 checker/test。
 4. 运行 `openspec instructions <artifact-id> --change <change> --json`，检查 `context`、`rules`、dependencies 和 references。
-5. 单独运行 `openspec instructions apply --change <change> --json`；Apply 不会重新收到 `context`/`rules`。
+5. 单独运行 `openspec instructions apply --change <change> --json` 与 `openspec instructions archive --change <change> --json`；二者会收到 `context` 和各自的 `operations.*.guidance`，但不会收到 artifact rules。
 6. 运行 `openspec status --change <change> --json`，核对实际 schema、artifact 状态和后续路径。
 
 `<artifact-id>` 必须是当前 schema 的真实 artifact ID；不能用 `apply` 代替它。
@@ -55,12 +55,12 @@ next_read:
 | 症状 | 常见根因 | 正确修正 |
 |---|---|---|
 | `context` 或 rule 完全不出现 | 编辑了非生效 root、被 `.yaml` 覆盖的 `.yml`、字段被 parser 丢弃，或 rule key 不属于当前 schema | 按 root/schema/instructions JSON 定位后，再修改有效文件与合法 key。 |
-| `rules.tasks` 写得很好，但 Apply 没有遵守 | Apply 本来就不接收 `context`/`rules` | 稳定 Apply 行为移到 schema `apply.instruction`；这次 change 的动作和证据写入 tasks/artifacts。 |
-| Explore 或 Archive 没有遵守一条 config 规则 | 它们不调用 artifact instructions | 将专属行为移到 workflow skill、`AGENTS.md`、playbook 或 checker。 |
+| `rules.tasks` 写得很好，但 Apply 没有遵守 | Apply 不接收 artifact rules | 稳定项目 guidance 移到 `operations.apply.guidance`；gate/结构移到 schema `apply.instruction`；本次动作和证据写入 tasks/artifacts。 |
+| Explore 或 Archive 没有遵守一条 config 规则 | Explore 只读 context/rules，Archive 不读 artifact rules | Archive 的短稳定步骤移到 `operations.archive.guidance`；Explore/复杂专属行为用 workflow skill、`AGENTS.md`、playbook 或 checker。 |
 | 改了 `config.schema`，活跃 change 仍选择旧名称 | change metadata `.openspec.yaml` 中记录的 schema 名称优先 | 新 change 使用新默认值；既有 change 要显式改名迁移并验证，不要期待隐式切换。注意 metadata 不保存 schema 内容；修改同名 schema 定义仍可能影响既有 change。 |
 | `openspec schema init --default` 后默认 schema 没变 | 当前命令写入的 `defaultSchema` 没有被 project config 消费者读取 | 手动写 `schema: <name>`，再以新 change 的 `.openspec.yaml` 验证。 |
 | `store:` 指向外部 store，但本地 guidance 仍被使用 | 本地 planning shape 让 local root 胜出 | 移除歧义：使用 config-only pointer，或把 guidance 放到真正选中的 local/store root。 |
-| 新增 `guidance:`、`apply_rules:` 等字段后没有效果 | 未支持的顶层 key 被静默忽略 | 使用现有 placement，或先实现可验证的 OpenSpec feature。 |
+| 新增 `guidance:`、`apply_rules:`、`operations.explore:` 等字段后没有效果 | 未支持的顶层 key/operation 被静默忽略 | 使用 `operations.apply/archive.guidance` 或现有 placement，或先实现可验证的 OpenSpec feature。 |
 
 ## schema 与多 schema 的维护规则
 
@@ -86,7 +86,7 @@ next_read:
 1. 确认实际 root、`config.yaml`/`.yml` 优先级，以及 `store:` 没有与本地 planning shape 冲突。
 2. 检查每个活跃 change 的 schema 与 rule keys 是否兼容。
 3. 对代表性 change 运行 `openspec instructions <artifact-id> --change <change> --json`，确认只出现预期 `context`/`rules`。
-4. 运行 `openspec instructions apply --change <change> --json`，确认 Apply guidance 真正来自 schema/artifacts。
+4. 运行 `openspec instructions apply --change <change> --json` 和 `openspec instructions archive --change <change> --json`，确认 operation guidance 来自正确的 `operations` 字段，而 artifact rules 没有误当作 operation input。
 5. 运行 `openspec status --change <change> --json`，确认 schema、artifact 状态和后续步骤。
 6. 检查 stderr 的 YAML、50 KiB、unknown artifact ID 或 ignored `store:` warning。
 7. 运行硬规则对应的 checker/test/CI；“prompt 已出现”不是验收证据。

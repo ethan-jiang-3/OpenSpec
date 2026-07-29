@@ -19,16 +19,17 @@
 | `init` | 人类 + 工具集成 | 项目路径、global config、工具目录 | `openspec/` 基础设施、skills/commands、安装报告 | 决定外部工具能否使用 OpenSpec 工作流 | 是 |
 | `update` | 人类 + 工具集成 | 当前版本、配置、已配置工具 | 更新后的 skills/commands、同步报告 | 决定工具侧工作流是否与配置一致 | 是 |
 | `list` | 人类 + 机器 | changes/specs 目录、task progress、mtime | 列表或 JSON 索引 | 帮助选择目标 change/spec | 否 |
-| `view` | 人类 | 项目中的 changes/specs | 交互式 dashboard | 改善浏览体验 | 否 |
+| `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard | 改善浏览体验 | 否 |
 | `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON | 帮助人工审阅和调试解析结果 | 否 |
 | `validate` | 人类 + 机器 | change delta specs、正式 specs | 合法性报告、退出码 | 决定是否需要修复、是否适合 archive | 否 |
 | `archive` | 人类 + OPSX | change 内容、主 specs、validate 结果 | 更新后的 specs、archive 目录、报告 | 结束 change 生命周期 | 是 |
 | `config` | 人类 | global config、workflow 选择 | 配置变更与摘要 | 影响后续 `init/update` 投递结果 | 是 |
 | `schema` | 高级用户/作者 | schema 搜索路径、schema.yaml、templates | schema 列表、校验结果、脚手架 | 改变 workflow 定义层 | 可能 |
 | `new change` | 人类 + OPSX | change 名称、schema、项目根目录 | 新建 change 目录与元数据 | 开启一个新的 workflow 实例 | 是 |
-| `status` | 人类 + OPSX | schema、artifact graph、已存在输出文件 | artifact 状态图 | 决定下一步应推进哪个 artifact | 否 |
+| `status` | 人类 + agent workflow | schema、artifact graph、已存在输出文件、`skip_specs` metadata | artifact 状态图（可含 `skipped`） | 决定下一步应推进哪个 artifact | 否 |
 | `instructions <artifact>` | OPSX + 高级用户 | change context、template、rules、dependencies | artifact instruction 包 | 影响 artifact 文档生成质量与顺序 | 否 |
-| `instructions apply` | OPSX + 高级用户 | apply config、context files、tasks | apply instruction 包 | 决定是否进入代码实施阶段 | 否 |
+| `instructions apply` | agent workflow + 高级用户 | apply config、context files、tasks、project context、operation guidance | apply instruction 包 | 决定是否进入代码实施阶段 | 否 |
+| `instructions archive` | agent workflow + 高级用户 | change、project context、`operations.archive.guidance` | archive operation input | 为 archive skill 提供只读指引 | 否 |
 | `templates` | 高级用户/工具 | schema 解析路径、artifact templates | 模板路径与来源 | 帮助调试模板覆盖与解析 | 否 |
 | `schemas` | 高级用户/工具 | project/user/package schemas | schema 列表与来源 | 帮助发现可用 workflow 模型 | 否 |
 | `store register` | 人类 | 本地路径、store id、remote（可选） | `~/.openspec/stores/registry.yaml`、`.openspec-store/store.yaml` | 全局注册仓库 checkout | 是 |
@@ -46,7 +47,8 @@
 | `new change` | 名称、schema、项目目录 | 新 change 实例 | 让后续状态与说明命令有上下文可挂载 |
 | `status` | graph、completed outputs | readiness / blockedness | 选择下一步 artifact |
 | `instructions <artifact>` | template、rules、deps、output path | 单个 artifact 的执行包 | 生成 proposal/spec/design/tasks |
-| `instructions apply` | apply config、tasks、context files | apply 工作单 | 决定能否编码与如何编码 |
+| `instructions apply` | apply config、tasks、context files、operation inputs | apply 工作单 | 决定能否编码与如何编码 |
+| `instructions archive` | change、project context、archive guidance | archive operation input | 归档前读取当前指引，不执行归档 |
 | `templates` | schema 目录 | 模板定位信息 | 调试与理解 workflow 定义 |
 | `schemas` | schema 搜索路径 | 可用 schema 列表 | 发现和选择工作流模型 |
 
@@ -57,6 +59,7 @@
 - `status --json`
 - `instructions <artifact> --json`
 - `instructions apply --json`
+- `instructions archive --json`
 - `schemas --json`
 - `templates --json`
 - `list --json`

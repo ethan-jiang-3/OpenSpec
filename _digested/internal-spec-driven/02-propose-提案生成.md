@@ -1,6 +1,6 @@
 # 02 — propose：Proposal 生成
 
-propose 是四条命令中最核心的一条。它执行完整的"从零到可实施"流程：创建 change、按 DAG 顺序逐一生成所有 artifact，直到满足 apply 条件。
+propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用名由宿主决定：Claude 可显示 `/opsx:propose`，Codex v1.7.0 使用 `$openspec-propose-change`。
 
 ---
 
@@ -92,7 +92,7 @@ while (不是所有 applyRequires 中的 artifact 都 done):
 
 **循环终止条件**：`applyRequires` 数组中的每个 artifact ID 在最新 status 中都有 `status: "done"`。
 
-对于 spec-driven schema，`applyRequires: ["tasks"]`，所以需要 proposal → specs → design → tasks 全部完成后才能退出循环。
+对于 spec-driven schema，`applyRequires: ["tasks"]`。正常路径是 proposal 后 specs 与 design 都 ready、二者完成后 tasks ready；v1.7.0 的同级推荐顺序按 schema 声明（specs 在 design 前），但这不是新增 DAG 依赖。
 
 ### Step 5：最终状态展示
 
@@ -129,7 +129,7 @@ openspec status --change "<name>"     # 纯文本模式，给人看
 
 **instruction** (`schema.yaml:10-26`) 强调的关键点：
 - Capabilities 部分是**关键契约** —— 它建立了 proposal 和 specs 阶段之间的连接
-- 每个列出的 capability 需要一个对应的 spec 文件（`specs/<name>/spec.md`）
+- 每个列出的 capability 需要一个对应的 spec 文件（`specs/<capability-path>/spec.md`）；v1.7.0 可以用嵌套 path，如 `identity/session`。
 - "Keep it concise (1-2 pages). Focus on the 'why' not the 'how' — implementation details belong in design.md."
 
 **proposal 在 DAG 中的位置**：`requires: []`，是 DAG 的根节点，立即可做。完成后解锁 specs 和 design。
@@ -177,14 +177,14 @@ TO: ### Requirement: <new-name>
 3. **MODIFIED 必须复制完整的 requirement block**（包括所有 scenario）—— "Common pitfall: Using MODIFIED with partial content loses detail at archive time."
 4. **用 SHALL/MUST** 写规范性需求，避免 should/may。
 5. MODIFIED 的 workflow：
-   > 1. 在 `openspec/specs/<capability>/spec.md` 中找到已有 requirement
+   > 1. 在 `openspec/specs/<capability-path>/spec.md` 中找到已有 requirement
    > 2. 复制完整的 requirement block（从 `### Requirement:` 到所有 scenario）
    > 3. 粘贴到 `## MODIFIED Requirements` 下，编辑以反映新行为
    > 4. 确保 header 文本完全匹配（对空白不敏感）
 
 **specs 在 DAG 中的位置**：`requires: [proposal]`。和 design 并行。完成后（与 design 一起）解锁 tasks。
 
-**generates 的特殊性**：`specs/**/*.md` 是 glob 模式。`detectCompleted()` 用 `fast-glob` 检查 —— 只要 `specs/` 下存在至少一个 `.md` 文件就算完成。这意味着 specs 可以是一个文件（`specs/data-export/spec.md`）也可以是多个（每个 capability 一个目录）。
+**generates 的特殊性**：`specs/**/*.md` 是 glob 模式。`detectCompleted()` 用 `fast-glob` 检查 —— 只要 `specs/` 下存在至少一个 `.md` 文件就算完成。这意味着 specs 可以是一个文件（`specs/data-export/spec.md`）也可以是多个；每个 capability 的身份是 `specs/` 下的相对 path，而不是仅仅末级目录名。change delta 必须用同一相对 path，根级 `changes/<change>/specs/spec.md` 不构成 capability，会被 validate/archive 拒绝。
 
 ### 2.3 design（依赖 proposal，`requires: [proposal]`）
 
@@ -293,6 +293,8 @@ specs done + design done → tasks 入度 0
 4. **遵循 `instruction`**：来自 schema 的指导，比如"specs 的 scenario 必须用 4 个 hashtag"
 5. **写到 `resolvedOutputPath`**：绝对路径，agent 直接写
 
+新 capability 的 delta 可以在 requirements 前写 `## Purpose`；v1.7.0 archive 会把可读 Purpose 带入新 main spec。既有 main spec 的 Purpose 不会被 delta 覆盖；没有可读 Purpose 时才回退占位文字。
+
 **agent 绝对不应该做的事**：
 - 把 `context`、`rules`、`<project_context>` 标签复制到 artifact 文件中
 - 跳过依赖文件不读就创建 artifact
@@ -309,7 +311,7 @@ openspec/changes/<name>/
   .openspec.yaml          ← schema + 创建日期
   proposal.md             ← 为什么做、做什么
   specs/
-    <capability>/spec.md  ← delta spec（ADDED/MODIFIED/REMOVED/RENAMED）
+    <capability-path>/spec.md  ← delta spec（ADDED/MODIFIED/REMOVED/RENAMED，可嵌套）
   design.md               ← 技术方案（如果需要的话）
   tasks.md                ← 实施清单（checkbox 格式）
 ```
@@ -328,4 +330,4 @@ openspec/changes/<name>/
 }
 ```
 
-此时 agent 提示用户："All artifacts created! Ready for implementation. Run `/opsx:apply` to start."
+若这次变更确实没有 spec-level 行为变化，可在 change metadata 中显式写 `skip_specs: true`：specs artifact 会是 `skipped`，tasks/apply 可继续；它不能与任何非隐藏 delta spec 文件共存。否则此时 agent 提示用户开始 apply（Claude 例子为 `/opsx:apply`，Codex 为 `$openspec-apply-change`）。

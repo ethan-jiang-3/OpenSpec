@@ -181,7 +181,7 @@ config 只保留这张稳定 boundary map；每次 change 的实际嵌套、选�
 
 1. 确认每个 `rules` key 是当前 schema 的真实 artifact ID。
 2. 用一个代表性 change 检查 `openspec instructions <artifact-id> --change <change> --json`，确认 profile 和 rule 真的出现。
-3. 单独检查 `openspec instructions apply --change <change> --json`；Apply 不会重新收到 `context`/`rules`。
+3. 单独检查 `openspec instructions apply --change <change> --json` 与 `openspec instructions archive --change <change> --json`；二者会收到 project `context` 与对应 `operations.*.guidance`，但不会收到 artifact rules。
 4. 将运行时不变量交给其 owner 的 schema、validator、test 或 CI，而不是留在 config 的 prose 中。
 
 更细的规则设计见 [`01-design-config-yaml.md`](01-design-config-yaml.md)；配置不生效、schema 切换或 `store:` 问题见 [`02-diagnose-maintain-config-yaml.md`](02-diagnose-maintain-config-yaml.md)。

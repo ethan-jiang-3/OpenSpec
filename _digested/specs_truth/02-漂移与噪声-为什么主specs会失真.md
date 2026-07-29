@@ -2,7 +2,7 @@
 
 ## 主轴（接 `01` 的引擎）
 
-> **specs 只在 `archive` 更新 + requirement 无 ID（身份=标题）+ 没有任何工具持续对账 ⇒ 漂移是默认状态，长期对齐靠人 + 纪律 + 巡检。**
+> **确定性 archive 与 agent sync 都可能更新 main specs；requirement 无 ID（身份=标题），且没有工具持续做 code↔spec 语义对账 ⇒ 漂移仍是默认状态，长期对齐靠人 + 纪律 + 巡检。**
 
 `01` 讲了前两个支柱（specs 怎么产生、身份是什么）。本章讲**第三个支柱——为什么"没有工具持续对账"**，以及这种失真长期下来长什么样（噪声）。
 
@@ -37,13 +37,13 @@ delta 和主 spec 的匹配发生在 `buildUpdatedSpec` 里，**只在 `archive`
 
 ## 噪声长什么样（六类，附本 repo 实证）
 
-> 先说清结构关系：OpenSpec 是**两层「以名字为身份」模型**（见 `01`）——**①（capability 目录名失配）和 ⑥（requirement 标题失配）是同一个 name-as-identity 脆弱在两层的表现**；⑥ 是它最纯的形态（ur-cause，机理层），①③⑤ 是可观察的症状。
+> 先说清结构关系：OpenSpec 是**两层「以名字为身份」模型**（见 `01`）——**①（capability path 失配）和 ⑥（requirement 标题失配）是同一个 name-as-identity 脆弱在两层的表现**；⑥ 是它最纯的形态（ur-cause，机理层），①③⑤ 是可观察的症状。
 
 下面每类都给本 repo 里能直接指认的真实例子（写作时快照，用来对号入座，不是说必须处理）。
 
 ### ① 悬空 delta 目标：active change 指向不存在的 capability
 
-一个 change 的 `specs/<capability>/spec.md` 指向一个 `openspec/specs/` 里**根本没有**的capability 目录——也就是 **capability 身份（=目录名）对不上**：设计了没建、capability 目录被改名（capability 无 rename 操作，改名=裸搬目录）、或早删了。
+一个 change 的 `specs/<capability-path>/spec.md` 指向一个 `openspec/specs/` 里**根本没有**的 capability path——也就是 **capability 身份（=相对路径）对不上**：设计了没建、path 被改名（capability 无 rename 操作，改名=裸搬目录）、或早删了。
 
 本 repo 实例（目标在 `specs/` 中均不存在）：
 
@@ -74,7 +74,7 @@ delta 和主 spec 的匹配发生在 `buildUpdatedSpec` 里，**只在 `archive`
 
 ### ④ 废弃但仍 active 的 change：噪音文件夹
 
-change 已废弃/被 supersede/纯 proposal 没动，却还待在 active `changes/`。共同特征：`openspec validate` 直接报错——多数是 `No deltas found`（只有 `proposal.md`，没 `specs/` delta）。
+change 已废弃/被 supersede/纯 proposal 没动，却还待在 active `changes/`。未声明 marker 的共同特征是 `openspec validate` 报 `No deltas found`（只有 `proposal.md`，没 `specs/` delta）。v1.7.0 的例外是有意没有 spec-level 行为变化的工作：`.openspec.yaml` 写 `skip_specs: true` 后，validate 接受它、status 显示 specs skipped；它不能与任何 delta spec 文件共存。
 
 本 repo 实例：`add-artifact-regeneration-support`、`schema-alias-support`（纯 proposal、代码无实现）；`workspace-agent-guidance` / `workspace-apply-repo-slice` / `workspace-verify-and-archive` / `workspace-reimplementation-roadmap`（proposal 自带 "deferred" 说明，实质已搁置）。
 

@@ -34,7 +34,7 @@ workflow template
 | `archive` | `archive-change.ts` | 收尾归档 |
 | `bulk-archive` | `bulk-archive-change.ts` | 批量归档 |
 | `onboard` | `onboard.ts` | 引导式端到端体验 |
-| `update` | `update-change.ts` | 修订已有 planning artifacts，保持一致性（v1.6.0 新增） |
+| `update` | `update-change.ts` | 修订已有 planning artifacts，保持一致性 |
 
 `profile` 只决定安装哪些 workflow；模板本身定义 agent 的动作顺序和 guardrails。
 
@@ -55,7 +55,7 @@ workflow template
 | `continue` | 不一定 | 一次一个 | 增量 |
 | `ff` | 可用于已有 change | 多个 | 批量推进 |
 
-这四个模板共同解释了 OPSX “动作而非阶段”的体验：用户可以从不同粒度切入同一条 artifact DAG。
+这四个模板共同解释了 agent workflow “动作而非阶段”的体验：用户可以从不同粒度切入同一条 artifact DAG。Claude 的名称可为 `/opsx:*`；Codex v1.7.0 为 `$openspec-*` skills，不能把前者当通用入口。
 
 ## update：修订而非推进（v1.6.0 新增）
 
@@ -71,13 +71,13 @@ workflow template
 
 ## implementation 与 closeout 模板
 
-`apply` 模板消费 `openspec instructions apply` 的结果。它关注 apply gate 是否 blocked、tasks 是否存在、是否有 checkbox、未完成 tasks 列表、implementation 时是否需要更新 artifacts、workspace actionContext 是否允许编辑。具体 apply gate 源码机制见 `../internal-spec-driven/03-apply-实施执行.md`。
+`apply` 模板消费 `openspec instructions apply` 的结果。它关注 apply gate 是否 blocked、tasks 是否存在、是否有 checkbox、未完成 tasks 列表、implementation 时是否需要更新 artifacts；v1.7.0 同时读取项目 `context` 与 `operations.apply.guidance`。artifact `rules.*` 只服务 artifact 生成，不会成为 Apply 的 operation 指令。具体 apply gate 源码机制见 `../internal-spec-driven/03-apply-实施执行.md`。
 
-`sync` 是 agent-driven spec merge，不是 CLI archive。模板要求 agent 选择 change、用 `status` 获取 delta spec path、读取 delta spec 和主 spec、智能应用 ADDED/MODIFIED/REMOVED/RENAMED，并保留 change active。重要 guardrail：如果 `actionContext.mode` 是 `workspace-planning`，当前 sync 不支持 workspace spec sync，必须停止。
+`sync` 是 agent-driven spec merge，不是 CLI archive。模板要求 agent 选择 change、用 `status` 获取 delta spec path、读取 delta spec 和主 spec、智能应用 ADDED/MODIFIED/REMOVED/RENAMED，并保留 change active。main spec root 按 store-aware root selection 解析；不要再把已废止的 `workspace-planning` gate 当作当前 guardrail。
 
 `verify` 用来检查实现是否与 proposal/specs/design/tasks 一致。它不是 `validate` 的替代：`validate` 检查 OpenSpec 文档结构，`verify` 让 agent 审查代码实现、测试、任务完成度和 artifact coherence。
 
-`archive` 模板是 agent 层的收尾操作手册。它会引导 agent 检查是否需要 sync、是否完成 tasks、是否适合调用 CLI archive。**v1.6.0 加固**：sync 必须 inline 执行（不等完成绝不 mv）、sync prompt 新增 Cancel 选项、sync 完成后对全部 capability 重新验证（ADDED/MODIFIED/REMOVED/RENAMED 逐项确认）、main spec 路径改用 store-aware `planningHome.root`。CLI archive 源码机制见 `../internal-spec-driven/04-archive-归档合并.md`。
+`archive` 模板是 agent 层的收尾操作手册。它先读取 `openspec instructions archive --json`（project `context` 与 `operations.archive.guidance`），检查是否需要 sync、是否完成 tasks、是否适合调用 CLI archive；sync 必须 inline 完成并对全部 capability 重新验证后才移动 change。v1.7.0 下，正确 early-sync 的完全一致 delta 会在 archive 中保持幂等 no-op，仍需阻断近似匹配或真实 drift。CLI archive 源码机制见 `../internal-spec-driven/04-archive-归档合并.md`。
 
 `bulk-archive` 面向多个 completed changes。它的风险不在单个 merge 算法，而在选择和确认：哪些 changes 完成、哪些跳过、是否逐个验证、失败时如何报告 partial results。
 
@@ -93,7 +93,7 @@ workflow template
 - expanded workflows 不是新状态机，而是围绕同一套 status/instructions API 的不同操作粒度。
 - template 是跨工具复用的 workflow 语义；tool delivery 再把它投递成不同 agent 的 skill/command 外壳。
 - 修改 template 会改变 agent 行为，即使 TypeScript 源码没有变化，也应当视为产品行为变更。
-- **v1.6.0 template 行为修正**：① propose/continue/ff 现在要求写完 artifact 后**从磁盘重读依赖文件**（不用内存中的旧版本——用户可能已编辑过）；② sync/archive 的 main spec 路径改用 store-aware `planningHome.root`；③ schema instruction 增强——specs 明确为"行为契约"不写实现细节，design Open Questions 语义收紧。
+- **v1.7.0 当前模板契约**：① propose/continue/ff 写完 artifact 后从磁盘重读依赖文件；② 同级 ready artifact 的推荐顺序由 schema 声明顺序决定（内置为 specs 后 design，二者仍可并行）；③ schema artifact `instruction` 是生成时的权威指令；④ `skip_specs: true` 会把 specs 设为显式 skipped，不再把无 spec-level 变化的 change 卡住。
 
 ## 源码锚点
 

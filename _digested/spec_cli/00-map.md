@@ -7,7 +7,7 @@
 更具体一点：
 
 - 对人类来说，它是一个用来初始化、查看、校验、archive change/spec 的工具。
-- 对 OPSX 来说，它是一组稳定的本地协议端点，用来读取状态、获取模板、获取下一步说明、判断能否进入 apply、以及感知 schema。
+- 对 agent workflow 来说，它是一组稳定的本地协议端点，用来读取状态、获取模板、获取下一步说明、判断能否进入 apply/archive、以及感知 schema。
 - 对 IDE / AI 工具集成来说，它还是一个“投递目标”，`init` / `update` 会把工作流模板安装成 skills 或 commands。
 - 对 store operator 来说，它提供跨仓库上下文引用接口，`store register`/`context`/`workset` 负责管理多仓库 spec 引用。
 
@@ -38,7 +38,7 @@
 - `view`
 - `store list` / `context`
 
-### 2. OPSX / AI 工作流
+### 2. Agent / AI 工作流
 
 OPSX 关心的是：
 
@@ -53,6 +53,7 @@ OPSX 关心的是：
 - `status --json`
 - `instructions <artifact> --json`
 - `instructions apply --json`
+- `instructions archive --json`
 - `schemas --json`
 - `templates --json`
 - `list --json`
@@ -113,7 +114,7 @@ Store 的核心设计规则：**上下文引用用 store，实现在 owning repo
 - `loadChangeContext()` 把 change、schema、graph、completed 状态组装成运行时上下文。
 - `generateInstructions()` 把模板、规则、依赖、输出位置编译成 AI 可执行说明。
 
-这一层决定了 workflow 命令的真正价值。v1.5.0 中所有 change 使用 `spec-driven` schema。
+这一层决定了 workflow 命令的真正价值。以 v1.7.0 为当前基线：内置 change 默认使用 `spec-driven` schema，但项目也可以选择或提供自定义 schema；不要把历史版本中的默认值写成所有 change 的永久限制。
 
 ### 4. 工具投递层
 
@@ -132,6 +133,7 @@ Store 的核心设计规则：**上下文引用用 store，实现在 owning repo
 - `openspec status`
 - `openspec instructions <artifact>`
 - `openspec instructions apply`
+- `openspec instructions archive`
 - `openspec new change`
 - `openspec schemas`
 - `openspec templates`

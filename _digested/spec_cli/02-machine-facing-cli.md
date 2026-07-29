@@ -87,6 +87,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - `contextFiles`: 可作为实施上下文的 artifact 输出文件集合
 - `progress`: 任务总数、已完成、剩余
 - `tasks`: 从 tracking file 解析出来的任务项
+- `context` 与 `guidance`：项目 `context` 以及 `operations.apply.guidance`（如有）。它们是 operation input，不是 artifact rules。
 - `missingArtifacts`: 缺少哪些 prerequisite artifacts
 - `instruction`: 当前阶段应执行什么
 
@@ -95,6 +96,10 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - 这是代码实现阶段最关键的桥接接口。
 - 它把文档阶段产物转换成实施阶段输入。
 - 它还负责在不满足前置条件时明确阻止进入 apply。
+
+### `openspec instructions archive --change <name> --json`
+
+作用：为 archive workflow 提供只读 operation input，包括已解析的 project `context` 和 `operations.archive.guidance`。它不执行 archive；真正合并和移动仍由 `openspec archive` 完成。
 
 ### `openspec schemas --json`
 
@@ -128,7 +133,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 对机器的意义：
 
 - 让工作流从“抽象意图”进入“可落地 change 上下文”。
-- 许多 `/opsx:*` 先要确保 change 存在，后续状态与文档生成才有挂载点。
+- 许多宿主 workflow（Claude 的 `/opsx:*`、Codex 的 `$openspec-*`）先要确保 change 存在，后续状态与文档生成才有挂载点。
 
 ## 机器接口的共同模式
 
@@ -210,11 +215,11 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - 输出 working set（root + referenced stores 的 spec 索引）。
 - agent 可据此了解当前项目还关心哪些仓库的 specs。
 
-### `--store <id>` flag
+### root / `--store <id>`
 
-- 所有核心命令（`status`、`instructions`、`list` 等）支持 `--store <id>` 选择操作目标 store。
-- 无 `--store` 时默认使用 nearest `openspec/` 目录。
+- root 由配置和当前路径解析；`defaultStore` 只是机器级的低优先级 fallback，不能替代项目级 root。
+- `openspec view` 已明确支持 `--store <id>` 并按解析后的 root 展示内容。不要据此推断每一个 workflow runtime 命令都接受同一组 `--store` 参数。
 
-### v1.5.0 的 guardrail 变化
+### 历史 guardrail（非当前主结论）
 
 v1.4.0 的 workspace guardrail（`actionContext.mode = "workspace-planning"` 阻止 sync/archive）在 v1.5.0 中不再需要——因为 `actionContext.mode` 始终为 `repo-local`，不存在 workspace 级 change。跨仓库操作自然被 store reference 的只读语义保护。

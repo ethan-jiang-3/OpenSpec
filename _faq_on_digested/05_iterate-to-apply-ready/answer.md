@@ -4,6 +4,8 @@
 
 Propose 的 mechanical apply gate（tasks.md 存在）只是一个文件系统事实。真正能开始实施的 artifacts 需要经过一轮或多轮 Explore 审视——把 artifacts 当成 Explore 的调查对象，拿真实代码去校验，发现 gap 就修，修完再审，直到 artifacts 足够具体、一致、可实现。
 
+> **v1.7.0 补充。** `skip_specs: true` 是“本 change 没有 spec-level 行为变化”的正式 metadata，不是漏写 specs 的容错；此时 status 的 specs 是 `skipped`，迭代审视应确认这一判断本身成立。下面 `/opsx:*` 仍是 Claude 示例；Codex 以对应 `$openspec-*` skill 运行。
+
 ```text
 Propose 产出 artifacts（mechanical apply-ready）
   → 切换 stance：从 produce 到 critique
@@ -27,7 +29,7 @@ Propose 产出 artifacts（mechanical apply-ready）
 | ITR-03 | 批判性阅读 artifacts | 读 proposal/specs/design/tasks，逐个检查 scope 准吗、scenario 可测吗、tasks 可执行吗。 |
 | ITR-04 | 真实代码校验 | rg 搜索 + 读入口/模块/测试/数据模型，逐项对照：artifact 声称 ⇔ 代码事实。 |
 | ITR-05 | 发现 + 分类 gap | 识别 scope 偏差、specs 不完整、design 假设被推翻、tasks 太粗、artifacts 不一致、遗漏 artifact。 |
-| ITR-06 | 修 gap | 按 gap 类型选策略：直接编辑 / `/opsx:update`（v1.6.0 官方修订 workflow）/ `/opsx:continue` / 回 Explore / 拆 change。 |
+| ITR-06 | 修 gap | 按 gap 类型选策略：直接编辑 / 宿主 update workflow / continue workflow / 回 Explore / 拆 change。 |
 | ITR-07 | 重审循环 | 修完回到 ITR-03 再审；有 gap 继续循环，无 gap 进入 ITR-08。通常 1-3 轮。 |
 | ITR-08 | 真正 apply-ready gate | scope 和代码一致、specs 可测、design 明确、tasks 具体、无矛盾。 |
 | ITR-09 | 交棒 apply | `/opsx:apply` 可以开始，artifacts 已经过代码校验。 |
@@ -112,7 +114,7 @@ ITR-03 和 ITR-04 的输出汇总后，按六种类型分类。详细方法见 [
 | artifacts 不一致 | proposal 和 specs scope 不同 | proposal 写只做 GitHub OAuth，tasks 出现 Google OAuth |
 | 遗漏 artifact | DAG 允许缺失但实际需要 | 复杂 change 缺 design |
 
-修复策略取决于 gap 严重度：小修直接编辑文件或用 `/opsx:update`（v1.6.0 新增的官方修订 workflow，逐 artifact 确认后写入，并自动检查一致性），中修用 `/opsx:continue` 补 artifact，大修回 Explore 重新讨论 scope。
+修复策略取决于 gap 严重度：小修直接编辑文件或用宿主 update workflow（逐 artifact 确认后写入，并自动检查一致性），中修用 continue workflow 补 artifact，大修回 Explore 重新讨论 scope。Claude 示例是 `/opsx:update` / `/opsx:continue`；Codex 使用相应 `$openspec-*` skills。
 
 ## Step 6：重审循环
 
@@ -137,7 +139,7 @@ ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
 - artifacts 之间没有矛盾（proposal scope = specs 覆盖 = tasks 范围）
 - 用真实代码校验过，没有"artifact 说存在但代码里不存在"的文件或接口
 
-满足所有条件后→ ITR-09：交棒 `/opsx:apply`。
+满足所有条件后→ ITR-09：交棒宿主 apply workflow（Claude：`/opsx:apply`；Codex：`$openspec-apply-change`）。
 
 ## 和四个阶段的衔接
 
@@ -188,7 +190,7 @@ ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
 
 ## 参考来源
 
-源码引用基于 commit `970cb44`（Explore）、`750a03c`（Propose）、`ff4576f`（Apply）：
+源码引用以 v1.7.0 tag `4e16790` 为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

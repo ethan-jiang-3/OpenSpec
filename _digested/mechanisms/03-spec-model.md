@@ -46,6 +46,12 @@ Markdown files
 
 这使得一个 change 不是“一个目录里有几个 Markdown 文件”这么简单，而是 CLI 和 agent 可作为结构化 change 来审阅、验证、输出 JSON。
 
+### v1.7.0：capability ID 是相对路径
+
+delta 与 main spec 都通过 `discoverSpecFiles()` 递归发现：`specs/auth/spec.md` 的 ID 是 `auth`，`specs/identity/session/spec.md` 的 ID 是 `identity/session`。list、show、validate、change parser、archive/apply 都使用同一条发现路径，因此 nested layout 是完整生命周期支持，不是只允许把文件放进子目录。
+
+这只是 path namespace：`identity` 和 `identity/session` 没有继承、聚合或自动加载语义。`changes/<change>/specs/spec.md` 则没有 capability 目录，v1.7.0 会被 validate/archive 拒绝，避免它被发现器忽略后静默丢失。
+
 ## requirement-blocks 是 archive 的关键
 
 `requirement-blocks.ts` 是 archive 和 validation 的关键 parser。它提供两套能力：
@@ -59,6 +65,7 @@ Markdown files
 - `normalizeRequirementName()` 当前只 trim，不 lower-case。
 - REMOVED 支持 `### Requirement:` header，也支持 bullet list header。
 - RENAMED 用 FROM/TO pair。
+- UTF-8 BOM 会被剥离，fenced code block 中的 header 不参与 section/requirement 识别。
 
 这些细节看起来小，但会直接影响 archive merge 是否能找到正确 requirement，以及同名/改名冲突如何处理。
 
@@ -87,7 +94,9 @@ parser output
 
 Zod 负责基础结构；规则校验负责 OpenSpec 语义，比如 Purpose 长度、SHALL/MUST、scenario 数量、delta 冲突。
 
-`validateChangeDeltaSpecs()` 会扫描 change 的 `specs/` 目录，检查 ADDED/MODIFIED/REMOVED/RENAMED 的结构、重复、冲突和 scenario 要求。这套校验是 archive 前的重要守门器。
+`validateChangeDeltaSpecs()` 会递归扫描 change 的 `specs/` 目录，检查 ADDED/MODIFIED/REMOVED/RENAMED 的结构、重复、冲突和 scenario 要求。这套校验是 archive 前的重要守门器。`skip_specs: true` 是一个受限例外：无 spec-level 行为改动的 change 可显式跳过 specs artifact；但 marker 与 specs 下任意非隐藏文件共存会报错，不能用来掩盖真实 delta。
+
+新 capability 的 delta 可以写 `## Purpose`。archive 创建 main spec 时会带入该 Purpose；缺失或无法构成可读 Purpose 时才留下 TBD placeholder。已有 main spec 的 Purpose 不会被 delta 覆盖。
 
 ## warnings 与 errors
 
@@ -126,6 +135,7 @@ Zod 负责基础结构；规则校验负责 OpenSpec 语义，比如 Purpose 长
 | change parser | `src/core/parsers/change-parser.ts` |
 | requirement blocks | `src/core/parsers/requirement-blocks.ts` |
 | main spec structure | `src/core/parsers/spec-structure.ts` |
+| recursive spec discovery | `src/utils/spec-discovery.ts` |
 | validator | `src/core/validation/validator.ts` |
 | JSON converter | `src/core/converters/json-converter.ts` |
 | read commands | `src/core/list.ts`、`src/core/view.ts`、`src/commands/show.ts`、`src/commands/validate.ts` |

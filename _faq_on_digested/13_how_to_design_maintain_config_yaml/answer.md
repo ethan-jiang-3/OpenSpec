@@ -2,7 +2,7 @@
 
 ## 一句话
 
-把 `config.yaml` 当成**项目 profile + artifact-specific guidance**，不要当成项目百科或运行时控制器。真正的阶段化上下文主要由 schema 的 artifact DAG 和 change artifacts 承担：proposal 记录分类和决定，specs/design 直接读取 proposal 并分别细化行为与技术后果，tasks 再读取 specs/design，Apply 最后读取当前已有的实际 artifacts。
+把 `config.yaml` 当成**项目 profile + artifact-specific / operation-specific guidance**，不要当成项目百科或运行时控制器。真正的阶段化上下文主要由 schema 的 artifact DAG 和 change artifacts 承担：proposal 记录分类和决定，specs/design 直接读取 proposal 并分别细化行为与技术后果，tasks 再读取 specs/design，Apply 最后读取当前已有的实际 artifacts；v1.7.0 再把 project context 与 Apply/Archive guidance 明确路由到两个 operation。
 
 ## 先拆掉一个错误前提
 
@@ -10,10 +10,10 @@
 
 | 阶段 | 实际上下文来源 | `context` / `rules` 是否自动出现 |
 |---|---|---|
-| Explore | skill、`list/status`、按需读文件 | 否 |
+| Explore | skill、`list/status`、按需读文件 | 是：读取 project `context` 与 artifact `rules`；没有 `operations.explore` |
 | proposal/specs/design/tasks | instructions + schema + dependency artifacts | 是，分别为全局 context 与当前 artifact rules |
-| apply | generated Apply instructions：ready 时使用 schema `apply.instruction`，并携带 `contextFiles`、task progress 与可选 references | 否 |
-| archive | workflow、status、tasks、delta specs | 否 |
+| apply | generated Apply instructions：schema `apply.instruction`、`contextFiles`、task progress、project context、`operations.apply.guidance` | 是：context + apply guidance；不是 artifact rules |
+| archive | workflow、status、tasks、delta specs、archive instructions | 是：context + `operations.archive.guidance`；不是 artifact rules |
 
 所以长 context 的坏处不只是 token 多：它把 apply/runtime/Explore 专属知识交给了不需要它的 artifact，同时没有保证真正需要它的阶段收到。
 
@@ -23,9 +23,9 @@
 
 | 事实 | 对配置决策的影响 |
 |---|---|
-| `context` 与 `rules` 只进入 `openspec instructions <artifact>` | 它们只能服务 planning artifacts，不能当作所有阶段的通用 guidance。 |
-| Apply 由 schema Apply block、change artifacts、tasks/progress 和可选 references 组装；只有 ready 分支使用 `apply.instruction` | apply 期间必须可见的稳定规则要进入 schema/持久化 artifacts 或确定性检查；本次实施事实要进入 artifacts/tasks。 |
-| Explore、Sync、Archive 不调用 artifact instructions | 这些阶段的专属行为要进入 workflow skill、`AGENTS.md`、playbook 或 checker。 |
+| `rules` 只进入 `openspec instructions <artifact>` | rules 只能服务 planning artifacts，不能当作所有阶段的通用 guidance。 |
+| `context` 进入 artifact instructions，也进入 Apply/Archive；operation guidance 进入对应 operation | Apply/Archive 的稳定项目步骤可写入 `operations.apply/archive.guidance`；结构 gate 仍归 schema，单次事实仍归 artifacts/tasks。 |
+| Explore 读取 context/rules；Sync 没有 config operation guidance；Archive 读取 archive operation inputs | 不存在 `operations.explore` / `operations.sync`；更复杂专属行为仍归 workflow skill、`AGENTS.md`、playbook 或 checker。 |
 | `schema` 在 new change 时会被写入 change 的 `.openspec.yaml` | 修改项目默认值不会迁移已在进行的 change。 |
 | `store` 是 root 选择机制，不是 guidance 字段 | 先确认命令最终选中了哪个 root，再判断正在编辑的 config 是否会被读取。 |
 
@@ -38,6 +38,8 @@
 ```text
 稳定、短、全局的背景事实           -> config.context
 一个 artifact 的长期写作约束        -> config.rules.<artifact>
+Apply 的稳定项目步骤                -> config.operations.apply.guidance
+Archive 的稳定项目步骤              -> config.operations.archive.guidance
 一个 change 的范围、分类、决定      -> proposal / specs / design / tasks
 新的 artifact、依赖、apply 行为      -> schema.yaml / workflow skill
 必须强制且可验证的不变量            -> checker / test / CI
@@ -90,15 +92,15 @@
 
 ## 何时不该继续改 config
 
-- 要让 apply 始终收到指导：改 custom schema 的 `apply.instruction`。
-- 要让 Explore/Archive 遵循专属步骤：改 workflow skill、`AGENTS.md` 或 playbook。
+- 要让 apply 始终收到项目 guidance：用 `operations.apply.guidance`；要改它的 gate/结构再改 custom schema 的 `apply.instruction`。
+- 要让 Archive 收到短稳定 guidance：用 `operations.archive.guidance`；Explore 没有对应 operation 字段，复杂步骤仍改 workflow skill、`AGENTS.md` 或 playbook。
 - 要增加前置分类/审查阶段：fork schema，新增 artifact 与 dependency。
 - 要不可绕过：写 checker/test/CI。
 - 要新的 `guidance` / `stage_context` 选择器：先实现并验证 OpenSpec 功能；当前随意添加的未知 YAML key 不会产生该能力。
 
 ## 维护节奏
 
-每次 archive 后回顾 agent 被重复纠正的点。只有它跨多个 future changes、能定位到明确 consumer、可写成可判断动作、且不应该由其他层承担时，才升级为 config rule。改动后用代表性 change 的 `openspec instructions <artifact> --json` 逐个检查注入结果，并单独检查 `openspec instructions apply --json`，不要假设 config 会随 apply 出现。
+每次 archive 后回顾 agent 被重复纠正的点。只有它跨多个 future changes、能定位到明确 consumer、可写成可判断动作、且不应该由其他层承担时，才升级为 config rule 或 operation guidance。改动后用代表性 change 的 `openspec instructions <artifact> --json` 逐个检查 rules 注入，并单独检查 `openspec instructions apply --json` 与 `openspec instructions archive --json`，确认 context/guidance 出现在正确 operation。
 
 ## 延伸材料
 

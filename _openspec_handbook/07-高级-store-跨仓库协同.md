@@ -2,6 +2,8 @@
 
 > **Store 是 OpenSpec 的跨仓库上下文引用机制：声明哪些仓库的 specs 与当前项目相关，让 agent 知道「还有哪些 specs 可以看」。** 单仓库项目不需要 store；当你维护多个关联仓库时才用得上。
 
+> **v1.7.0 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。`openspec view` 同样按 resolved root 展示，支持 `--store`。
+
 ---
 
 ## 一、为什么需要 store

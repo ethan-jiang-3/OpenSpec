@@ -43,7 +43,7 @@ CLI 直接用它。
 
 如果没传 name，`selectChange()` 会读取 `openspec/changes/` 下的 active change 目录，排除 `archive/`，并用 inquirer 让用户选择。
 
-这和 `/opsx:archive` 模板不同。OPSX 模板要求没有 name 时总是用 `openspec list --json` 加 AskUserQuestion，由 agent 组织选择。
+这和宿主 archive 模板不同。Claude 的 OPSX 模板在没有 name 时会用 `openspec list --json` 加 AskUserQuestion，由 agent 组织选择；Codex 使用对应 archive skill。
 
 ## 目录验证
 
@@ -56,7 +56,7 @@ openspec/changes/<change>/
 
 不存在就报错或中止。这个阶段不会读取 schema，也不会判断 artifact graph。
 
-CLI archive 是 repo-local 的老牌命令路径；它以当前目录下的 `openspec/` 为根。
+CLI archive 按 resolved planning root 工作；store-aware root selection 也用于 archive/sync，不应把它概括成“永远是当前目录下的 `openspec/`”。
 
 ## validation pass
 
@@ -159,7 +159,7 @@ fallback on EPERM/EXDEV: copyDirRecursive() + fs.rm(src)
 
 ## 参考来源
 
-源码引用基于 commit `487ea92`：
+源码引用以 v1.7.0 tag `4e16790` 为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

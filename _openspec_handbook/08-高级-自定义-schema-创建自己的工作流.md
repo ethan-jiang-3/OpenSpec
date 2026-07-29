@@ -8,6 +8,8 @@
 
 写完 config.yaml 之后，你迟早会遇到一个时刻：**config 的 rules 不够用了**。
 
+v1.7.0 先分清两种“不够”：Apply/Archive 只是需要短稳定项目步骤时，用 `operations.apply/archive.guidance`，不必 fork schema；只有想改变 artifact、依赖、template 或 apply gate/结构时，才需要自定义 schema。
+
 不是规则写得不够好——而是你发现，你想改的东西 config 根本管不到。你想让 proposal 问不同的问题、想让 specs 换一种格式、想让 tasks 少一个阶段、甚至想把整个 artifact 流程换成你自己的。这些 config.yaml 做不到。
 
 这时候你需要 **自定义 schema**。
@@ -19,7 +21,7 @@
 ```mermaid
 graph LR
     subgraph "config.yaml 能改"
-        A[提示层<br/>rules/context]
+        A[提示层<br/>context/rules/operations]
     end
     subgraph "只有 schema 能改"
         B[结构层<br/>artifact 种类/DAG/template]
@@ -30,7 +32,8 @@ graph LR
 | config.yaml 能做的 | 只有 schema 能做的 |
 |-------------------|-------------------|
 | 加 context（项目背景、约束） | 增加/删除/重命名 artifact |
-| 加 rules（内容规范、禁止项） | 改变 artifact 的生成指令（instruction） |
+| 加 rules（artifact 内容规范、禁止项） | 改变 artifact 的生成指令（instruction） |
+| 加 Apply/Archive operation guidance | 定义 apply 阶段的入口条件和执行结构 |
 | 指定用哪个 schema | 换掉 artifact 的输出模板（template） |
 | | 重画 artifact 之间的依赖关系（DAG） |
 | | 定义 apply 阶段的入口条件和执行指令 |

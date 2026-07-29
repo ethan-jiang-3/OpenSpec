@@ -5,9 +5,9 @@ archive 是整个 change 生命周期的终点。它做三件事：验证 change
 这里需要先区分两条相关但不同的路径：
 
 - **`openspec archive` CLI**：由 `ArchiveCommand.execute()` 执行，程序化完成验证、delta spec 合并和目录移动。
-- **`/opsx:archive` skill/command 模板**：由 host agent 按 `archive-change.ts` 的指令执行，会先做 delta spec sync 状态评估，再按模板移动目录。它不是 `ArchiveCommand.execute()` 的逐字封装。
+- **host 的 archive workflow skill/command 模板**：由 host agent 按 `archive-change.ts` 的指令执行，会先做 delta spec sync 状态评估，再按模板移动目录。Claude 等 command adapter 可显示为 `/opsx:archive`；Codex v1.7.0 使用 `$openspec-archive-change` skill。它不是 `ArchiveCommand.execute()` 的逐字封装。
 
-本篇主体讲 `openspec archive` CLI 的内部机制；第 5 节单独说明 `/opsx:archive` 模板层面的 sync 检查。
+本篇主体讲 `openspec archive` CLI 的内部机制；第 5 节单独说明 host archive workflow 的 sync 检查与 operation inputs。
 
 ---
 
@@ -74,14 +74,17 @@ Phase 3: Move
 
 ### 3.1 找 delta spec
 
-`findSpecUpdates()` (`src/core/specs-apply.ts`)：扫描 `<changeDir>/specs/` 下每个子目录。对于每个包含 `spec.md` 的子目录，查找对应的主 spec 文件：
+`findSpecUpdates()` (`src/core/specs-apply.ts`)：递归扫描 `<changeDir>/specs/`。对于每个包含 `spec.md` 的 capability path，查找相同相对路径的主 spec 文件：
 
 ```
 change/specs/data-export/spec.md  →  openspec/specs/data-export/spec.md
 change/specs/user-auth/spec.md    →  openspec/specs/user-auth/spec.md
+change/specs/identity/session/spec.md → openspec/specs/identity/session/spec.md
 ```
 
 返回 `SpecUpdate[]`，每个包含 `{source, target, exists}`（target 是主 spec 路径，exists 表示主 spec 是否已存在）。
+
+`changes/<change>/specs/spec.md` 没有 capability folder，递归发现器不会把它当 update；v1.7.0 的 validator/archive 会把这种根级 delta 作为 ERROR 拒绝，而不是静默跳过。
 
 ### 3.2 解析 delta plan
 
@@ -122,6 +125,7 @@ interface DeltaPlan {
 如果目标 spec 不存在（新 capability）：
 - 只允许 ADDED。MODIFIED/RENAMED 会报错（因为没有东西可以 modify/rename）
 - REMOVED 会被忽略并产生警告（没有东西可以 remove）
+- delta 若含可读的 `## Purpose`，`buildSpecSkeleton()` 会把它写入新 main spec；缺失或不可读时才回退到 TBD placeholder。已有目标的 Purpose 不被 delta 覆盖。
 
 ### 3.4 提取主 spec 的 Requirements section
 
@@ -214,6 +218,12 @@ CLI 会先对所有 `SpecUpdate` 调用 `buildUpdatedSpec()`，把 rebuilt 内�
 
 需要注意的是：一旦进入实际 `writeUpdatedSpec()` 写入阶段，CLI 没有事务式回滚。如果写入过程中发生 I/O 异常，已经写入的文件不会自动恢复。
 
+### 3.8 已 early-sync 的 delta 不再一律失败
+
+v1.7.0 识别“agent sync 已把同一内容写入 main spec”的正常模式：内容相同的 ADDED/MODIFIED、已消失的 REMOVED、以及 source 已消失但 target 已存在的 RENAMED 都是 no-op，archive 不会为它们重写 main spec。REMOVED 的 no-op 会携带 warning，JSON archive 结果也可返回 `warnings`。
+
+这个宽容只针对**确实已应用的同一操作**。主 spec 里仍存在仅大小写或空白不同的近似 requirement 时，工具会明确报错要求精确匹配；内容不同的 ADDED 仍是 collision。fenced code 中的 scenario/header 也不会参与 drift 比较，UTF-8 BOM 不会让首个 delta section 失效。
+
 ---
 
 ## 4. 移动阶段
@@ -264,9 +274,9 @@ openspec/specs/theme/spec.md    ← 已更新（如果有 delta spec）
 
 ---
 
-## 5. Sync 检查（OPSX 模板层面）
+## 5. Sync 检查与 operation inputs（host workflow 层面）
 
-`/opsx:archive` skill 模板 (`archive-change.ts`) 在移动之前会做一个额外检查：delta spec 是否已经合并到主 spec。这个检查属于 **agent 模板层**，不是 `ArchiveCommand.execute()` 的内部步骤。
+host archive workflow (`archive-change.ts`) 在选择 change 后先调用 `openspec instructions archive --change <name> --json`。返回的 `context` 是项目级 prompt input，`operationGuidance` 是适用时遵守的 advisory guidance；它们不改变 CLI root、validator、任务确认或 merge 规则。随后 workflow 才在移动之前检查 delta spec 是否已经合并到主 spec。这个检查属于 **agent 模板层**，不是 `ArchiveCommand.execute()` 的内部步骤。
 
 ```text
 if delta specs exist:
@@ -278,7 +288,7 @@ if delta specs exist:
      - 其他输入                  → 重新询问
 ```
 
-**v1.6.0 加固**：
+**当前 v1.7.0 的加固行为**：
 - sync 必须 **inline** 执行（不等完成绝不 mv——防止 changeRoot 被移走后 sync 读不到 delta spec）
 - sync 完成后对 `artifactPaths.specs.existingOutputPaths` 中**每个 capability** 重新验证：ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名
 - 任何 mismatch 都停止 archive，changeRoot 保持完整
@@ -305,13 +315,13 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 
 ---
 
-## 8. v1.6.0 变更摘要
+## 8. v1.7.0 当前行为摘要
 
 | 变更 | 影响位置 | 说明 |
 |---|---|---|
 | date prefix 防堆叠 | `archive.ts`：move 前检测 change name 是否已有 `YYYY-MM-DD-` 前缀 | 已有前缀则不再叠加，避免 `2026-07-21-2026-06-14-xxx` |
-| RENAMED no-op | `specs-apply.ts`：已 sync 的 RENAMED delta 不再报错 | 之前 archive 遇到已 sync 的 RENAMED 会失败 |
-| scenario-drift multiplicity | `specs-apply.ts`：多个 change 对同一 capability 的场景漂移检测 | 之前只考虑单一 change 的场景 |
-| 已 sync specs 不失败 | `archive.ts`：archive 前 specs 已 sync 时不再报错 | 减少误报 |
-| 递归 spec 发现 | `spec-discovery.ts`：支持嵌套 spec 目录（`specs/auth/oauth/spec.md`） | 之前只支持一级 capability 目录 |
-| 统一 requirement reader | `requirement-text.ts`：消除多处重复的 markdown 解析逻辑 | 重构，不影响行为 |
+| recursive capability path | `spec-discovery.ts` / `findSpecUpdates()` | 支持 `specs/identity/session/spec.md`；delta/main 同路径；根级 delta 会报错 |
+| Purpose carry-through | `specs-apply.ts` | 新 capability 的 delta Purpose 进入新 main spec；existing Purpose 保持权威 |
+| early-sync no-op | `specs-apply.ts` | 完全一致的 ADDED/MODIFIED、已移除 REMOVED、已改名 RENAMED 不造成无意义失败或重写 |
+| parser / drift robustness | `requirement-blocks.ts` / `code-fence.ts` | BOM、fenced code 不再造成假 delta 或 scenario drift |
+| inline verified sync | `archive-change.ts` | agent sync 后逐 capability 验证才允许移动 change；Cancel 保留 changeRoot |

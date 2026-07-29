@@ -32,7 +32,7 @@
 
 ### `view`
 
-- 角色：交互式仪表盘。
+- 角色：交互式仪表盘；v1.7.0 按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
 - 核心对象：聚合浏览。
 - 更偏人类，不偏自动化。
 
@@ -58,6 +58,7 @@
 - 核心对象：change、delta specs、正式 specs、archive 目录。
 - 输出语义：变更被吸收到 specs，并从 active change 迁移到 archive。
 - 系统重要性：极高，因为它会改变主 specs。
+- 归档前若 main specs 已被正确 early-sync，完全一致的 ADDED/MODIFIED/REMOVED/RENAMED 会是幂等 no-op；大小写或空白等近似命中仍会报错，不能把 no-op 误解成放宽校验。
 
 ## 四、workflow runtime 类
 
@@ -80,6 +81,12 @@
 
 - 角色：apply 工作单编译器。
 - 边界：决定能否实施并给出实施上下文，但不直接执行代码修改。
+
+### `instructions archive`
+
+- 角色：archive operation input 编译器。
+- 核心对象：change、project `context`、`operations.archive.guidance`。
+- 边界：只读；不合并 specs、不移动 archive 目录。
 
 ### `templates`
 

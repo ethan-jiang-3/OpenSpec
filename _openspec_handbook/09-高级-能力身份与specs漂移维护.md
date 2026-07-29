@@ -102,7 +102,7 @@ graph TD
 1. **都怕改名，且没有 ID 兜底。** 传统系统里改个名字，ID 不变，引用不断链。OpenSpec **没有 ID**——名字一改，所有指向旧名字的引用全部失配，而且**没有任何工具告诉你断了**。
 2. **capability 比 requirement 更脆。** requirement 至少有 `RENAMED` 操作（`FROM: ### Requirement: 旧` / `TO: ### Requirement: 新`），改名是个一等动作；**capability 没有任何 rename 操作**——改 capability path 只能靠你手动搬目录，然后所有指向旧路径的 delta 默默变成"悬空目标"。
 
-> 一句话：**requirement 改名有"正规手续"（RENAMED）；capability 改名没有手续，是裸操作。** 所以 capability 目录名要当**稳定性契约**对待——能不改就不改。
+> 一句话：**requirement 改名有“正规手续”（RENAMED）；capability 改名没有手续，是裸操作。** 所以完整 capability 相对 path 要当**稳定性契约**对待——能不改就不改。
 
 ## 这就是 specs 漂移的根源
 

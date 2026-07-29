@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/update-change.ts` → `getUpdateChangeSkillTemplate()` + `getOpsxUpdateCommandTemplate()`
 
-> **用户怎么调**：`/opsx:update [change-name]`
+> **调用方式**：command adapter 可为 `/opsx:update [change-name]`；Codex v1.7.0 用 `$openspec-update-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-update-change`（skill）/ `OPSX: Update`（command）
 > **独立 CLI 命令**：无——update 是纯 agent 模板，修订已有 planning artifacts，不改代码。
 > **profile**：custom（需显式启用，不在默认 core 里）
@@ -27,7 +27,7 @@ update 是 **planning artifact 修订器**。它不改代码，只修订已有�
 ## CLI 命令调用序列
 
 ```text
-1. [可选] openspec list --json              # 选 change
+1. [可选] 显式名称 → 对话推断 → 唯一 active change 自动选择；仅歧义时 `openspec list --json`
 2. openspec status --change "<name>" --json  # 获取 artifactPaths + planningHome
 3. [agent 读全部已有 artifacts]
 4. [agent 做修订 + 检查一致性]
@@ -47,7 +47,7 @@ sequenceDiagram
     participant FS as 文件系统
 
     User->>MD: /opsx:update [change-name]
-    MD->>MD: 若无 name → openspec list → 用户选择
+    MD->>MD: 若无 name → 唯一 active change 自动选择；歧义时 list → 用户选择
 
     rect rgb(240, 248, 255)
         Note over MD,FS: Step 2 · 获取 artifacts
@@ -126,7 +126,7 @@ Do NOT invent new files under a glob artifact
 Explore 审视 artifacts → 发现 gap → 修 gap → 再审
 ```
 
-v1.6.0 的 `/opsx:update` 就是这个循环中**"修 gap"**步骤的官方 workflow。它提供了：
+v1.6.0 引入、在 v1.7.0 仍可用的 update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。它提供了：
 
 - artifact 修订的正式操作协议（读→改→一致性检查→确认→写）
 - "update vs start fresh" 判断（修改意图 vs 精炼细节）

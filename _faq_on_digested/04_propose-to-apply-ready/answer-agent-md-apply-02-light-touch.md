@@ -16,7 +16,7 @@
 
 ### 1. 用 `openspec/config.yaml` 写清项目语境
 
-`config.yaml` 可以给 artifact 生成阶段注入 context/rules。它不能直接重写默认 `/opsx:apply` 模板，但能让 proposal/design/tasks 这些 planning artifacts 从一开始就写对。
+`config.yaml` 可以给 artifact 生成阶段注入 context/rules，也可在 v1.7.0 用 `operations.apply.guidance` / `operations.archive.guidance` 分别给 Apply/Archive 传入项目级短稳定步骤。它们不能直接重写 schema gate，但能让 proposal/design/tasks 从一开始就写对，并让非代码 apply 的操作边界更清楚。
 
 示例：
 
@@ -35,6 +35,11 @@ rules:
     - Every task must be a Markdown checkbox.
     - Every implementation task should name the target file or directory when possible.
     - Mark install/publish/verification actions as separate tasks.
+
+operations:
+  apply:
+    guidance:
+      - Treat named Markdown, skill, command, installation, and verification files as valid implementation outputs.
 ```
 
 这个改法不碰 schema，但会让 `openspec instructions <artifact> --json` 返回的 artifact 操作包带上这些约束。
@@ -104,6 +109,7 @@ apply:
 | 机制 | 说明 |
 |---|---|
 | `config.yaml` context/rules | `generateInstructions()` 会把它们放进 artifact instructions，约束 proposal/design/tasks 的生成。 |
+| `operations.apply.guidance` | `instructions apply` 会把它与 project context 提供给 Apply；artifact rules 不会自动转入 Apply。 |
 | schema `apply.instruction` | `generateApplyInstructions()` 会把它作为 apply 阶段的 `instruction` 返回给 agent。 |
 
 也就是说，你不需要改 core CLI，就能让 planning artifacts 和 apply 动态指令都更贴近非代码产物。

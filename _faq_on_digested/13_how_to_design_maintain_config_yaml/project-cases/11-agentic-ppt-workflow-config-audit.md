@@ -52,7 +52,7 @@ Agentic PPT workflow 是一个 AI 驱动的演示文稿生产系统：Agent 阅�
 | Gates、Agent control、simple reliable control | 91-126 | 是重要但条件化的政策；当前对所有 artifact 全量投放会淹没普通 PPT change。 | proposal/specs/design rules 加“涉及 X 时读 Y”的短指针；完整政策留在 `openspec/policies/`。 |
 | Capability 注册表和完整 capability 表 | 127-173 | 它是 proposal/specs 做归属判断的索引，不是所有 stages 的背景。 | proposal/specs rules 指向 `openspec/specs/`；由实际 main specs 作为权威；完整表可移至 capability index。 |
 | Workflow 术语、生产语义、refresh paths | 174-200 | 专属 run-bundle production / implementation 的知识。 | 指定 deck 的 controller/playbook 拥有；framework change 仅在影响 runtime contract 时在 proposal/design 记录兼容性，不放 context。 |
-| Agent 入口与 OpenSpec 开发循环 | 201-212 | 这是行动 playbook。尤其 Apply/Explore 不自动读 context，放在这里不能保证实际执行者看见。 | `AGENTS.md` / playbook / schema `apply.instruction`；change 的 tasks 写明实际步骤。 |
+| Agent 入口与 OpenSpec 开发循环 | 201-212 | 这是行动 playbook。Explore 会读取 context/rules，Apply 会读取 context 与 apply guidance；但二者都不会把完整 playbook 或 artifact rules 变成确定性执行契约。 | `AGENTS.md` / playbook / schema `apply.instruction`；change 的 tasks 写明实际步骤。 |
 
 ## Rules 归位
 
@@ -61,7 +61,7 @@ Agentic PPT workflow 是一个 AI 驱动的演示文稿生产系统：Agent 阅�
 | `proposal`（215-247） | 非常清楚地维护 proposal 的信息密度、capability 契约、change domain 和 control owner。 | 八条长规则承载了三种 change class 和三条 policy；建议变为基础 rule + 条件化 policy-pointer，分类结果写入 proposal。 |
 | `specs`（248-277） | 对 delta、owner、archive safety、gate semantics 的要求具体。 | 能力名和 canonical vocabulary 不应仅靠 context；实际 main specs / glossary 应为 source。只让有相关风险的 spec 加载对应 policy。 |
 | `design`（278-303） | owner、验证策略、migration、gate/recovery 都是 design 的正确职责。 | 很多条只在 framework control path 变化时适用；把 trigger 前置，避免常规视觉/文案改动承受不相关的控制语言。 |
-| `tasks`（304-325） | 覆盖变化、依赖顺序、tests、gate-sensitive tasks，有可执行性。 | 仍要注意 Apply 不会加载这些 config rules；任务必须在生成时具体化，强制部分需有 tests/checks。 |
+| `tasks`（304-325） | 覆盖变化、依赖顺序、tests、gate-sensitive tasks，有可执行性。 | 仍要注意 Apply 不会加载这些 artifact rules；任务必须在生成时具体化，强制部分需有 tests/checks。 |
 
 ## 可行的渐进收缩目标
 
@@ -70,7 +70,7 @@ Agentic PPT workflow 是一个 AI 驱动的演示文稿生产系统：Agent 阅�
 1. `context` 只保留“项目是何物、OpenSpec framework-maintenance 范围、Flow/Gate owner、去哪里找权威”的短导航。
 2. 将 gate/control/quality 三套长政策改成 canonical 文档；在 proposal/specs/design 中仅留下有触发条件的阅读与留痕要求。
 3. 在 proposal 明确本次是 framework maintenance，并记录对 run-bundle contract 的影响；指定 deck 的 production 不创建 OpenSpec artifacts，也不让后续 artifact 从 context 猜测入口。
-4. run-bundle 的真实执行入口和 Gate 规则放入 playbook / `AGENTS.md` / schema `apply.instruction`；不要期待 config 在实际 Apply 中出现。
+4. run-bundle 的真实执行入口和 Gate 规则放入 playbook / `AGENTS.md` / schema `apply.instruction`；Apply 虽会收到 project `context` 与 apply guidance，也不能承载完整 policy 或提供确定性 gate。
 
 ## 对本文建议的复核
 

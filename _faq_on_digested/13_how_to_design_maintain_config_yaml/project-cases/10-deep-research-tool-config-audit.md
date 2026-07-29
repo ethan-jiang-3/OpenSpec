@@ -62,7 +62,7 @@ Deep Research Tool 是一个把宽泛研究问题转化为证据支撑、多波�
 |---|---|---|
 | `proposal`（168-177） | 能明确语言、source、capability、版本等长期约束。 | 多条与 context 的 Evolution Directions 重复；不同 change 类型适用性不同。保留摘要和明确路径，详细政策转为短指针。 |
 | `design`（178-183） | 技术栈、状态机、source-of-record 非常适合 design。 | “只能用依赖”应是项目硬约束的同时有 package/test 支撑；不要只靠 rule。 |
-| `tasks`（184-200） | done condition、依赖排序、requirement ID、收尾验证都能转化为可读任务。 | Apply 本身不重新注入 config；必须让生成出的 `tasks.md` 写出收尾验证，且由 CI/checker 复核。 |
+| `tasks`（184-200） | done condition、依赖排序、requirement ID、收尾验证都能转化为可读任务。 | Apply 不会重新注入 artifact `rules`（但会接收 project `context` 与 `operations.apply.guidance`）；必须让生成出的 `tasks.md` 写出收尾验证，且由 CI/checker 复核。 |
 | `specs`（201-227） | Capability / requirement 的约束有明确 artifact owner。 | 主 spec 结构与 ID 格式最好由现有 governance checker 保障；长的边界测试可从 inline rule 移为 policy 指针。 |
 
 ## 对本文 Evolution Directions 建议的复核（以当前项目契约为准）

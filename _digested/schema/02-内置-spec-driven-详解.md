@@ -12,10 +12,11 @@
 
 具体哪些是硬契约（偏离即出问题）：
 
-- **artifact DAG**（`requires`）：proposal→specs→design→tasks 的依赖是工具判断"下一个该生成什么 / 是否完成"的依据，自己加/漏 artifact 会破坏 `apply`/`status` 的判断。
+- **artifact DAG**（`requires`）：`proposal → {specs, design} → tasks` 的依赖是工具判断"下一个该生成什么 / 是否完成"的依据；同级推荐顺序按 schema 声明为 specs 再 design，自己加/漏 artifact 会破坏 `apply`/`status` 的判断。
 - **delta 操作段头**（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）：archive 靠它解析；写错段头 → delta 不被识别。
 - **格式**：`### Requirement: <name>`、scenario **必须 4 个 `#`**（`#### Scenario:`，写成 3 个或 bullet 会**静默失败**）、requirement 正文要含 `SHALL`/`MUST`。
-- **能力契约**：proposal 列的每个 capability 名，必须与 `specs/<capability>/` 目录名**逐字一致**（kebab-case）——这是 schema 自己点名的 proposal↔specs "critical contract"。
+- **能力契约**：proposal 列的 capability 必须与 `specs/<capability-path>/spec.md` 的相对路径一致。内置 guidance 默认举 flat kebab-case 名；v1.7.0 runtime 也支持 `identity/session` 这类 nested path，团队采用它时应在 config/AGENTS 明确约定。
+- **无行为 delta 的边界**：纯重构、工具或文档 change 可在 `.openspec.yaml` 设 `skip_specs: true`；它使 specs artifact 显式 skipped，且不能和任何 delta spec 文件共存。
 
 所以**想真正用好 OpenSpec，高手会直接读一遍 `schemas/spec-driven/schema.yaml` 原文**（不是只读别人转述）。下面逐字段拆解是帮你读它的导航。
 
@@ -93,7 +94,7 @@ apply:
 - Capabilities（新增/修改的 capability，每个对应一个 spec 文件）
 - Impact（影响范围）
 
-**关键设计**：Capabilities 部分是 proposal 和 specs 之间的"合同"——proposal 里列出的每个 capability，specs 阶段都要生成对应的 `specs/<name>/spec.md`。
+**关键设计**：Capabilities 部分是 proposal 和 specs 之间的"合同"——有 spec-level 行为改动时，proposal 里列出的每个 capability path，specs 阶段都要生成对应的 `specs/<path>/spec.md`。没有行为 delta 时不要编造 requirement，应显式声明 `skip_specs: true`。
 
 ### specs（规格说明）
 
@@ -108,6 +109,8 @@ apply:
 - 格式强制：`### Requirement:` + `#### Scenario:` (必须是 4 个 #)
 - GIVEN / WHEN / THEN 场景格式
 - MODIFIED 要求复制完整 requirement（防止 archive 时信息丢失）
+- 新 capability 的 delta 可写 `## Purpose`；archive 会将它带入新 main spec。既有 main spec 的 Purpose 不由 delta 改写。
+- `skip_specs: true` 时不要创建 delta spec；instructions/status 会将 specs 标为 skipped。
 
 ### design（技术设计）
 

@@ -27,6 +27,10 @@ interface PlanningHome {
 - **working set**：组装后的上下文
 - **workset**：个人保存的工作视图
 
+### `defaultStore` 不是项目 root 覆盖
+
+v1.7.0 可通过全局配置设置 `defaultStore`。它是机器上的低优先级 fallback；有显式 `--store`、项目配置或当前目录可解析 root 时，后者优先。root JSON 可把这一来源标为 `global_default`。因此不能把 default store 解释成“所有 change 都改到这个仓库”。
+
 ### Store：注册一个仓库
 
 Store 是**全局注册的仓库 checkout**。数据放在 `~/.openspec/stores/`：
@@ -118,9 +122,11 @@ openspec workset list
 命令通过 `src/core/root-selection.ts` 解析操作目标：
 
 - `--store <id>` 选择注册的 store 的 root
-- 无 `--store` 时，向上找最近的 `openspec/` 目录
+- 无 `--store` 时，优先解析项目/当前目录 root；必要时才使用机器级 `defaultStore` fallback
 
 `actionContext.mode` 始终是 `'repo-local'`。
+
+`openspec view` 也使用同一 root-selection 语义，并支持 `--store`；它展示的不是固定 cwd 下的目录。
 
 ## 源码入口
 

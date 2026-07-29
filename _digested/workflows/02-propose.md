@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/propose.ts` → `getOpsxProposeSkillTemplate()` + `getOpsxProposeCommandTemplate()`
 
-> **用户怎么调**：`/opsx:propose <change-name 或描述>`
+> **调用方式**：command adapter 可为 `/opsx:propose <change-name 或描述>`；Codex v1.7.0 用 `$openspec-propose`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-propose`（skill）/ `OPSX: Propose`（command）
 > **独立 CLI 命令**：无——propose 内调 `openspec new change`，但 propose 本身没有对应的 CLI 命令。
 > **profile**：core（大多数用户默认可见）
@@ -45,7 +45,7 @@ sequenceDiagram
     participant FS as 文件系统
 
     User->>MD: /opsx:propose <name or description>
-    MD->>MD: 若无输入 → AskUserQuestion<br/>从描述导出 kebab-case name
+    MD->>MD: 若无输入 → 向用户询问<br/>从描述导出 kebab-case name
 
     rect rgb(240, 248, 255)
         Note over MD,FS: Step 2 · 创建容器
@@ -76,7 +76,7 @@ sequenceDiagram
 
     rect rgb(240, 255, 240)
         Note over MD,FS: Step 5 · apply gate
-        MD->>MD: 检查 applyRequires 全部 done
+        MD->>MD: 检查 applyRequires 全部满足<br/>（done 或显式 skipped）
         MD->>TS: openspec status --change X
         TS-->>MD: 最终状态（人类可读）
         MD-->>User: "All artifacts created! Ready for implementation."
@@ -94,6 +94,13 @@ These guide what you write, but should never appear in the output
 ```
 
 这是 propose（以及 continue、ff）最容易踩的坑：agent 把 template 返回的 `<context>` 和 `<rules>` 标签复制进了 artifact 文件。
+
+## v1.7.0：命名、顺序与无 spec change
+
+- `openspec new change` 接受数字前缀的 kebab-case 名，例如 `100-add-feature`；不再把数字开头一概拒绝。
+- `specs` 和 `design` 在 proposal 后都 ready，但 status/模板按 schema 声明顺序先推荐 specs。它不是新增的 `specs -> design` 依赖。
+- 纯重构、工具或文档工作可在 `.openspec.yaml` 声明 `skip_specs: true`。此时 specs 是 `skipped`，而不是待生成的空文件；若需求出现 spec-level 行为变化，必须移除 marker 后再写 delta。
+- nested layout 使用 `specs/<capability-path>/spec.md`，如 `specs/identity/session/spec.md`；默认 schema 文案仍偏 flat，团队应在 config/AGENTS 明确路径约定。
 
 ## Guardrails
 

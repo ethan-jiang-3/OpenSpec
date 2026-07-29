@@ -4,6 +4,8 @@
 
 **别把 specs 当一次性产物。日常就活在 explore → propose → apply → archive 这个圈里，而 specs 只在 archive 那一步更新。所以 apply 完记得 archive；apply 改代码时顺手想一句"这段 spec 还准吗"；感觉不对就用 propose 写个 change 去 archive。平时几乎不用手碰 spec 文件。**
 
+> **v1.7.0 边界。** “只在 archive 更新”说的是 main spec 的程序化归档路径；agent sync 可以在 archive 前做 early-sync，archive 对完全一致的结果会幂等 no-op。capability ID 是 `specs/` 下的相对 path（可为 `identity/session`），不是仅仅末级目录名；这些路径层次不提供自动检索或消除上下文预算。
+
 ## 先分清两件事
 
 很多人把两件不同的事混成一团，先拆开：
@@ -19,7 +21,7 @@
 
 ## 日常就一个圈：explore → propose → apply → archive
 
-不用记复杂规则。日常就一个圈：**explore → propose → apply → archive**——前三步是 `/opsx:` 工作流技能，`archive` 是 `openspec` CLI 命令（**specs 只在这步更新**）。`validate`/`list`/`view` 是只读的 CLI 工具命令，偶尔用，**不在圈里**。（CLI 命令 vs `/opsx:` slash 的完整对照见 [`../../_digested/specs_truth/README.md`](../../_digested/specs_truth/README.md)；`validate` 查什么见 [`06`](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
+不用记复杂规则。日常就一个圈：**explore → propose → apply → archive**——由宿主 workflow 推进，`archive` CLI 完成程序化归档（Claude 的 `/opsx:*` 与 Codex 的 `$openspec-*` 只是不同入口）。`validate`/`list`/`view` 是只读的 CLI 工具命令，偶尔用，**不在圈里**。（CLI 命令 vs host workflow 的完整对照见 [`../../_digested/specs_truth/README.md`](../../_digested/specs_truth/README.md)；`validate` 查什么见 [`06`](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
 
 ```text
 explore    感觉要改、读代码判断要不要动          ← "spec 可能要修" 的入口
@@ -47,7 +49,7 @@ archive    校验 + 把 delta 合进主 spec + 收档      ← ★ specs 只在�
 - **apply 完就 archive，别卡着** —— specs 只在 archive 时更新。change 停在 apply 之后不归档，是最常见的失真 + 噪声源（它要么指向早不存在的方向，要么没建完）。走完圈、到 archive 收尾。
 - **改 requirement 名字走 RENAMED，别"删旧 + 加新"** —— requirement 没有稳定 ID，身份就是它的标题。删了再加等于把历史连续性掐断，以后任何指向旧名字的 delta 都失配。
 - **apply 改代码时，顺手想一句"这段 spec 还准吗"** —— 最廉价的对齐动作。改完一个行为，花 10 秒问：spec 里有没有描述这个？我这一改让它更准还是更不准？不准就在下一个 propose 的 delta 里带上。
-- **capability 目录名 = 它的身份，别改** —— `openspec/specs/<capability>/` 这个名字就是 capability 的身份，也是所有 delta 的靶心。requirement 改名还有 `RENAMED` 操作，**capability 改名没有任何操作**，只能裸搬目录——一改，指向旧名的 delta 全悬空。所以目录名当稳定性契约对待。（详见 [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md)。）
+- **capability relative path = 它的身份，别随意搬** —— `openspec/specs/<capability-path>/spec.md` 的相对 path（可嵌套）就是 capability ID，也是 delta 的靶心。requirement 改名还有 `RENAMED`；capability path 仍没有独立 rename operation，裸搬会让旧 path 的 delta 悬空。所以完整 path 当稳定性契约对待。（详见 [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md)。）
 - **别手改主 spec** —— 要改就走 propose（写 delta）再 archive。手改是核选项，而且改完没有任何工具知道你动过。
 
 （`openspec validate` 是真实的 CLI 命令（和 `archive` 同列），但**不是工作流一步**——archive 自己会先校验，平时不用单独跑它；而且它只查结构、查不出 specs↔代码漂移，见误区 1 和 [`06` validate 命令参考](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
@@ -84,7 +86,7 @@ openspec archive fix-<something> -y      # archive 会先校验，再把 delta �
 openspec new change add-<capability>-spec
 #   ## ADDED Requirements   ← 如实描述代码里已经发运的行为
 openspec archive add-<capability>-spec -y
-# archive 新建的 spec，## Purpose 是 "TBD ..." 占位，记得补一句
+# 新 capability delta 可先写 ## Purpose；archive 会带入 main spec
 ```
 
 ### 招三：噪声 change（废弃了 / 没建完 / 早被别的方向取代）→ 挪走或删
@@ -107,7 +109,7 @@ grep -nE "^### Requirement:" openspec/specs/<capability>/spec.md
 openspec archive <change> -y
 ```
 
-只有当整段已经面目全非、对不上号时，才升级到 `/opsx:sync`（让 agent 重对齐），或手改 spec + 再写个 rebaseline change——这是最后手段，平时用不到。
+只有当整段已经面目全非、对不上号时，才升级到宿主 sync workflow（Claude 示例 `/opsx:sync`；让 agent 重对齐），或手改 spec + 再写个 rebaseline change——这是最后手段，平时用不到。
 
 ## 常见误区
 
@@ -139,7 +141,7 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 
 ## 参考来源
 
-源码引用基于 commit `db4a05a`：
+源码引用以 v1.7.0 tag `4e16790` 为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
@@ -149,6 +151,6 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 | [`../../_digested/specs_truth/03-手段清单-到底有多少种修法.md`](../../_digested/specs_truth/03-手段清单-到底有多少种修法.md) | 修法：纠正型 delta、AUTHOR-NEW、DELETE/SHELVE |
 | [`../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md`](../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md) | `archive ... not found` 怎么排错 |
 | [`../../_digested/specs_truth/06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md)（validate 命令参考） | `validate` 是 CLI 命令（非 slash）、结构 linter、抓不出漂移；archive 自校验使单独 validate 冗余 |
-| [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md) | capability=目录名=身份、两层 name-as-identity、capability 无 rename；specs 漂移与维护（用户向） |
+| [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md) | capability=specs 相对 path=身份、capability 无独立 rename；specs 漂移与维护（用户向） |
 | `src/core/specs-apply.ts` | `buildUpdatedSpec`：MODIFIED 整块替换、按标题精确匹配、原子 fail-fast |
 | `src/core/validation/validator.ts` | `validateChangeDeltaSpecs` 只读 change delta、不打开主 spec（误区 1 的根） |

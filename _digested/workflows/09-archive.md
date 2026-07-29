@@ -4,19 +4,19 @@
 
 `src/core/templates/workflows/archive-change.ts` → `getArchiveChangeSkillTemplate()` + `getOpsxArchiveCommandTemplate()`
 
-> **用户怎么调**：`/opsx:archive [change-name]`（agent 模板）或 `openspec archive <name>`（CLI 命令）
+> **调用方式**：command adapter 可为 `/opsx:archive [change-name]`，Codex v1.7.0 用 `$openspec-archive-change`；另有确定性 CLI `openspec archive <name>`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-archive-change`（skill）/ `OPSX: Archive`（command）
-> **独立 CLI 命令**：**有**——`openspec archive <name>` 是独立的 CLI 命令，做 programmatic validate → merge → move。`/opsx:archive` 是 agent 模板，做 pre-flight checks + agent-driven sync + 手动 mv。**两条路径不同**：CLI 做完整替换式合并，OPSX 做智能合并。
+> **独立 CLI 命令**：**有**——`openspec archive <name>` 做 programmatic validate → merge → move。host archive workflow 做 pre-flight checks + agent-driven sync + 手动 mv。**两条路径不同**：CLI 做完整替换式合并，agent workflow 做智能合并。
 > **profile**：core（大多数用户默认可见）
-> **v1.6.0 变更**：① sync 前 main spec 路径改用 store-aware `planningHome.root`；② sync prompt 新增 Cancel 选项；③ sync 必须 inline 执行且完成后**验证全部 capability** 才允许 archive；④ guardrail 新增 "Never archive while sync is still in flight"。
+> **v1.7.0 要点**：① 选择 change 后先读取 `openspec instructions archive --json` 的 context/operation guidance；② status 的 `skipped` specs artifact 视为满足；③ sync 仍必须 inline 并逐 capability 验证；④ CLI merge 对 fully early-synced operations 采用 no-op / warnings，而非无意义重写。
 
 ## 一句话
 
 archive 是 agent 层的收尾操作手册。它和 `openspec archive` CLI 命令不同——template 做的是 pre-flight checks（artifact 完成度、task 完成度、delta spec sync assessment），然后由 agent 执行 `mv` 移动 change 目录。它不调用 CLI 的 programmatic merge。
 
-## CLI archive vs OPSX archive
+## CLI archive vs host archive workflow
 
-| | `openspec archive` CLI | `/opsx:archive` template |
+| | `openspec archive` CLI | host archive workflow |
 |---|---|---|
 | 合并方式 | programmatic merge（RENAMED→REMOVED→MODIFIED→ADDED） | agent-driven sync（读 delta + main → 智能合并） |
 | spec update | `buildUpdatedSpec()` → `writeUpdatedSpec()` | 调 `openspec-sync-specs` skill |
@@ -26,15 +26,16 @@ archive 是 agent 层的收尾操作手册。它和 `openspec archive` CLI 命�
 ## CLI 命令调用序列
 
 ```text
-1. [可选] openspec list --json                    # 选择 change
-2. openspec status --change "<name>" --json        # 检查 artifact 完成度
-3. [agent 读 tasks.md]                             # 统计 checkbox
-4. [agent 读 delta specs + main specs 对比]         # sync assessment
+1. 显式名称 → 对话推断 → 唯一 active change 自动选择；仅歧义时 `openspec list --json`
+2. openspec instructions archive --change "<name>" --json  # 读取 context + operationGuidance（不影响 CLI contract）
+3. openspec status --change "<name>" --json        # 检查 artifact 完成度；done / skipped 都满足
+4. [agent 读 tasks.md]                             # 统计 checkbox
+5. [agent 读 delta specs + main specs 对比]         # sync assessment
    → main spec 路径用 <planningHome.root>/openspec/specs/（store-aware）
    → 用户可选 Cancel / Archive without syncing / Sync now / Sync anyway
    → 若选 sync：inline 执行 → 验证全部 capability → 通过后才继续
-5. mkdir -p "<changesDir>/archive"                 # 创建 archive 目录
-6. mv "<changeRoot>" "<archiveDir>/YYYY-MM-DD-<name>"  # 移动
+6. mkdir -p "<changesDir>/archive"                 # 创建 archive 目录
+7. mv "<changeRoot>" "<archiveDir>/YYYY-MM-DD-<name>"  # 移动
 ```
 
 注意：archive template **不调用** `openspec archive` CLI 命令。它自己执行 `mv`。
@@ -104,7 +105,7 @@ sequenceDiagram
 
 ## sync assessment 的选项和路由
 
-template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然后给用户选项。v1.6.0 的关键变化：sync **必须 inline 执行**，且完成后必须重新对比全部 capability 做验证。
+template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然后给用户选项。sync **必须 inline 执行**，且完成后必须重新对比全部 capability 做验证；archive inputs 的 context 是必读 prompt input、operation guidance 是可适用的建议，但二者不会改变任务确认、root 或 CLI merge 规则。
 
 | 用户选择 | agent 行为 |
 |---|---|

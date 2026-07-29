@@ -21,6 +21,8 @@
 - `rules.apply` 无效；Apply 的稳定 instruction 来自 `schema.apply.instruction`。
 - Explore、Sync 和 Archive 也不是 artifact ID，不能通过同名 `rules` 获得指导。
 
+v1.7.0 还要区分 schema instruction 和项目 operation input：`context` 会进入 Apply/Archive，`operations.apply.guidance` 与 `operations.archive.guidance` 分别提供这两个 operation 的项目级指引；它们不改变 schema 的 DAG 或 apply hard gate。
+
 ## 2. schema 拥有什么，不拥有什么
 
 把 `schema.yaml` 称为控制面是有边界的。它是 artifact DAG 与 Apply contract 的声明源，不是整个 OpenSpec 生命周期的全部源码。
@@ -57,21 +59,21 @@ proposal ---+            +-> tasks
 2. `proposal` 完成后，`specs` 与 `design` 同时 ready。
 3. `specs` 与 `design` 都完成后，`tasks` ready。
 
-[`ArtifactGraph.getBuildOrder()`](../../src/core/artifact-graph/graph.ts) 使用 Kahn 拓扑排序，并按 artifact ID 排序 ready queue。因此它给当前 schema 的确定性总序是：
+[`ArtifactGraph.getBuildOrder()`](../../src/core/artifact-graph/graph.ts) 使用 Kahn 拓扑排序；v1.7.0 对同级 ready artifact 按 schema 声明顺序稳定排序。因此它给当前 schema 的确定性推荐总序是：
 
 ```text
-proposal -> design -> specs -> tasks
+proposal -> specs -> design -> tasks
 ```
 
 这只是合法拓扑序，不表示 `design` 依赖 `specs`。要区分三个概念：
 
 - **声明顺序**：YAML 中列出的 `proposal, specs, design, tasks`。
 - **依赖偏序**：`proposal` 后 `specs/design` 可并行，二者之后才是 `tasks`。
-- **CLI 的确定性展示/选择顺序**：拓扑排序把同时 ready 的 `design` 排在 `specs` 前。
+- **CLI 的确定性展示/选择顺序**：同级 ready 的 `specs` 在 `design` 前，因为内置 schema 的声明顺序如此。
 
 ### 当前 schema 内部的两个张力
 
-第一，`design.instruction` 要求“Reference the proposal for motivation and specs for requirements”，但 `design.requires` 只有 `proposal`。生成 design instructions 时，`dependencies` 不会提供 change specs；正常 CLI 顺序还可能先选择 `design`。
+第一，`design.instruction` 要求“Reference the proposal for motivation and specs for requirements”，但 `design.requires` 只有 `proposal`。生成 design instructions 时，`dependencies` 不会把 change specs 当成硬依赖；虽然内置推荐顺序会先显示 specs，agent 仍不能把这种顺序提示当成 DAG 保证。
 
 第二，`design.instruction` 写着“create only if any apply”，但 `tasks.requires` 固定包含 `design`。在当前 DAG 中，不创建 `design.md` 就无法让 `tasks` 进入 ready，因此 design 实际上是结构必需项。
 
@@ -129,7 +131,7 @@ tasks.dependencies    = [specs, design]
 
 它不会自动展开传递依赖。例如 `tasks.dependencies` 没有 `proposal`；proposal 中的重要分类必须先被 specs/design 继承，或由执行者按 change artifacts 的整体上下文读取。
 
-`context` 与 `rules` 只属于 artifact instructions，不会因为 schema 中有 Apply block 就自动进入 Apply。完整阶段边界见 [`07-config-yaml-上下文路由源码深挖.md`](07-config-yaml-上下文路由源码深挖.md)。
+`rules` 只属于 artifact instructions，不会因为 schema 中有 Apply block 就自动进入 Apply。v1.7.0 的 project `context` 会进入 Apply/Archive，额外 operation guidance 放在 `operations.apply/archive.guidance`；完整阶段边界见 [`07-config-yaml-上下文路由源码深挖.md`](07-config-yaml-上下文路由源码深挖.md)。
 
 ## 6. Apply block 的精确语义
 
@@ -146,7 +148,7 @@ apply:
 
 [`generateApplyInstructions()`](../../src/commands/workflow/instructions.ts) 对它的消费方式如下：
 
-1. 只直接检查 `apply.requires` 中的 `tasks` 输出是否存在。
+1. 读取 project `context` 与 `operations.apply.guidance`，并只直接检查 `apply.requires` 中的 `tasks` 输出是否存在。
 2. 读取 `tasks.md` 的 checkbox，计算 total、complete 与 remaining。
 3. 收集 schema 中**所有已经存在**的 artifact 输出，形成 `contextFiles`。
 4. 有待办任务且前置条件成立时，使用 `apply.instruction`；缺 artifact、缺 tracking file、没有 checkbox 或全部完成时，返回相应的诊断/结束 instruction。

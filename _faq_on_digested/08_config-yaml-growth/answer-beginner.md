@@ -6,13 +6,17 @@
 
 ## 先认清楚这个文件
 
-`openspec/config.yaml` 在三层里属于**项目全局层**——"这个项目长期按什么原则开发"（另两层：`specs/` 是"系统现在会什么"，`changes/` 是"这次改什么"，细节见 [`../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md)）。它只有三个字段：
+`openspec/config.yaml` 在三层里属于**项目全局层**——“这个项目长期按什么原则开发”（另两层：`specs/` 是“系统现在会什么”，`changes/` 是“这次改什么”，细节见 [`../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md)）。对日常作者最重要的字段有：
 
 | 字段 | 作用 |
 |---|---|
 | `schema` | 用哪个工作流（默认 `spec-driven`） |
 | `context` | 项目背景，注入到**所有** artifact 的指令 |
 | `rules` | 按 artifact ID 分的约束，只注入给对应 artifact |
+| `operations.apply.guidance` | v1.7.0 的 Apply 专属项目指引，和 context 一起进入 apply instructions |
+| `operations.archive.guidance` | v1.7.0 的 Archive 专属项目指引，和 context 一起进入 archive instructions |
+
+`rules.apply` / `rules.archive` 不会生效；Explore 会读取 `context` / artifact `rules`，但没有 `operations.explore`。
 
 真实"长出来"的样子——这个 repo 自己 dogfood 的 [`openspec/config.yaml`](../../openspec/config.yaml)（OpenSpec 团队自己的成品）：
 
@@ -39,9 +43,17 @@ rules:
   design:
     - Prefer explicit lookups over pattern matching or regex
     - If we generate it, we track it by name in a constant
+
+operations:
+  apply:
+    guidance:
+      - Run the relevant tests before marking a task complete.
+  archive:
+    guidance:
+      - Review migration and rollback notes before confirming archive.
 ```
 
-`context` 分两块（产品语言 + 跨平台要求），`rules` 跨三个 artifact，每条都具体可执行。**这就是长出来的样子——也是你下面该抄的范本。**
+`context` 分两块（产品语言 + 跨平台要求），`rules` 跨三个 artifact，每条都具体可执行；`operations` 只放 Apply/Archive 真正需要的稳定步骤。**这就是长出来的样子——也是你下面该抄的范本。**
 
 ## 普通人的路：现状几乎没有辅助
 
@@ -108,7 +120,7 @@ schema: spec-driven
    - [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md) 末尾有 4 种项目类型（审批系统 / API 平台 / SaaS 控制台 / 数据编排）的完整 sample config，挑最像你项目的抄。
 
    抄来后只改 `context` 里的技术栈/领域/质量优先级；`rules` 先原样保留，等你用一阵、看懂每条在卡什么，再动。
-3. **rules 先别自己发明。** 抄来的先用着；真要加新规则，照着抄来的格式写——key 用真实的 artifact ID（`proposal`/`specs`/`design`/`tasks`），别发明 `all`/`general` 这种（写了也不生效，还每次 warning）。
+3. **rules 先别自己发明。** 抄来的先用着；真要加新规则，照着抄来的格式写——key 用真实的 artifact ID（`proposal`/`specs`/`design`/`tasks`），别发明 `all`/`general`/`apply`/`archive` 这种（不会作为 artifact rule 生效）。Apply/Archive 的稳定步骤放到上面的 `operations.*.guidance`。
 4. **撞墙了再升级。** 当你想精确控制产出，或 agent 老犯同类错而你又不会改 rules——升级到 [`answer-intermediate.md`](answer-intermediate.md)（让 agent 帮你建/改 config）。熟 SDD 的话直接 [`answer-expert.md`](answer-expert.md)。
 
 为什么这样 OK：config 每次 `openspec instructions` 都重读、即时生效、写错不崩（fail-open）。所以抄一份先用着、慢慢改，比从零写靠谱得多，也**不必提前焦虑**。
@@ -136,7 +148,7 @@ schema: spec-driven
 ## 结论
 
 ```text
-1. config.yaml 是项目全局层：定义 context（所有 artifact 共享）+ rules（按 artifact）。
+1. config.yaml 是项目全局层：定义 context（所有 artifact 共享，也给 Apply/Archive）+ rules（按 artifact）+ operations guidance（仅 Apply/Archive）。
 2. 普通人现状几乎没有辅助（init stub / config 陷阱 / agent 没引导）——这是 OpenSpec 的产品缺口，不是你的错。
 3. 最省力的路：别从零写，抄一个有经验的人的 config.yaml（dogfood 范本 / 同事的 / handbook 06 的 sample），改改技术栈和领域先用着。
 4. config 基本为空也能跑；撞墙了（要精确控制 / agent 老犯同类错）再升级 intermediate（agent 帮你建）或 expert（自己写）。

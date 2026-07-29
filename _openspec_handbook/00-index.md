@@ -29,7 +29,7 @@
 
 | 手册版本 | 日期 | 对齐 OpenSpec | 主要变更 |
 |---------|------|--------------|---------|
-| v1.0 | 2026-06 | 1.4.1 | 首版编号化；新增 `09-能力身份与specs漂移维护`（spec-driven 是 driver + capability=目录名身份 + 两层 name-as-identity + 漂移维护）；`02`/`04`/`99` 补 capability 身份与 RENAMED 前向指针。 |
+| v1.0 | 2026-06 | 1.4.1 | 首版编号化；新增 `09-能力身份与specs漂移维护`（spec-driven 是 driver + capability=相对 path 身份 + 两层 name-as-identity + 漂移维护）；`02`/`04`/`99` 补 capability 身份与 RENAMED 前向指针。 |
 | v1.1 | 2026-06 | 1.4.1 | `explore` 地位补全（贯穿 02/03/11/13）：02 状态机补 explore 两处、03 新增 explore 深层机制（反复打磨 proposal / 对抗 LLM 幻觉 / change 作围栏）+ 生命周期补全四动词 `explore→propose→apply→archive`、11/13 实战织入 explore（change 出来后反复打磨保质量）；宪章「三层递进梯度」原则微调（高级可作精炼对照锚点）。 |
 | v1.2 | 2026-07 | 1.5.0 | 07 章重写：workspace → store 模型（跨仓库上下文引用）；00-index 版本/术语/命令表/阅读路径更新；workspace/initiative/context-store 概念全部删除。 |
 | v1.3 | 2026-07 | 1.7.0 | 对齐 v1.7：nested capability path 完整生命周期、`skip_specs`、Apply/Archive operation guidance、工具投递与 Codex skills-only、store/default 与 archive/sync 可靠性更新。 |
@@ -254,7 +254,7 @@ graph LR
 | [06-高级-config-yaml-怎么写到真正好用.md](06-高级-config-yaml-怎么写到真正好用.md) | 讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
 | [07-高级-store-跨仓库协同.md](07-高级-store-跨仓库协同.md) | store 跨仓库上下文引用 | 需要管理多个关联仓库的人 |
 | [08-高级-自定义-schema-创建自己的工作流.md](08-高级-自定义-schema-创建自己的工作流.md) | 自定义 schema——从 fork 到完全自定义 DAG | config.yaml 不够用、想创建自己工作流的人 |
-| [09-高级-能力身份与specs漂移维护.md](09-高级-能力身份与specs漂移维护.md) | capability 身份模型（capability=目录名）+ specs 漂移维护 | 想搞懂 specs 怎么组织、为什么会漂、怎么守的人 |
+| [09-高级-能力身份与specs漂移维护.md](09-高级-能力身份与specs漂移维护.md) | capability 身份模型（capability=specs 相对 path）+ specs 漂移维护 | 想搞懂 specs 怎么组织、为什么会漂、怎么守的人 |
 | [10-实战-claude-code-里的-openspec-到底怎么落地.md](10-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
 | [11-实战-从一个真实-change-走完整条主线.md](11-实战-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
 | [12-实战-如何正确修改-artifacts.md](12-实战-如何正确修改-artifacts.md) | artifact 修改指南 | 想知道 artifacts 该怎么改、怎么验证的人 |

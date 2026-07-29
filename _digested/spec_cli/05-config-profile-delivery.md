@@ -42,7 +42,7 @@
 - `bulk-archive`
 - `verify`
 - `onboard`
-- `update`（v1.6.0）
+- `update`
 
 所以，profile 回答的是：
 

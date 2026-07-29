@@ -17,6 +17,8 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 
 所以关键不是“Explore 调了哪个命令就得到 change name”，而是 agent 在 Explore 中完成了一次 scoped discovery。
 
+> **v1.7.0 当前边界。** Explore 也会读取项目 `config.yaml` 的 `context` 与 artifact `rules`，作为探索时的背景和约束；它没有 `operations.explore`，不会获得 Apply/Archive 专属 guidance。调用名由宿主决定：下文的 `/opsx:*` 是 Claude 示例，Codex 使用相应的 `$openspec-*` skill。
+
 ## 先分清两件事
 
 `explore` 和 `propose` 的边界很重要：
@@ -31,7 +33,7 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 
 这意味着：**判断“要不要 propose、propose 几个”主要发生在 Explore 阶段，而不是 Propose 阶段。**
 
-`/opsx:propose` 的模板只要求理解用户想 build/fix 什么，然后导出 change name、`openspec new change`、按 `status` 和 `instructions` 创建 artifact。它不是用来做长时间问题发现的。
+宿主的 propose workflow 只要求理解用户想 build/fix 什么，然后导出 change name、`openspec new change`、按 `status` 和 `instructions` 创建 artifact。Claude 的调用可写作 `/opsx:propose`；它不是用来做长时间问题发现的。
 
 ![Explore 到 propose 的总览流程](figures/explore-to-propose-overview.svg)
 
@@ -373,7 +375,7 @@ Explore 认为可以 propose 时，agent 不应该只说”我来创建 change�
 - src/routes/oauth/*
 - auth integration tests
 
-如果你认可这个边界，我可以进入 /opsx:propose add-oauth-login。
+如果你认可这个边界，我可以进入 propose workflow（Claude：`/opsx:propose add-oauth-login`；Codex：`$openspec-propose-change`）。
 ```
 
 这段说明本质上是 proposal 之前的 pre-proposal boundary check。它让用户和 agent 在创建文件前先对齐 scope。
@@ -463,11 +465,11 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 
 ## 参考来源
 
-源码引用基于 commit `970cb44`：
+源码引用以 v1.7.0 tag `4e16790` 为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/explore.ts` | Explore 是 stance；可以读代码但不实施；启动时检查 `openspec list --json`；相关 change 用 `status --json` 读取 artifacts |
+| `src/core/templates/workflows/explore.ts` | Explore 是 stance；可以读代码但不实施；启动时检查 `openspec list --json`；相关 change 用 `status --json` 读取 artifacts，并读取项目 context/rules |
 | `src/core/templates/workflows/propose.ts` | Propose 从 change name/description 开始，创建 change，并按 `status` / `instructions` 循环生成 artifacts |
 | `src/commands/workflow/status.ts` | `status --json` 解析 planning home、change、schema 后输出结构化 status JSON |
 | `src/commands/workflow/instructions.ts` | `instructions <artifact> --json` 输出依赖文件、输出路径、template、rules、instruction 等 agent 操作包 |

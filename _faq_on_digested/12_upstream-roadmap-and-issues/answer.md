@@ -1,6 +1,10 @@
 # 答案：OpenSpec 上游 Roadmap、主要问题与社区状况
 
-> **综合来源**：GitHub Issues/Discussions（Fission-AI/OpenSpec）、官方文档（ROADMAP.md, faq.md, migration-guide.md, workspace-roadmap.md）、Release Notes（v1.0.0–v1.6.0-beta.1）、社区讨论（HN, Discord, 博客）
+> **当前基线（2026-07-29）**：本地源码与 CLI 都是 OpenSpec **v1.7.0**，tag `4e16790`。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
+>
+> **v1.7.0 对本 FAQ 的纠偏**：nested capability path 已正式支持；`skip_specs: true`、Apply/Archive operation guidance 和 `instructions archive` 已交付；new spec Purpose 会随 archive 传递；early-sync archive 已幂等；Codex 已改为 `$openspec-*` skills-only，不能再把 `/opsx:*` 写成通用入口。
+>
+> **综合来源**：GitHub Issues/Discussions（Fission-AI/OpenSpec）、官方文档（ROADMAP.md, faq.md, migration-guide.md, workspace-roadmap.md）、Release Notes（历史版本）与社区讨论（HN, Discord, 博客）
 >
 > **交叉验证**：多项发现与我们 `_digested/` 和 `_faq_on_digested/` 中的独立分析高度吻合。
 
@@ -8,7 +12,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（v1.0.0–v1.6.0-beta.1）
+### 1.1 已交付（历史至 v1.6，补入当前 v1.7.0）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -17,6 +21,7 @@
 | v1.4.0 | `/opsx:update` workflow、Kimi CLI、Mistral Vibe 支持 | `_digested/workflows/` 深挖了 workflow templates |
 | v1.5.0 | Stores（早期 beta）、sync workflow 进 core profile | `_digested/system/03-planning-home-与-store-模型.md` 覆盖了 store 模型 |
 | v1.6.0-beta.1 | Canonical resolution 统一、auto-approve CLI | — |
+| v1.7.0 | nested main specs、`skip_specs`、operation guidance / `instructions archive`、Purpose carry-through、early-sync no-op、Codex skills-only | 本轮三目录同步的当前依据 |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
@@ -82,7 +87,7 @@
 
 - `/opsx:apply` 只检查 4 个 artifact 文件**是否存在**，不检查 tasks 是否真正完成。
 - `/opsx:archive` 报告 "All tasks complete" 即使所有 checkbox 都未勾选。
-- Archive 不会自动合并 delta specs 到 `openspec/specs/`——需手动操作。
+- `openspec archive` 默认会程序化合并 delta specs；宿主 archive workflow 也会先评估/验证 inline sync。用户可显式 `--skip-specs` 或拒绝确认，因此“archived”仍不必然代表 main specs 已更新。
 
 这不是 bug，而是**刻意的轻量化设计取舍**。代价是：workflow 的"完成"信号不可靠，依赖人工 review。
 
@@ -92,7 +97,7 @@
 
 - **Windsurf 用 workflows 而非 commands**：OpenSpec 生成的 `commands/opsx` 文件对 Windsurf 不兼容（[#591](https://github.com/Fission-AI/OpenSpec/issues/591)）。v1.0.2 甚至删除了用户已有的工作 Windsurf 配置。
 - **Cursor 双重加载**：从 `.claude/` 和 `.cursor/` 同时加载 skills 导致重复。
-- **Codex CLI 回归**：v0.117.0 起所有 `/opsx:*` slash commands 不被识别（[#890](https://github.com/Fission-AI/OpenSpec/issues/890)）。
+- **Codex 历史 slash-command 回归**：[#890] 反映旧 `/opsx:*` 投递的问题；v1.7.0 的当前交付是 `$openspec-*` skills-only，不应再把它当 Codex 问题的现行 workaround。
 - **多项目配置失败**：只有第一个项目生成 slash commands（[#195](https://github.com/Fission-AI/OpenSpec/issues/195)）。
 
 **根本原因**：OpenSpec 的 "universal delivery" 抽象层（同一套 workflow semantics → skills → commands → per-tool adapters）在面对真实工具差异时，adapter 层的健壮性不足。每增加一个工具支持，不是"零成本"，而是可能引入新的断裂点。
@@ -117,7 +122,7 @@ v1.0.0 是迄今为止最大的 breaking change：
 - **手动步骤**：`project.md` 不会自动删除，用户需要手动把有用内容迁移到 `config.yaml` 的 `context:` 字段
 - **迁移命令**：`openspec init`（会检测旧文件、引导清理）；CI 环境：`openspec init --force --tools claude`
 
-此后（v1.0.x–v1.6.x）无进一步 breaking changes。计划中的 schema 重命名（`spec-driven` → `openspec-default`）会使用别名保持兼容。
+此后（v1.0.x–v1.6.x）的历史判断不能当作当前结论。v1.7.0 已实质改变 nested path、operation inputs、skip-spec change、archive/sync 与 Codex delivery；计划中的 schema 重命名仍应以当前 release note/源码验证。
 
 ---
 
@@ -130,16 +135,16 @@ v1.0.0 是迄今为止最大的 breaking change：
 | OpenSpec 是什么？ | 在 AI 写代码前让开发者和 AI 在 spec 上达成一致的轻量层 | `_digested/system/01-系统心智模型.md` |
 | 绑死某个 AI 工具吗？ | 否，支持 25+ 工具 | `_digested/system/04-agent-contract-与工具投递.md` |
 | 能在已有大项目上用吗？ | 是，brownfield-first：只 spec 每次改动触及的部分 | `_digested/system/08-对照常见-SDD-与-AI-Coding.md` |
-| 最简单的用法是什么？ | `/opsx:explore`（可选）→ `/opsx:propose` → `/opsx:apply` → `/opsx:archive` | `_faq_on_digested/03` 到 `07` 覆盖了每一步 |
+| 最简单的用法是什么？ | explore（可选）→ propose → apply → archive；Claude 可用 `/opsx:*`，Codex 用 `$openspec-*` | `_faq_on_digested/03` 到 `07` 覆盖了每一步 |
 
 ### 3.2 混淆高发区
 
 | Q | A |
 |---|---|
 | Slash commands 不出现怎么办？ | 运行 `openspec update` → 重启 IDE → 检查 `.claude/skills/` 是否有文件。确认在 AI chat 里输入（不是终端） |
-| Terminal vs AI Chat 的区别？ | `openspec ...` 在终端；`/opsx:...` 在 AI 助手的 chat 里。语法因工具而异（`/opsx:propose` vs `/opsx-propose`）——这是 **#1 支持问题** |
+| Terminal vs AI Chat 的区别？ | `openspec ...` 在终端；agent 入口由宿主决定（Claude `/opsx:*`，Codex `$openspec-*`） |
 | 怎么升级？ | `npm install -g @fission-ai/openspec@latest` 然后每个项目里执行 `openspec update` |
-| 怎么自定义？ | `openspec/config.yaml` 的 `context:` / `rules:` / `schema:` 字段；自定义 schema 用 `openspec schema fork spec-driven my-workflow` |
+| 怎么自定义？ | `openspec/config.yaml` 的 `context:` / `rules:` / `operations:` / `schema:` 字段；自定义 schema 用 `openspec schema fork spec-driven my-workflow` |
 
 ### 3.3 什么时候用 / 什么时候不用
 

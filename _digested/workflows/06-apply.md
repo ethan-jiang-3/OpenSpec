@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/apply-change.ts` → `getApplyChangeSkillTemplate()` + `getOpsxApplyCommandTemplate()`
 
-> **用户怎么调**：`/opsx:apply [change-name]`
+> **调用方式**：command adapter 可为 `/opsx:apply [change-name]`；Codex v1.7.0 用 `$openspec-apply-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-apply-change`（skill）/ `OPSX: Apply`（command）
 > **独立 CLI 命令**：无——apply 没有对应的 `openspec apply` CLI 命令，它是纯 agent 模板，消费 `openspec instructions apply --json` 的运行时输出。
 > **profile**：core（大多数用户默认可见）
@@ -40,7 +40,7 @@ sequenceDiagram
         MD->>TS: openspec status --change X --json
         TS-->>MD: schemaName, changeRoot, actionContext
         MD->>TS: openspec instructions apply --change X --json
-        TS-->>MD: state, contextFiles, progress, tasks
+        TS-->>MD: state, contextFiles, progress, tasks,<br/>optional context + operationGuidance
     end
 
     alt state = "blocked"
@@ -94,6 +94,15 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 | `ready` | 一切就绪，有 pending tasks | 读 contextFiles → 开始 task loop |
 | `all_done` | 全部 checkbox 已勾 | 祝贺，建议 archive |
 
+## v1.7.0：operation inputs 不等于 artifact rules
+
+`openspec instructions apply --change X --json` 除了 `contextFiles`、progress、tasks 和 state，还可返回：
+
+- `context`：来自 selected root 的项目背景，agent 必须作为实施期 prompt input 考虑；
+- `operationGuidance`：`config.yaml` 的 `operations.apply.guidance`，逐条作为适用时遵守的 advisory guidance。
+
+它们不替代任何 CLI state、task、完成判定或 schema instruction。`rules.tasks` 只在生成 `tasks.md` 时使用；`rules.apply` 没有消费者。若要给 Apply 写长期提醒，正确位置是 `operations.apply.guidance`，强制约束仍应落在 tests、lint 或 CI。
+
 ## Fluid Workflow Integration
 
 apply template 明确写了它不是 phase lock：
@@ -128,6 +137,7 @@ template 硬编码了三种输出格式：
 | Keep changes minimal and scoped | 不夹带 |
 | Update checkbox immediately after each task | 不拖延 |
 | Use contextFiles from CLI, don't assume file names | 不硬编码 |
+| Read context / consider operation guidance, but preserve CLI gate | config 是 prompt input，不能绕过 blocked/all_done |
 
 ## 和 FAQ 的衔接
 

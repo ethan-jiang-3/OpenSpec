@@ -23,14 +23,16 @@ next_read:
 
 ## 先接受配置的能力边界
 
-`config.yaml` 不是项目百科，也不是通用的分阶段 guidance router：
+`config.yaml` 不是项目百科，也不是任意阶段都可自由扩展的 guidance router；v1.7.0 有明确的 Apply/Archive operation slots：
 
 | 内容 | 正确位置 | 原因 |
 |---|---|---|
-| 所有 planning artifacts 都需要的短、稳定背景 | `context` | 只会在 `openspec instructions <artifact>` 中重复注入。 |
+| 所有 planning artifacts 都需要的短、稳定背景 | `context` | 注入 artifact instructions；也会进入 Apply/Archive operation inputs。 |
 | 一个 artifact 的长期写作或审查约束 | `rules.<artifact-id>` | 只会在该 artifact 的 instructions 中出现。 |
 | 本次 change 的范围、分类、取舍、风险、验证事实 | proposal / specs / design / tasks | 通过 artifact DAG 在正确时机交给下游。 |
-| Apply 的固定行为、新的 gate、额外 review 节点或新输出结构 | schema / template / workflow skill | Apply 不接收 config 的 `context`/`rules`。 |
+| Apply 的稳定项目步骤 | `operations.apply.guidance` | 与 context 一起进入 `instructions apply`；不改变 schema gate。 |
+| Archive 的稳定项目步骤 | `operations.archive.guidance` | 与 context 一起进入 `instructions archive`；不改变 archive CLI 的确定性合并。 |
+| Apply 的新 gate、额外 review 节点或新输出结构 | schema / template / workflow skill | operation guidance 是 prompt input，不是结构控制器。 |
 | 必须成立的约束 | checker / test / lint / CI / validator | prompt 不能证明或强制结果。 |
 | 跨团队上游 spec 的发现 | `references` | 生成可按需读取的索引，而不是内联正文。 |
 | 运行中的状态、receipt、授权或进度 | runtime-owned state / record | config 是项目级长期配置。 |
@@ -48,8 +50,10 @@ next_read:
           是 -> references；需要时再读取正文
           否 -> 它是否必须被确定性地强制或证明？
                   是 -> owning spec/policy + checker / test / lint / CI；artifact/task 记录影响与证据
-                  否 -> 它是否改变 artifact、依赖、gate 或 Apply 行为？
-                          是 -> schema / template / workflow skill
+                  否 -> 它是否是 Apply/Archive 都只需短稳定指导的 operation 行为？
+                          是 -> operations.apply/archive.guidance
+                          否 -> 它是否改变 artifact、依赖、gate 或 Apply 行为？
+                                  是 -> schema / template / workflow skill
                           否 -> 它是否只属于一个 change？
                                   是 -> proposal / specs / design / tasks
                                   否 -> 它是否只服务一个 artifact？
@@ -136,11 +140,12 @@ specs + design
 
 | 需求 | 正确升级点 |
 |---|---|
-| Apply 始终需要一项稳定指导 | custom schema 的 `apply.instruction` |
+| Apply 始终需要一项项目稳定指导 | `operations.apply.guidance`；若要改 gate/结构才用 custom schema 的 `apply.instruction` |
+| Archive 始终需要一项项目稳定指导 | `operations.archive.guidance` |
 | Explore 或 Archive 有专属步骤 | workflow skill、`AGENTS.md`、playbook 或检查清单 |
 | 需要新的分类、审查或安全节点 | schema artifact + `requires` |
 | 必须保证结构、注册表、权限或验证 | validator / test / CI |
-| 需要新的 selector，例如 `guidance:` 或 `apply_rules:` | 先实现 OpenSpec feature 与诊断/测试；未知 YAML key 没有效果 |
+| 需要新的 selector，例如 `operations.explore`、`operations.sync` 或任意未知 key | 先实现 OpenSpec feature 与诊断/测试；现有 operation slots 只有 apply/archive |
 
 项目属于混合智能运行时，不自动意味着必须 fork schema。只有它的 planning lifecycle 真正需要额外 artifact、依赖或 Apply gate 时，schema 才是正确升级点。
 
@@ -149,7 +154,7 @@ specs + design
 1. 每条 `context` 都是短、稳定且面向所有 planning artifacts 的事实。
 2. 每条 rule 都有当前 schema 中真实存在的 artifact owner。
 3. 任何 change-local 决策都已迁出 config，准备由 artifacts 留痕。
-4. Apply/Explore/Archive 规则没有假设 `context`/`rules` 会自动出现。
+4. Apply/Archive 规则只使用 `context` + 对应 `operations.*.guidance`；Explore 只使用 `context` / artifact rules，未假设不存在的 operation slot。
 5. 长政策有唯一 source，rules 只保留有条件的短指针。
 6. 硬约束有对应的 deterministic owner。
 

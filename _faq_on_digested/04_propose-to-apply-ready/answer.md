@@ -18,6 +18,8 @@ change name / description
 
 OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责创建 change 容器、解释 schema 和文件状态、给出路径和 instructions；agent 负责读取上下文、生成 artifact 内容并写文件。
 
+> **v1.7.0 当前边界。** `/opsx:apply` 是 Claude 写法；Codex 使用 `$openspec-apply-change`。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；specs 会显式为 `skipped`，但不得同时存在非隐藏 delta spec 文件。
+
 ![Propose 到 apply-ready 的流程](figures/propose-to-apply-ready.svg)
 
 图中编号说明：
@@ -35,8 +37,8 @@ OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责�
 | PRP-09 | status loop | 写完后重新运行 `status --json`，让 CLI 重新解释哪些 artifacts done/ready/blocked。 |
 | PRP-10 | applyRequires gate | 检查 schema `apply.requires` 中的 artifacts 是否都已经有输出文件。 |
 | PRP-11 | final status | apply gate 满足后显示最终 `openspec status --change "<name>"` 给人看。 |
-| PRP-12 | apply instructions | `/opsx:apply` 入口会调用 `openspec instructions apply --change "<name>" --json`。 |
-| PRP-13 | contextFiles/tasks | apply instructions 返回所有 context files、task progress 和 pending tasks。 |
+| PRP-12 | apply instructions | 宿主 apply workflow 会调用 `openspec instructions apply --change "<name>" --json`。 |
+| PRP-13 | contextFiles/tasks | apply instructions 返回 artifact context files、project `context`、`operations.apply.guidance`、task progress 和 pending tasks。 |
 | PRP-14 | apply-ready handoff | agent 可以开始实施 tasks；propose 阶段到此结束。 |
 
 PRP-04、PRP-06、PRP-10 的细节分别展开在：
@@ -229,7 +231,7 @@ agent 不应该把 `context`、`rules` 或 `<project_context>` 标签复制进 a
 specs/**/*.md
 ```
 
-因此一个 change 可以创建多个 capability delta specs。
+因此一个 change 可以创建多个 capability delta specs。v1.7.0 的 capability 是 `specs/` 下的相对 path，允许 `identity/session/spec.md` 这样的嵌套路径；delta 必须使用同一相对 path，根级 `changes/<change>/specs/spec.md` 无效。
 
 ### design
 
@@ -264,6 +266,8 @@ schema instruction 说 design 不是流水账；它应该用于跨模块、新�
 ```
 
 `tasks.md` 完成后，默认 `apply.requires: [tasks]` 被满足。
+
+如果 change 只是重构、工具或文档等不改变 spec-level 行为的工作，则在 metadata 写 `skip_specs: true`，status 会将 specs 标为 `skipped` 而不是要求写一份虚假的零 delta spec；真实行为变化不能用它绕过 specs。
 
 ## Step 6：每写完一个 artifact，都重新解释状态
 
@@ -310,7 +314,7 @@ apply:
 ```text
 tasks artifact done
   -> apply.requires 满足
-  -> /opsx:apply 可以读取 apply instructions
+  -> 宿主 apply workflow 可以读取 apply instructions
 ```
 
 `tasks artifact done` 的意思是：
@@ -325,7 +329,7 @@ resolveArtifactOutputs(changeDir, "tasks.md").length > 0
 
 ## Step 8：进入 apply 前会发生什么
 
-当用户运行 `/opsx:apply`，apply skill 会：
+当用户运行宿主 apply workflow（Claude 示例为 `/opsx:apply`），它会：
 
 ```bash
 openspec status --change "<name>" --json
@@ -336,6 +340,8 @@ openspec instructions apply --change "<name>" --json
 
 ```text
 contextFiles   # proposal/specs/design/tasks 等已存在 artifact 文件
+context        # project config context
+guidance       # operations.apply.guidance（如配置）
 progress       # total / complete / remaining
 tasks          # checkbox task list
 state          # blocked / ready / all_done
@@ -383,7 +389,7 @@ planning artifacts 已经足够让 apply skill 读取上下文和任务清单
 
 ## 参考来源
 
-源码引用基于 commit `750a03c`：
+源码引用以 v1.7.0 tag `4e16790` 为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

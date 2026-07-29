@@ -61,7 +61,7 @@ DeerFlow Deep Research 是建立在 DeerFlow 2.1 上的下游深度研究产品�
 | `proposal`（58-62） | `Change Focus` 强制声明 causal owner、evidence seam、scope 与 triggered policies；对 Flow 或 node 变更，Workflow Outcome Review 与 Node Agent Review 能让审查聚焦于边界。 | 保留 Focus Card 和条件触发；表格字段、分类定义、policy 解释应由 Agent Charter 作唯一权威，config 只保留短指针。尤其不要把 review record 写成会赋予 node role、route、state write、model invocation、tool permission 或 recovery 的东西。 |
 | `specs`（64-65） | 要求 observable/mechanically verifiable behavior，并坚持最低 deterministic evidence，符合 B2 的外部行为契约。 | main spec / active delta 才是 requirement ID 与行为的权威；spec 不应以 prompt 文本替代 graph、state 或 node 的可执行契约。 |
 | `design`（67-68） | 要求说明 state、checkpoint、artifact、evidence、recovery 的 owner，并禁止 competing controller；这是 B2 最重要的设计 guardrail。 | 对 graph/node change，design 应从实际 owner 记录 node input/output、允许 transition predicate、state mutation / reducer、candidate admission evaluator、retry/fallback 与 deterministic graph test。不要只靠“模型会如何判断”的叙述。 |
-| `tasks`（70-71） | 要求 red-before-green、窄验证命令和 archive 前的完整检查，能把 guidance 变为可执行 evidence。 | Apply 不会重新注入 config rules。因此生成的 `tasks.md` 必须写出具体 test / `make verify` / OpenSpec validation，而 mirror cleanliness 等不可协商事实还应由 checker、test 或 CI 验证，不能只留在 task prose。 |
+| `tasks`（70-71） | 要求 red-before-green、窄验证命令和 archive 前的完整检查，能把 guidance 变为可执行 evidence。 | Apply 不会重新注入 artifact `rules`（但会接收 project `context` 与 apply guidance）。因此生成的 `tasks.md` 必须写出具体 test / `make verify` / OpenSpec validation，而 mirror cleanliness 等不可协商事实还应由 checker、test 或 CI 验证，不能只留在 task prose。 |
 
 ## B2 的专属诊断问题
 

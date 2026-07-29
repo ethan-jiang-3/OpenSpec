@@ -1,6 +1,6 @@
 # 07 - 内置 spec-driven 的 config.yaml 上下文路由（源码深挖）
 
-> 范围：本文只讨论仓库随包发布的 [`schemas/spec-driven/`](../../schemas/spec-driven/)；不展开自定义 schema、`store:` 根指针或无关 workflow。Explore 与 Archive 只用于划定 config 注入边界。源码基线为 `af94ff8`。这里的“内置 `spec-driven`”特指最终解析到 package source 的那一份 schema，而不只是名字恰好叫 `spec-driven`。
+> 范围：本文只讨论仓库随包发布的 [`schemas/spec-driven/`](../../schemas/spec-driven/)；不展开自定义 schema、`store:` 根指针或无关 workflow。Explore 与 Archive 只用于划定 config 注入边界。源码基线为 OpenSpec `v1.7.0`（`4e16790`）。这里的“内置 `spec-driven`”特指最终解析到 package source 的那一份 schema，而不只是名字恰好叫 `spec-driven`。
 
 四个 artifact 的结构契约、完成判定和 Apply gate 由 [`05-schema-driven-控制面.md`](05-schema-driven-控制面.md) 集中解释；本文在该基础上只追踪 `config.yaml` 的消费者与阶段边界。
 
@@ -15,14 +15,15 @@
 
 `apply` 不是第五个 artifact，而是 schema 中独立的执行阶段配置。因而 `config.yaml` 的合法 `rules` key 只有 `proposal`、`specs`、`design`、`tasks`；`rules.apply`、`rules.explore`、`rules.archive` 都没有消费者。四个 artifact 与 `apply` block 的权威定义都在 [`schemas/spec-driven/schema.yaml`](../../schemas/spec-driven/schema.yaml)；schema 类型也把 `artifacts` 与可选的 `apply` 定义为两个不同字段（[`SchemaYamlSchema`](../../src/core/artifact-graph/types.ts)）。
 
-`config.yaml` 也不是覆盖所有阶段的通用提示词路由器：
+`config.yaml` 也不是覆盖所有阶段的同一种提示词路由器。v1.7.0 把 artifact 规则和 operation guidance 明确分开：
 
-- `context` 与 `rules.<artifact-id>` 只进入 `openspec instructions <artifact>`。
-- `references` 进入 `openspec instructions <artifact>` 和 `openspec instructions apply`，但只是实时生成的上游 spec 索引，不内联 spec 正文。
-- Apply 从 change 中已有的四类 artifact 生成 `contextFiles`，并使用 schema 的 `apply.instruction`；它不接收 config `context` 或 `rules`。
-- Explore 与 Archive 不调用 artifact/apply instructions，因而三者都不会被自动注入。
+- `context` 与 `rules.<artifact-id>` 进入 `openspec instructions <artifact>`；`rules.apply`、`rules.explore`、`rules.archive` 仍没有消费者。
+- `references` 进入 artifact instructions 和 `openspec instructions apply`，但只是实时生成的上游 spec 索引，不内联 spec 正文。
+- Apply 从 change 中已有 artifact 生成 `contextFiles`，同时接收 config `context` 与 `operations.apply.guidance`；**不**接收 artifact `rules.*`。
+- `openspec instructions archive` 是新的只读 operation surface，返回 config `context` 与 `operations.archive.guidance`；Archive workflow 在归档前读取它。
+- Explore 不走 instructions API，但 workflow 会从 resolved root 读取 `context` / `rules` 作为会话约束；它没有 `operations.explore`。
 
-上述调用边界由 [`instructionsCommand()`、`applyInstructionsCommand()` 与 `loadRootConfigContext()`](../../src/commands/workflow/instructions.ts) 共同决定；`references` 的“索引而非正文”契约在 [`assembleReferenceIndex()`](../../src/core/references.ts) 中实现。
+上述调用边界由 [`ProjectConfigSchema` / `loadOperationInputs()`](../../src/core/project-config.ts)、[`instructionsCommand()`、`applyInstructionsCommand()`、`archiveInstructionsCommand()` 与 `loadRootConfigContext()`](../../src/commands/workflow/instructions.ts) 共同决定；`references` 的“索引而非正文”契约在 [`assembleReferenceIndex()`](../../src/core/references.ts) 中实现。
 
 ## 1. 先确认你真的在使用内置 schema
 
@@ -53,7 +54,7 @@ proposal ────────┤                        ├────> tas
                                                    both          tasks
 ```
 
-也就是说，`proposal` 完成后，`specs` 和 `design` **同时 ready**；`design` 并不依赖 `specs`。`ArtifactGraph.getNextArtifacts()` 只检查直接 `requires`，`getBuildOrder()` 用排序后的 Kahn 队列产生确定顺序（[`graph.ts`](../../src/core/artifact-graph/graph.ts)）。对当前 ID 而言，拓扑输出实际是 `proposal, design, specs, tasks`；`status` 又按这个顺序输出 artifact（[`formatChangeStatus()`](../../src/core/artifact-graph/instruction-loader.ts)）。集成测试也明确断言 proposal 完成后 ready 集合为 `design` 与 `specs`（[`workflow.integration.test.ts`](../../test/core/artifact-graph/workflow.integration.test.ts)）。
+也就是说，`proposal` 完成后，`specs` 和 `design` **同时 ready**；`design` 并不依赖 `specs`。`ArtifactGraph.getNextArtifacts()` 只检查直接 `requires`，`getBuildOrder()` 用 Kahn 队列产生确定顺序（[`graph.ts`](../../src/core/artifact-graph/graph.ts)）。v1.7.0 将同级 tie-break 改为**schema 声明顺序**，所以内置 schema 的顺序为 `proposal, specs, design, tasks`；这只是推荐/展示顺序，不把 `specs -> design` 变成依赖。proposal 完成后的 ready 集合仍同时包含 `specs` 与 `design`。
 
 ### 每个 artifact 的直接依赖与产物
 
@@ -72,7 +73,7 @@ proposal ────────┤                        ├────> tas
 |---|---|---|
 | `dependencies` | artifact instructions | 当前 artifact 的直接 DAG 前置项；给出 ID、完成状态、schema output path 和描述。 |
 | `contextFiles` | Apply instructions | change 中**所有当前已存在** artifact 的已展开绝对文件路径；不只限于 `apply.requires`，也不等同于 DAG 直接依赖。 |
-| `context` | `config.yaml` / artifact instructions | 项目级 prompt 背景，只约束四个 planning artifact 的作者；不是文件列表。 |
+| `context` | `config.yaml` / instructions | 项目级 prompt 背景：进入 artifact instructions，也进入 Apply/Archive operation inputs；不是文件列表。 |
 
 `dependencies` 由 [`getDependencyInfo()`](../../src/core/artifact-graph/instruction-loader.ts) 构造；`contextFiles` 由 [`generateApplyInstructions()`](../../src/commands/workflow/instructions.ts) 遍历 schema 的全部 artifact 并调用 `resolveArtifactOutputs()` 构造；config `context` 则由 [`readProjectConfig()`](../../src/core/project-config.ts) 解析并在 `generateInstructions()` 中取出。
 
@@ -98,9 +99,9 @@ resolveRootForCommand()
 - config 从**命令已经解析出的 root** 读取，而不是无条件从 shell 当前目录读取。入口见 [`resolveRootForCommand()`](../../src/core/root-selection.ts) 和 [`instructionsCommand()`](../../src/commands/workflow/instructions.ts)。
 - 新 change 创建时，`createChange()` 按显式 `--schema` -> config `schema` -> 默认 `spec-driven` 选名，并把结果写入 change 的 `.openspec.yaml`（[`createChange()`](../../src/utils/change-utils.ts)）。
 - 已有 change 按显式 `--schema` -> `.openspec.yaml` -> config `schema` -> `spec-driven` 解析名称（[`resolveSchemaForChange()`](../../src/utils/change-metadata.ts)）。因此修改 config `schema` 不会悄悄迁移已有、带 metadata 的 change。
-- 相反，`context`、`rules`、`references` 没有写入 change metadata；每次 instructions 命令都会从当前 resolved root 重新读取，所以它们对活跃 change 是动态生效的（[`loadRootConfigContext()`](../../src/commands/workflow/instructions.ts)）。
+- 相反，`context`、`rules`、`operations`、`references` 没有写入 change metadata；每次 instructions 命令都会从当前 resolved root 重新读取，所以它们对活跃 change 是动态生效的（[`loadRootConfigContext()`](../../src/commands/workflow/instructions.ts)）。
 
-## 4. `context`、`rules`、`references` 的精确注入路径
+## 4. `context`、`rules`、`operations`、`references` 的精确注入路径
 
 ### Artifact instructions：四个 artifact 共用一条路径
 
@@ -146,17 +147,18 @@ openspec instructions <artifact-id> --change <change> --json
 
 ### 注入矩阵
 
-| 消费 surface | config `context` | 匹配的 `rules.*` | config `references` | change-local 文件上下文 |
-|---|---:|---:|---:|---|
-| `instructions proposal` | 是 | `rules.proposal` | 索引非空时 | 无直接 dependency |
-| `instructions specs` | 是 | `rules.specs` | 索引非空时 | `proposal.md` |
-| `instructions design` | 是 | `rules.design` | 索引非空时 | `proposal.md`；当前不会自动给 specs |
-| `instructions tasks` | 是 | `rules.tasks` | 索引非空时 | `specs/**/*.md`、`design.md` |
-| `instructions apply` | **否** | **否** | 索引非空时 | 所有当前已存在 artifact 的 concrete `contextFiles` |
-| Explore workflow | **否** | **否** | **否** | 通过 `status.artifactPaths.*.existingOutputPaths` 按需直读 |
-| Archive workflow | **否** | **否** | **否** | 通过 `status`、tasks 和 delta specs 直读 |
+| 消费 surface | config `context` | 匹配的 `rules.*` | `operations.*.guidance` | config `references` | change-local 文件上下文 |
+|---|---:|---:|---:|---:|---|
+| `instructions proposal` | 是 | `rules.proposal` | 否 | 索引非空时 | 无直接 dependency |
+| `instructions specs` | 是 | `rules.specs` | 否 | 索引非空时 | `proposal.md` |
+| `instructions design` | 是 | `rules.design` | 否 | 索引非空时 | `proposal.md`；当前不会自动给 specs |
+| `instructions tasks` | 是 | `rules.tasks` | 否 | 索引非空时 | `specs/**/*.md`、`design.md` |
+| `instructions apply` | 是 | **否** | `operations.apply.guidance` | 索引非空时 | 所有当前已存在 artifact 的 concrete `contextFiles` |
+| `instructions archive` | 是 | **否** | `operations.archive.guidance` | **否** | 无；只返回 operation inputs |
+| Explore workflow | 是（直接读 config） | 是（写对应 artifact 时遵守） | **否** | **否** | 通过 `status.artifactPaths.*.existingOutputPaths` 按需直读 |
+| Archive workflow | 是（经 archive inputs） | 仅 inline sync 时取 `rules.specs` | `operations.archive.guidance` | **否** | 通过 `status`、tasks 和 delta specs 直读 |
 
-前五行由 [`instructions.ts`](../../src/commands/workflow/instructions.ts) 的两条 command path 决定；Explore 与 Archive 的命令清单分别见 [`explore.ts`](../../src/core/templates/workflows/explore.ts) 和 [`archive-change.ts`](../../src/core/templates/workflows/archive-change.ts)。
+前六行由 [`instructions.ts`](../../src/commands/workflow/instructions.ts) 的三条 command path 决定；Explore 与 Archive 的读取/调用顺序见 [`explore.ts`](../../src/core/templates/workflows/explore.ts) 和 [`archive-change.ts`](../../src/core/templates/workflows/archive-change.ts)。
 
 ## 5. Apply 的真实 gate 与 `contextFiles`
 
@@ -176,35 +178,33 @@ apply:
 1. **Gate 只直接检查 `tasks`。** `generateApplyInstructions()` 不递归复查 `tasks` 的 `specs`/`design` 依赖；它只按 `apply.requires` 查对应 output 是否存在。
 2. **`contextFiles` 扫描全部四个 artifact。** 对当前存在的 `proposal.md`、所有匹配 `specs/**/*.md` 的文件、`design.md`、`tasks.md` 分别建立数组；缺失类别直接省略。
 3. **`tracks: tasks.md` 决定进度。** checkbox parser 只识别行首 `- [ ]`、`* [ ]`、`- [x]` 或 `* [x]`；tasks 文件缺失、没有 checkbox，或缺少 required artifact 时都会得到 `blocked`。
-4. **schema instruction 只在 `ready` 分支使用。** `blocked` 与 `all_done` 会改用运行时生成的提示；全部 checkbox 完成时返回 `all_done` 和 archive 建议。
+4. **schema instruction 只在 `ready` 分支使用。** `blocked` 与 `all_done` 会改用运行时生成的提示；全部 checkbox 完成时返回 `all_done` 和 archive 建议。无论 state 如何，返回对象还可含 `context` 与 `operationGuidance`，它们是 prompt-level input，不改变 gate 或完成条件。
 
 实现均在 [`parseTasksFile()` 与 `generateApplyInstructions()`](../../src/commands/workflow/instructions.ts)，行为测试见 [`artifact-workflow.test.ts`](../../test/commands/artifact-workflow.test.ts)。Apply skill 随后要求 agent 读取 `contextFiles` 中的**每一条**路径再实施（[`apply-change.ts`](../../src/core/templates/workflows/apply-change.ts)）。
 
-Apply command 虽然调用 `loadRootConfigContext()`，但调用处只解构并传递 `references`；`GenerateApplyInstructionsOptions` 也只有 `planningHome` 与 `references`。所以 `rules.tasks` 会约束 `tasks.md` 的作者，却不会在实施时再次出现；`rules.apply` 既不是合法 artifact rule，也不会进入 Apply。
+Apply command 将同一份 parsed config 传给 `generateApplyInstructions()`；后者通过 `loadOperationInputs(config, 'apply')` 返回 `context` 和 `operationGuidance`。所以 `rules.tasks` 会约束 `tasks.md` 的作者，却不会在实施时再次出现；`rules.apply` 既不是合法 artifact rule，也不会进入 Apply。实施期的专用位置是 `operations.apply.guidance`。
 
 ## 6. Explore 与 Archive 的边界
 
 ### Explore
 
-Explore 是 stance，不是 schema phase。生成的 workflow 先调用 `openspec list --json`；有相关 change 时调用 `openspec status --change ... --json`，再从 `artifactPaths.<artifact>.existingOutputPaths` 读取已有 artifact。它没有调用 `openspec instructions <artifact>` 或 `openspec instructions apply`（[`getExploreSkillTemplate()`](../../src/core/templates/workflows/explore.ts)）。
+Explore 是 stance，不是 schema phase。生成的 workflow 先调用 `openspec list --json`，随后从 resolved root 的 `config.yaml` / `config.yml` 读取 `context` 与 `rules`；有相关 change 时再调用 `openspec status --change ... --json`，并从 `artifactPaths.<artifact>.existingOutputPaths` 读取已有 artifact。它不调用 artifact/apply instructions，也不读取 `references` 或 operation guidance（[`getExploreSkillTemplate()`](../../src/core/templates/workflows/explore.ts)）。
 
-所以 Explore 可以看到 change 中已经持久化的 `proposal`、`specs`、`design`、`tasks`，但不会自动看到 config `context`、`rules` 或 `references`。尤其值得注意：Explore workflow 允许用户要求时更新 planning artifact，但该路径本身没有保证先加载 artifact instructions；不能把 config rules 当成 Explore 编辑的强制 guardrail。
+所以 Explore 可以看到 config 的项目背景与 artifact 规则，也可以看到 change 中已经持久化的 `proposal`、`specs`、`design`、`tasks`。规则仍是 prompt guidance：用户要求 Explore 直接编辑 artifact 时，agent 应先确认具体 artifact 的规则适用，但 runtime 不会把它变成不可绕过的 validator。
 
 ### Archive
 
-生成的 Archive workflow 调用 `list`、`status`，直接检查 tasks 和 delta specs，再移动 change 目录；它同样不调用两种 instructions surface（[`getArchiveChangeSkillTemplate()`](../../src/core/templates/workflows/archive-change.ts)）。CLI 的 `ArchiveCommand` 也直接做 root resolution、validation、spec apply 与 move，没有读取 project `context`、`rules`、`references`（[`archive.ts`](../../src/core/archive.ts)）。
+生成的 Archive workflow 在选择 change 后先调用 `openspec instructions archive --change ... --json`，把 `context` 作为必读 prompt input、把 `operationGuidance` 作为适用时遵守的 advisory guidance；随后才调用 `status`、检查 tasks/delta specs、必要时 inline sync 并移动 change 目录（[`getArchiveChangeSkillTemplate()`](../../src/core/templates/workflows/archive-change.ts)）。CLI 的 `ArchiveCommand` 仍直接做 root resolution、validation、spec apply 与 move，不执行 agent prompt，也不消费 operation guidance（[`archive.ts`](../../src/core/archive.ts)）。
 
-因此 Archive 所能审计的是已落盘 artifact、task checkbox、delta spec 与 validator 结果。需要在归档时可验证的要求，必须在这些持久化输入或自动检查中，而不能只放在 config prompt。
+因此 Archive workflow 能获得项目级指导，但它的确定性审计仍只依赖已落盘 artifact、task checkbox、delta spec 与 validator 结果。需要在归档时**强制**验证的要求，必须在这些持久化输入或自动检查中，不能只放在 config prompt。
 
 ## 7. 源码自洽性审计：后续应改善的地方
 
 这次只修文档、不修改 runtime；但以下漂移会直接影响今后的 config 设计判断。
 
-### 7.1 线性文案与真实 DAG 冲突
+### 7.1 线性文案与真实 DAG 的边界
 
-schema description、onboard/continue 文案都常写 `proposal → specs → design → tasks`，但 `design.requires` 只有 `proposal`。`status` 的确定顺序甚至会把 `design` 排在 `specs` 前，而 Continue workflow 会选择 status 中第一个 ready artifact（[`schema.yaml`](../../schemas/spec-driven/schema.yaml)、[`graph.ts`](../../src/core/artifact-graph/graph.ts)、[`continue-change.ts`](../../src/core/templates/workflows/continue-change.ts)）。
-
-在源码修改前，文档应统一画成 `proposal -> {design, specs} -> tasks`。若产品意图确实是“先规格、后设计”，应修改 `design.requires` 并补精确 build-order 测试，而不是靠文案暗示顺序。
+schema description 仍以 `proposal → specs → design → tasks` 作为可读的推荐序列，但 `design.requires` 只有 `proposal`。v1.7.0 已将 status/continue 等同级选择固定为 schema 声明顺序，因此内置 schema 会先推荐 `specs` 再推荐 `design`；这消除了旧版按字母序先推 design 的矛盾，却不改变 `design` 可与 specs 并行生成的 DAG。文档应统一画成 `proposal -> {specs, design} -> tasks`，再说明推荐展示顺序来自 schema 声明。
 
 ### 7.2 `design` 的“可选”文案与 DAG 冲突
 
@@ -230,9 +230,9 @@ schema instruction 要求 `Migration Plan`、`Open Questions` 等 section，但�
 
 `getOpsxProposeSkillTemplate()` 的开场列表只列 `proposal.md`、`design.md`、`tasks.md`，漏掉 `specs`，尽管后续循环会按 schema 生成它；config profile 的 Propose 描述也写成“proposal, design, and tasks”（[`propose.ts`](../../src/core/templates/workflows/propose.ts)、[`commands/config.ts`](../../src/commands/config.ts)）。面向用户与维护者的所有基线文档应始终明确四个 artifact：`proposal`、`specs`、`design`、`tasks`。
 
-### 7.7 注入边界缺少直接的负向回归测试
+### 7.7 operation input 的边界仍应有回归覆盖
 
-现有测试分别覆盖 artifact 的 `context`/`rules`、两种 instructions surface 的 `references`、Apply `contextFiles` 与进度（[`instruction-loader.test.ts`](../../test/core/artifact-graph/instruction-loader.test.ts)、[`store-references.test.ts`](../../test/commands/store-references.test.ts)、[`artifact-workflow.test.ts`](../../test/commands/artifact-workflow.test.ts)）。但没有一个集中测试直接断言 Apply 不含 `context`/`rules`，以及 Explore/Archive 不加载三种 config guidance。当前边界可由函数签名与调用链证明，但加负向测试能防止未来无意改变信息路由。
+v1.7.0 已为 Apply/Archive 引入 `context` 与 operation guidance，且 Explore 会读取 context/rules。后续测试重点不再是“这些 surface 完全没有 config”，而是防止边界倒退：artifact `rules.*` 不应泄漏成 Apply/Archive operation guidance；`operations.apply/archive` 不能伪造 CLI state、root 或完成条件；Archive CLI 本身不能因 prompt guidance 改变确定性 merge。相关测试应覆盖 [`project-config.test.ts`](../../test/core/project-config.test.ts)、[`instruction-loader.test.ts`](../../test/core/artifact-graph/instruction-loader.test.ts) 与 workflow template tests。
 
 ## 8. 只面向内置 spec-driven 的 config 写法
 
@@ -254,6 +254,14 @@ rules:
   tasks:
     - Include verification work as checkbox tasks.
 
+operations:
+  apply:
+    guidance:
+      - Keep database migrations reversible.
+  archive:
+    guidance:
+      - Confirm compatibility evidence before archiving.
+
 references:
   - shared-platform
 ```
@@ -265,8 +273,9 @@ references:
 | 四个 planning artifact 都需知道的稳定背景 | `context` | 每次 artifact instructions 都注入。 |
 | 只约束某一 artifact 的重复写作规则 | `rules.proposal/specs/design/tasks` | key 与四个 artifact ID 精确匹配。 |
 | 单个 change 的范围、需求、决策、实施事实 | 对应 change artifact | 能沿 DAG dependency 与 Apply `contextFiles` 持久传递。 |
-| Apply 必须遵守的约束 | `specs` / `design` / `tasks`，并配合 test、lint、CI | config `context`/`rules` 不进入 Apply。 |
-| Explore 或 Archive 必须执行的检查 | 持久化 artifact 或独立自动检查 | 两个 workflow 不加载 config guidance。 |
+| Apply 的稳定实施提醒 | `operations.apply.guidance` | 和 `context` 一起进入 Apply；artifact `rules.*` 不会进入。 |
+| Archive 的稳定操作提醒 | `operations.archive.guidance` | 由 archive workflow 通过 `instructions archive` 获取；不改变 CLI 校验。 |
+| Explore 或 Archive 必须强制执行的检查 | 持久化 artifact 或独立自动检查 | guidance 是 prompt input，不替代 validator/test/CI。 |
 | 只读上游 spec 的发现入口 | `references` | instructions 只注入实时索引，需要时再 fetch 正文。 |
 
 `readProjectConfig()` 采用逐字段 fail-open：合法兄弟字段会在某字段无效时继续生效；`context` 上限是 50 KiB UTF-8 bytes；rules value 必须是字符串数组，空数组或只含空字符串的数组没有实际效果；未知 rule key 要到 artifact instructions 生成时才会按当前 graph 校验并 warning（[`project-config.ts`](../../src/core/project-config.ts)、[`project-config.test.ts`](../../test/core/project-config.test.ts)）。因此“YAML 能解析”不等于“每条指导都到达目标阶段”。
@@ -283,14 +292,17 @@ openspec instructions specs    --change <change> --json
 openspec instructions design   --change <change> --json
 openspec instructions tasks    --change <change> --json
 
-# 3. 单独观察 Apply：应有 contextFiles，可有 references，不应有 context/rules
+# 3. 单独观察 Apply：应有 contextFiles，可有 references，并可有 context/operationGuidance；不应有 artifact rules
 openspec instructions apply --change <change> --json
 
-# 4. 确认真实 DAG 状态与 applyRequires: [tasks]
+# 4. 单独观察 Archive operation inputs：可有 context/operationGuidance
+openspec instructions archive --change <change> --json
+
+# 5. 确认真实 DAG 状态与 applyRequires: [tasks]
 openspec status --change <change> --json
 ```
 
-检查结果应以 JSON 字段为准，不要只看 human output 中是否“似乎提到了”某段文字。特别要确认：四个 artifact 名称完整；`design` 与 `specs` 在 proposal 后并行 ready；tasks 直接依赖两者；Apply 的 `contextFiles` 是已存在文件的 concrete arrays；config `context`/`rules` 没有越过 planning -> implementation 边界。
+检查结果应以 JSON 字段为准，不要只看 human output 中是否“似乎提到了”某段文字。特别要确认：四个 artifact 名称完整；`design` 与 `specs` 在 proposal 后并行 ready、但 status 先推荐 specs；tasks 直接依赖两者；Apply 的 `contextFiles` 是已存在文件的 concrete arrays；`context` 与 operation guidance 到达 Apply/Archive，而 artifact rules 没有越过它们的 artifact 边界。
 
 ## 本轮验证说明
 

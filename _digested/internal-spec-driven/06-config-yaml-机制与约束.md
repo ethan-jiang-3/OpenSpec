@@ -1,6 +1,6 @@
 # 06 — config.yaml 的机制与约束
 
-前五篇讲的是 schema 驱动的四条命令。但还有一层控制面经常被忽略：`openspec/config.yaml`。它不定义工作流的结构（那是 schema 的事），但它在工作流执行的**每一步**都会被读取和注入。
+前五篇讲的是 schema 驱动的四条命令。但还有一层控制面经常被忽略：`openspec/config.yaml`。它不定义工作流的结构（那是 schema 的事），但会在 artifact 指令、Apply/Archive operation inputs，以及 Explore 会话初始化时被读取。
 
 这篇从源码出发，精确说明 config.yaml 是什么、有什么约束、如何被使用、以及怎样利用它。
 
@@ -40,6 +40,11 @@ const ProjectConfigSchema = z.object({
     )
     .optional()
     .describe('Per-artifact rules, keyed by artifact ID'),
+  operations: z.object({
+    apply: z.object({ guidance: z.array(z.string()).optional() }).optional(),
+    archive: z.object({ guidance: z.array(z.string()).optional() }).optional(),
+  }).optional(),
+  store: z.string().optional(),
 });
 ```
 
@@ -52,10 +57,13 @@ const ProjectConfigSchema = z.object({
 | `schema` | 是 | `string` | 非空 | 无（`openspec init` 自动写入 `spec-driven`） |
 | `context` | 否 | `string` | 最大 **50KB**（51,200 字节，运行时检查） | 无 |
 | `rules` | 否 | `Record<string, string[]>` | key 应为合法的 artifact ID | 无 |
+| `operations` | 否 | object | 只接受 `apply` / `archive`；各自只接受字符串数组 `guidance` | 无 |
+| `store` | 否 | `string` | config-only root 的 store fallback；不是 operation prompt | 无 |
+| `references` | 否 | string 或 `{id, remote}` 数组 | 由 `readProjectConfig()` 专门解析；为 artifact/Apply 提供索引 | 无 |
 
-当前项目级 `openspec/config.yaml` 的有效顶层字段就是这三个：`schema`、`context`、`rules`。其中 `context` / `rules` 属于 prompt 注入层，影响 agent 生成 artifact 时看到的背景和约束；`schema` 属于 workflow schema 选择层，影响新 change 默认使用哪个 artifact DAG。
+当前项目级 `openspec/config.yaml` 的已消费顶层字段是 `schema`、`context`、`rules`、`operations`、`store` 与 `references`。其中 `rules` 只属于 artifact prompt 注入层；`context` 同时进入 artifact 与 operation input；`operations` 只为 Apply/Archive 提供 advisory guidance；`schema` 属于 workflow schema 选择层；`store` / `references` 处理 root 与跨 store 上下文。
 
-如果 YAML 顶层额外写了其他 key，例如 `team:`、`metadata:`、`owner:`，当前实现会被 YAML parser 读到，但 `readProjectConfig()` 只逐字段拣取 `schema` / `context` / `rules`，不会把未知顶层字段复制进返回的 config，也不会为这些未知字段打印 warning。结果就是：**静默忽略，不报错，也不生效**。
+如果 YAML 顶层额外写了其他 key，例如 `team:`、`metadata:`、`owner:`，当前实现会被 YAML parser 读到，但不会成为 OpenSpec 的运行时配置。结果就是：**静默忽略，不报错，也不生效**；不要把自定义 metadata 与上述已消费字段混在一起期待它被 workflow 使用。
 
 ### 50KB 限制
 
@@ -114,6 +122,12 @@ if (effectiveProjectRoot) {
 
 `change-utils.ts:132-147`：读取 `config.schema` 来决定新 change 的默认 schema。
 
+### 时机 3：Apply / Archive / Explore
+
+- `openspec instructions apply --change X --json` 读取 `context` 与 `operations.apply.guidance`，同时返回 change-local `contextFiles`。
+- `openspec instructions archive --change X --json` 读取 `context` 与 `operations.archive.guidance`；Archive agent workflow 在归档前调用它。确定性的 `openspec archive` CLI 不把 prompt guidance 变成 merge 规则。
+- Explore workflow 从 resolved root 直接读取 `context` 和 `rules`，作为会话/写 artifact 时的约束；它不消费 `operations`。
+
 ### status 的边界
 
 `openspec status` 会通过 change metadata / schema / planning home 构造 artifact 状态、`nextSteps` 和 `actionContext`。
@@ -126,7 +140,7 @@ config 读取失败（文件不存在、YAML 解析错误、字段类型不匹�
 
 ---
 
-## 4. context 和 rules 如何注入到指令中
+## 4. context、rules 与 operation guidance 如何进入指令
 
 ### 4.1 context 的注入
 
@@ -180,6 +194,22 @@ const configRules = rulesForArtifact && rulesForArtifact.length > 0 ? rulesForAr
 | **AI 怎么用** | 理解项目上下文 | 遵守具体规则 |
 | **典型长度** | 屏幕半页 | 3-5 条规则 |
 | **注入位置** | `<project_context>` 标签 | `<rules>` 标签 |
+
+### 4.4 `operations`：给 Apply / Archive 的专用 guidance
+
+```yaml
+operations:
+  apply:
+    guidance:
+      - Keep data migrations reversible.
+  archive:
+    guidance:
+      - Confirm compatibility evidence before archiving.
+```
+
+`operations.apply.guidance` 和 `operations.archive.guidance` 是两条独立 operation surface。它们与 `context` 一起分别出现在 `openspec instructions apply`、`openspec instructions archive` 的 JSON 中；它们是 agent 应考虑的提醒，不能绕过 CLI `blocked` 状态、root 选择、validator 或 archive merge。
+
+这也解释了一个常见边界：`rules.tasks` 可以约束任务清单的写法，却不会在 Apply 时重复注入；要给实施期稳定提醒，写 `operations.apply.guidance`，不是 `rules.apply`。
 
 ---
 

@@ -3,6 +3,8 @@
 > 到了这一步，问题已经不是"全局约束该放哪"，而是更现实的一层：
 > **就算我知道它们该放进 `config.yaml`，那我到底该怎么写，才不会写成一堆正确但无用的话？**
 
+> **v1.7.0 配置路由。** `context` 进入 artifact instructions，也进入 Apply/Archive；`rules.<artifact>` 只进入同名 artifact；Apply/Archive 专属的短稳定步骤写到 `operations.apply/archive.guidance`。Explore 读取 context/rules，但没有 `operations.explore`。
+
 ---
 
 ## 这一篇解决什么问题
@@ -136,6 +138,14 @@ rules:
     - ...
   design:
     - ...
+
+operations:
+  apply:
+    guidance:
+      - Run the relevant checks before marking a task complete.
+  archive:
+    guidance:
+      - Confirm required release evidence before archive.
 ```
 
 这里的重点不在字段多少，而在于分工清晰：
@@ -143,6 +153,7 @@ rules:
 - `schema`：默认 change 结构选择
 - `context`：项目长期背景
 - `rules`：项目长期工程纪律
+- `operations`：Apply/Archive 的项目级短稳定步骤
 
 只要这三层不混，`config.yaml` 就比较容易保持质量。
 
@@ -152,7 +163,8 @@ rules:
 graph TD
     A[config.yaml] --> B[context]
     A --> C[rules]
-    A --> D[schema]
+    A --> D[operations]
+    A --> E[schema]
 
     B --> B1[项目长期背景]
     B --> B2[技术栈/质量重点]
@@ -161,11 +173,13 @@ graph TD
     C --> C2[测试/回归约束]
     C --> C3[风险红线]
 
-    D --> D1[默认工作流骨架]
+    D --> D1[Apply/Archive guidance]
+    E --> E1[默认工作流骨架]
 
     style B fill:#e3f2fd,stroke:#2196f3
     style C fill:#fff3e0,stroke:#ff9800
-    style D fill:#f3e5f5,stroke:#9c27b0
+    style D fill:#e8f5e9,stroke:#4caf50
+    style E fill:#f3e5f5,stroke:#9c27b0
 ```
 
 ---
@@ -493,10 +507,9 @@ rules:
     - Core approval logic should be developed test-first when feasible
     - Approval-related changes must preserve authorization regression coverage
     - Notification-related changes must verify decision-triggered notification flow
-  risk:
-    - Do not merge changes with incomplete authorization checks
-    - Keep audit records append-only
-    - Avoid silent behavioral rewrites of existing user-visible flows
+  proposal:
+    - Identify authorization checks and audit evidence required before archive.
+    - Identify any behavior rewrite that users could observe and record the approval/rollout need.
 ```
 
 ### 为什么强
@@ -699,9 +712,8 @@ rules:
     - Approval logic should be developed test-first when feasible
     - Approval-related changes must preserve authorization regression coverage
     - Audit-related changes must verify lifecycle events are still recorded
-  risk:
-    - Do not merge changes with incomplete authorization checks
-    - Keep audit records append-only
+  proposal:
+    - Identify authorization checks and append-only audit evidence required before archive.
 ```
 
 ### 适合什么项目
@@ -735,9 +747,8 @@ rules:
   tasks:
     - Published endpoints must preserve integration coverage
     - Authorization and rate-limit behavior must remain covered for public APIs
-  risk:
-    - Avoid silent contract changes
-    - Keep logging and metrics available for critical endpoints
+  proposal:
+    - Identify public contract changes and the required observability evidence.
 ```
 
 ### 适合什么项目
@@ -771,9 +782,8 @@ rules:
   tasks:
     - Critical admin flows should preserve regression coverage
     - Accessibility-impacting changes should verify keyboard and focus behavior
-  risk:
-    - Avoid hidden coupling across features
-    - Avoid silent changes to established interaction patterns
+  proposal:
+    - Identify cross-feature coupling and established interaction behavior at risk.
 ```
 
 ### 适合什么项目
@@ -805,9 +815,8 @@ rules:
   tasks:
     - Job state transitions should be verified with focused tests
     - Changes affecting scheduling or retries must preserve regression coverage for duplicate execution risks
-  risk:
-    - Avoid non-idempotent side effects without explicit safeguards
-    - Critical background workflows should remain observable through logs or metrics
+  proposal:
+    - Identify idempotency safeguards and observability evidence for background-workflow changes.
 ```
 
 ### 适合什么项目
@@ -893,10 +902,8 @@ rules:
     - Approval logic should be developed test-first when feasible
     - Approval-related changes must preserve authorization regression coverage
     - Audit-related changes must verify lifecycle events are still recorded
-  risk:
-    - Do not merge changes with incomplete authorization checks
-    - Keep audit records append-only
-    - Avoid silent behavior changes in established workflows
+  proposal:
+    - Identify authorization checks, audit evidence, and behavior changes requiring approval before archive.
 ```
 
 重点不是字多，而是：

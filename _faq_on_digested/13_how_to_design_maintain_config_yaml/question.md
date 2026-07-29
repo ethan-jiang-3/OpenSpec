@@ -26,11 +26,13 @@
 
 # 答案摘要
 
-`config.yaml` 的正确定位是**小而稳定的项目 profile + 单 artifact 的长期指导**，不是通用阶段化上下文系统。
+`config.yaml` 的正确定位是**小而稳定的项目 profile + artifact / operation 的长期指导**，不是任意阶段都可自由扩展的上下文系统。
 
 ```text
 所有 artifact 都要知道的稳定事实 -> context
 只服务一个 artifact 的长期约束   -> rules.<artifact>
+Apply 的稳定项目步骤              -> operations.apply.guidance
+Archive 的稳定项目步骤            -> operations.archive.guidance
 本次 change 的分类/决定/风险      -> proposal / specs / design / tasks
 工作流节点和 apply 固定行为       -> schema.yaml / workflow skill
 不可绕过的规则                    -> checker / test / CI
@@ -38,6 +40,6 @@
 运行时状态                         -> state / receipt / run 文件
 ```
 
-最容易漏掉的事实：当前 `apply` 不会接收 `context`/`rules`；Explore 和 Archive 也不会通过 artifact instructions 自动接收它们。要实现阶段精确指导，首先应利用 artifact DAG 传递 change-local context；若仍不够，再升级 schema 或 workflow，而不是发明未支持的 config 字段。
+最容易漏掉的事实：v1.7.0 的 Apply/Archive 会接收 project `context` 与各自 `operations.*.guidance`，但不会接收 artifact `rules`；Explore 读取 context/rules，却没有 `operations.explore`。要实现阶段精确指导，先用现有 consumer，再让 change artifacts 传递 change-local context；若仍不够，再升级 schema 或 workflow，而不是发明未支持字段。
 
 完整答案见 [`answer.md`](answer.md)。从下游项目类型选择初稿见 [`00-initial-config-baselines.md`](00-initial-config-baselines.md)；信息归位见 [`01-design-config-yaml.md`](01-design-config-yaml.md)；配置诊断与维护见 [`02-diagnose-maintain-config-yaml.md`](02-diagnose-maintain-config-yaml.md)；三个项目特定审计见 [`project-cases/README.md`](project-cases/README.md)。内置 `spec-driven` 的源码边界见 [`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md)，其余机制证据见 [`sources.md`](sources.md)。

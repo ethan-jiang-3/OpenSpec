@@ -2,6 +2,8 @@
 
 > 目标不是研究源码，而是先把它当工具用顺手。如果第一反应是"改个功能干嘛这么折腾"——很正常，这一篇先帮你把这股别扭解开。
 
+> **v1.7.0 使用提示。** 本章把 `/opsx:*` 保留为 Claude 的示例入口；Codex 使用 `$openspec-*` skills（如 `$openspec-propose-change`）。两者都由宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
+
 ---
 
 ## 先别急着写代码——想想装修
@@ -63,7 +65,7 @@ OpenSpec 做的事，就是给"改代码"也加上装修那套**"先想清楚，
 /opsx:propose  →  /opsx:apply  →  /opsx:archive
 ```
 
-这里的 `/opsx:*` 不是另一套叫 OPSX 的工具，而是 OpenSpec 投递到 Claude Code、Cursor、Codex 等 agent 工具里的命令入口。你在终端里直接运行的是 `openspec ...` CLI；在 agent 对话里触发工作流，通常用 `/opsx:*`。
+这里的 `/opsx:*` 不是另一套叫 OPSX 的工具，而是 Claude 等宿主的 command 入口。你在终端里直接运行的是 `openspec ...` CLI；在 agent 对话里触发工作流要使用宿主安装的入口（Codex 为 `$openspec-*` skills）。
 
 ---
 

@@ -3,6 +3,8 @@
 > 这一篇不再讲"按钮在哪""命令怎么敲"，而是讲 OpenSpec 对软件开发这件事本身的理解。
 > 它放在高级区最前面，因为先理解这套生命周期思想，后面的 config、schema、store 才不会变成孤立机制。
 
+> **v1.7.0 现实边界。** 主 specs 可以按嵌套 capability path 切分，却不会自动检索“当前相关”的 specs；agent 仍需按 change scope 选择和阅读上下文。workflow 调用名也随宿主变化：本文 `/opsx:*` 为 Claude 示例，Codex 为 `$openspec-*` skills。
+
 ---
 
 ## OpenSpec 核心哲学：为什么这样设计

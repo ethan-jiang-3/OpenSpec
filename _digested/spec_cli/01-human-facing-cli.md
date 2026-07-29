@@ -30,7 +30,7 @@
 影响：
 
 - 它决定这个项目是否真正接入 OpenSpec 工作流。
-- 它决定外部工具能不能看到 `/opsx:*` 这类工作流入口。
+- 它决定外部工具能不能看到实际安装的工作流入口。入口语法由宿主 adapter 决定：Claude 可以是 `/opsx:*`，Codex v1.7.0 是 `$openspec-*` skills，不能混为一谈。
 - 它不会直接创建业务 change，但会决定后续 change workflow 以什么外壳呈现。
 
 容易误解：
@@ -67,6 +67,7 @@
 
 - 它不是业务数据升级工具。
 - 它主要更新的是“工具接入层”。
+- v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
 
 ## 2. 发现当前项目里有什么
 
@@ -105,7 +106,7 @@
 
 输入：
 
-- 项目中的 changes 和 specs。
+- 解析后的 OpenSpec root 中的 changes 和 specs；可用 `--store` 选择 store root。
 
 输出：
 
@@ -114,6 +115,7 @@
 影响：
 
 - 更适合人工浏览，不适合作为机器协议端点。
+- 它不能假定总是读取当前 cwd 下最近的 `openspec/`；v1.7.0 会按 root selection 读取被选中的 root。
 
 ## 3. 查看某个具体对象
 
@@ -300,11 +302,18 @@
 
 本质目标：
 
-- 输出 apply 阶段的实施说明，包括 context files、task 进度和阻塞状态。
+- 输出 apply 阶段的实施说明，包括 artifact context files、项目 `context`、`operations.apply.guidance`、task 进度和阻塞状态。
 
 对人类意义：
 
 - 它把“哪些文档应该先读、当前还缺什么、接下来怎么实施”说明白了。
+
+### `openspec instructions archive --change <name>`
+
+本质目标：
+
+- 只读地输出 archive 阶段的输入包；v1.7.0 的 archive workflow 用它取得当前 context、`operations.archive.guidance` 与 change 状态。
+- 它不移动目录，也不替代 `openspec archive <name>` 的写入动作。
 
 ## 面向人类的使用顺序
 
@@ -316,7 +325,8 @@
 4. `openspec instructions proposal/spec/design/tasks --change <name>`
 5. `openspec show <item>` / `openspec validate`
 6. `openspec instructions apply --change <name>`
-7. `openspec archive <name>`
+7. `openspec instructions archive --change <name>`（需要 agent/archive 指引时）
+8. `openspec archive <name>`
 
 从这个顺序看，CLI 实际上协助人走完从提出 change 到 archive spec 的完整生命周期。它不是一堆孤立命令，而是一条工作流轨道。
 
@@ -347,4 +357,3 @@
 ### 和 repo-local 的关系
 
 Store 提供跨仓库的上下文引用，不替代 repo 级工作流。change 始终在具体 repo 下创建和 archive。设计原则：**上下文引用用 store，实现在 owning repo**。
-

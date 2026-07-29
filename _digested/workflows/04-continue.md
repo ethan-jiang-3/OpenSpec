@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/continue-change.ts` → `getContinueChangeSkillTemplate()` + `getOpsxContinueCommandTemplate()`
 
-> **用户怎么调**：`/opsx:continue [change-name]`
+> **调用方式**：command adapter 可为 `/opsx:continue [change-name]`；Codex v1.7.0 用 `$openspec-continue-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-continue-change`（skill）/ `OPSX: Continue`（command）
 > **独立 CLI 命令**：无——continue 没有对应的 `openspec continue` CLI 命令。
 > **profile**：custom（需显式启用，不在默认 core 里）
@@ -34,7 +34,7 @@ continue 根据 `status --json` 的结果有三个分支：
 ## CLI 命令调用序列
 
 ```text
-1. [可选] openspec list --json              # 选 change
+1. [可选] 显式名称 → 对话推断 → 唯一 active change 自动选择；仅歧义时 `openspec list --json` 选 change
 2. openspec status --change "<name>" --json  # 读 DAG → 判断分支
 3. [若 ready] openspec instructions <first-ready> --change "<name>" --json
 4. [agent 读依赖 + 写 artifact]
@@ -56,9 +56,10 @@ sequenceDiagram
     rect rgb(240, 248, 255)
         Note over MD,FS: Step 1 · 选择 change
         opt 无 name
-            MD->>TS: openspec list --json
+            MD->>MD: 若唯一 active change，自动选择
+            MD->>TS: 仅歧义时 openspec list --json
             TS-->>MD: active changes
-            MD-->>User: AskUserQuestion 选择
+            MD-->>User: 询问选择
             User-->>MD: 选 change
         end
     end
@@ -105,7 +106,7 @@ STOP after creating ONE artifact
 |---|---|
 | Create ONE artifact per invocation | 核心约束 |
 | Always read dependency artifacts — re-read from disk, not memory | 用户可能已编辑过（v1.6.0） |
-| Never skip artifacts or create out of order | 遵守 DAG |
+| Never skip artifacts or create out of order | 遵守 DAG；`skip_specs: true` 的 specs 是显式 skipped，不应创建 spec 文件 |
 | context unclear → ask before creating | 不猜 |
 | Verify artifact file exists after writing | 确认写入 |
 | Use schema's artifact sequence, don't assume names | schema-agnostic |
@@ -115,7 +116,7 @@ STOP after creating ONE artifact
 template 里硬编码了 spec-driven schema 的 artifact 创建指引：
 
 - **proposal.md**: 问清 change → 填 Why/What Changes/Capabilities/Impact。Capabilities 段决定后续 specs 文件数。
-- **specs/<capability>/spec.md**: 按 proposal 的 Capabilities 列表，每个 capability 一个 spec 文件。
+- **specs/<capability-path>/spec.md**: 按 proposal 的 Capabilities 列表，每个 capability path 一个 spec 文件；nested path 可用但需团队约定。
 - **design.md**: 技术决策、架构、实现方案。
 - **tasks.md**: checkbox 任务清单。
 

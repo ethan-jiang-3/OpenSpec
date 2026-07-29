@@ -37,7 +37,7 @@ sequenceDiagram
     rect rgb(255, 250, 240)
         Note over User,FS: ══════ Phase 1 · 创建 change 容器 ══════
         MD->>TS: openspec new change "add-oauth-login"
-        TS->>TS: validateChangeName()<br/>（小写字母开头，kebab-case）
+        TS->>TS: validateChangeName()<br/>（kebab-case；v1.7.0 允许数字前缀）
         TS->>TS: resolveCurrentPlanningHomeSync()<br/>解析 .openspec.yaml → planning home
         TS->>TS: 选定 schema：<br/>显式 --schema → project config →<br/>planning home default
         TS->>FS: 创建 change 目录<br/>写 .openspec.yaml<br/>（schema, created date）
@@ -88,16 +88,16 @@ sequenceDiagram
     else applyRequires 满足（默认：tasks done）
         rect rgb(240, 255, 240)
             Note over User,FS: ══════ apply-ready · 交棒 ══════
-            MD->>MD: tasks artifact done<br/>→ apply.requires 满足<br/>→ /opsx:apply 可以开始
-            MD-->>User: propose 完成。<br/>planning artifacts 已足够让<br/>apply skill 读取上下文和任务清单。<br/>可以进入 /opsx:apply。
+            MD->>MD: tasks artifact done<br/>→ apply.requires 满足<br/>→ 宿主 apply workflow 可以开始
+            MD-->>User: propose 完成。<br/>planning artifacts 已足够让<br/>apply skill 读取上下文和任务清单。<br/>可以进入宿主 apply workflow。
         end
     end
 
     opt apply 入口做最终检查
         Note over User,FS: （apply 阶段的第一动作，不属于 propose）
         MD->>TS: openspec instructions apply --change "X" --json
-        TS->>TS: 检查 apply.requires<br/>收集 contextFiles<br/>解析 tasks.md checkbox<br/>计算 progress
-        TS-->>MD: state: ready | blocked | all_done<br/>contextFiles, progress, tasks
+        TS->>TS: 检查 apply.requires<br/>收集 contextFiles、project context、apply guidance<br/>解析 tasks.md checkbox<br/>计算 progress
+        TS-->>MD: state: ready | blocked | all_done<br/>contextFiles, context/guidance, progress, tasks
     end
 ```
 

@@ -6,6 +6,8 @@
 
 为什么这是当下可行的路径：OpenSpec 没有 config 编辑工具（见 [`answer.md`](answer.md)），但 agent 能读项目、能看到 stub 注释和 `customization.md` 的格式、还能在 `openspec instructions` 的输出里看到当前 context/rules。OpenSpec 没引导它做这事，所以**引导它的任务落到你的话术上**。
 
+v1.7.0 还应让 agent 单独识别 `operations.apply.guidance` / `operations.archive.guidance`：前者放跨 change 的实施步骤，后者放归档前稳定检查；不要把它们误写成 artifact `rules`。
+
 ## 为什么 agent 是当下可行的路径
 
 先把"可行"建立在事实上：

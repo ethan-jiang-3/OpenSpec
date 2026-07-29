@@ -2,12 +2,12 @@
 
 ## 一句话
 
-`/opsx:apply` 是从 planning artifacts 进入真实代码修改的阶段。它的核心循环是：
+宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段。下文 `/opsx:apply` 是 Claude 示例；Codex v1.7.0 使用 `$openspec-apply-change`。它的核心循环是：
 
 ```text
 选择 change
   -> status --json 确认 schema / scope / actionContext
-  -> instructions apply --json 获取 contextFiles / tasks / state
+  -> instructions apply --json 获取 contextFiles / operation inputs / tasks / state
   -> 读取所有 contextFiles
   -> 逐个执行 pending task
   -> 改业务代码
@@ -15,7 +15,7 @@
   -> 直到所有 tasks done 或遇到暂停条件
 ```
 
-CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、task progress 和动态指令；agent 读取这些信息后实施代码并更新 checkbox。
+CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、项目 `context`、`operations.apply.guidance`、task progress 和动态指令；agent 读取这些信息后实施代码并更新 checkbox。artifact `rules.*` 只用于生成 planning artifact，不能替代 Apply guidance。
 
 ![Apply 到 archive-ready 的流程](figures/apply-ready-to-archive-ready.svg)
 
@@ -25,7 +25,7 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、t
 |---|---|---|
 | APP-01 | select change | 根据用户输入、对话上下文、唯一 active change 或用户选择确定 change。 |
 | APP-02 | status check | 运行 `openspec status --change "<name>" --json`，读取 schema、planningHome、changeRoot、actionContext。 |
-| APP-03 | apply instructions | 运行 `openspec instructions apply --change "<name>" --json`，获取 apply runtime 包。 |
+| APP-03 | apply instructions | 运行 `openspec instructions apply --change "<name>" --json`，获取 apply runtime 包（含 context 与 operation guidance）。 |
 | APP-04 | state branch | 根据 `state` 分支：`blocked` 停止修 planning，`all_done` 建议 archive，`ready` 继续实施。 |
 | APP-05 | read contextFiles | 读取 `contextFiles` 中所有 artifact 文件，不能凭记忆写代码。 |
 | APP-06 | show progress | 展示 schema、progress、remaining tasks 和 CLI 返回的 instruction。 |
@@ -48,7 +48,7 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、t
 
 ## Step 1：选择 change
 
-`/opsx:apply` 的输入可以带 change name：
+Claude 的 `/opsx:apply` 可带 change name（其他宿主使用自己的 invocation）：
 
 ```text
 /opsx:apply add-oauth-login
@@ -105,6 +105,7 @@ openspec instructions apply --change "<name>" --json
 | `tasks` | 从 tracking file 解析出的 task 列表和 done 状态。 |
 | `missingArtifacts` | 缺 required artifact 时才出现。 |
 | `instruction` | schema apply 阶段的动态指导。 |
+| operation inputs | 项目 `context` 与 `operations.apply.guidance`（如配置）；这是 Apply 专属项目指引，不是 `rules.apply`。 |
 
 默认 `spec-driven` 的 context files 通常包括：
 
@@ -142,7 +143,7 @@ design   -> technical decisions / constraints
 tasks    -> implementation checklist
 ```
 
-agent 不应该只靠聊天记忆或 change name 实施。OpenSpec 的工程取舍就是让真实上下文落在文件里，再由 CLI 明确告诉 agent 读哪些文件。
+agent 不应该只靠聊天记忆或 change name 实施。除逐一读取 `contextFiles` 外，还应遵循 operation input 中的 project context/guidance。OpenSpec 的工程取舍就是让真实上下文落在文件里，再由 CLI 明确告诉 agent 读哪些文件。
 
 ## Step 6：展示进度，然后开始 task loop
 
@@ -220,7 +221,7 @@ apply 不是盲目执行到底。遇到这些情况应该暂停：
 可选下一步
 ```
 
-如果是 planning artifact 问题，建议回到 `/opsx:continue` 或 explore 更新 artifacts，而不是硬写代码。
+如果是 planning artifact 问题，建议回到宿主 continue workflow 或 explore 更新 artifacts，而不是硬写代码。
 
 ## Step 9：所有 tasks 完成后进入 archive-ready
 
@@ -242,7 +243,7 @@ Completed this session:
 - ...
 ```
 
-这时状态是 archive-ready：可以 review、跑测试、然后 `/opsx:archive`。archive 会把 delta specs 合并回主 `openspec/specs/` 并移动 change 目录；它不是 apply 的一部分。
+这时状态是 archive-ready：可以 review、跑测试、然后运行宿主 archive workflow。archive 会把 delta specs 合并回主 `openspec/specs/` 并移动 change 目录；它不是 apply 的一部分。
 
 ## 三方分工
 
@@ -276,7 +277,7 @@ Completed this session:
 
 ## 参考来源
 
-源码引用基于 commit `ff4576f`：
+源码引用以 v1.7.0 tag `4e16790` 为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

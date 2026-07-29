@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/bulk-archive-change.ts` → `getBulkArchiveChangeSkillTemplate()` + `getOpsxBulkArchiveCommandTemplate()`
 
-> **用户怎么调**：`/opsx:bulk-archive`
+> **调用方式**：command adapter 可为 `/opsx:bulk-archive`；Codex v1.7.0 用 `$openspec-bulk-archive-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-bulk-archive-change`（skill）/ `OPSX: Bulk Archive`（command）
 > **独立 CLI 命令**：无——没有 `openspec bulk-archive` CLI 命令。这是纯 agent 模板，批量编排 archive + sync + 冲突解决。
 > **profile**：custom（需显式启用，不在默认 core 里）
@@ -28,9 +28,10 @@ bulk-archive 是 archive 的批量版。它的核心复杂度不在单个 merge 
 1. openspec list --json                          # 获取全部 active changes
 2. [用户多选 changes]
 3. for each change:
-   a. openspec status --change "<name>" --json   # artifact 状态
-   b. [读 tasks.md]                              # task 完成度
-   c. [读 artifactPaths.specs.existingOutputPaths]  # delta specs
+   a. openspec instructions archive --change "<name>" --json # context / archive guidance
+   b. openspec status --change "<name>" --json   # artifact 状态（done / skipped 都满足）
+   c. [读 tasks.md]                              # task 完成度
+   d. [读 artifactPaths.specs.existingOutputPaths]  # delta specs
 4. [冲突检测：capability → [changes]]
 5. [对每个冲突：读 delta specs + 搜代码 → 判断谁实现了]
 6. [对每个 change：archive（sync + mv）]
@@ -106,6 +107,7 @@ template 规定 agent 必须读代码来判断：
 | Detect and resolve spec conflicts agentically | 不盲合并 |
 | Report partial failures clearly | 一个失败不阻塞其他 |
 | Don't auto-select changes | 用户必须显式选 |
+| Read each selected change's archive inputs | context/guidance 是 prompt input，不改变批量选择或确定性检查 |
 
 ## 源码锚点
 

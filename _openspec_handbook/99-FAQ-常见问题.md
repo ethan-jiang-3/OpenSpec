@@ -20,17 +20,18 @@
 ## 命令和工作流
 
 ### Q4: OpenSpec 和 OPSX 是两个东西吗？
-**A**: 不是。OpenSpec 是整套机制；`opsx` 只是 OpenSpec workflow 在 agent 工具里的 slash command 命名空间。
+**A**: 不是。OpenSpec 是整套机制；`opsx` 是 Claude 等 adapter 的一个 workflow command 命名空间，不是所有 agent 工具的通用语法。
 
 - `openspec`：终端 CLI，例如 `openspec init`、`openspec status --json`、`openspec archive <name>`
-- `/opsx:*`：宿主 agent 里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
+- `/opsx:*`：Claude 等宿主里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
+- `$openspec-*`：Codex v1.7.0 的 skills-only 入口，例如 `$openspec-propose-change`、`$openspec-apply-change`
 - `.claude/commands/opsx/`：Claude Code 里保存这些入口文件的位置
 
 所以不要把 `opsx` 理解成另一个产品。它只是让 agent 工具能触发 OpenSpec workflow 的入口层。
 
-### Q5: `/opsx:propose` 和 CLI 是什么关系？
+### Q5: 宿主 propose workflow 和 CLI 是什么关系？
 **A**: 
-- `/opsx:propose`：在 Claude Code、Cursor、Codex 等宿主工具里用，agent 会按 workflow 自动跑多步 CLI
+- Claude 的 `/opsx:propose`（或 Codex 的 `$openspec-propose-change`）：宿主 workflow，agent 会按 workflow 自动跑多步 CLI
 - CLI 里没有 `openspec propose` 这个等价命令
 - 对应的底层步骤通常是 `openspec new change <name>`，再用 `openspec status --json` 和 `openspec instructions <artifact> --json` 生成 artifacts
 - 机器协议层面（status/instructions 返回什么、agent 怎么跑多步），详见 [90 附录·给机器看的 agent 协议](90-附录-给机器看的-agent-协议.md)
@@ -58,9 +59,11 @@
 3. 不需要手动写 specs/
 
 ### Q9: 我要手动维护 specs/ 吗？
-**A**: 不需要。specs/ 是 archive 自动更新的。你只需要：
+**A**: 通常不需要直接手改。specs/ 由 archive 程序化更新；你只需要：
 - 在 change 里写 delta spec
-- archive 时自动 merge 回 specs/
+- archive 时把它 merge 回 specs/（除非明确 `--skip-specs` 或拒绝 spec update）
+
+v1.7.0 也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为变化”；它不能与 delta spec 文件共存。
 
 ### Q10: delta spec 和正式 spec 有什么区别？
 **A**:
@@ -102,10 +105,12 @@
 ## archive 和冲突
 
 ### Q15: archive 是自动的还是手动的？
-**A**: 自动的。运行 `/opsx:archive` 后：
-- CLI 自动读取 delta spec
-- 自动 merge 到 specs/
-- 自动把 change 移到 archive/
+**A**: archive 必须由你显式运行（CLI 或宿主 archive workflow）。在确认更新 specs 后，CLI 会：
+- 读取 delta spec（也支持嵌套 capability path）
+- 程序化 merge 到 specs/
+- 把 change 移到 archive/
+
+宿主 archive workflow 在 v1.7.0 还会读取 `instructions archive` 的 context/guidance；已正确 early-sync 的完全一致 delta 会是 no-op，近似内容仍会报错。
 
 ### Q16: archive 时有冲突怎么办？
 **A**: 
@@ -127,6 +132,7 @@
 ### Q18: config.yaml 和 schema 有什么区别？
 **A**:
 - **config.yaml**：项目级背景和规则（技术栈、测试约定）
+- `operations.apply/archive.guidance`：Apply/Archive 的项目级短稳定步骤（与 context 一起进入对应 operation）
 - **schema**：change 的结构骨架（有哪些 artifact、依赖关系）
 
 两者各自该装什么、边界在哪，详见 [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)。
@@ -181,7 +187,7 @@ specs/
 
 不推荐按技术层（models/services/controllers）。
 
-**关键**：每个 capability 的身份就是它的目录名。proposal 列的 capability、delta 的修改目标、archive 的合并操作——全都靠这个目录名寻址（同名才命中）。所以**别随便改目录名**：requirement 改名还有 `RENAMED` 操作，capability 改名没有任何操作，改了会让指向旧名的 delta 全悬空。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
+**关键**：每个 capability 的身份是它在 `specs/` 下的相对 path。可以组织成 `identity/session/spec.md`；proposal、delta 和 archive 都依靠同一完整 path 寻址。不要随便搬改 path：requirement 改名还有 `RENAMED`，capability path 没有独立 rename 操作，改了会让旧 path 的 delta 悬空。它只是路径 namespace，不是继承或自动 retrieval。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
 
 ### Q25: 一个功能涉及多个域怎么办？
 **A**: 
@@ -194,7 +200,7 @@ specs/
 ## 工具集成
 
 ### Q26: OpenSpec 支持哪些 AI 工具？
-**A**: v1.4.1 支持的工具包括：
+**A**: 支持工具列表会随 release 变化，应以当前 `openspec init` / release note 为准；以下是历史示例：
 - **主要**：Claude Code、Cline、Cursor、Codex、Windsurf、GitHub Copilot
 - **v1.3.0 新增**：Junie（JetBrains）、Lingma、ForgeCode、IBM Bob、Pi（pi.dev）、Kiro（AWS）
 - **v1.4.0 新增**：Kimi CLI、Mistral Vibe
@@ -205,7 +211,7 @@ specs/
 1. 在项目里运行 `openspec init`（v1.2.0+ 会自动检测已安装的工具并预选）
 2. 也可以手动指定：`openspec init --tools claude,cursor`
 3. 运行 `openspec update` 确保 skills/commands 是最新的
-4. 重启 AI 工具，就可以用 `/opsx:propose` 等命令了
+4. 重启 AI 工具，使用该宿主安装的入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change` 等 skills
 
 ### Q28: 为什么有 `.claude/` 和 `openspec/` 两个目录？
 **A**: 
@@ -221,7 +227,7 @@ specs/
 **A**: 
 - 检查 artifact 的依赖关系（比如 tasks 依赖 specs 和 design）
 - 先完成依赖的 artifact
-- 或者用 `/opsx:ff` 强制跳到下一个
+- 或者使用该宿主的 ff workflow（Claude 示例 `/opsx:ff`）生成剩余 ready artifact；它不能绕过 schema 的真实依赖
 
 ### Q30: AI 生成的 artifacts 质量不好怎么办？
 **A**: 

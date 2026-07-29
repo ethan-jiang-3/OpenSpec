@@ -18,13 +18,13 @@ findSpecUpdates()
 `findSpecUpdates(changeDir, mainSpecsDir)` 扫描：
 
 ```text
-openspec/changes/<change>/specs/<capability>/spec.md
+openspec/changes/<change>/specs/<capability-path>/spec.md
 ```
 
 每个文件对应一个主 spec：
 
 ```text
-openspec/specs/<capability>/spec.md
+openspec/specs/<capability-path>/spec.md
 ```
 
 返回结构里有：
@@ -77,11 +77,13 @@ renamed: Array<{ from, to }>
 - `MODIFIED` 和 `RENAMED` 报错。
 - `REMOVED` 会 warning 并忽略，因为没有东西可删。
 
+delta 的 `## Purpose` 可位于 requirements 之前；v1.7.0 会把可读 Purpose 写入新建 main spec。已有 main spec 的 Purpose 不会被 delta 覆盖。
+
 ## 读取或创建 main spec baseline
 
 如果目标主 spec 存在，CLI 读取它。
 
-如果不存在，CLI 创建 skeleton：
+如果不存在，CLI 创建 skeleton；可读的 delta Purpose 会代替占位文字：
 
 ```markdown
 # <capability> Specification
@@ -92,7 +94,7 @@ TBD - created by archiving change <change>. Update Purpose after archive.
 ## Requirements
 ```
 
-这就是为什么新 capability archive 后可能带有 `TBD` purpose：它是 programmatic skeleton，后续需要人工完善。
+所以新 capability **不再总是**带 `TBD`：只有 delta 没有可读 Purpose 时，才会留下该 programmatic placeholder，之后可人工完善。
 
 ## 结构检查
 
@@ -121,7 +123,7 @@ RENAMED -> REMOVED -> MODIFIED -> ADDED
 
 先把旧 requirement key 改成新 key。
 
-如果 source 不存在，报错；如果 target 已经存在，也报错。
+通常 source 不存在会报错；但 v1.7.0 对已正确 early-sync、内容完全一致的 ADDED/MODIFIED/REMOVED/RENAMED 识别为幂等 no-op。大小写、空白或内容只是“看起来接近”时仍会报错，不能当作宽松匹配。
 
 ### REMOVED
 
@@ -202,7 +204,7 @@ CLI archive 的 merge 是 programmatic merge：
 
 ## 参考来源
 
-源码引用基于 commit `487ea92`：
+源码引用以 v1.7.0 tag `4e16790` 为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
