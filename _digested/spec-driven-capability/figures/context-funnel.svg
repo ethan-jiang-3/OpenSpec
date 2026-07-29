@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Capability discovery 的上下文漏斗</title>
+  <desc id="desc">从短小的项目全局约束开始，经轻量 catalog、候选 capability、完整 requirement block，最终形成当前 change 的直接上下文。</desc>
+  <style>
+    .bg { fill: #f8fafc; }
+    .wide { fill: #ede9fe; stroke: #7c3aed; stroke-width: 2; }
+    .catalog { fill: #e0f2fe; stroke: #0284c7; stroke-width: 2; }
+    .candidate { fill: #dcfce7; stroke: #16a34a; stroke-width: 2; }
+    .detail { fill: #fef3c7; stroke: #d97706; stroke-width: 2; }
+    .change { fill: #dbeafe; stroke: #2563eb; stroke-width: 2; }
+    .label { font: 600 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+    .small { font: 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #334155; }
+    .note { font: 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+    .arrow { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+  <rect class="bg" width="1200" height="720" rx="24"/>
+  <text class="label" x="70" y="55">默认不全读 specs：每一层只增加本次真正需要的上下文</text>
+  <path class="wide" d="M120 95 H1080 L1010 185 H190 Z"/>
+  <text class="label" x="600" y="135" text-anchor="middle">短小全局内核：跨所有 change 的底线与约束</text>
+  <text class="note" x="600" y="163" text-anchor="middle">来自 config.context；不是完整业务规格</text>
+  <path class="arrow" d="M600 190 L600 225"/>
+  <path class="catalog" d="M220 230 H980 L920 320 H280 Z"/>
+  <text class="label" x="600" y="270" text-anchor="middle">catalog：path、Purpose、关键词、边界</text>
+  <text class="note" x="600" y="298" text-anchor="middle">导航索引；main spec 仍是行为真相</text>
+  <path class="arrow" d="M600 325 L600 360"/>
+  <path class="candidate" d="M320 365 H880 L825 455 H375 Z"/>
+  <text class="label" x="600" y="405" text-anchor="middle">候选 capability：为什么相关、New 还是 Modified</text>
+  <text class="note" x="600" y="433" text-anchor="middle">先看 requirement 标题，再决定读取深度</text>
+  <path class="arrow" d="M600 460 L600 495"/>
+  <path class="detail" d="M405 500 H795 L750 575 H450 Z"/>
+  <text class="label" x="600" y="538" text-anchor="middle">完整 requirement block 与 scenarios</text>
+  <text class="note" x="600" y="563" text-anchor="middle">仅针对要改变或明显相互约束的合同</text>
+  <path class="arrow" d="M600 580 L600 615"/>
+  <rect class="change" x="480" y="620" width="240" height="58" rx="16"/>
+  <text class="label" x="600" y="656" text-anchor="middle">当前 change artifacts</text>
+</svg>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Capability 随迭代增长及治理</title>
+  <desc id="desc">从初始小系统到多个稳定 capability 的演进图，显示新增、修改、受控拆分与受控路径迁移的不同处理。</desc>
+  <style>
+    .bg { fill: #f8fafc; }
+    .step { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+    .header { fill: #1e3a8a; }
+    .card { fill: #dbeafe; stroke: #2563eb; stroke-width: 1.4; }
+    .change { fill: #dcfce7; stroke: #16a34a; stroke-width: 1.4; }
+    .warn { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.7; }
+    .label { font: 600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+    .small { font: 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #334155; }
+    .white { font: 600 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #ffffff; }
+    .mono { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #1d4ed8; }
+    .arrow { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+  </defs>
+  <rect class="bg" width="1200" height="760" rx="24"/>
+  <text class="label" x="70" y="55">系统不是一次性切完：让 capability 随行为边界成熟而增长</text>
+  <rect class="step" x="55" y="90" width="255" height="430" rx="18"/>
+  <rect class="header" x="55" y="90" width="255" height="54" rx="18"/>
+  <text class="white" x="182" y="124" text-anchor="middle">阶段 1 · 小而内聚</text>
+  <rect class="card" x="85" y="185" width="195" height="80" rx="12"/>
+  <text class="mono" x="105" y="216">identity/authentication</text>
+  <text class="small" x="105" y="244">登录与会话仍共同演进</text>
+  <text class="small" x="85" y="330">先不为未来假设拆分。</text>
+  <text class="small" x="85" y="355">合同仍可独立说明、验证。</text>
+  <path class="arrow" d="M310 305 L370 305"/>
+  <rect class="step" x="380" y="90" width="255" height="430" rx="18"/>
+  <rect class="header" x="380" y="90" width="255" height="54" rx="18"/>
+  <text class="white" x="507" y="124" text-anchor="middle">阶段 2 · 正常迭代</text>
+  <rect class="change" x="410" y="180" width="195" height="70" rx="12"/>
+  <text class="label" x="430" y="210">修改现有合同</text>
+  <text class="small" x="430" y="235">delta → 同 path archive</text>
+  <rect class="change" x="410" y="280" width="195" height="70" rx="12"/>
+  <text class="label" x="430" y="310">新增独立行为</text>
+  <text class="small" x="430" y="335">新 capability + Purpose</text>
+  <text class="small" x="410" y="410">先查 catalog，再决定 New / Modified。</text>
+  <path class="arrow" d="M635 305 L695 305"/>
+  <rect class="step" x="705" y="90" width="255" height="430" rx="18"/>
+  <rect class="header" x="705" y="90" width="255" height="54" rx="18"/>
+  <text class="white" x="832" y="124" text-anchor="middle">阶段 3 · 边界成熟</text>
+  <rect class="card" x="735" y="180" width="195" height="62" rx="12"/>
+  <text class="mono" x="755" y="218">identity/login</text>
+  <rect class="card" x="735" y="265" width="195" height="62" rx="12"/>
+  <text class="mono" x="755" y="303">identity/session</text>
+  <rect class="card" x="735" y="350" width="195" height="62" rx="12"/>
+  <text class="mono" x="755" y="388">identity/authorization</text>
+  <text class="small" x="735" y="455">只有独立演进、验证时才拆分。</text>
+  <path class="arrow" d="M960 305 L1020 305"/>
+  <rect class="warn" x="1028" y="90" width="132" height="430" rx="18"/>
+  <text class="label" x="1094" y="132" text-anchor="middle">例外</text>
+  <text class="label" x="1094" y="162" text-anchor="middle">路径迁移</text>
+  <text class="small" x="1044" y="220">不是普通 archive。</text>
+  <text class="small" x="1044" y="255">冻结 active changes</text>
+  <text class="small" x="1044" y="285">迁移 path 与引用</text>
+  <text class="small" x="1044" y="315">审阅新基线</text>
+  <text class="small" x="1044" y="345">严格验证后恢复</text>
+  <rect class="warn" x="90" y="590" width="1015" height="92" rx="15"/>
+  <text class="label" x="125" y="627">治理原则</text>
+  <text class="small" x="125" y="658">正常变化：在稳定 path 内迭代 requirements。结构变化：显式规划、审阅、验证。不要把“改目录”伪装成日常 archive。</text>
+</svg>
