@@ -10,13 +10,13 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.4** |
+| **手册版本** | **v1.5** |
 | **对齐 OpenSpec** | 1.7.0 |
 | **本版日期** | 2026-07 |
 
 **两个版本维度（别混）**：
 
-- **手册版本**（v1.4）：本手册自身的版次。理解加深、内容大修时升版。
+- **手册版本**（v1.5）：本手册自身的版次。理解加深、内容大修时升版。
 - **对齐 OpenSpec**（1.7.0）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
@@ -34,6 +34,7 @@
 | v1.2 | 2026-07 | 1.5.0 | 07 章重写：workspace → store 模型（跨仓库上下文引用）；00-index 版本/术语/命令表/阅读路径更新；workspace/initiative/context-store 概念全部删除。 |
 | v1.3 | 2026-07 | 1.7.0 | 对齐 v1.7：nested capability path 完整生命周期、`skip_specs`、Apply/Archive operation guidance、工具投递与 Codex skills-only、store/default 与 archive/sync 可靠性更新。 |
 | v1.4 | 2026-07 | 1.7.0 | 将 capability 专题正式纳入手册主线：按行为合同切分、浅 taxonomy、path identity、catalog discovery、同路径 delta/archive、rebaseline 与并发治理；不再只把 nested path 当目录技巧。 |
+| v1.5 | 2026-07 | 1.7.0 | 系统性勘误与打磨：修正 Pi/Kiro 版本归属（v1.2.0）、core/custom profile 命令数（6/12）、`apply.tracks` 约束措辞（从硬编码改强烈推荐）；CLI 命令表补全（status/instructions/view/schema/store setup 等）；`.openspec.yaml` 补完整字段表；schema 约束表补 `description`；FAQ 工具列表更新到 v1.7.0；`validate` 描述准确化；删各章尾部 `## 下一步` 跳转；宪章润色。 |
 
 ---
 
@@ -202,7 +203,7 @@ graph LR
 | **capability / 能力** | 可独立解释、独立改变、独立验证的行为合同切片；身份 = `specs/` 下的相对路径 | `auth`、`identity/session`；domain 只用于导航，不是父合同（详见 [09](09-高级-能力身份与specs漂移维护.md)） |
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
-| **profile** | 选择安装哪些工作流命令 | core（5个命令，v1.4.0 起）vs custom（自选命令） |
+| **profile** | 选择安装哪些工作流命令 | core（v1.2.0 引入 4 个，v1.4.0 起 5 个，v1.6.0 起 6 个）vs custom（自选命令） |
 | **store** | 全局注册的仓库 checkout；通过 `references:` 声明跨仓库依赖 | `openspec store register` → `config.yaml` 加 `references:` → `openspec context` 查看 |
 | **brownfield** | 已有代码库，在上面继续改 | 接手一个跑了 3 年的系统 |
 | **greenfield** | 从零开始的新项目 | 白纸一张，全新设计 |
@@ -213,13 +214,14 @@ graph LR
 
 这里的 `/opsx:*` 都是 agent 工具里的 slash command 入口。它们属于 OpenSpec 工作流，但不是终端 CLI 命令。需要直接在终端里运行时，看下面的 `openspec ...` CLI 表。
 
-### 日常最常用（core profile，v1.4.0 起默认包含 5 个命令）
+### 日常最常用（core profile，v1.2.0 引入，v1.6.0 起默认 6 个命令）
 
 | 命令 | 作用 | 典型场景 |
 |------|------|---------|
 | `/opsx:propose <name>` | 发起一个 change，生成 artifacts | 开始一个新功能或修复 |
 | `/opsx:explore` | 探索/调研模式，不生成 artifacts | 了解现有代码、调研技术方案；change 出来后反复打磨 proposal |
 | `/opsx:apply [name]` | 按 tasks 执行实现；也可用于 Markdown/skill/command 等非代码产物 | 开始实施 change |
+| `/opsx:update` | 更新现有 artifact（v1.6.0 纳入 core） | 修改 proposal/specs/design/tasks 中的任意一个 |
 | `/opsx:sync` | 同步 delta spec 到主 spec（v1.4.0 新增纳入 core） | 多人协作时合并 spec 变更 |
 | `/opsx:archive [name]` | 收尾，合并 delta spec 回基线 | 功能完成后归档 |
 
@@ -246,15 +248,27 @@ graph LR
 | `openspec list --specs --json` | 列出 main-spec capability path，作为 discovery 的起点，不会自动读取全文 |
 | `openspec show <name>` | 查看某个 change 详情 |
 | `openspec show <capability> --type spec --json --requirements` | 查看某个 capability 的 requirement 标题；确实要改时再读取完整 block/scenarios |
-| `openspec validate` | 验证 artifacts 结构；只验证格式和结构，不验证内容质量 |
+| `openspec validate` | 验证 artifacts 结构、格式和最低内容门槛（SHALL/MUST 关键词、场景存在、描述长度下限）；不验证需求合理性或设计质量 |
+| `openspec status` | 查看 change 当前进展（artifact 完成状态、进度计数） |
+| `openspec instructions [artifact]` | 输出指定 artifact 的生成指令（agent 可消费的 `--json` 格式） |
 | `openspec archive <name>` | 归档 change |
 | `openspec config profile` | 切换工作流 profile |
 | `openspec update` | 更新 AI 工具的 skills/commands |
 | `openspec store register` | 注册一个仓库 checkout 为全局 store |
+| `openspec store setup [id]` | 从零创建并注册一个全局 store（不同于 register 只指向已有目录） |
 | `openspec store list` | 列出已注册的 store |
+| `openspec store unregister <id>` | 取消注册（只删注册信息，保留本地文件） |
+| `openspec store remove <id>` | 取消注册并删除本地文件夹 |
+| `openspec store doctor [id]` | 检查 store 的注册和引用健康状态 |
 | `openspec context` | 查看 working set（root、referenced store 的本地路径与按需 `show --store` 入口） |
+| `openspec view` | 在终端中浏览 working set（支持 `--store <id>`） |
 | `openspec workset create/open/list/remove` | 创建/打开/列出/移除个人本地目录视图；不从 `references:` 推导 |
-| `openspec doctor` | 检查 store reference 健康状态 |
+| `openspec doctor` | 检查 root 和 store reference 健康状态 |
+| `openspec schema fork/init/validate/which` | 自定义工作流 schema（详见 [08](08-高级-自定义-schema-创建自己的工作流.md)） |
+| `openspec schemas` | 列出可用 schema |
+| `openspec templates` | 列出/查看 artifact 模板 |
+| `openspec completion` | 生成/安装/卸载 shell 自动补全 |
+| `openspec feedback` | 提交 GitHub issue 反馈 |
 
 ---
 

@@ -280,15 +280,21 @@ schema 决定：
 
 ## `.openspec.yaml` 为什么关键
 
-这个文件在 change 目录里，价值在于：
+这个文件在 change 目录里，是每次 change 的元数据。完整字段：
 
-- 它记录"这次 change 实际绑定哪套 schema"
+| 字段 | 必填 | 用途 |
+|------|------|------|
+| `schema` | 是 | 绑定到哪套工作流 schema |
+| `created` | 否 | 创建日期（`YYYY-MM-DD`） |
+| `goal` | 否 | 一句话描述这次 change 的目标 |
+| `affected_areas` | 否 | 涉及的代码区域列表 |
+| `initiative` | 否 | 关联的 initiative（`{store, id}`） |
+| `skip_specs` | 否 | 声明本次无 spec 级行为变更（纯重构/工具/文档），设为 `true` 时 validator 接受零 delta |
+
+其中最核心的是 `schema`：
+
 - 它让单次 change 可以偏离项目默认 schema
-
-也就是说：
-
-- 项目默认可以在 `config.yaml` 里写 `schema: spec-driven`
-- 但某个特殊 change 可以用另一套 schema
+- 项目默认可以在 `config.yaml` 里写 `schema: spec-driven`，但某个特殊 change 可以用另一套
 
 所以 change 的实际解析顺序，通常会优先看 change 自己，再回退到项目默认。
 
@@ -303,7 +309,7 @@ profile 和 schema 不是一回事。
 profile 管的是：
 
 - 你装哪些 workflow 命令
-- 默认是 core 5 个，还是更多扩展动作
+- 默认是 core 6 个，还是更多扩展动作
 
 ### schema 管什么
 
@@ -324,7 +330,7 @@ schema 管的是：
 **场景**：你想用 OpenSpec，但只想要最简单的工作流。
 
 1. **选 profile**：`openspec config profile` 选 `core` 或 `custom`
-   - core：你只有 5 个命令（propose/explore/apply/sync/archive）
+   - core：你只有 6 个命令（propose/explore/apply/update/sync/archive）
    - custom：自选命令（可以额外启用 new/continue/ff/verify/bulk-archive/onboard 等）
    - 这是"入口层"的选择
 

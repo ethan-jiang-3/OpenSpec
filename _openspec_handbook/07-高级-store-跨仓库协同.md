@@ -31,7 +31,7 @@ flowchart LR
 
 产品需求同时砸在 API、Web、Mobile 三个 repo 上——每个 repo 各自的 spec-driven 流程管好自己的代码没问题，但 agent 在做 API 的 change 时，如果能看一眼 Web 和 Mobile 的 specs，方案会考虑得更周全。
 
-v1.3.0 之前，OpenSpec 的所有操作都是 repo-local 的：
+在 store 模型（v1.5.0）出现之前，OpenSpec 的所有操作都是 repo-local 的：
 
 ```text
 my-project/
@@ -84,12 +84,14 @@ references:
 ### store：注册仓库
 
 ```bash
-openspec store register /path/to/checkout --id platform-api
+openspec store register /path/to/checkout --id platform-api   # 注册已有 checkout
+openspec store setup platform-api --path /path/to/new          # 从零创建并注册
 openspec store list
-openspec store unregister platform-api
+openspec store unregister platform-api                         # 取消注册，保留本地文件
+openspec store remove platform-api                             # 取消注册并删除本地文件夹
 ```
 
-只记录已有目录，不 clone、不 init。
+`register` 指向已有目录，不 clone、不 init；`setup` 创建新目录并同时注册。`unregister` 只忘掉注册信息，`remove` 连本地文件一起删。
 
 ### context：查看工作上下文
 

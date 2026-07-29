@@ -322,7 +322,7 @@ implementation done
 
 ---
 
-## 最后的压缩结论
+## 压缩结论
 
 1. OpenSpec 不是 CI/CD，也不应该伪装成 CI/CD
 2. OpenSpec 适合管理部署 change 的意图、风险、步骤、验证和证据

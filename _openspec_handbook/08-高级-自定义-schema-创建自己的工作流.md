@@ -242,7 +242,7 @@ apply:                          # apply 阶段配置
   requires:                     # 至少一个 artifact 就绪才能 apply
     - specs
     - tasks
-  tracks: tasks.md              # 进度追踪文件（必须是 tasks.md）
+  tracks: tasks.md              # 进度追踪文件（强烈推荐 tasks.md）
   instruction: |                # apply 阶段的 agent 提示词
     写清楚执行循环和 done 标准。简短——别把方法论教科书塞进来。
 ```
@@ -254,12 +254,13 @@ apply:                          # apply 阶段配置
 | `name` | string | 是 | 唯一，用 `--schema` 时指定 |
 | `version` | integer | 是 | 正整数 |
 | `artifacts[].id` | string | 是 | 唯一，DAG 节点标识 |
+| `artifacts[].description` | string | 是 | 对 artifact 的一句话说明 |
 | `artifacts[].generates` | string | 是 | 输出文件，支持 glob（如 `specs/**/*.md`） |
 | `artifacts[].template` | string | 是 | 必须对应 `templates/` 下的真实文件 |
 | `artifacts[].instruction` | string | 否 | agent 生成此 artifact 时的完整提示 |
 | `artifacts[].requires` | string[] | 否 | 依赖的 artifact id 列表，空 = DAG 起点 |
 | `apply.requires` | string[] | 是 | 至少一个 artifact id |
-| `apply.tracks` | string/null | 否 | 进度追踪文件，**必须用 `tasks.md`** |
+| `apply.tracks` | string/null | 否 | 进度追踪文件，**强烈推荐 `tasks.md`**（偏离需自行保证 artifact `generates` 一致） |
 | `apply.instruction` | string | 否 | apply 阶段的 agent 提示 |
 
 ---
@@ -310,9 +311,9 @@ openspec instructions proposal --change my-change --json
 
 ## 避坑清单
 
-### 1. `apply.tracks` 必须叫 `tasks.md`
+### 1. `apply.tracks` 强烈推荐用 `tasks.md`
 
-change 列表的进度计数硬编码了这个文件名。用别的名字（比如 `checklist.md`），计数永远是 0/0。
+进度计数通过 `schema.artifacts` 中 `generates` 匹配 `apply.tracks` 的文件名来找到对应的 artifact，所以技术上你可以用自定义名字（比如 `checklist.md`）——前提是存在一个 `generates: checklist.md` 的 artifact。但默认脚手架和工作流模板都默认 `tasks.md`，fallback 路径按 `id === 'tasks'` 查找 artifact，**偏离它意味着你需要自己保证所有环节一致**，否则计数、apply 指令、以及 archive 行为都可能出错。除非有明确理由，否则不要换名字。
 
 ### 2. 改 artifact id 要同步改 config.yaml 的 rules key
 
@@ -403,7 +404,7 @@ agent 不需要你在 instruction 里教它怎么沟通、怎么审查——它�
 - **artifact 名尽量对齐 spec-driven**——proposal/specs/design/tasks 这套动词用户已经会了，不要为了"领域感"发明新名字。除非你的流程真的装不进这个框架
 - **fork 优先**——比 init 和手写快，而且继承了源 schema 的验证过的 DAG
 - **装项目级、验证完再用**——`openspec/schemas/<name>/` + `openspec schema validate <name> --verbose`
-- **`apply.tracks` 必须叫 `tasks.md`**——硬编码约束
+- **`apply.tracks` 强烈推荐 `tasks.md`**——默认脚手架和模板都用它；如果换成自定义文件名，确保有 `generates` 匹配的 artifact，且 fallback（按 `id === 'tasks'` 查找）能正确回退
 - **改 artifact id 记得同步 config.yaml 的 rules key**——key 耦合，不同步 rule 静默失效
 - **apply.instruction 保持简短**——只写执行循环和 done 标准，方法论留给 agent
 

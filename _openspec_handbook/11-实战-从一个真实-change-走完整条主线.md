@@ -257,7 +257,7 @@ Generate CSV on demand from the filtered order query and return it as a file dow
 接着看 change 里的：
 
 ```text
-openspec/changes/add-task-csv-export/specs/tasks/spec.md
+openspec/changes/add-task-csv-export/specs/orders/spec.md
 ```
 
 一个合理的 delta spec 可能是：
@@ -551,7 +551,7 @@ openspec/changes/add-task-csv-export/
 ├── design.md
 ├── tasks.md
 └── specs/
-    └── tasks/spec.md
+    └── orders/spec.md
 ```
 
 而 `tasks.md` 已经变成：

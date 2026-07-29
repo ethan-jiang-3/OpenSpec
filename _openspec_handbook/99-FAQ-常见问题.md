@@ -13,7 +13,7 @@
 **A**: 传统文档是"写完就不改"，OpenSpec 是"边做边改"。而且 OpenSpec 用 delta spec 表达增量变化，不是每次重写整份文档。
 
 ### Q3: 我必须用 AI 工具吗？
-**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、Windsurf、GitHub Copilot、Kimi CLI、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode 等。
+**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、Windsurf、GitHub Copilot、Kimi CLI、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode、Trae、Oh My Pi、CodeArts Agent、Hermes Agent、ZCode 等。完整列表以当前 `openspec init` 输出为准。
 
 ---
 
@@ -44,8 +44,8 @@
 
 ### Q7: 什么时候该用 core profile，什么时候用 custom？
 **A**:
-- **core**（默认，v1.4.0 起）：5 个命令（propose/explore/apply/sync/archive），适合大多数场景。sync 在 v1.4.0 从 custom 移入了 core。
-- **custom**：自选所有 11 个命令（可以额外启用 verify/continue/ff 等），适合复杂项目
+- **core**（默认，v1.2.0 引入，v1.6.0 起 6 个命令）：propose/explore/apply/update/sync/archive，适合大多数场景。sync 在 v1.4.0 移入 core，update 在 v1.6.0 移入 core。
+- **custom**：自选所有 12 个命令（可以额外启用 new/continue/ff/verify/bulk-archive/onboard 等），适合复杂项目
 - **切换**：`openspec config profile`
 
 ---
@@ -213,8 +213,11 @@ specs/
 ### Q26: OpenSpec 支持哪些 AI 工具？
 **A**: 支持工具列表会随 release 变化，应以当前 `openspec init` / release note 为准；以下是历史示例：
 - **主要**：Claude Code、Cline、Cursor、Codex、Windsurf、GitHub Copilot
-- **v1.3.0 新增**：Junie（JetBrains）、Lingma、ForgeCode、IBM Bob、Pi（pi.dev）、Kiro（AWS）
+- **v1.2.0 新增**：Pi（pi.dev）、Kiro（AWS）
+- **v1.3.0 新增**：Junie（JetBrains）、Lingma、ForgeCode、IBM Bob
 - **v1.4.0 新增**：Kimi CLI、Mistral Vibe
+- **v1.6.0 新增**：Trae、Oh My Pi
+- **v1.7.0 新增**：CodeArts Agent、Hermes Agent、ZCode
 - 也可以直接用 CLI（不用任何 AI 工具）
 
 ### Q27: 怎么安装 OpenSpec 到我的 AI 工具？

@@ -14,8 +14,8 @@ OpenSpec 有两种 profile（配置模式）：
 
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
-| **core** | 5 个命令（v1.4.0 起） | 快速开发，简单场景 | 是（默认） |
-| **custom** | 11 个命令 | 复杂项目，需要更多控制 | 否 |
+| **core** | 6 个命令（v1.6.0 起） | 快速开发，简单场景 | 是（默认） |
+| **custom** | 12 个命令 | 复杂项目，需要更多控制 | 否 |
 
 ### 检查你当前的 Profile
 
@@ -27,12 +27,13 @@ openspec config profile
 # profile: core
 ```
 
-### Core Profile 的 5 个命令
+### Core Profile 的 6 个命令
 
 ```bash
 /opsx:propose <name>   # 创建 change + 生成所有 artifacts
 /opsx:explore          # 探索/调研模式
 /opsx:apply [name]     # 实现 tasks
+/opsx:update           # 更新现有 artifact（v1.6.0 纳入 core）
 /opsx:sync             # 同步 delta specs（v1.4.0 从 custom 移入 core）
 /opsx:archive [name]   # 归档 change
 ```
@@ -267,6 +268,46 @@ rm -rf openspec/changes/add-task-csv-export/
 
 ---
 
+## `/opsx:update`：修改 artifact 的正式工作流
+
+上面三种方式告诉你"怎么动手改"，但它们各自独立——手动改了 proposal，design 和 tasks 可能已经不一致了。`/opsx:update` 解决的就是这个问题。
+
+### 它做什么
+
+`/opsx:update` 读一遍 change 的全部已有 artifact，按你的意图改目标文件，然后**检查并修复其他 artifact 的一致性**。它不创建新 artifact（那是 `/opsx:continue` 的事），也不改代码（那是 `/opsx:apply` 的事）——它的边界就是"planning artifact 内部的自洽"。
+
+```
+propose 产出第一版 → explore 发现漏洞 → update 修 proposal + specs + design + tasks
+                                                      ↓
+                                          全部一致了才 apply
+```
+
+### 为什么需要它，而不是手改
+
+手改的风险在于**单向思维**——你改 design 的时候脑子里只有 design，很难同时检查 proposal 和 tasks 是否还跟它一致。而 `update` 是双向检查：改 design 会影响 tasks，反过来你在实现中推翻的设计假设也应该回流到 proposal。
+
+实际场景：
+
+> 以 BuildFlow 为例——`add-qc-check` 这个 change 的 proposal 说"质检员在 App 上打勾就行"，design 写了一套拍照+GPS 定位的验收流程。propose 阶段没人发现这个矛盾。跑完 explore 后你意识到 proposal 太乐观了，`/opsx:update add-qc-check` 会同时修 proposal（把约束写实）和 design（让拍照流程能追溯到 proposal 里的 requirement），而不是改一个留一个。
+
+### 什么时候用它
+
+| 场景 | 用什么 |
+|------|--------|
+| explore 后发现 proposal 不够 | **update** |
+| 实现中发现 design 不现实，要回头改 | **update**（改完再 apply） |
+| 说"update"看看有没有不一致 | **update**（先做 coherence review） |
+| 要加一个全新的 artifact（比如补 design） | `/opsx:continue`，不是 update |
+| 整个 change 的方向错了 | `/opsx:new`，不是 update |
+
+核心判断：**改的是已有 artifact 的内容 → update；要创建还不存在的 artifact → continue**。
+
+### 一句话
+
+`/opsx:update` 是"迭代打磨 planning"的正式入口。它把"改 proposal → 改 design → 改 tasks"这个容易三步各写各的流程，锁成一次自洽操作。
+
+---
+
 ## 每个 Artifact 的详细修改指南
 
 现在我们逐个讲解每个 artifact 的修改方法，包含大量真实场景和完整示例。
@@ -482,8 +523,9 @@ rules:
 ```yaml
 # 正确：统一缩进
 rules:
-  - Write tests
-  - Add docs
+  tasks:
+    - Write tests
+    - Add docs
 ```
 
 **错误 2：context 和 rules 混淆**
@@ -501,7 +543,8 @@ context: |
   Tech: TypeScript
 
 rules:
-  - Write tests for all new features
+  tasks:
+    - Write tests for all new features
 ```
 
 **错误 3：规则太模糊**
@@ -516,8 +559,9 @@ rules:
 ```yaml
 # 正确：具体明确
 rules:
-  - Keep domain code grouped by capability, not by technical layer
-  - Do not bypass published module interfaces
+  design:
+    - Keep domain code grouped by capability, not by technical layer
+    - Do not bypass published module interfaces
 ```
 
 #### 验证 config.yaml 的修改

@@ -648,7 +648,49 @@ Blocking rule:
 
 ### 用 review 检查冲突
 
-`openspec validate` 能检查结构和格式，但它不会替你判断两个并行 change 是否语义冲突。review 时要明确检查两件事：这次 delta spec 改了哪些 requirement，以及这些 requirement 是否正被另一个 active change 修改。
+`openspec validate` 能检查结构、格式和最低内容门槛（SHALL/MUST 关键词、场景存在等），但它不会替你判断两个并行 change 是否语义冲突。review 时要明确检查两件事：这次 delta spec 改了哪些 requirement，以及这些 requirement 是否正被另一个 active change 修改。
+
+---
+
+## `/opsx:sync`：不等 archive 就把 spec 合并回主线
+
+### 为什么需要它
+
+标准流程是 `propose → apply → archive`——archive 时才把 delta spec 合并回 `specs/`。但多人协作时这个节奏太慢了。
+
+假设 Alice 和 Bob 同时开工：
+
+```
+Alice: add-qc-check     → 改 specs/quality/spec.md（新增 Requirement: Photo Verification）
+Bob:   add-qc-report    → 也改 specs/quality/spec.md（修改 Requirement: Report Format）
+```
+
+如果 Alice 先 archive，Bob 的 delta 是基于旧 `specs/quality/spec.md` 写的——他的 `## MODIFIED Requirements: Report Format` 期望的是一个旧版本。等 Bob archive 时，要么合并冲突，要么更糟——Alice 新增的 `Photo Verification` 在 Bob 的合并中被无声覆盖。
+
+**sync 的价值就是把"等 archive 才合并"拆成两步**：先把 spec 级别的变更合并回主线（sync），代码实现可以继续留在 change 里（apply 还没完）。这样 Bob 开工时看到的 `specs/quality/spec.md` 已经包含了 Alice 的 spec 变更，不会产生基于旧基线的冲突。
+
+### 它做什么
+
+`/opsx:sync` 把当前 change 的全部 delta spec 按 ADDED/MODIFIED/REMOVED/RENAMED 语义合并到 `openspec/specs/` 的对应 main spec 中。关键行为：
+
+- **智能合并，不是文件覆盖**——MODIFIED 只改提到的 requirement，不改的保留原样。ADDED 如果 main spec 已经有了同名 requirement 就当 MODIFIED 处理
+- **幂等**——同样的 delta 跑两次 sync，结果一样
+- **不归档**——change 仍然 active，代码实现和 tasks 不受影响
+- **sync 后再 archive**——v1.7.0 中，sync 后的 delta 和 main spec 完全一致时，archive 是 no-op（只移动目录，不重写文件）
+
+### 什么时候用它
+
+| 场景 | 要不要 sync |
+|------|------------|
+| 你的 change 涉及 specs 变更，而同事马上要改同一个 capability | **sync**——先合并，同事基于你的 spec 开工 |
+| 你的 spec 已经稳定，但代码还没写完 | **sync**——spec 先落地，代码慢慢写 |
+| 整个 change（spec + 代码）都完了 | 直接 archive，不需要单独 sync |
+| 你的 change 是 `skip_specs: true` | 不需要 sync（没有 delta spec） |
+| 不确定 delta 是否最终版 | 可以 sync——反正 archive 时可以再 sync 一次（幂等） |
+
+### 一句话
+
+`/opsx:sync` 把 spec 的合并时机从 archive 提前到"现在"，让并行开发的人看到彼此已经确定的 spec 变更，减少 archive 时的冲突——它是多人协作中"spec 级别的 rebase"。
 
 ---
 

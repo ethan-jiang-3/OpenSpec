@@ -219,8 +219,8 @@ context: |
 
 ```yaml
 context: |
-  Project: ProcureFlow
-  Domain: Internal procurement request and approval platform
+  Project: BuildFlow
+  Domain: Construction work inspection request and approval platform
   Stack: TypeScript, React, Node.js, PostgreSQL
   Quality priorities:
   - correctness of approval decisions
@@ -544,8 +544,8 @@ rules:
 schema: spec-driven
 
 context: |
-  Project: ProcureFlow
-  Domain: Internal procurement request and approval platform
+  Project: BuildFlow
+  Domain: Construction work inspection request and approval platform
   Stack: TypeScript, React, Node.js, PostgreSQL
   Quality priorities:
   - correctness of approval decisions
@@ -1005,7 +1005,7 @@ rules:
 
 ---
 
-## 最后的压缩结论
+## 压缩结论
 
 如果把整篇压成 9 句话，大概就是：
 
