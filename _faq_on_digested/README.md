@@ -52,6 +52,7 @@ _faq_on_digested/
 - [`12_upstream-roadmap-and-issues/`](12_upstream-roadmap-and-issues/question.md) — 以 GitHub Issues/Discussions、官方文档、Release Notes 为源，归纳上游项目的 1) roadmap（已交付/近期/workspace 四阶段/context store），2) 最主要问题（结构性限制/高频 bug/迁移痛点），3) 社区最常见问题，并与我们在 `_digested/` 中的研究交叉对照。
 - [`13_how_to_design_maintain_config_yaml/`](13_how_to_design_maintain_config_yaml/question.md) — 如何按下游运行时的 Flow owner 选择传统确定性、MD/Agent 控制或程序/Graph 控制的 config 初始基线，让 config.yaml 在正确阶段提供准确指导，并按生效 root、schema、instructions 与 artifacts 诊断“配置没有生效”。
 - [`14_main_specs_context_scaling/`](14_main_specs_context_scaling/question.md) — archive 后主 specs 不断增长时，OpenSpec 现有的 capability 分片、按需读取与 external reference index 到底覆盖了什么；本仓库没有的 local spec discovery / retrieval 如何用 catalog、全局 context 内核与显式选择协议补上。
+- [`15_nested_capability_migration/`](15_nested_capability_migration/question.md) — 项目 capability 太多（几十个 flat capability），如何从 flat 迁移到嵌套二级目录结构？完整操作指南：taxonomy 设计、受控 rebaseline 流程、active delta 处理、config.yaml 更新、catalog 建设、验证清单、迁移后纪律。
 
 ## 引用规范
 
