@@ -1,5 +1,7 @@
 # 答案：把 flat capability 迁移到嵌套二级目录——完整操作指南
 
+> **本文定位**：这是 FAQ 14（[主 specs 上下文缩放](../../_faq_on_digested/14_main_specs_context_scaling/answer.md)）的**操作伴侣**。FAQ 14 回答了「nested path 能解决什么、不能解决什么、agent 上下文策略应该怎么设计」——先读它建立判断框架。本文只回答一件事：**如果你的项目已经决定从 flat 迁到 nested，具体怎么执行。**
+
 ## 一句话结论
 
 **从 flat 迁移到 nested 可行，v1.7.0 已完整支持。但这不是一次普通 archive——capability path 就是它的身份，没有 rename 操作。迁移是一次受控 rebaseline：先冻结 active changes，再搬 main specs，再逐一更新所有指向旧 path 的引用（delta、catalog、config、文档），最后验证并恢复。**
@@ -37,6 +39,30 @@ list、show、validate、change parser、apply、archive 全部使用同一条�
 | nested path 是命名空间，不含继承或自动聚合 | `identity` 和 `identity/session` 是两个独立 capability。父目录不会自动继承、汇总或加载子 spec |
 
 这些不是设计缺陷——它们是 identity 模型的直接推论。理解这些约束，下面的步骤就都是必然的。
+
+### 如果不按约束来，具体会炸在什么地方
+
+上面那六条约束不是"最好遵守"的软建议。每一条背后都有一个具体的、被真实项目验证过的失败模式。按严重程度排列：
+
+**风险 1：path 就是身份，没有 rename——archive 会原子回滚。** 把 `auth/` 搬到 `identity/login/` 后，OpenSpec 眼里旧 capability 已经死了、新 capability 是新创建的。任何仍指向 `auth` 的 delta，下次 archive 时直接 `not found`。archive 是原子的——一个 delta 找不到目标，整批全部回滚，连本该成功的新 capability 创建也一并丢弃。本 repo 自己的 `simplify-skill-installation` change 就真实遇到过：16 条 requirement 操作全部 `not found`，一个坏全盘不落。更危险的是，搬完目录**没有任何工具会主动告诉你"还有 3 个 active delta 指向旧 path"**——要到下次 archive 炸了才知道。
+
+**风险 2：active delta 是悬空炸弹。** 迁移期间，每个 `changes/<id>/specs/<old-path>/spec.md` 还指向旧 ID。如果你搬了 main specs 但没碰这些 delta，它们立刻变成孤儿。这也是为什么 Phase 2 的 active-change 清册被标为"最关键的一步"——你必须明确知道每个 active delta 的最终命运，不能靠猜。
+
+**风险 3：拆分丢失 Git 行级追溯。** 如果不仅搬家还拆分（比如一个大 `auth` 拆成 `identity/login` + `identity/authorization`），用的是 `cp` + `git rm`，新 capability 在 Git 眼里是全新文件。`git blame` 断了。这不是 bug——行为合同拆分本身就是一个新起点——但你必须在 migration design 里留下旧→新映射，让未来的人知道去哪里找历史。
+
+**风险 4：并发——迁移期间有人 propose 新 change。** 如果迁移过程中有人基于旧 flat path 写了新 delta，迁移一完成这个新 change 立刻变成需要修的新债务。这也是 Phase 3 Step 1 要冻结的原因——不是仪式感，是防止新债务在你还来不及验证时就产生。
+
+**风险 5：validate 只查结构，查不出语义漂移。** `openspec validate --specs --strict` 全部绿灯，不代表 specs 和代码对齐了。validate 只查文件格式和 requirement block 的结构合法性，从来不打开源码对照。迁移时你动了几十个 capability 的身份，这个盲区被成倍放大。验证通过只是起点，真正的正确性检查靠的是 Phase 4 中逐个 capability 的 `show` 抽查和人工 review。
+
+**风险 6：catalog 变成过期但被信任的第二份真相。** 人和 agent 倾向于先看 catalog 再读 spec。如果某次 archive 后 spec 的 Purpose 或 requirements 变了但 catalog 没更新，catalog 就变成了过期的导航——而 agent 浑然不知。冲突时以 main spec 为准——这条铁律写在文档里，但 agent 不会自动校验。
+
+**风险 7：为了整齐提前拆分。** 树形目录看起来很漂亮，容易诱惑你把还在共同演进的两个 requirement 拆成两个 capability。结果 agent 每次改它们都**必须同时读两份 spec**——上下文浪费反而增加了。拆分的唯一信号是"它们已经独立演进、独立验证了一段时间"，不是"树看起来不对称"。等行为真正分叉了再拆，比提前拆然后每天多读一份 spec 划算得多。
+
+**风险 8：config.context 膨胀。** 迁移完成很有成就感，容易想把整个 taxonomy、catalog、path convention 全塞进 `config.context`，让 agent 每次都"全知道"。但这东西每次 prompt 都注入、受 50KB 硬上限、而且**不会随 archive 自动更新**——很快就会变成一份过期的、无人维护的、却每次都在消耗 token 的第二份 baseline。
+
+---
+
+> **一句话：最大的风险不是技术上行不通（v1.7.0 完整支持 nested path），而是组织上不完整——搬了 main specs 但漏了 active deltas、漏了 catalog、漏了 agent 约定，然后在下一次 archive 时集中爆炸。这也是为什么下面的步骤是一张检查清单，而不是"你就 git mv 一下就好"。**
 
 ---
 
@@ -85,6 +111,8 @@ openspec/specs/
 
 domain 不承担：继承、默认 requirement、自动聚合、自动加载所有子 spec。这些都是不存在的语义。
 
+> **mixed flat+nested 完全合法**：不是每个 capability 都必须属于一个 domain。`data-export/spec.md`（flat）和 `identity/session/spec.md`（nested）可以并存。discovery 对两者一视同仁。不在 domain 下的 capability 不会被隐藏或降级。
+
 **命名规则**：
 - path segment 用 kebab-case：`invoice-generation`，不是 `billingPage`
 - 用领域概念而非实现名：`session`，不是 `redis-session-store`
@@ -108,12 +136,15 @@ domain 不承担：继承、默认 requirement、自动聚合、自动加载所�
 | data-export | data-export | 无相邻 capability，留在根一级 |
 ```
 
-几个要同时做的判断：
-- auth 和 authorization 是不是同一件事？如果是，**合并**为一个 capability 而不是拆成两个
-- 有没有两个 capability 其实共享同一组 requirement，只是当初被不同的人用不同名字建了？**合并**
-- 有没有一个 capability 包含了两种独立演进的行为（比如 auth 里同时有 login 和 permission）？**拆分**
+画映射表时对每个旧 capability 追问三句（来自 [01-切分与taxonomy.md](../../_digested/spec-driven-capability/01-切分与taxonomy.md) 的决策表）：
 
-这个映射表是后续所有操作的基础。**在这一步就找人 review，不要等到搬完了再讨论。**
+| 问题 | 如果答案是"是" |
+|------|--------------|
+| 它和另一个旧 capability 是否共享同一组 requirement，只是被不同的人用了不同名字创建？ | **合并**为一个新 path，不要保留两个近义合同 |
+| 它内部是否包含了两组已经独立演进、独立验证的行为（比如 login 和 permission 各自独立变更了很久）？ | **拆分**成两个新 path，各自带自己的 requirements 和 Purpose |
+| 它的行为能否被一个已有 capability 的 requirement 自然描述？ | 不要新建 path，直接 **MODIFIED** 已有 capability |
+
+映射表不是一次性画完就冻结的——在找人 review 之前，把上面三问的结论也写进理由列。**在这一步就找人 review，不要等到搬完了再讨论。**
 
 ---
 
@@ -125,14 +156,14 @@ domain 不承担：继承、默认 requirement、自动聚合、自动加载所�
 openspec list
 ```
 
-如果有 change 处于 apply-ready 或更后状态，先完成或取消它们。迁移期间不应该有并发的 archive 操作。
+如果有 change 处于 apply-ready（即已通过 `/opsx:apply` 实施了代码、等待 archive）、或已经走在 archive 流程中，先完成或取消它们。迁移期间不应该有并发的 archive 操作。
 
 ### Step 2：清点所有触及旧 path 的 active changes
 
 这是最关键的一步。对每个 active change，检查它的 `specs/` 目录：
 
 ```bash
-# 列出所有 active changes
+# 列出所有 active changes（--json 输出 change ID 和状态）
 openspec list --json
 
 # 对每个 change，看它的 delta 指向哪些 capability
@@ -157,10 +188,12 @@ ls openspec/changes/<change-id>/specs/
 
 **原则：迁移开始前，不能有任何一个 active delta 仍然指向旧 path 却无人知道它应该映射到哪个新 path。**
 
+> **skip_specs 的 change**：声明了 `skip_specs: true` 的 change 没有 delta specs，不受此次迁移影响，正常保留即可。
+
 ### Step 3：确认 config.yaml 和 AGENTS.md 中没有硬编码的旧 path
 
 ```bash
-rg "auth|login|session|billing" openspec/config.yaml AGENTS.md 2>/dev/null
+rg "auth|login|session|billing" openspec/config.yaml AGENTS.md 2>/dev/null || grep -rE "auth|login|session|billing" openspec/config.yaml AGENTS.md 2>/dev/null
 ```
 
 记录所有引用位置，迁移后需要同步更新。
@@ -175,31 +208,30 @@ rg "auth|login|session|billing" openspec/config.yaml AGENTS.md 2>/dev/null
 
 ### Step 2：搬迁 main specs
 
-用 `git mv`（不是普通 `mv`），保留 Git 历史：
+用 `git mv`（不是普通 `mv`），保留 Git 历史。先创建目标父目录，再逐条搬迁：
 
 ```bash
-# 按映射表逐条执行
+# 0. 先创建所有需要的父目录
+mkdir -p openspec/specs/identity
+mkdir -p openspec/specs/billing
+
+# 1. 按映射表逐条执行
 git mv openspec/specs/auth openspec/specs/identity/authorization
 git mv openspec/specs/login openspec/specs/identity/login
 git mv openspec/specs/session openspec/specs/identity/session
 git mv openspec/specs/billing openspec/specs/billing/invoices
 git mv openspec/specs/subscriptions openspec/specs/billing/subscriptions
-# data-export 不动
+# data-export 不动——留在根一级
 ```
 
-如果目标父目录不存在，先创建：
-
-```bash
-mkdir -p openspec/specs/identity
-mkdir -p openspec/specs/billing
-```
-
-**重要**：如果某个旧 capability 要**拆分**成两个新 capability（比如 `auth` 拆成 `identity/login` 和 `identity/authorization`），不能靠 `git mv`。你需要：
+**重要**：如果某个旧 capability 要**拆分**成两个新 capability（比如 `auth` 里的 login 和 permission 行为已经独立演进很久），不能靠 `git mv`。你需要：
 1. 复制旧 spec.md 的内容到两个新位置
 2. 在每个新位置只保留属于它的 requirements
 3. 为每个新 capability 写清 `## Purpose`
 4. `git rm` 旧 capability
 5. 在 migration change 的 design 或 proposal 中记录拆分映射
+
+> **注意**：拆分用 `cp` + `git rm`，不用 `git mv`，因此新 capability 的 Git 历史不会延续旧文件的行级追溯。这是可接受的权衡——行为合同的拆分本身就是一个新的起点。旧文件的历史仍可通过 `git log -- openspec/specs/auth/`（旧 path）查看。
 
 ### Step 3：更新 active deltas
 
@@ -211,10 +243,14 @@ mkdir -p openspec/specs/billing
 
 mkdir -p openspec/changes/<change>/specs/identity/authorization
 git mv openspec/changes/<change>/specs/auth/spec.md \
-       openspec/changes/<change>/specs/identity/authorization/spec.md
+       openspec/changes/<change>/specs/identity/authorization/spec.md 2>/dev/null \
+  || mv openspec/changes/<change>/specs/auth/spec.md \
+        openspec/changes/<change>/specs/identity/authorization/spec.md
 # 删除空的旧目录
 rmdir openspec/changes/<change>/specs/auth 2>/dev/null
 ```
+
+> `git mv` 对未跟踪文件会失败；失败时回退到普通 `mv`。change 下的 delta 经常是还没 commit 的新文件，这种情况很正常。
 
 **如果旧 capability 被拆分了**（比如 `auth`→`identity/login`+`identity/authorization`），delta 不能简单搬运——你需要：
 1. 读 delta 中的每个 requirement 操作
@@ -308,7 +344,7 @@ rules:
 
 ```bash
 # 1. 新 capability 全部被发现
-openspec list --specs --json | jq '.[].id'
+openspec list --specs --json | jq '.[].id'          # 若未安装 jq，直接看未过滤的 JSON 输出
 # 预期输出包含 identity/login、identity/session、billing/invoices 等
 # 预期输出不含 auth、login、session、billing（旧 path）
 
@@ -354,9 +390,11 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 迁移完成不代表故事结束。以下习惯守住成果：
 
-### agent 的 discovery 协议（每次 propose 前）
+### agent 的 discovery 协议
 
-```
+下面这份协议应写入项目的 AGENTS.md（见 Phase 3 Step 6）。它在每次 `/opsx:propose` 和 `/opsx:explore` 的 discovery 阶段执行——不是在 propose 之前单独跑一遍，而是 propose workflow 内部的前几步：
+
+```text
 1. 读 openspec/config.yaml → 知道全局不能破坏什么
 2. 读 openspec/specs/README.md（catalog）或 openspec list --specs --json → 列出候选 capability path
 3. 用关键词和用户意图过滤候选 → 标记每个为 New / Modified / verify only / excluded
@@ -411,7 +449,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ## 一句话总结
 
-**nested capability 是已实现的、适合大项目的组织能力。迁移的实质是一次受控 rebaseline：先冻结、再映射、再搬迁、再逐层更新引用、再验证。path 是稳定身份——这次把 taxonomy 做对，以后就不要再随便改。**
+**nested capability 是已实现的、适合大项目的组织能力。迁移的实质是一次受控 rebaseline：先冻结、再映射、再搬迁、再逐层更新引用、再验证。path 是稳定身份——这次把 taxonomy 做对。以后要改（拆分、合并、改名、退役），必须走同样的受控 rebaseline 流程（Phase 2→3→4），绝不能混在功能 change 里顺手操作。**
 
 ---
 
