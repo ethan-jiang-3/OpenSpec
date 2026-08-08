@@ -53,6 +53,7 @@ _faq_on_digested/
 - [`13_how_to_design_maintain_config_yaml/`](13_how_to_design_maintain_config_yaml/question.md) — 如何按下游运行时的 Flow owner 选择传统确定性、MD/Agent 控制或程序/Graph 控制的 config 初始基线，让 config.yaml 在正确阶段提供准确指导，并按生效 root、schema、instructions 与 artifacts 诊断“配置没有生效”。
 - [`14_main_specs_context_scaling/`](14_main_specs_context_scaling/question.md) — archive 后主 specs 不断增长时，OpenSpec 现有的 capability 分片、按需读取与 external reference index 到底覆盖了什么；本仓库没有的 local spec discovery / retrieval 如何用 catalog、全局 context 内核与显式选择协议补上。
 - [`15_nested_capability_migration/`](15_nested_capability_migration/question.md) — 项目 capability 太多（几十个 flat capability），如何从 flat 迁移到嵌套二级目录结构？完整操作指南：taxonomy 设计、受控 rebaseline 流程、active delta 处理、config.yaml 更新、catalog 建设、验证清单、迁移后纪律。
+- [`16_upgrade-openspec-cli-and-projects/`](16_upgrade-openspec-cli-and-projects/question.md) — OpenSpec 整体怎么升级？升级完全局 CLI 之后，每个项目里还要做什么（`openspec update` 重投递 skills/commands、迁移 `.codex`→`.agents`、清理 legacy）？各安装方式的升级命令分别是什么？
 
 ## 引用规范
 

@@ -105,3 +105,9 @@
 - [x] D4-4 `15-实战-多人协作` 场景 3：补"退役 vs 在途 MODIFIED"冲突（validate 通过 / archive 拒绝 target spec does not exist）
 - [x] D4-5 `90-附录-agent协议`：instructions 示例字段名对齐真实形状（`change`→`changeName`、`outputPath`→`resolvedOutputPath`、dependencies 对象化 + unlocks）
 - [~] D4-6 核对无需改：01/02/03/04/05/06/07/08/10/13/14 正文无 v1.8.0 硬性过时（validate/SHALL/status/archive 声称已逐条扫过）；ch10 已含 `.agents` 共享根；ch01 init 工具选择由 ch10 覆盖
+
+## E. 新增 FAQ：整体升级 OpenSpec + 逐项目更新（用户提出缺口）
+- [x] E1 调研 v1.8.0 升级机制：无 `openspec upgrade` 命令；全局 CLI 升级走安装方式；`openspec update` 先查版本（`getAvailableCliUpdate` 只在 update 命令调用，init 不做），npm 全局交互 TTY 可自升级并重跑；升级命令按安装方式选择（npm/pnpm/bun/yarn/volta/npx/项目依赖/源码 clone）
+- [x] E2 版本检查门控：`OPENSPEC_NO_UPDATE_CHECK` / `DO_NOT_TRACK` / `OPENSPEC_TELEMETRY=0` / CI / `NODE_ENV=test` / `telemetry.enabled=false` 都会关闭检查
+- [x] E3 逐项目步骤 = `openspec update`：智能检测版本戳过期 → 重生成 skills/commands；迁移 legacy 目录（`.codex`→`.agents`）；`.openspec-target` ownership；legacy 清理不删用户内容；Copilot cloud 只刷新 opt-in 项目；`--force` 强制
+- [x] E4 新建 `_faq_on_digested/16_upgrade-openspec-cli-and-projects/{question,answer}.md` + README 索引更新
