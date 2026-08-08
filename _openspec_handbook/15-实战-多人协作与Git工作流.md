@@ -355,6 +355,7 @@ git commit -m "Sync with add-request-filter changes"
 - 尽量错开时间，避免并行修改同一个 spec
 - 如果必须并行，后 archive 的人要用 `/opsx:sync` 同步，并手动审查 delta spec 是否仍然准确
 - `/opsx:sync` 在当前 core profile 中默认可用
+- **退役 vs 在途修改（v1.8.0）**：若某人用 `retire_capabilities: true` 退役整个 capability（REMOVED 拿掉最后一个 requirement），而另一个 in-flight change 仍在 MODIFIED 它——后者的 `validate` 会通过，但 `archive` 会以 "target spec does not exist" 拒绝。退役 change 要先 archive（让 main spec 真正消失），或把在途的 MODIFIED 改成对别的 capability 的 ADDED。
 
 ---
 

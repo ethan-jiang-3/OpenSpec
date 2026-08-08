@@ -64,7 +64,7 @@ Phase 3: Move
 
 ### 2.3 任务完成检查
 
-`archive.ts:174-194`：读取 tasks.md，统计未完成 checkbox。如果有未完成任务，警告并要求确认。
+`archive.ts:174-194`：读取 tasks.md，统计未完成 checkbox。如果有未完成任务，警告并要求确认。v1.8.0 起与 `list` / `view` / `instructions apply` 共用 `src/utils/task-progress.ts` 的同一 parser——**缩进的子任务也计入**（旧版只认列 0 的 checkbox，未完成的 `  - [ ] 1.1.1` 会被漏掉，archive 于是"✓ Complete"却带着半截活收档）。
 
 ---
 

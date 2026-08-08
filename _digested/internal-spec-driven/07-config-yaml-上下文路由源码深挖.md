@@ -177,10 +177,10 @@ apply:
 
 1. **Gate 只直接检查 `tasks`。** `generateApplyInstructions()` 不递归复查 `tasks` 的 `specs`/`design` 依赖；它只按 `apply.requires` 查对应 output 是否存在。
 2. **`contextFiles` 扫描全部四个 artifact。** 对当前存在的 `proposal.md`、所有匹配 `specs/**/*.md` 的文件、`design.md`、`tasks.md` 分别建立数组；缺失类别直接省略。
-3. **`tracks: tasks.md` 决定进度。** checkbox parser 只识别行首 `- [ ]`、`* [ ]`、`- [x]` 或 `* [x]`；tasks 文件缺失、没有 checkbox，或缺少 required artifact 时都会得到 `blocked`。
+3. **`tracks: tasks.md` 决定进度。** checkbox parser（`parseTaskLines()` in `src/utils/task-progress.ts`）识别 `-`/`*` 开头的 `[ ]`/`[x]`/`[X]`，**允许前导缩进（v1.8.0 起缩进子任务也计入）**；tasks 文件缺失、没有 checkbox，或缺少 required artifact 时都会得到 `blocked`。
 4. **schema instruction 只在 `ready` 分支使用。** `blocked` 与 `all_done` 会改用运行时生成的提示；全部 checkbox 完成时返回 `all_done` 和 archive 建议。无论 state 如何，返回对象还可含 `context` 与 `operationGuidance`，它们是 prompt-level input，不改变 gate 或完成条件。
 
-实现均在 [`parseTasksFile()` 与 `generateApplyInstructions()`](../../src/commands/workflow/instructions.ts)，行为测试见 [`artifact-workflow.test.ts`](../../test/commands/artifact-workflow.test.ts)。Apply skill 随后要求 agent 读取 `contextFiles` 中的**每一条**路径再实施（[`apply-change.ts`](../../src/core/templates/workflows/apply-change.ts)）。
+实现均在 [`parseTaskLines()`（`src/utils/task-progress.ts`）与 `generateApplyInstructions()`](../../src/commands/workflow/instructions.ts)，行为测试见 [`artifact-workflow.test.ts`](../../test/commands/artifact-workflow.test.ts)。Apply skill 随后要求 agent 读取 `contextFiles` 中的**每一条**路径再实施（[`apply-change.ts`](../../src/core/templates/workflows/apply-change.ts)）。
 
 Apply command 将同一份 parsed config 传给 `generateApplyInstructions()`；后者通过 `loadOperationInputs(config, 'apply')` 返回 `context` 和 `operationGuidance`。所以 `rules.tasks` 会约束 `tasks.md` 的作者，却不会在实施时再次出现；`rules.apply` 既不是合法 artifact rule，也不会进入 Apply。实施期的专用位置是 `operations.apply.guidance`。
 

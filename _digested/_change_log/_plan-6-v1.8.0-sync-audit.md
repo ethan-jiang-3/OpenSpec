@@ -74,5 +74,34 @@
 ## 最终检查
 - [x] `git diff` 复核无错漏（14 个文件，+60/-48，语义逐条核对源码）
 - [x] 确认未误动真实 `openspec/` 或跑 `openspec write` 类命令（记忆约束）——只改了 `_digested/`/`_faq_on_digested/`/`_openspec_handbook/`
-- [x] 未提交（等用户指示）
+- [x] 已提交（`9d8f3b9`）
 - [x] 三处 README 基线正确（v1.8.0 / `e50bd09` / `d578896`）；00-index 版本表正确（v1.6 对齐 1.8.0），本次为版本内勘误不新增版本行
+
+---
+
+## D. 三大主题覆盖核对（用户指定重点，提交后追加）
+
+### 主题1：retire_capabilities
+- [x] D1-1 `_digested/spec-driven-capability/04-演进与治理.md`：原"删除 main spec 目录不是 archive 的高阶语义"与 v1.8.0 矛盾 → 改写为 retire_capabilities 机制 + 与 in-flight MODIFIED 冲突提示
+- [x] D1-2 其余覆盖已确认到位：`04-archive`（L328）、`workflows/09-archive`（L11）、`mechanisms/04`（L80）、FAQ `07/12/15`、handbook `99-FAQ Q16`/`00-index`
+
+### 主题2：archive 可靠性（可重跑 / exit1 / 重复名 / note-loss）
+- [x] D2-1 `04-archive` L329-331 已完整覆盖（重复 canonical 名、note-loss、可重跑+exit1）——无需改
+- [x] D2-2 `workflows/09-archive`（L11）、`mechanisms/04`（L80）、FAQ `07`（L335）已覆盖 rerun/exit1——无需改
+- [x] D2-3 handbook `99-FAQ Q16` 补"失败/被卡两种出路"：retire 完整说明（含 git checkout 恢复、--no-validate 不触发）+ 非交互可重跑命令
+
+### 主题3：task-progress 缩进子任务（共享 parser）
+- [x] D3-1 `internal-spec-driven/03-apply` 3.1-3.3：旧正则 `^[-*]\s*\[([ xX])\]\s*(.+)\s*$` + `parseTasksFile()` → 共享 `parseTaskLines()`（`/^\s*[-*]\s*\[([\sxX])\]\s*(.*)/`），补缩进子任务说明
+- [x] D3-2 `internal-spec-driven/02-propose` L242-249：旧正则 → 共享 parser + 缩进说明
+- [x] D3-3 `internal-spec-driven/07-config-yaml` L180/L183：`parseTasksFile()` → `parseTaskLines()`，parser 识别范围更新
+- [x] D3-4 `internal-spec-driven/04-archive` 2.3：补共享 parser + 子任务计入
+- [x] D3-5 FAQ `06/answer-app03` L108-121/L168、`answer-sequence` L48/L186/L216：旧正则 + `parseTasksFile()` → 共享 parser
+- [~] D3-6 `workflows/06-apply` L129 已覆盖（同步时已加）；handbook 11/12 为概念层无旧正则声称，无需改
+
+## D4. handbook 深度补漏（用户指出"更新严重不够"后的第二遍正文核查）
+- [x] D4-1 确认问题模式：同步只在每章顶部加 v1.8.0 提示块，正文读者遇到旧行为处未改 → 逐个正文核查
+- [x] D4-2 `12-实战-修改artifacts` 第 3 节修改表：`specs/<capability>/spec.md` 行补 retire（REMOVED 拿掉最后一个 requirement → `retire_capabilities: true`）；`tasks.md` 行补缩进子任务计入；`.openspec.yaml` 行补 retire 与 schema 并存
+- [x] D4-3 `11-实战-change走主线` 第 5 步（tasks）：补 v1.8.0 缩进子任务计数提示 + 四命令共享 parser
+- [x] D4-4 `15-实战-多人协作` 场景 3：补"退役 vs 在途 MODIFIED"冲突（validate 通过 / archive 拒绝 target spec does not exist）
+- [x] D4-5 `90-附录-agent协议`：instructions 示例字段名对齐真实形状（`change`→`changeName`、`outputPath`→`resolvedOutputPath`、dependencies 对象化 + unlocks）
+- [~] D4-6 核对无需改：01/02/03/04/05/06/07/08/10/13/14 正文无 v1.8.0 硬性过时（validate/SHALL/status/archive 声称已逐条扫过）；ch10 已含 `.agents` 共享根；ch01 init 工具选择由 ch10 覆盖

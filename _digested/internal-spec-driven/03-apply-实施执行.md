@@ -74,15 +74,17 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 
 ### 3.1 正则
 
-`parseTasksFile()`（`src/commands/workflow/instructions.ts`）：
+v1.8.0 起统一走共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`），`list` / `view` / `instructions apply` / `archive` 对同一 tasks 文件的判断完全一致：
 
 ```typescript
-const checkboxMatch = line.match(/^[-*]\s*\[([ xX])\]\s*(.+)\s*$/);
-if (checkboxMatch) {
-  const done = checkboxMatch[1].toLowerCase() === 'x';
-  // ...
-}
+const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
 ```
+
+三个关键点（v1.8.0 放宽/修正）：
+
+- **`^\s*[-*]`** — 允许前导缩进，**缩进的子任务照常计数**（旧版锚定列 0，`  - [ ] 1.1.1` 对 progress 不可见，导致有未完成子任务也报 "✓ Complete" 甚至被 archive 收掉）。
+- **`\[([\sxX])\]`** — 方括号内认 `\s`（空格/制表符/不间断空格，都是"未完成"）、`x`/`X`（完成，大小写不敏感）。
+- **`\s*(.*)`** — 尾部不锚定 `$`，描述可为空；`\r` 不会被 `.` 吞掉，CRLF 的 tasks.md 也能解析。
 
 ### 3.2 什么算 checkbox
 
@@ -91,12 +93,13 @@ if (checkboxMatch) {
 - `- [X] Task` → 完成（大小写不敏感）
 - `* [ ] Task` → 也支持 `*` 前缀
 - 空格数量灵活（`-  [ ]` 和 `- [ ]` 都可以）
+- `  - [ ] 1.1.1 子任务` → **算**（v1.8.0 起前导缩进不再隐藏它）
 
 ### 3.3 什么不算 checkbox
 
 - 没有方括号的 `- Task` → 不算
-- `- [?] Task` → 不算（只认空格和 x/X）
-- 非列表项中的 `[ ]` → 不算（必须在 `-` 或 `*` 开头）
+- `- [?] Task` → 不算（方括号内只认空白与 x/X）
+- 非列表项中的 `[ ]` → 不算（必须以 `-` 或 `*` 开头，开头前允许缩进）
 
 ### 3.4 编号约定
 

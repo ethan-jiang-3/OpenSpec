@@ -970,10 +970,10 @@ rm -rf openspec/changes/add-task-csv-export/
 
 | 文件 | 推荐修改方式 | 关键风险 |
 |------|--------------|----------|
-| `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把 delta spec 写成全量重写 |
+| `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把 delta spec 写成全量重写；**REMOVED 拿掉某 capability 最后一个 requirement 时 archive 会以 "at least one requirement" 中止**——若要整 capability 退役，需在 `.openspec.yaml` 声明 `retire_capabilities: true`（v1.8.0） |
 | `design.md` | 实现发现方案变化时及时回头修改，说明原因和风险 | 只改代码不改设计，后人看不到真实取舍 |
-| `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节 |
-| `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析 |
+| `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节；**v1.8.0 起缩进的子任务也计入进度**（`  - [ ] 1.1.1` 会阻止 "✓ Complete"），别只盯顶层 checkbox |
+| `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析（`retire_capabilities` 与 `schema:` 并存，见上） |
 
 一条实用判断准则：
 

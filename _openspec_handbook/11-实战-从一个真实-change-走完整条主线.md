@@ -421,6 +421,8 @@ size is small for the current staff workflow.
 
 - `tasks` 就是施工边界
 
+> **v1.8.0 任务计数**：上面这种 `- [ ] 1.1` 顶层 checkbox 一定被追踪；若你把子任务写成**缩进的** `  - [ ] 1.1.1`，v1.8.0 起也计入进度（旧版会漏掉，导致 status 显示 "✓ Complete"、archive 也不警告却带着半截活收档）。`list` / `view` / `instructions apply` / `archive` 用同一个解析器，口径一致。
+
 ---
 
 ## 第 6 步：到这里，change 其实已经进入"可执行状态"

@@ -122,9 +122,9 @@ sequenceDiagram
 
 ```json
 {
-  "artifact": "design",                       // 要生成的 artifact 类型
-  "change": "add-task-csv-export",           // 所属 change
-  "outputPath": "openspec/changes/add-task-csv-export/design.md",  // 输出路径
+  "changeName": "add-task-csv-export",                             // 所属 change
+  "artifactPath": "openspec/changes/add-task-csv-export/design.md", // 实际输出路径
+  "resolvedOutputPath": "openspec/changes/add-task-csv-export/design.md", // 应该写到的绝对/相对路径
   "template": "# Design\n\n## Approach\n## Decisions\n## Risks\n",  // 文本模板
   "instruction": "Describe technical approach and key tradeoffs.",   // 生成指令
   "context": "Stack: TypeScript, React, Node.js",                    // 项目背景（来自 config.yaml）
@@ -132,7 +132,8 @@ sequenceDiagram
     "Explain migration risk when behavior changes existing flow",
     "Do not bypass domain module boundaries"
   ],
-  "dependencies": ["proposal", "specs"]       // 依赖哪些 artifact（应该先读它们）
+  "dependencies": [{ "id": "proposal", "done": true, "path": "proposal.md", "description": "..." }], // 依赖 artifact（应先读）
+  "unlocks": ["tasks"]                                                // 完成后会解锁哪些 artifact
 }
 ```
 

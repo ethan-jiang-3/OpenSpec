@@ -121,7 +121,9 @@ v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 sp
 
 完全相同、已 early-sync 的 delta 可以是 no-op；内容近似但不同仍必须人工重基线，不能期待自动合并。
 
-v1.8.0 追加：如果这个 change 的 REMOVED 拿掉了某 capability 的**最后一个 requirement**，archive 原本会以 "must have at least one requirement" 中止；在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后，archive 会删除该 capability 的整个 main spec。这适合"整个 capability 退役"，不能用来绕过真实行为变更。
+v1.8.0 追加（archive 失败/被卡时的两种出路）：
+1. **退役整个 capability**：如果这个 change 的 REMOVED 拿掉了某 capability 的**最后一个 requirement**，archive 原本会以 "must have at least one requirement" 中止；在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后，archive 会删除该 capability 的整个 main spec。这适合"整个 capability 退役"，不能用来绕过真实行为变更。输出会列出被删 section，并给可粘贴的 `git checkout` 恢复命令；`--no-validate` 永不触发退役。
+2. **非交互下被确认阻塞**：agent/CI 里 stdin closed 时，archive 会指出缺哪个 flag 并给**携带原 flags 的可重跑命令**（如 `openspec archive <name> --skip-specs --yes`）——直接粘贴重跑即可，不必凭空猜参数；不带 change 名时它现在会以 exit 1 明确请求 change 名，而不是静默吞错。
 
 ### Q17: 不 archive 会怎样？
 **A**: specs/ 基线不会更新，下一个 change 就没有正确的基线。多人协作时会乱套。

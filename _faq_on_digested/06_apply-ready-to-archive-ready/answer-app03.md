@@ -105,10 +105,10 @@ remaining = 0
 ]
 ```
 
-解析规则来自 `parseTasksFile()`：
+解析规则来自共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`）：
 
 ```text
-^[-*]\s*\[([ xX])\]\s*(.+)\s*$
+^\s*[-*]\s*\[([\sxX])\]\s*(.*)
 ```
 
 也就是说：
@@ -117,6 +117,7 @@ remaining = 0
 - `- [x] Task` 是完成。
 - `- [X] Task` 也是完成。
 - `* [ ] Task` 也支持。
+- `  - [ ] 1.1.1 子任务` 也算（v1.8.0 起允许前导缩进，子任务计入进度）。
 - `- Task` 不算。
 - `- [?] Task` 不算。
 
@@ -165,6 +166,6 @@ all_done -> 建议 archive
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/commands/workflow/instructions.ts` | `generateApplyInstructions()`、`parseTasksFile()`、state/progress/tasks 输出 |
+| `src/utils/task-progress.ts` + `src/commands/workflow/instructions.ts` | `parseTaskLines()`（共享 parser）、`generateApplyInstructions()`、state/progress/tasks 输出 |
 | `schemas/spec-driven/schema.yaml` | 默认 apply requires/tracks/instruction |
 | `src/core/templates/workflows/apply-change.ts` | apply skill 如何消费 apply instructions |

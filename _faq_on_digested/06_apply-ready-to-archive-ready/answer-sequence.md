@@ -45,7 +45,7 @@ sequenceDiagram
     rect rgb(255, 240, 255)
         Note over User,FS: ══════ Phase 2 · apply instructions gate ══════
         MD->>TS: openspec instructions apply --change "X" --json
-        TS->>TS: 检查 apply.requires 是否满足<br/>收集所有 artifact → contextFiles<br/>读 tasks.md → 解析 checkbox<br/>（正则：^[-*]\s*\[([ xX])\]\s*(.+)$）<br/>计算 progress
+        TS->>TS: 检查 apply.requires 是否满足<br/>收集所有 artifact → contextFiles<br/>读 tasks.md → 解析 checkbox<br/>（正则：^\s*[-*]\s*\[([\sxX])\]\s*(.*)，v1.8.0 允许缩进子任务）<br/>计算 progress
         TS-->>MD: state, contextFiles,<br/>progress{total, complete, remaining},<br/>tasks[{description, done}],<br/>instruction, [missingArtifacts]
     end
 
@@ -183,7 +183,7 @@ MD: （可选）openspec instructions apply --json
 TS: 重新解析 tasks.md → complete: 3/7 → remaining: 4
 ```
 
-进度不在 agent 的口头总结里，也不在隐藏数据库里。它在 `tasks.md` checkbox 里，由 TS 的 `parseTasksFile()` 实时解释。MD 勾了才算，TS 扫了才认。
+进度不在 agent 的口头总结里，也不在隐藏数据库里。它在 `tasks.md` checkbox 里，由 TS 的共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`）实时解释——v1.8.0 起缩进的子任务也计入。MD 勾了才算，TS 扫了才认。
 
 ### 模式 4：MD 遇 guard → 暂停，不硬写
 
@@ -213,7 +213,7 @@ apply 不是 "phase lock"。发现 planning 问题时回写 artifacts 是允许�
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/apply-change.ts` | apply skill 的完整步骤、guardrails、checkbox 更新、暂停条件 |
-| `src/commands/workflow/instructions.ts` | `generateApplyInstructions()`、`parseTasksFile()`、state/progress/tasks 输出 |
+| `src/utils/task-progress.ts` + `src/commands/workflow/instructions.ts` | `parseTaskLines()`（共享 parser）、`generateApplyInstructions()`、state/progress/tasks 输出 |
 | `src/core/artifact-graph/outputs.ts` | required artifact 输出文件判定 |
 | `src/core/artifact-graph/instruction-loader.ts` | change context 和 contextFiles 收集 |
 | `src/core/change-status-policy.ts` | `actionContext`（repo-local）语义 |

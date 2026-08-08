@@ -239,13 +239,14 @@ TO: ### Requirement: <new-name>
 1. **"Follow the template below exactly."**
    > "The apply phase parses checkbox format to track progress. Tasks not using `- [ ]` won't be tracked."
 
-2. checkbox 解析正则 (`instructions.ts:233`)：
+2. checkbox 解析（v1.8.0 起统一走共享 parser `parseTaskLines()` in `src/utils/task-progress.ts`）：
    ```typescript
-   const checkboxMatch = line.match(/^[-*]\s*\[([ xX])\]\s*(.+)\s*$/);
+   const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
    // done = checkboxMatch[1].toLowerCase() === 'x'
    ```
    - `- [ ]` → 未完成
    - `- [x]` 或 `- [X]` → 完成
+   - 允许前导缩进——`  - [ ] 1.1.1` 子任务照常计数（v1.8.0；旧版只认列 0 的 checkbox）
    - 不需要 `X.Y` 编号格式（只是建议，解析器不强求）
 
 3. 分组用 `## N. Group Name` 二级标题
