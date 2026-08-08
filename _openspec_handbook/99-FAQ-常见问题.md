@@ -214,12 +214,13 @@ specs/
 
 ### Q26: OpenSpec 支持哪些 AI 工具？
 **A**: 支持工具列表会随 release 变化，应以当前 `openspec init` / release note 为准；以下是历史示例：
-- **主要**：Claude Code、Cline、Cursor、Codex、Windsurf、GitHub Copilot
+- **主要**：Claude Code、Cline、Cursor、Codex、Devin Desktop（原 Windsurf）、GitHub Copilot
 - **v1.2.0 新增**：Pi（pi.dev）、Kiro（AWS）
 - **v1.3.0 新增**：Junie（JetBrains）、Lingma、ForgeCode、IBM Bob
 - **v1.4.0 新增**：Kimi CLI、Mistral Vibe
 - **v1.6.0 新增**：Trae、Oh My Pi
 - **v1.7.0 新增**：CodeArts Agent、Hermes Agent、ZCode
+- **v1.8.0 新增**：MiniMax Code（全局 skills-only）、Atlassian Rovo Dev CLI、GitHub Copilot 一等支持（本地 skill + opt-in cloud agent）、vendor-neutral `agents` 目标（`.agents/skills/`，与 Codex 共享根）
 - 也可以直接用 CLI（不用任何 AI 工具）
 
 ### Q27: 怎么安装 OpenSpec 到我的 AI 工具？

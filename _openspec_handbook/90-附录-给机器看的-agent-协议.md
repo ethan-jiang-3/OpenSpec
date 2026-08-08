@@ -89,37 +89,34 @@ sequenceDiagram
 - CLI 负责"给 agent 真实上下文"
 - LLM 负责"真正写内容和做推理"
 
-### `openspec status --json` 示例（简化）
+### `openspec status --change <name> --json` 示例（精简字段）
 
 ```json
 {
-  "change": "add-task-csv-export",           // 当前 change 名称
-  "schema": "spec-driven",                    // 使用的 schema
-  "artifacts": {
-    "proposal": { 
-      "status": "done",                       // 已完成
-      "path": "changes/add-task-csv-export/proposal.md" 
-    },
-    "specs": { 
-      "status": "done",                       // 已完成
-      "path": "changes/add-task-csv-export/specs/" 
-    },
-    "design": { 
-      "status": "in_progress",                // 进行中
-      "path": "changes/add-task-csv-export/design.md" 
-    },
-    "tasks": { 
-      "status": "todo",                       // 待开始
-      "path": "changes/add-task-csv-export/tasks.md" 
-    }
-  },
-  "nextRecommended": "design"                 // 建议下一步做什么
+  "changeName": "add-task-csv-export",
+  "schemaName": "spec-driven",
+  "artifacts": [
+    { "id": "proposal", "outputPath": "proposal.md", "status": "done" },
+    { "id": "specs",    "outputPath": "specs/**/*.md", "status": "done" },
+    { "id": "design",   "outputPath": "design.md", "status": "ready" },
+    { "id": "tasks",    "outputPath": "tasks.md", "status": "blocked", "missingDeps": ["design"] }
+  ],
+  "isPlanningComplete": false,
+  "nextSteps": ["Run openspec instructions design --change \"add-task-csv-export\" --json before writing that artifact."],
+  "actionContext": {
+    "mode": "repo-local",
+    "sourceOfTruth": "repo",
+    "allowedEditRoots": ["/project"],
+    "constraints": ["Repo-local change artifacts and implementation edits are scoped to this project."]
+  }
 }
 ```
 
 **字段说明**：
-- `status`：可能的值是 `todo`（待做）、`in_progress`（进行中）、`done`（完成）
-- `nextRecommended`：CLI 根据依赖关系推荐下一步应该生成哪个 artifact
+- `artifacts[].status`：`done`（文件存在）| `ready`（依赖满足、可写）| `blocked`（缺依赖）| `skipped`（change 声明 `skip_specs` 后跳过、视为已满足）
+- `isPlanningComplete`：所有非 skipped planning artifact 都存在才算完成（v1.8.0 主字段；`isComplete` 是兼容别名，二者同值）
+- `nextSteps`：数组，给 agent 的建议下一步命令
+- `actionContext`：机器可读约束（`mode` 恒为 `repo-local`，`allowedEditRoots` 指向 project root）
 
 ### `openspec instructions design --json` 示例（简化）
 

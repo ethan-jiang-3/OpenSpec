@@ -115,7 +115,7 @@ openspec archive <change> -y
 
 ### 误区 1：以为 `validate` 能查出 specs 和代码对不上
 
-`validate` 是**真实的 `openspec` CLI 命令**（和 `archive` 同列，**不是** `/opsx:` slash 技能）——别误以为它不存在或是什么隐藏功能。但它只是**结构 linter**：只查文件结构（段头/`SHALL`/`MUST`/scenario/僵尸 change），**从不打开主 spec、抓不出 specs↔代码漂移**；而且 `archive` 自己默认就先校验，平时不用单独跑它。所以"specs 对不对得上代码"靠走完四步圈的习惯，不是 `validate`。（完整边界见 [`02` 缺口一](../../_digested/specs_truth/02-漂移与噪声-为什么主specs会失真.md) 和 [`06` validate 参考](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
+`validate` 是**真实的 `openspec` CLI 命令**（和 `archive` 同列，**不是** `/opsx:` slash 技能）——别误以为它不存在或是什么隐藏功能。但它只是**结构 linter**：只查文件结构（段头/`SHALL`/`MUST`/scenario/僵尸 change），**不跨文件对账、抓不出 specs↔代码漂移**（v1.8.0 起唯一例外：`validate <change>` 能拿到主 spec 时会对 MODIFIED 块做 scenario-loss 前置检测）；而且 `archive` 自己默认就先校验，平时不用单独跑它。所以"specs 对不对得上代码"靠走完四步圈的习惯，不是 `validate`。（完整边界见 [`02` 缺口一](../../_digested/specs_truth/02-漂移与噪声-为什么主specs会失真.md) 和 [`06` validate 参考](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
 
 ### 误区 2：手改主 spec 最快
 

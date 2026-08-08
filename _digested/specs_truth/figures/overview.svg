@@ -73,7 +73,7 @@
   <!-- three gaps -->
   <rect x="40" y="262" width="290" height="74" rx="5" fill="url(#badGrad)" stroke="#fca5a5"/>
   <text x="185" y="281" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">缺口① validate 逐文件</text>
-  <text x="185" y="299" text-anchor="middle" font-size="9" fill="#b91c1c">从不打开主 spec</text>
+  <text x="185" y="299" text-anchor="middle" font-size="9" fill="#b91c1c">基本不读主 spec（MODIFIED 例外）</text>
   <text x="185" y="313" text-anchor="middle" font-size="9" fill="#b91c1c">⇒ delta↔spec 失配</text>
   <text x="185" y="327" text-anchor="middle" font-size="9" fill="#b91c1c">静默通过 validate</text>
 

@@ -249,7 +249,7 @@ graph LR
 | `openspec list --specs --json` | 列出 main-spec capability path，作为 discovery 的起点，不会自动读取全文 |
 | `openspec show <name>` | 查看某个 change 详情 |
 | `openspec show <capability> --type spec --json --requirements` | 查看某个 capability 的 requirement 标题；确实要改时再读取完整 block/scenarios |
-| `openspec validate` | 验证 artifacts 结构、格式和最低内容门槛（SHALL/MUST 关键词、场景存在、描述长度下限）；不验证需求合理性或设计质量 |
+| `openspec validate` | 验证 artifacts 结构、格式和最低内容门槛（场景存在、描述长度下限；SHALL/MUST 自 v1.8.0 起是 guidance，normal 模式缺失仅 WARNING、strict 才强制；`validate <change>` 还做 MODIFIED scenario-loss 前置检测）；不验证需求合理性或设计质量 |
 | `openspec status` | 查看 change 当前进展（artifact 完成状态、进度计数） |
 | `openspec instructions [artifact]` | 输出指定 artifact 的生成指令（agent 可消费的 `--json` 格式） |
 | `openspec archive <name>` | 归档 change |

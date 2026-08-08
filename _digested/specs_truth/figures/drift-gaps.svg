@@ -34,7 +34,7 @@
   <rect x="40" y="128" width="300" height="96" rx="5" fill="url(#badGrad)" stroke="#fca5a5"/>
   <text x="190" y="148" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">缺口① validate 逐文件</text>
   <text x="190" y="166" text-anchor="middle" font-size="9" fill="#b91c1c">validateChangeDeltaSpecs() 只读</text>
-  <text x="190" y="180" text-anchor="middle" font-size="9" fill="#b91c1c">changeDir/specs/，从不打开主 spec</text>
+  <text x="190" y="180" text-anchor="middle" font-size="9" fill="#b91c1c">changeDir/specs/，基本不读主 spec（仅 scenario-loss）</text>
   <text x="190" y="198" text-anchor="middle" font-size="9" fill="#b91c1c">⇒ MODIFIED/REMOVED 指向</text>
   <text x="190" y="212" text-anchor="middle" font-size="9" fill="#b91c1c">不存在的东西，validate 全过</text>
 

@@ -93,6 +93,8 @@ template 里硬编码了五种典型入口的示例对话：
 | 方案比较 | "Should we use Postgres or SQLite?" | 追问上下文 → 建对比表 → 给推荐 |
 | 空输入 | 只进入 explore mode | 自由对话 |
 
+> **v1.8.0**：捕捉成**新 change** 时必须先 `openspec new change "<name>"` scaffold（保住 `.openspec.yaml` metadata），再按 `status`/`instructions` 建 artifact；capture 后不需用户再跑额外命令。详见 `../internal-spec-driven/01-explore-探索模式.md` 第五节。
+
 ## Guardrails
 
 template 里写了 8 条 guardrail：
