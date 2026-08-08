@@ -2,7 +2,7 @@
 
 ## 一句话
 
-宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段。下文 `/opsx:apply` 是 Claude 示例；Codex v1.7.0 使用 `$openspec-apply-change`。它的核心循环是：
+宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段。下文 `/opsx:apply` 是 Claude 示例；Codex v1.8.0 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。它的核心循环是：
 
 ```text
 选择 change
@@ -277,7 +277,7 @@ Completed this session:
 
 ## 参考来源
 
-源码引用以 v1.7.0 tag `4e16790` 为当前基线：
+源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

@@ -1,6 +1,6 @@
 # 02 — propose：Proposal 生成
 
-propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用名由宿主决定：Claude 可显示 `/opsx:propose`，Codex v1.7.0 使用 `$openspec-propose-change`。
+propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用名由宿主决定：Claude 可显示 `/opsx:propose`，Codex v1.8.0 使用 `$openspec-propose-change`。
 
 ---
 
@@ -175,7 +175,7 @@ TO: ### Requirement: <new-name>
 1. **Scenario 必须用 4 个 hashtag**（`#### Scenario:`）。用 3 个或 bullet 会**静默失败** —— 解析器不识别。
 2. **每个 requirement 至少要有一个 scenario**。
 3. **MODIFIED 必须复制完整的 requirement block**（包括所有 scenario）—— "Common pitfall: Using MODIFIED with partial content loses detail at archive time."
-4. **用 SHALL/MUST** 写规范性需求，避免 should/may。
+4. **用 SHALL/MUST** 写规范性需求，避免 should/may。v1.8.0 起 normal 模式下这条只是 guidance（缺失给 WARNING，非英语 spec 也能过），只有 `validate --strict` 才强制；写作建议不变。
 5. MODIFIED 的 workflow：
    > 1. 在 `openspec/specs/<capability-path>/spec.md` 中找到已有 requirement
    > 2. 复制完整的 requirement block（从 `### Requirement:` 到所有 scenario）

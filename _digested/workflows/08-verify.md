@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/verify-change.ts` → `getVerifyChangeSkillTemplate()` + `getOpsxVerifyCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:verify [change-name]`；Codex v1.7.0 用 `$openspec-verify-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:verify [change-name]`；Codex v1.8.0 用 `$openspec-verify-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-verify-change`（skill）/ `OPSX: Verify`（command）
 > **独立 CLI 命令**：有类似功能的 `openspec validate`，但两者不同——`validate` 检查 OpenSpec 文档结构（CLI 程序化），verify 检查代码实现是否与 artifacts 一致（agent 智能审查）。
 > **profile**：custom（需显式启用，不在默认 core 里）

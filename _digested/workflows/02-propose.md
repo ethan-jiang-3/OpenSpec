@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/propose.ts` → `getOpsxProposeSkillTemplate()` + `getOpsxProposeCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:propose <change-name 或描述>`；Codex v1.7.0 用 `$openspec-propose`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:propose <change-name 或描述>`；Codex v1.8.0 用 `$openspec-propose`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-propose`（skill）/ `OPSX: Propose`（command）
 > **独立 CLI 命令**：无——propose 内调 `openspec new change`，但 propose 本身没有对应的 CLI 命令。
 > **profile**：core（大多数用户默认可见）
@@ -95,7 +95,7 @@ These guide what you write, but should never appear in the output
 
 这是 propose（以及 continue、ff）最容易踩的坑：agent 把 template 返回的 `<context>` 和 `<rules>` 标签复制进了 artifact 文件。
 
-## v1.7.0：命名、顺序与无 spec change
+## v1.8.0：命名、顺序与无 spec change（v1.7.0 引入）
 
 - `openspec new change` 接受数字前缀的 kebab-case 名，例如 `100-add-feature`；不再把数字开头一概拒绝。
 - `specs` 和 `design` 在 proposal 后都 ready，但 status/模板按 schema 声明顺序先推荐 specs。它不是新增的 `specs -> design` 依赖。

@@ -4,7 +4,7 @@
 
 **别把 specs 当一次性产物。日常就活在 explore → propose → apply → archive 这个圈里，而 specs 只在 archive 那一步更新。所以 apply 完记得 archive；apply 改代码时顺手想一句"这段 spec 还准吗"；感觉不对就用 propose 写个 change 去 archive。平时几乎不用手碰 spec 文件。**
 
-> **v1.7.0 边界。** “只在 archive 更新”说的是 main spec 的程序化归档路径；agent sync 可以在 archive 前做 early-sync，archive 对完全一致的结果会幂等 no-op。capability ID 是 `specs/` 下的相对 path（可为 `identity/session`），不是仅仅末级目录名；这些路径层次不提供自动检索或消除上下文预算。
+> **v1.8.0 边界。** “只在 archive 更新”说的是 main spec 的程序化归档路径；agent sync 可以在 archive 前做 early-sync，archive 对完全一致的结果会幂等 no-op。capability ID 是 `specs/` 下的相对 path（可为 `identity/session`），不是仅仅末级目录名；这些路径层次不提供自动检索或消除上下文预算。（v1.7.0 引入，v1.8.0 不变。）
 
 ## 先分清两件事
 
@@ -141,7 +141,7 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 
 ## 参考来源
 
-源码引用以 v1.7.0 tag `4e16790` 为当前基线：
+源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

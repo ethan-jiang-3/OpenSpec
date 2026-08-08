@@ -40,7 +40,9 @@ repo-local `init/update` 会根据 delivery：
 - `commands`：生成 command 文件。
 - `both`：两者都生成。
 
-但 delivery 是意图，工具能力才是上限。v1.7.0 的 Codex 没有 command surface：它始终接收 `.codex/skills/openspec-*/SKILL.md`，并以 `$openspec-*` skill 调用；旧的托管 Codex prompts 会在有 replacement skill 时由 `update` 清理。不要把 `/opsx:*` 当成 Codex 的调用语法。
+但 delivery 是意图，工具能力才是上限。v1.8.0 的 Codex 没有 command surface：它始终接收 `.agents/skills/openspec-*/SKILL.md`（v1.7.0 时代是 `.codex/skills/`），并以 `$openspec-*` skill 调用；旧的托管 Codex prompts 会在有 replacement skill 时由 `update` 清理，`.codex` 旧 skill 树会原地迁移到 `.agents` 并保留用户定制。不要把 `/opsx:*` 当成 Codex 的调用语法。
+
+v1.8.0 同时新增 vendor-neutral `agents` 目标（`--tools agents`），与 Codex 共享 `.agents` 根。共享根同一时刻只能有一个 active writer，由 `src/core/shared-skill-target.ts` 的 `.openspec-target` marker 决定归属（详见 `mechanisms/02-tool-delivery.md`）。
 
 
 ## skills 与 commands 的区别

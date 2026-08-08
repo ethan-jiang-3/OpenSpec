@@ -3,7 +3,7 @@
 > 这一篇讲的是：实现已经写出来以后，怎么把部署、验证、回滚也纳入 OpenSpec 的 change 闭环。
 > OpenSpec 不是 CI/CD 系统，但它很适合把部署这件事讲清楚、做有序、验有据。
 
-> **v1.7.0 实施/归档提示。** 将持续的部署检查短语写进 `operations.apply.guidance`，将 archive 前的发布证据检查写进 `operations.archive.guidance`；二者与 project `context` 分别进入 Apply/Archive。不要把它们误写成 `rules.apply` / `rules.archive`，也不要把 prompt 当作 CI 的替代。
+> **v1.8.0 实施/归档提示。** 将持续的部署检查短语写进 `operations.apply.guidance`，将 archive 前的发布证据检查写进 `operations.archive.guidance`；二者与 project `context` 分别进入 Apply/Archive。不要把它们误写成 `rules.apply` / `rules.archive`，也不要把 prompt 当作 CI 的替代。（v1.7.0 引入，v1.8.0 不变。）
 
 ---
 

@@ -89,7 +89,7 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 - 每个 artifact 的状态
 - 哪些 artifact 被哪些依赖阻塞
 
-JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。
+JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 起，`ChangeStatus` 同时携带 **`isPlanningComplete`**（所有非 skipped planning artifact 都存在；skipped artifact 视为已满足而不必写出）与兼容别名 **`isComplete`**；状态文案也不再在 change 实现前就暗示"已完成"。语义见 `src/core/artifact-graph/instruction-loader.ts` 的 `ChangeStatus` 类型。
 
 ### 状态语义
 

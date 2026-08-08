@@ -54,7 +54,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | onboard | `/opsx:onboard` | `openspec-onboard` | 无 | custom |
 | **update** | `/opsx:update [name]` | `openspec-update-change` | 无 | custom（v1.6.0 新增） |
 
-> 表中 `/opsx:*` 是 command adapter（例如 Claude Code）的示例，不是通用调用语法。v1.7.0 的 Codex 是 skills-only，使用 `$openspec-explore`、`$openspec-apply`、`$openspec-archive-change` 等；其他 host 应以实际安装的 command/skill 名为准。
+> 表中 `/opsx:*` 是 command adapter（例如 Claude Code）的示例，不是通用调用语法。Codex 是 skills-only，使用 `$openspec-explore`、`$openspec-apply`、`$openspec-archive-change` 等（v1.8.0 下装在 `.agents/skills/`）；其他 host 应以实际安装的 command/skill 名为准。
 
 > **core profile**（默认）：propose, explore, apply, sync, archive —— 5 个。大多数用户只看到这些。
 > **custom profile**：需在 `customWorkflows` 中显式启用，才能解锁全部 12 个。
@@ -118,12 +118,13 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | `openspec schemas --json` | new（可选） |
 | `openspec validate` | verify |
 
-## v1.7.0 运行时要点
+## v1.8.0 运行时要点
 
-- `skip_specs: true` 让没有 spec-level 行为变化的 change 将 specs artifact 标为 `skipped`；规划/apply/归档 workflow 应把它当已满足，而不能创建任何 delta file。
-- `specs` 与 `design` 在 proposal 后并行 ready；同级推荐顺序按 schema 声明，内置 schema 先推荐 specs 再 design。
-- 除 bulk archive 外，workflow 选择 change 的默认顺序是：显式名称 → 对话推断 → 唯一 active change 自动选择 → 仅在歧义时列出并询问。
-- Apply/Archive 通过各自的 instructions API 获得当前 config `context` 和 operation guidance；artifact `rules.*` 仍只约束对应 artifact 的生成。
+- `skip_specs: true` 让没有 spec-level 行为变化的 change 将 specs artifact 标为 `skipped`；规划/apply/归档 workflow 应把它当已满足，而不能创建任何 delta file。（v1.7.0 引入）
+- `specs` 与 `design` 在 proposal 后并行 ready；同级推荐顺序按 schema 声明，内置 schema 先推荐 specs 再 design。（v1.7.0）
+- 除 bulk archive 外，workflow 选择 change 的默认顺序是：显式名称 → 对话推断 → 唯一 active change 自动选择 → 仅在歧义时列出并询问。（v1.7.0）
+- Apply/Archive 通过各自的 instructions API 获得当前 config `context` 和 operation guidance；artifact `rules.*` 仍只约束对应 artifact 的生成。（v1.7.0）
+- status 的 JSON 含 `isPlanningComplete`（与兼容别名 `isComplete`）；planning artifact 的完成与实现进度分开表达。（v1.8.0）
 
 template 不直接操作文件系统——它通过 CLI 命令获取路径，再由 agent 用自己的文件工具去读写。
 

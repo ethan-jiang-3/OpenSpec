@@ -46,7 +46,7 @@ Markdown files
 
 这使得一个 change 不是“一个目录里有几个 Markdown 文件”这么简单，而是 CLI 和 agent 可作为结构化 change 来审阅、验证、输出 JSON。
 
-### v1.7.0：capability ID 是相对路径
+### v1.8.0：capability ID 是相对路径（v1.7.0 引入）
 
 delta 与 main spec 都通过 `discoverSpecFiles()` 递归发现：`specs/auth/spec.md` 的 ID 是 `auth`，`specs/identity/session/spec.md` 的 ID 是 `identity/session`。list、show、validate、change parser、archive/apply 都使用同一条发现路径，因此 nested layout 是完整生命周期支持，不是只允许把文件放进子目录。
 

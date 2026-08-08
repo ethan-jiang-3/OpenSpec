@@ -36,7 +36,7 @@
 ```text
 项目事实层（openspec/）
   ↓ 被多个工具共享
-工具入口层（.claude/ 或 .codex/ 或 .cursor/）
+工具入口层（.claude/ 或 .agents/ 或 .cursor/）
 ```
 
 - 项目事实（specs/changes/config.yaml/schemas）只写一次

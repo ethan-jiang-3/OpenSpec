@@ -3,7 +3,7 @@
 > 前面的几篇已经把概念一层层拆开了。
 > 这一篇不再单独讲概念，而是用一个完整案例，把 `propose → apply → archive` 整条线真正走一遍。
 
-> **v1.7.0 实战校正。** 下文 `/opsx:*` 为 Claude 示例，Codex 运行相应 `$openspec-*` skills。case 中的 capability 可使用嵌套 relative path；新 capability delta 可写 `## Purpose`，archive 会带入新 main spec。若之前已正确 sync，archive 对完全一致 delta 允许幂等 no-op，但归档前仍必须验证。
+> **v1.8.0 实战校正。** 下文 `/opsx:*` 为 Claude 示例，Codex 运行相应 `$openspec-*` skills（v1.8.0 下装在 `.agents/skills/`）。case 中的 capability 可使用嵌套 relative path；新 capability delta 可写 `## Purpose`，archive 会带入新 main spec。若之前已正确 sync，archive 对完全一致 delta 允许幂等 no-op，但归档前仍必须验证。（v1.7.0 引入，v1.8.0 不变。）
 
 ---
 
@@ -600,7 +600,7 @@ openspec status --change add-task-csv-export --json
 openspec validate add-task-csv-export --type change --strict
 ```
 
-第一条会给 workflow project `context` 与 `operations.archive.guidance`；它们是项目级提醒，不会替代 delta、tasks 或 validator。最后一条通过后，archive 才有一个确定的 `orders` delta 可以同步。若团队已通过独立 sync 把**完全一致**的 delta 写入 `orders` main spec，v1.7.0 会把它视作 no-op；只要 requirement 标题、正文或 scenario 有差异，仍必须先重新核对，而不会被静默吞掉。
+第一条会给 workflow project `context` 与 `operations.archive.guidance`；它们是项目级提醒，不会替代 delta、tasks 或 validator。最后一条通过后，archive 才有一个确定的 `orders` delta 可以同步。若团队已通过独立 sync 把**完全一致**的 delta 写入 `orders` main spec，v1.8.0（v1.7.0 起）会把它视作 no-op；只要 requirement 标题、正文或 scenario 有差异，仍必须先重新核对，而不会被静默吞掉。
 
 这一步最核心的事，不是挪目录，而是两件事：
 

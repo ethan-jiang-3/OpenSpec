@@ -13,7 +13,7 @@
 **A**: 传统文档是"写完就不改"，OpenSpec 是"边做边改"。而且 OpenSpec 用 delta spec 表达增量变化，不是每次重写整份文档。
 
 ### Q3: 我必须用 AI 工具吗？
-**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、Windsurf、GitHub Copilot、Kimi CLI、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode、Trae、Oh My Pi、CodeArts Agent、Hermes Agent、ZCode 等。完整列表以当前 `openspec init` 输出为准。
+**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、GitHub Copilot、Devin Desktop（原 Windsurf）、Kimi Code、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode、Trae、Oh My Pi、CodeArts Agent、Hermes Agent、ZCode、MiniMax Code、Rovo Dev CLI 等；另有 vendor-neutral 的 `agents` 目标（`--tools agents`，写入 `.agents/skills/`）。完整列表以当前 `openspec init` 输出为准。
 
 ---
 
@@ -24,7 +24,7 @@
 
 - `openspec`：终端 CLI，例如 `openspec init`、`openspec status --json`、`openspec archive <name>`
 - `/opsx:*`：Claude 等宿主里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
-- `$openspec-*`：Codex v1.7.0 的 skills-only 入口，例如 `$openspec-propose-change`、`$openspec-apply-change`
+- `$openspec-*`：Codex v1.8.0 的 skills-only 入口（装在 `.agents/skills/`），例如 `$openspec-propose-change`、`$openspec-apply-change`
 - `.claude/commands/opsx/`：Claude Code 里保存这些入口文件的位置
 
 所以不要把 `opsx` 理解成另一个产品。它只是让 agent 工具能触发 OpenSpec workflow 的入口层。
@@ -63,7 +63,7 @@
 - 在 change 里写 delta spec
 - archive 时把它 merge 回 specs/（除非明确 `--skip-specs` 或拒绝 spec update）
 
-v1.7.0 也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为变化”；它不能与 delta spec 文件共存。
+v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为变化”；它不能与 delta spec 文件共存。
 
 ### Q10: delta spec 和正式 spec 有什么区别？
 **A**:
@@ -110,7 +110,7 @@ v1.7.0 也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为
 - 程序化 merge 到 specs/
 - 把 change 移到 archive/
 
-宿主 archive workflow 在 v1.7.0 还会读取 `instructions archive` 的 context/guidance；已正确 early-sync 的完全一致 delta 会是 no-op，近似内容仍会报错。
+宿主 archive workflow 在 v1.8.0（v1.7.0 起）还会读取 `instructions archive` 的 context/guidance；已正确 early-sync 的完全一致 delta 会是 no-op，近似内容仍会报错。
 
 ### Q16: archive 时有冲突怎么办？
 **A**: OpenSpec 不会在 main spec 写入 Git 式 conflict marker。发生真实冲突时，archive 会中止，main spec 与 change 都保持原样。正确做法是：
@@ -120,6 +120,8 @@ v1.7.0 也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为
 3. 运行 `openspec validate <change> --type change --strict`，再 archive。
 
 完全相同、已 early-sync 的 delta 可以是 no-op；内容近似但不同仍必须人工重基线，不能期待自动合并。
+
+v1.8.0 追加：如果这个 change 的 REMOVED 拿掉了某 capability 的**最后一个 requirement**，archive 原本会以 "must have at least one requirement" 中止；在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后，archive 会删除该 capability 的整个 main spec。这适合"整个 capability 退役"，不能用来绕过真实行为变更。
 
 ### Q17: 不 archive 会怎样？
 **A**: specs/ 基线不会更新，下一个 change 就没有正确的基线。多人协作时会乱套。

@@ -18,7 +18,7 @@ change name / description
 
 OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责创建 change 容器、解释 schema 和文件状态、给出路径和 instructions；agent 负责读取上下文、生成 artifact 内容并写文件。
 
-> **v1.7.0 当前边界。** `/opsx:apply` 是 Claude 写法；Codex 使用 `$openspec-apply-change`。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；specs 会显式为 `skipped`，但不得同时存在非隐藏 delta spec 文件。
+> **v1.8.0 当前边界。** `/opsx:apply` 是 Claude 写法；Codex 使用 `$openspec-apply-change`（v1.8.0 下装在 `.agents/skills/`）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；specs 会显式为 `skipped`，但不得同时存在非隐藏 delta spec 文件。
 
 ![Propose 到 apply-ready 的流程](figures/propose-to-apply-ready.svg)
 
@@ -231,7 +231,7 @@ agent 不应该把 `context`、`rules` 或 `<project_context>` 标签复制进 a
 specs/**/*.md
 ```
 
-因此一个 change 可以创建多个 capability delta specs。v1.7.0 的 capability 是 `specs/` 下的相对 path，允许 `identity/session/spec.md` 这样的嵌套路径；delta 必须使用同一相对 path，根级 `changes/<change>/specs/spec.md` 无效。
+因此一个 change 可以创建多个 capability delta specs。v1.8.0（v1.7.0 起）的 capability 是 `specs/` 下的相对 path，允许 `identity/session/spec.md` 这样的嵌套路径；delta 必须使用同一相对 path，根级 `changes/<change>/specs/spec.md` 无效。
 
 ### design
 
@@ -389,7 +389,7 @@ planning artifacts 已经足够让 apply skill 读取上下文和任务清单
 
 ## 参考来源
 
-源码引用以 v1.7.0 tag `4e16790` 为当前基线：
+源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

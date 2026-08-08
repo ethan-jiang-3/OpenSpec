@@ -1,6 +1,6 @@
 # 宿主工作流调用链（以 Claude OPSX 为例）
 
-> **v1.7.0 入口边界。** 本篇用 `/opsx:*` 描述 Claude Code 的实际 command 形态；它不是 OpenSpec 的通用语法。Codex 使用 `$openspec-*` skills，例如 `$openspec-propose-change`、`$openspec-apply-change`、`$openspec-archive-change`。下文的“模板/agent”层可跨宿主复用，具体调用名以安装出来的 adapter 为准。
+> **v1.8.0 入口边界。** 本篇用 `/opsx:*` 描述 Claude Code 的实际 command 形态；它不是 OpenSpec 的通用语法。Codex 使用 `$openspec-*` skills（v1.8.0 下安装在 `.agents/skills/`），例如 `$openspec-propose-change`、`$openspec-apply-change`、`$openspec-archive-change`；另有 vendor-neutral `agents` 目标共享同一根目录。下文的“模板/agent”层可跨宿主复用，具体调用名以安装出来的 adapter 为准。
 
 这一篇专门从工作流模板的角度，反向看 `openspec` CLI 是怎样被真正使用的。
 

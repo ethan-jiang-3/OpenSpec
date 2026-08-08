@@ -4,6 +4,8 @@
 
 > **当前基线（2026-07-29）**：本 checkout 与 PATH CLI 均为 v1.7.0；下文所有源码链接均固定到该 release。关于 local main-spec catalog / 自动选择 / token-budget retrieval 的结论未变；nested path 是 v1.7.0 的正式能力，见 [`_research-nested-capability-paths.md`](_research-nested-capability-paths.md)。
 
+> **v1.8.0 同步（2026-08-08）**：v1.8.0 未改变本底稿的结论——main-spec retrieval / catalog 仍未解决，nested path 语义不变。链接保留指向 v1.7.0 以保持原始核验的固定锚点；当前行为以 v1.8.0 源码为准。
+
 ## 先分开两个问题
 
 `archive` 不会把全体 main specs 送进一个 LLM 上下文。它先发现当前 change 下的 delta spec，再把每个 delta 映射到同相对路径的 main spec；随后只重建这些目标。[`archive.ts` L438](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/archive.ts#L438)；[`specs-apply.ts` L48-L77](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/specs-apply.ts#L48-L77)。所以 archive 的规模风险是被一次 change 触及的 capability 数量，不是仓库全部 specs 的总量。

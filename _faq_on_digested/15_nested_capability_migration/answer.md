@@ -4,21 +4,21 @@
 
 ## 一句话结论
 
-**从 flat 迁移到 nested 可行，v1.7.0 已完整支持。但这不是一次普通 archive——capability path 就是它的身份，没有 rename 操作。迁移是一次受控 rebaseline：先冻结 active changes，再搬 main specs，再逐一更新所有指向旧 path 的引用（delta、catalog、config、文档），最后验证并恢复。**
+**从 flat 迁移到 nested 可行，v1.8.0 已完整支持（v1.7.0 起）。但这不是一次普通 archive——capability path 就是它的身份，没有 rename 操作。迁移是一次受控 rebaseline：先冻结 active changes，再搬 main specs，再逐一更新所有指向旧 path 的引用（delta、catalog、config、文档），最后验证并恢复。**
 
 ---
 
 ## 前提：先确认你运行的是什么
 
-### v1.7.0 的行为基线
+### v1.8.0 的行为基线
 
 在开始之前必须确认环境：
 
 ```bash
-openspec --version  # 应输出 v1.7.0（或更高）
+openspec --version  # 应输出 v1.8.0（或更高）
 ```
 
-v1.7.0 的 `discoverSpecFiles()` 会递归发现任意深度的 `spec.md`，并把**相对于 `specs/` 的目录路径**作为 capability ID。这意味着以下布局是完整生命周期支持的：
+v1.8.0（v1.7.0 起）的 `discoverSpecFiles()` 会递归发现任意深度的 `spec.md`，并把**相对于 `specs/` 的目录路径**作为 capability ID。这意味着以下布局是完整生命周期支持的：
 
 ```text
 openspec/specs/identity/session/spec.md
@@ -62,7 +62,7 @@ list、show、validate、change parser、apply、archive 全部使用同一条�
 
 ---
 
-> **一句话：最大的风险不是技术上行不通（v1.7.0 完整支持 nested path），而是组织上不完整——搬了 main specs 但漏了 active deltas、漏了 catalog、漏了 agent 约定，然后在下一次 archive 时集中爆炸。这也是为什么下面的步骤是一张检查清单，而不是"你就 git mv 一下就好"。**
+> **一句话：最大的风险不是技术上行不通（v1.8.0 完整支持 nested path），而是组织上不完整——搬了 main specs 但漏了 active deltas、漏了 catalog、漏了 agent 约定，然后在下一次 archive 时集中爆炸。这也是为什么下面的步骤是一张检查清单，而不是"你就 git mv 一下就好"。**
 
 ---
 

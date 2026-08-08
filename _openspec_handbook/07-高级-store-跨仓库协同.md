@@ -2,7 +2,7 @@
 
 > **Store 是可选的跨仓库 OpenSpec 引用机制：声明哪些已 checkout 的 OpenSpec root 与当前项目相关，并给人或 agent 一个按需读取它们的入口。** 它不是多仓库协调层，也不是本地 main specs 变大后的默认解法；单仓库项目通常不需要它。
 
-> **v1.7.0 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。`openspec view` 同样按 resolved root 展示，支持 `--store`。
+> **v1.8.0 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。`openspec view` 同样按 resolved root 展示，支持 `--store`。（v1.7.0 引入，v1.8.0 不变。）
 
 ---
 
@@ -128,7 +128,7 @@ openspec store doctor platform-api
 
 ### view：先确认你到底在看哪个 root
 
-v1.7.0 的一个容易误会点是：store 注册、项目 `references:`、机器级 `defaultStore` 都存在，但它们不是同一件事。`defaultStore` 只是本机低优先级 fallback；只要当前项目有可解析的 local planning root，它不会把该项目悄悄切到另一个 store。
+v1.8.0（v1.7.0 起）的一个容易误会点是：store 注册、项目 `references:`、机器级 `defaultStore` 都存在，但它们不是同一件事。`defaultStore` 只是本机低优先级 fallback；只要当前项目有可解析的 local planning root，它不会把该项目悄悄切到另一个 store。
 
 ```bash
 openspec view                     # 按当前解析出的 root 查看

@@ -77,7 +77,7 @@ renamed: Array<{ from, to }>
 - `MODIFIED` 和 `RENAMED` 报错。
 - `REMOVED` 会 warning 并忽略，因为没有东西可删。
 
-delta 的 `## Purpose` 可位于 requirements 之前；v1.7.0 会把可读 Purpose 写入新建 main spec。已有 main spec 的 Purpose 不会被 delta 覆盖。
+delta 的 `## Purpose` 可位于 requirements 之前；v1.8.0（v1.7.0 起）会把可读 Purpose 写入新建 main spec。已有 main spec 的 Purpose 不会被 delta 覆盖。
 
 ## 读取或创建 main spec baseline
 
@@ -123,7 +123,7 @@ RENAMED -> REMOVED -> MODIFIED -> ADDED
 
 先把旧 requirement key 改成新 key。
 
-通常 source 不存在会报错；但 v1.7.0 对已正确 early-sync、内容完全一致的 ADDED/MODIFIED/REMOVED/RENAMED 识别为幂等 no-op。大小写、空白或内容只是“看起来接近”时仍会报错，不能当作宽松匹配。
+通常 source 不存在会报错；但 v1.8.0（v1.7.0 起）对已正确 early-sync、内容完全一致的 ADDED/MODIFIED/REMOVED/RENAMED 识别为幂等 no-op。大小写、空白或内容只是“看起来接近”时仍会报错，不能当作宽松匹配。
 
 ### REMOVED
 
@@ -204,7 +204,7 @@ CLI archive 的 merge 是 programmatic merge：
 
 ## 参考来源
 
-源码引用以 v1.7.0 tag `4e16790` 为当前基线：
+源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

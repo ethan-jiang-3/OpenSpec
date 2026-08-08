@@ -1,6 +1,6 @@
 # 07 - 内置 spec-driven 的 config.yaml 上下文路由（源码深挖）
 
-> 范围：本文只讨论仓库随包发布的 [`schemas/spec-driven/`](../../schemas/spec-driven/)；不展开自定义 schema、`store:` 根指针或无关 workflow。Explore 与 Archive 只用于划定 config 注入边界。源码基线为 OpenSpec `v1.7.0`（`4e16790`）。这里的“内置 `spec-driven`”特指最终解析到 package source 的那一份 schema，而不只是名字恰好叫 `spec-driven`。
+> 范围：本文只讨论仓库随包发布的 [`schemas/spec-driven/`](../../schemas/spec-driven/)；不展开自定义 schema、`store:` 根指针或无关 workflow。Explore 与 Archive 只用于划定 config 注入边界。源码基线为 OpenSpec `v1.8.0`（`e50bd09`；v1.7.0 时代为 `4e16790`）。这里的“内置 `spec-driven`”特指最终解析到 package source 的那一份 schema，而不只是名字恰好叫 `spec-driven`。
 
 四个 artifact 的结构契约、完成判定和 Apply gate 由 [`05-schema-driven-控制面.md`](05-schema-driven-控制面.md) 集中解释；本文在该基础上只追踪 `config.yaml` 的消费者与阶段边界。
 

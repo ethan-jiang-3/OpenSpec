@@ -48,6 +48,7 @@ telemetry 在 `src/telemetry/`。它的边界：
 - 只记录 command name、version、surface。
 - 不记录 arguments、paths、content。
 - `OPENSPEC_TELEMETRY=0`、`DO_NOT_TRACK=1`、`CI=true` 会禁用。
+- v1.8.0 起，global config 的 `telemetry.enabled: false` 也禁用匿名遥测与 `openspec update` 版本检查；unset 保持开启（opt-out 模型），env/CI opt-out 优先。
 - PostHog 请求 1s timeout、无 retry、失败静默。
 - anonymous id 是随机 UUID，保存在 telemetry config。
 

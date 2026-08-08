@@ -2,7 +2,7 @@
 
 这个目录是对 OpenSpec 源码的**消化分析**：从 TypeScript 源码出发，理解机制、架构和设计意图。它不是用户指南——想学怎么用 OpenSpec 去 `_openspec_handbook/`。
 
-> **当前源码基线**：本文档集以 OpenSpec `v1.7.0`（upstream tag `4e16790`）为准。版本演进和旧行为只记录在 [`_change_log/`](./_change_log/README.md)；正文中的机制结论描述当前 release。
+> **当前源码基线**：本文档集以 OpenSpec `v1.8.0`（upstream `e50bd09`；release tag `v1.8.0` = `d578896`）为准。版本演进和旧行为只记录在 [`_change_log/`](./_change_log/README.md)；正文中的机制结论描述当前 release。
 
 更准确地说，`_digested/` 面向已熟悉 SDD、AI Coding、CLI/agent 工程，但尚未建立 OpenSpec 概念体系的读者。这里先带你抓住 OpenSpec 的思想主轴，再进入源码机制——而不是把源码目录平铺成分类货架。
 

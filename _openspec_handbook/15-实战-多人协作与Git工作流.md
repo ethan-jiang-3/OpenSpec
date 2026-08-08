@@ -2,7 +2,7 @@
 
 > 多人用 OpenSpec + Git 时，**绝大多数冲突都来自一件事：有人忘了"一个 change = 一个分支、PR 合并后立即 archive"这条纪律。** 这一篇把这条纪律拆成 4 个场景（独立功能 / 有依赖 / 改同一个 spec / 紧急 bugfix），告诉你每一步敲哪条命令、archive 顺序错会怎样、怎么用 PR 串行化避免基线不一致。
 
-> **v1.7.0 协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。两个 change 若触及同一 capability relative path（可嵌套）仍需串行化/重基线；正确 early-sync 后 archive 对完全一致 delta 是 no-op，但不能跳过 review 或用它掩盖不同内容。
+> **v1.8.0 协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。两个 change 若触及同一 capability relative path（可嵌套）仍需串行化/重基线；正确 early-sync 后 archive 对完全一致 delta 是 no-op，但不能跳过 review 或用它掩盖不同内容。（v1.7.0 引入，v1.8.0 不变。）
 
 ---
 
@@ -112,7 +112,7 @@ Alice archive identity/session
   → Bob archive
 ```
 
-已由独立 sync 写入的**完全一致** delta 在 v1.7.0 可成为 archive no-op；这只是降低了“已正确同步”的重复写入风险。它不等于两个不同改动自动合并，更不能代替上面的重读、review 和 rebaseline。
+已由独立 sync 写入的**完全一致** delta 在 v1.8.0（v1.7.0 起）可成为 archive no-op；这只是降低了“已正确同步”的重复写入风险。它不等于两个不同改动自动合并，更不能代替上面的重读、review 和 rebaseline。
 
 团队可以在 PR 描述中固定一张小表，让这种协调显式可见：
 
@@ -676,7 +676,7 @@ Bob:   add-qc-report    → 也改 specs/quality/spec.md（修改 Requirement: R
 - **智能合并，不是文件覆盖**——MODIFIED 只改提到的 requirement，不改的保留原样。ADDED 如果 main spec 已经有了同名 requirement 就当 MODIFIED 处理
 - **幂等**——同样的 delta 跑两次 sync，结果一样
 - **不归档**——change 仍然 active，代码实现和 tasks 不受影响
-- **sync 后再 archive**——v1.7.0 中，sync 后的 delta 和 main spec 完全一致时，archive 是 no-op（只移动目录，不重写文件）
+- **sync 后再 archive**——v1.8.0（v1.7.0 起）中，sync 后的 delta 和 main spec 完全一致时，archive 是 no-op（只移动目录，不重写文件）
 
 ### 什么时候用它
 

@@ -30,7 +30,7 @@
 影响：
 
 - 它决定这个项目是否真正接入 OpenSpec 工作流。
-- 它决定外部工具能不能看到实际安装的工作流入口。入口语法由宿主 adapter 决定：Claude 可以是 `/opsx:*`，Codex v1.7.0 是 `$openspec-*` skills，不能混为一谈。
+- 它决定外部工具能不能看到实际安装的工作流入口。入口语法由宿主 adapter 决定：Claude 可以是 `/opsx:*`，Codex v1.8.0 是 `$openspec-*` skills，不能混为一谈。
 - 它不会直接创建业务 change，但会决定后续 change workflow 以什么外壳呈现。
 
 容易误解：
@@ -68,6 +68,7 @@
 - 它不是业务数据升级工具。
 - 它主要更新的是“工具接入层”。
 - v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
+- v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。
 
 ## 2. 发现当前项目里有什么
 

@@ -17,7 +17,7 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 
 所以关键不是“Explore 调了哪个命令就得到 change name”，而是 agent 在 Explore 中完成了一次 scoped discovery。
 
-> **v1.7.0 当前边界。** Explore 也会读取项目 `config.yaml` 的 `context` 与 artifact `rules`，作为探索时的背景和约束；它没有 `operations.explore`，不会获得 Apply/Archive 专属 guidance。调用名由宿主决定：下文的 `/opsx:*` 是 Claude 示例，Codex 使用相应的 `$openspec-*` skill。
+> **v1.8.0 当前边界。** Explore 也会读取项目 `config.yaml` 的 `context` 与 artifact `rules`，作为探索时的背景和约束；它没有 `operations.explore`，不会获得 Apply/Archive 专属 guidance。调用名由宿主决定：下文的 `/opsx:*` 是 Claude 示例，Codex 使用相应的 `$openspec-*` skill（v1.8.0 下装在 `.agents/skills/`）。
 
 ## 先分清两件事
 
@@ -465,7 +465,7 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 
 ## 参考来源
 
-源码引用以 v1.7.0 tag `4e16790` 为当前基线：
+源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

@@ -23,21 +23,21 @@
 
 这不意味着每次都必须读完整个目录。默认 schema 的真实意图一直是：proposal 先确定哪些 capability 是 New / Modified，修改某个 requirement 时再定位该 capability 的主 spec 和完整 requirement block。它没有要求 agent 先读取所有 main specs；问题在于它也没有把“发现哪些 spec 相关”做成一个可靠、受预算约束的 runtime 步骤。
 
-## v1.7.0 已有能力与缺口
+## v1.8.0 已有能力与缺口
 
-本 FAQ 只以正式发布的 OpenSpec `v1.7.0`（tag `4e16790`）为基线；本 checkout 源码与当前 PATH CLI 均已核验为该版本。
+本 FAQ 以正式发布的 OpenSpec `v1.8.0`（release tag `v1.8.0` = `d578896`；`e50bd09` 为其后增量）为基线；v1.7.0（`4e16790`）的结论在 v1.8.0 未变——**自动 retrieval 仍未解决**。
 
-| 能力 | v1.7.0 当前行为 | 它解决什么 / 没解决什么 |
+| 能力 | 当前行为 | 它解决什么 / 没解决什么 |
 |---|---|---|
 | 一个 capability 一个 main spec | 有；flat layout 仍兼容 | 天然避免“整个项目一个 spec”；但不会自动控制单 capability 的膨胀。 |
-| 嵌套 capability 路径 | **有完整生命周期支持**：递归发现 `specs/identity/session/spec.md`，同路径 delta 可 list / show / validate / apply / archive | 可以按领域再拆分 capability；路径是 namespace，不是父子 spec 的继承模型。 |
+| 嵌套 capability 路径 | **有完整生命周期支持**：递归发现 `specs/identity/session/spec.md`，同路径 delta 可 list / show / validate / apply / archive（v1.7.0 引入，v1.8.0 不变） | 可以按领域再拆分 capability；路径是 namespace，不是父子 spec 的继承模型。 |
 | 浏览指定 spec / requirement | `openspec show <id> --type spec --json --requirements`，或 `--requirement <n>` | 已知目标后可以缩小读取量；`n` 是位置，不是稳定 requirement ID。 |
 | 本仓库 specs 的轻量语义 catalog | 只有 id / requirement count；#901 / PR #700 的 `--detail` 尚未合入 | agent 仍要自己浏览、grep 或使用项目自建 catalog。 |
 | 自动选择并加载“本次相关 main specs” | 没有；#901 / #902 仍 open | 这是本题真正缺失的能力。 |
 | `references:` 的 spec 索引 | 有 | 仅针对**外部 store**：id + `Purpose` 首行 + fetch recipe，正文不内联，且共享 50KB budget；不会索引当前 root 自己的 specs。 |
-| `config.yaml` 的 context | 50KB 上限；v1.7 将 context / operation guidance 扩展到 apply、archive instructions | 适合很小的全局“宪法”；不是 main specs 的替身或检索器。 |
+| `config.yaml` 的 context | 50KB 上限；context / operation guidance 进入 apply、archive instructions | 适合很小的全局“宪法”；不是 main specs 的替身或检索器。 |
 
-当前终端 PATH 中的 v1.7.0 CLI 可以创建和 archive nested path。源码 checkout 与全局 npm CLI 仍是两条独立更新路径，但当前结论不再以旧版本作限制；版本演进只见 [`0004-v1.6.0-to-v1.7.0.md`](../../_digested/_change_log/0004-v1.6.0-to-v1.7.0.md)。
+当前终端 PATH 中的 CLI（v1.8.0）可以创建和 archive nested path。源码 checkout 与全局 npm CLI 仍是两条独立更新路径，但当前结论不再以旧版本作限制；版本演进见 [`0004-v1.6.0-to-v1.7.0.md`](../../_digested/_change_log/0004-v1.6.0-to-v1.7.0.md) 与 [`0005-v1.7.0-to-v1.8.0.md`](../../_digested/_change_log/0005-v1.7.0-to-v1.8.0.md)。
 
 ## 官方现状：问题已被明确提出，但还没有落地
 
@@ -88,7 +88,7 @@ catalog：有哪些 capability、各自负责什么
 
 ### 2. 让 capability 边界承担分片，而不是把章节越写越大
 
-如果一个 main spec 长期同时包含能独立演化、独立发布、独立被修改的行为，它不是“上下文太小”的问题，而是 capability 边界已经过粗。本 checkout 源码和正式 v1.7.0 都支持：
+如果一个 main spec 长期同时包含能独立演化、独立发布、独立被修改的行为，它不是“上下文太小”的问题，而是 capability 边界已经过粗。本 checkout 源码和正式 v1.8.0（v1.7.0 起支持）都支持：
 
 ```text
 openspec/specs/
@@ -101,7 +101,7 @@ openspec/specs/
     subscriptions/spec.md
 ```
 
-对应 change delta 使用同一相对路径；archive 会写回对应的 nested main spec。拆分依据应是**行为合同和修改独立性**，不是按文档页数硬切：若两个 requirement 每次都必须一起改、同一 scenario 才能验证，拆成两个 capability 只会制造跨 spec 跳转成本。正式采用前要确认实际 CLI 已是 v1.7.0 或更高；默认 agent instruction 仍偏 flat，项目还应在 `config.yaml` / AGENTS 写明 `<domain>/<capability>` 约定（见 [#1459](https://github.com/Fission-AI/OpenSpec/issues/1459)）。
+对应 change delta 使用同一相对路径；archive 会写回对应的 nested main spec。拆分依据应是**行为合同和修改独立性**，不是按文档页数硬切：若两个 requirement 每次都必须一起改、同一 scenario 才能验证，拆成两个 capability 只会制造跨 spec 跳转成本。正式采用前要确认实际 CLI 已是 v1.8.0 或更高；默认 agent instruction 仍偏 flat，项目还应在 `config.yaml` / AGENTS 写明 `<domain>/<capability>` 约定（见 [#1459](https://github.com/Fission-AI/OpenSpec/issues/1459)）。
 
 要特别谨慎地迁移既有 flat capability。OpenSpec 的 capability 身份就是相对目录路径，没有 capability rename 操作。把 `auth/` 直接搬成 `identity/login/` 会使所有仍指向 `auth/` 的 active delta 失去目标。正确做法是把它作为一次受控 rebaseline / 结构迁移：先处理或搁置触及旧路径的 active changes，列清 requirement 到新路径的映射，人工 review 新基线，再让后续 change 全部使用新路径。不要把这个动作伪装成一次普通 archive。
 
@@ -184,7 +184,7 @@ Issue #901 / PR #902 已经覆盖了前两步和可选 sub-agent 的思路。它
 - [`../../_digested/specs_truth/03-手段清单-到底有多少种修法.md`](../../_digested/specs_truth/03-手段清单-到底有多少种修法.md) 与 [`06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md) — 没有 reconcile、全局审计、稳定 requirement ID 或 capability rename。
 - [`../../_digested/specs_truth/_research-main-spec-context-growth.md`](../../_digested/specs_truth/_research-main-spec-context-growth.md) — 对上游 `main`、#901、PR #700 / #902 与 #872 的逐项核验底稿。
 - [`../../_digested/_change_log/0004-v1.6.0-to-v1.7.0.md`](../../_digested/_change_log/0004-v1.6.0-to-v1.7.0.md) — v1.7.0 的正式发布与本 checkout 的源码合入；recursive spec discovery 已成为当前基线。
-- [`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md) — config、references 和各 workflow 的上下文路由边界（基线 v1.7.0 tag `4e16790`）。
+- [`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md) — config、references 和各 workflow 的上下文路由边界（基线 v1.8.0）。
 - [`../../_digested/mechanisms/01-store-模型与仓库协同.md`](../../_digested/mechanisms/01-store-模型与仓库协同.md) — external references 的 index-not-inline 模型。
 - [`../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md) — config / specs / changes 三层分工。
 - `src/utils/spec-discovery.ts`、`src/utils/item-discovery.ts`、`src/commands/spec.ts`、`src/core/references.ts`、`src/core/project-config.ts` — 本 checkout 的 recursive spec 发现、指定 spec/requirement 读取、external reference index 和 50KB context cap。
@@ -196,4 +196,4 @@ Issue #901 / PR #902 已经覆盖了前两步和可选 sub-agent 的思路。它
 - [PR #700: list --specs JSON/detail](https://github.com/Fission-AI/OpenSpec/pull/700) — #901 的 `--detail` 实现，尚未进入 main。
 - [PR #902: sub-agent spec discovery](https://github.com/Fission-AI/OpenSpec/pull/902) — 社区实现和实验性 token 数据，未当作已发布能力。
 - [Issue #872: too many OpenSpec files](https://github.com/Fission-AI/OpenSpec/issues/872) — summarization 需求仍为 open 问题。
-- [upstream v1.7.0 `4e16790`](https://github.com/Fission-AI/OpenSpec/tree/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b) — 本次同步的官方源码基线；已确认其 `list`、references 和 project-config 仍没有 local main-spec automatic retrieval。
+- [upstream v1.7.0 `4e16790`](https://github.com/Fission-AI/OpenSpec/tree/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b) — v1.7.0 同步的官方源码基线；已确认其 `list`、references 和 project-config 仍没有 local main-spec automatic retrieval。（v1.8.0 复核：结论不变。）

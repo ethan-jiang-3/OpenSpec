@@ -2,7 +2,7 @@
 
 ## 一句话
 
-把 `config.yaml` 当成**项目 profile + artifact-specific / operation-specific guidance**，不要当成项目百科或运行时控制器。真正的阶段化上下文主要由 schema 的 artifact DAG 和 change artifacts 承担：proposal 记录分类和决定，specs/design 直接读取 proposal 并分别细化行为与技术后果，tasks 再读取 specs/design，Apply 最后读取当前已有的实际 artifacts；v1.7.0 再把 project context 与 Apply/Archive guidance 明确路由到两个 operation。
+把 `config.yaml` 当成**项目 profile + artifact-specific / operation-specific guidance**，不要当成项目百科或运行时控制器。真正的阶段化上下文主要由 schema 的 artifact DAG 和 change artifacts 承担：proposal 记录分类和决定，specs/design 直接读取 proposal 并分别细化行为与技术后果，tasks 再读取 specs/design，Apply 最后读取当前已有的实际 artifacts；v1.8.0（v1.7.0 引入）再把 project context 与 Apply/Archive guidance 明确路由到两个 operation。
 
 ## 先拆掉一个错误前提
 

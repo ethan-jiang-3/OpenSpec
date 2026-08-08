@@ -8,7 +8,7 @@
 
 写完 config.yaml 之后，你迟早会遇到一个时刻：**config 的 rules 不够用了**。
 
-v1.7.0 先分清两种“不够”：Apply/Archive 只是需要短稳定项目步骤时，用 `operations.apply/archive.guidance`，不必 fork schema；只有想改变 artifact、依赖、template 或 apply gate/结构时，才需要自定义 schema。
+v1.8.0 先分清两种“不够”：Apply/Archive 只是需要短稳定项目步骤时，用 `operations.apply/archive.guidance`，不必 fork schema；只有想改变 artifact、依赖、template 或 apply gate/结构时，才需要自定义 schema。
 
 不是规则写得不够好——而是你发现，你想改的东西 config 根本管不到。你想让 proposal 问不同的问题、想让 specs 换一种格式、想让 tasks 少一个阶段、甚至想把整个 artifact 流程换成你自己的。这些 config.yaml 做不到。
 

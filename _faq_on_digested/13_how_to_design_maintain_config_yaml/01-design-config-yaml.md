@@ -23,7 +23,7 @@ next_read:
 
 ## 先接受配置的能力边界
 
-`config.yaml` 不是项目百科，也不是任意阶段都可自由扩展的 guidance router；v1.7.0 有明确的 Apply/Archive operation slots：
+`config.yaml` 不是项目百科，也不是任意阶段都可自由扩展的 guidance router；v1.8.0 有明确的 Apply/Archive operation slots（v1.7.0 引入）：
 
 | 内容 | 正确位置 | 原因 |
 |---|---|---|

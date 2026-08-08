@@ -72,7 +72,16 @@ repo-local init/update 根据 global config 的 `delivery` 分流：
 | `commands` | 只生成 commands，并删除 managed skills |
 | `both` | 两者都生成 |
 
-这张表描述的是投递策略，不是每个工具都必然支持三种形态。v1.7.0 的 Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.codex/skills/openspec-*/SKILL.md`，不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
+这张表描述的是投递策略，不是每个工具都必然支持三种形态。v1.8.0 的 Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.agents/skills/openspec-*/SKILL.md`（v1.7.0 时代是 `.codex/skills/`），不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
+
+### v1.8.0：共享 `.agents` 根与 vendor-neutral `agents` 目标
+
+v1.8.0 引入两个相关变化：
+
+1. **新增 vendor-neutral `agents` 目标**（`--tools agents`）：把 skills 装进 `.agents/skills/openspec-*/SKILL.md`，这是 AGENTS.md 兼容 assistant 的共享落点，不属于任何单一工具。`--tools all` 会包含它并创建 `.agents/skills/`。检测键是 `.agents/skills` 而非 `.agents` 根（框架常为别的东西用 `.agents/`）。
+2. **Codex 迁入同一个 `.agents` 根**：`codex` 的 `skillsDir` 从 `.codex` 改为 `.agents`（`.codex` 变成 `legacySkillsDirs`），update 会原地迁移旧 `.codex` 树并保留用户定制文件。
+
+因此 `.agents/skills/` 现在可能同时被 `agents` 与 `codex` 两个目标使用。共享根同一时刻只能有一个 active writer：`src/core/shared-skill-target.ts` 用 `.openspec-target` marker 文件记录谁在写这个根；没有 marker 时按已生成文件的 invocation 语法推断（`$openspec-` → codex，`/openspec-` → agents），找不到归属且已有 canonical 树时保留既有的 `agents` 含义。`--tools codex` 与 `--tools agents` 并发选择时由该逻辑收敛到单个 writer。
 
 profile 决定安装哪些 workflow，delivery 决定以什么形态投递。两者组合起来回答两个不同问题：
 
@@ -134,9 +143,22 @@ formatFile(content: CommandContent): string
 | 工具 | command 位置 | 说明 |
 |------|--------------|------|
 | Claude | `.claude/commands/opsx/<id>.md` | 项目内 command 文件，带 frontmatter |
-| Codex | `.codex/skills/openspec-*/SKILL.md` | v1.7.0 skills-only；以 `$openspec-*` 调用，不再生成 `<CODEX_HOME>/prompts/opsx-<id>.md` |
+| Codex | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 skills-only；以 `$openspec-*` 调用，`.codex` 是 legacy 迁移源 |
+| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 vendor-neutral 目标，与 Codex 共享 `.agents` 根 |
+| GitHub Copilot | `.github/skills/` 等 | v1.8.0 本地 skill + opt-in cloud coding-agent 文件（见下） |
 
 这个差异很重要：不是所有 command artifacts 都在 repo root 下。delivery 层要尊重每个工具的发现机制。
+
+## GitHub Copilot：本地 skill 与 opt-in cloud coding-agent
+
+GitHub Copilot 是 v1.8.0 的一等工具目标，但被拆成两层，其中 cloud 层默认不生成：
+
+| 层 | 产物 | 默认 |
+|----|------|------|
+| 本地 skill | `.github/skills/` 下的 OpenSpec skills | `--tools github-copilot` 时生成 |
+| cloud coding-agent 文件 | `.github/workflows/copilot-setup-steps.yml`（预装 CLI）+ `.github/agents/openspec.agent.md`（定制 agent 说明） | **opt-in**，默认 No |
+
+cloud 文件写入 `.github/` 是有侵入性的动作，所以由 `openspec init` 交互询问（非交互用 `--copilot-cloud` / `--no-copilot-cloud`），选择记入 `openspec/config.yaml` 的 `githubCopilot.cloudAgent`。`openspec update` 从不提示：只刷新已 opt-in、或已存在 managed cloud 文件的旧项目（视为隐含 opt-in）；用户自己改过的文件永不覆盖/删除；opt-out 只删除 managed 文件，保留用户定制。逻辑见 `src/core/github-copilot/cloud-agent.ts`。
 
 ## 工程洞察
 
@@ -152,6 +174,8 @@ formatFile(content: CommandContent): string
 | tool registry | `AI_TOOLS` in `src/core/config.ts` |
 | tool detection | `src/core/available-tools.ts`、`src/core/shared/tool-detection.ts` |
 | skill/command content | `src/core/shared/skill-generation.ts` |
+| shared skill root ownership | `src/core/shared-skill-target.ts`（`.openspec-target` marker） |
+| GitHub Copilot cloud agent | `src/core/github-copilot/cloud-agent.ts` |
 | workflow templates | `src/core/templates/workflows/` |
 | command adapters | `src/core/command-generation/` |
 | init/update | `src/core/init.ts`、`src/core/update.ts` |

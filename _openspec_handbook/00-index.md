@@ -10,13 +10,13 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.5** |
-| **对齐 OpenSpec** | 1.7.0 |
-| **本版日期** | 2026-07 |
+| **手册版本** | **v1.6** |
+| **对齐 OpenSpec** | 1.8.0 |
+| **本版日期** | 2026-08 |
 
 **两个版本维度（别混）**：
 
-- **手册版本**（v1.5）：本手册自身的版次。理解加深、内容大修时升版。
+- **手册版本**（v1.6）：本手册自身的版次。理解加深、内容大修时升版。
 - **对齐 OpenSpec**（1.7.0）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
@@ -35,6 +35,7 @@
 | v1.3 | 2026-07 | 1.7.0 | 对齐 v1.7：nested capability path 完整生命周期、`skip_specs`、Apply/Archive operation guidance、工具投递与 Codex skills-only、store/default 与 archive/sync 可靠性更新。 |
 | v1.4 | 2026-07 | 1.7.0 | 将 capability 专题正式纳入手册主线：按行为合同切分、浅 taxonomy、path identity、catalog discovery、同路径 delta/archive、rebaseline 与并发治理；不再只把 nested path 当目录技巧。 |
 | v1.5 | 2026-07 | 1.7.0 | 系统性勘误与打磨：修正 Pi/Kiro 版本归属（v1.2.0）、core/custom profile 命令数（6/12）、`apply.tracks` 约束措辞（从硬编码改强烈推荐）；CLI 命令表补全（status/instructions/view/schema/store setup 等）；`.openspec.yaml` 补完整字段表；schema 约束表补 `description`；FAQ 工具列表更新到 v1.7.0；`validate` 描述准确化；删各章尾部 `## 下一步` 跳转；宪章润色。 |
+| v1.6 | 2026-08 | 1.8.0 | 对齐 v1.8：工具投递新增 vendor-neutral `agents` 目标（`.agents/skills/`，与 Codex 共享根、ownership marker）；GitHub Copilot 一等支持（本地 skill + opt-in cloud coding-agent 文件）；Codex skills 迁到 `.agents`；archive 新增 `retire_capabilities`（删除已空 capability 的 main spec）、重复 canonical 名拒绝、note-loss 提示与无法交互时的可重跑命令；`status` 新增 `isPlanningComplete`；validate 的 SHALL/MUST 在 normal 模式降为 guidance、前置检测 MODIFIED scenario-loss；telemetry.enabled 全局配置。 |
 
 ---
 
@@ -79,7 +80,7 @@ OpenSpec = 整套机制
 
 - `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --json`、`openspec archive <name>`。
 - `/opsx:*` 是有 command adapter 的宿主（例如 Claude Code）里的入口，比如 `/opsx:propose`、`/opsx:apply`；它不是所有工具的通用语法。
-- Codex 在 v1.7.0 使用 skills-only 投递，入口是 `$openspec-*` skill，而不是 `/opsx:*` command。
+- Codex 在 v1.8.0 使用 skills-only 投递，入口是 `$openspec-*` skill（装在 `.agents/skills/`，与 vendor-neutral `agents` 目标共享根），而不是 `/opsx:*` command。
 - `opsx` 这个名字只是部分工具的 command 命名空间或文件前缀，不是另一套独立系统。
 - 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有与之完全对应的单一命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
 
@@ -188,7 +189,7 @@ graph LR
     C --> D[专题<br/>spec-driven-capability]
 ```
 
-先在 09 建立“行为合同切片、稳定 path、catalog 只导航”的判断，再按需要深入 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md)。嵌套目录可被 v1.7.0 完整处理，但它不会替 agent 自动挑选相关 specs。
+先在 09 建立“行为合同切片、稳定 path、catalog 只导航”的判断，再按需要深入 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md)。嵌套目录可被 v1.8.0 完整处理（v1.7.0 起），但它不会替 agent 自动挑选相关 specs。
 
 ---
 

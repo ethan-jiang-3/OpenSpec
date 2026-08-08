@@ -1,6 +1,6 @@
 # 09 · 高级：Capability 规划、身份与 specs 漂移维护
 
-> **适用 OpenSpec v1.7.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
+> **适用 OpenSpec v1.8.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
 
 ## 先回答：为什么这事值得你操心
 
@@ -51,7 +51,7 @@ artifacts:
 
 ## capability 的身份 = 它的相对路径
 
-很多人把 `openspec/specs/` 笼统当成"spec 基线"。但它不是一堆平铺的文档：v1.7.0 会递归发现任意深度的 `spec.md`，并按 capability 切分目录：
+很多人把 `openspec/specs/` 笼统当成"spec 基线"。但它不是一堆平铺的文档：v1.8.0（v1.7.0 起）会递归发现任意深度的 `spec.md`，并按 capability 切分目录：
 
 ```text
 openspec/specs/
@@ -95,7 +95,7 @@ data-export
 
 只有第三层本身也长期稳定、并能帮助未来读者导航时才继续加深，例如 `platform/observability/audit-events`。segment 用语义明确的 kebab-case；避免 `common`、`misc`、`utils`、`core` 这类“边界没想清楚”的垃圾桶名。domain 只承担命名和 discovery，不是父合同。
 
-在建新 path 前，先搜索既有 path、Purpose 和 requirement 标题。能修改已有行为合同，就不要创建近义 capability；只有确有独立合同与独立演进节奏时才新建。新 capability 的 delta 请写可读的 `## Purpose`，v1.7.0 在 archive 创建 main spec 时会把它带入，而不是一律写成 `TBD`。
+在建新 path 前，先搜索既有 path、Purpose 和 requirement 标题。能修改已有行为合同，就不要创建近义 capability；只有确有独立合同与独立演进节奏时才新建。新 capability 的 delta 请写可读的 `## Purpose`，v1.8.0（v1.7.0 起）在 archive 创建 main spec 时会把它带入，而不是一律写成 `TBD`。
 
 ## specs 很多以后：catalog 帮你找，main spec 才能定
 
@@ -118,7 +118,7 @@ catalog 只能导航，不能成为第二份行为规范；任何冲突都以 ma
 4. 用 `openspec show <path> --type spec --json --requirements` 先看 requirement 标题；只有要 MODIFIED/REMOVED/RENAMED 时才读完整 block 与 scenarios。
 5. delta 使用 proposal 中声明的**同一完整相对 path**；不确定边界就回 Explore，不要临时发明近义名称。
 
-这是一条项目治理协议，而非 v1.7.0 已自动保证的 retrieval 功能。把 path convention、catalog 位置和这几个步骤写进项目 `AGENTS.md` 或 `rules.proposal`；只把跨所有 change 都成立的短原则留在 config。详细模板见 [`_digested/spec-driven-capability/capability-governance-template.md`](../_digested/spec-driven-capability/capability-governance-template.md)。
+这是一条项目治理协议，而非 v1.8.0（v1.7.0 起）已自动保证的 retrieval 功能。把 path convention、catalog 位置和这几个步骤写进项目 `AGENTS.md` 或 `rules.proposal`；只把跨所有 change 都成立的短原则留在 config。详细模板见 [`_digested/spec-driven-capability/capability-governance-template.md`](../_digested/spec-driven-capability/capability-governance-template.md)。
 
 ## 两层「以名字为身份」模型（无稳定 ID）
 
@@ -191,7 +191,7 @@ openspec validate --specs --strict
 openspec validate <affected-change> --type change --strict
 ```
 
-同样地，两个 active changes 同时改同一 capability path 时，后 archive 的 change 必须基于前一个 archive 后的 main spec 重新核对 requirement block。可完全一致的 early sync 在 v1.7.0 可以成为 no-op，但它不是用来绕过并发协调、review 或结构迁移的捷径。
+同样地，两个 active changes 同时改同一 capability path 时，后 archive 的 change 必须基于前一个 archive 后的 main spec 重新核对 requirement block。可完全一致的 early sync 在 v1.8.0（v1.7.0 起）可以成为 no-op，但它不是用来绕过并发协调、review 或结构迁移的捷径。
 
 ### 一个够用的维护节奏
 

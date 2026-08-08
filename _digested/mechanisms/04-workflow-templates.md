@@ -55,7 +55,7 @@ workflow template
 | `continue` | 不一定 | 一次一个 | 增量 |
 | `ff` | 可用于已有 change | 多个 | 批量推进 |
 
-这四个模板共同解释了 agent workflow “动作而非阶段”的体验：用户可以从不同粒度切入同一条 artifact DAG。Claude 的名称可为 `/opsx:*`；Codex v1.7.0 为 `$openspec-*` skills，不能把前者当通用入口。
+这四个模板共同解释了 agent workflow “动作而非阶段”的体验：用户可以从不同粒度切入同一条 artifact DAG。Claude 的名称可为 `/opsx:*`；Codex v1.8.0 为 `$openspec-*` skills，不能把前者当通用入口。
 
 ## update：修订而非推进（v1.6.0 新增）
 
@@ -77,7 +77,7 @@ workflow template
 
 `verify` 用来检查实现是否与 proposal/specs/design/tasks 一致。它不是 `validate` 的替代：`validate` 检查 OpenSpec 文档结构，`verify` 让 agent 审查代码实现、测试、任务完成度和 artifact coherence。
 
-`archive` 模板是 agent 层的收尾操作手册。它先读取 `openspec instructions archive --json`（project `context` 与 `operations.archive.guidance`），检查是否需要 sync、是否完成 tasks、是否适合调用 CLI archive；sync 必须 inline 完成并对全部 capability 重新验证后才移动 change。v1.7.0 下，正确 early-sync 的完全一致 delta 会在 archive 中保持幂等 no-op，仍需阻断近似匹配或真实 drift。CLI archive 源码机制见 `../internal-spec-driven/04-archive-归档合并.md`。
+`archive` 模板是 agent 层的收尾操作手册。它先读取 `openspec instructions archive --json`（project `context` 与 `operations.archive.guidance`），检查是否需要 sync、是否完成 tasks、是否适合调用 CLI archive；sync 必须 inline 完成并对全部 capability 重新验证后才移动 change。v1.8.0（v1.7.0 起）下，正确 early-sync 的完全一致 delta 会在 archive 中保持幂等 no-op，仍需阻断近似匹配或真实 drift；归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`。CLI archive 源码机制见 `../internal-spec-driven/04-archive-归档合并.md`。
 
 `bulk-archive` 面向多个 completed changes。它的风险不在单个 merge 算法，而在选择和确认：哪些 changes 完成、哪些跳过、是否逐个验证、失败时如何报告 partial results。
 
@@ -93,7 +93,7 @@ workflow template
 - expanded workflows 不是新状态机，而是围绕同一套 status/instructions API 的不同操作粒度。
 - template 是跨工具复用的 workflow 语义；tool delivery 再把它投递成不同 agent 的 skill/command 外壳。
 - 修改 template 会改变 agent 行为，即使 TypeScript 源码没有变化，也应当视为产品行为变更。
-- **v1.7.0 当前模板契约**：① propose/continue/ff 写完 artifact 后从磁盘重读依赖文件；② 同级 ready artifact 的推荐顺序由 schema 声明顺序决定（内置为 specs 后 design，二者仍可并行）；③ schema artifact `instruction` 是生成时的权威指令；④ `skip_specs: true` 会把 specs 设为显式 skipped，不再把无 spec-level 变化的 change 卡住。
+- **v1.8.0 当前模板契约**：① propose/continue/ff 写完 artifact 后从磁盘重读依赖文件；② 同级 ready artifact 的推荐顺序由 schema 声明顺序决定（内置为 specs 后 design，二者仍可并行）；③ schema artifact `instruction` 是生成时的权威指令；④ `skip_specs: true` 会把 specs 设为显式 skipped，不再把无 spec-level 变化的 change 卡住（①②③④ v1.7.0 引入）；⑤ propose 聚焦 planning，澄清 material ambiguity 后再建 change，实现交给 apply（v1.8.0）。
 
 ## 源码锚点
 

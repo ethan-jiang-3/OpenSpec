@@ -2,7 +2,7 @@
 
 > 这一篇不是给第一次上手的人看的，而是给想研究"OpenSpec 怎么喂给宿主 agent"的人看的。
 >
-> **适用版本**：本文以 OpenSpec v1.7.0 为准；涵盖 `--json` 输出、PlanningHome 路由，以及 Apply/Archive operation inputs。
+> **适用版本**：本文以 OpenSpec v1.8.0 为准；涵盖 `--json` 输出、PlanningHome 路由，以及 Apply/Archive operation inputs。
 
 ---
 
@@ -22,7 +22,7 @@
 
 > **OpenSpec 自己不是 LLM，它是 prompt 编排器和状态引擎。**
 
-这里也要避免一个术语误会：`/opsx:*` 只是支持 command adapter 的宿主采用的一种命名空间，不是另一套运行时。Codex 在 v1.7.0 使用 `$openspec-*` skills，不生成 `/opsx:*` command。机器协议里的事实来源仍然是 `openspec` CLI 和 `openspec/` 文件状态。
+这里也要避免一个术语误会：`/opsx:*` 只是支持 command adapter 的宿主采用的一种命名空间，不是另一套运行时。Codex 在 v1.8.0 使用 `$openspec-*` skills，不生成 `/opsx:*` command。机器协议里的事实来源仍然是 `openspec` CLI 和 `openspec/` 文件状态。
 
 ---
 

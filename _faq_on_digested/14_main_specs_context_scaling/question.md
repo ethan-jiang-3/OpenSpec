@@ -10,6 +10,6 @@
 
 这里的“main specs”指整个 `openspec/specs/` 当前 capability 基线，不是 `changes/archive/` 中的历史 change。后者只在需要回答“当时为什么这样改”时才是上下文来源。
 
-本文以 **OpenSpec v1.7.0** 为唯一的当前行为基线：2026-07-29 已核验本 checkout 的源码为 upstream tag `4e16790`，PATH 中实际运行的全局 `openspec` 也为 v1.7.0。所有“现在是否支持”“当前 CLI 会做什么”的结论都以这个正式发布版为准。
+本文以 **OpenSpec v1.8.0** 为唯一的当前行为基线（release tag `v1.8.0` = `d578896`；`e50bd09` 为其后增量）。2026-08-08 已核验本 checkout 的源码合入 upstream 至 v1.8.0，PATH 中实际运行的全局 `openspec` 也应为 v1.8.0（低于 v1.8.0 的机器先升级）。所有“现在是否支持”“当前 CLI 会做什么”的结论都以这个正式发布版为准；v1.7.0 的相应结论（nested path 可用、无自动 retrieval）在 v1.8.0 不变。
 
 源码 checkout 与全局 npm CLI 是两条独立的更新路径；这里只记录它们当前已经对齐。较早版本何时缺少某项能力只保留在同步变更史中，不参与本 FAQ 的当前决策。

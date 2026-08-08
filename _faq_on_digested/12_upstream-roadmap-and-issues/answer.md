@@ -1,8 +1,10 @@
 # 答案：OpenSpec 上游 Roadmap、主要问题与社区状况
 
-> **当前基线（2026-07-29）**：本地源码与 CLI 都是 OpenSpec **v1.7.0**，tag `4e16790`。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
+> **当前基线（2026-08-08）**：本地源码与 CLI 都是 OpenSpec **v1.8.0**（release tag `v1.8.0` = `d578896`；`e50bd09` 为其后增量）。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
 >
-> **v1.7.0 对本 FAQ 的纠偏**：nested capability path 已正式支持；`skip_specs: true`、Apply/Archive operation guidance 和 `instructions archive` 已交付；new spec Purpose 会随 archive 传递；early-sync archive 已幂等；Codex 已改为 `$openspec-*` skills-only，不能再把 `/opsx:*` 写成通用入口。
+> **v1.8.0 对本 FAQ 的追加**：新增 vendor-neutral `agents` 目标（`--tools agents`，与 Codex 共享 `.agents` 根）；GitHub Copilot 一等支持（本地 skill + opt-in cloud coding-agent 文件）；`retire_capabilities` 支持删除已空 capability 的 main spec；`status` 增加 `isPlanningComplete`；validate 的 SHALL/MUST 在 normal 模式降为 guidance、并前置检测 MODIFIED scenario-loss；archive 在无法交互时给出可重跑命令。
+>
+> **v1.7.0 对本 FAQ 的纠偏（仍有效）**：nested capability path 已正式支持；`skip_specs: true`、Apply/Archive operation guidance 和 `instructions archive` 已交付；new spec Purpose 会随 archive 传递；early-sync archive 已幂等；Codex 已改为 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`），不能再把 `/opsx:*` 写成通用入口。
 >
 > **综合来源**：GitHub Issues/Discussions（Fission-AI/OpenSpec）、官方文档（ROADMAP.md, faq.md, migration-guide.md, workspace-roadmap.md）、Release Notes（历史版本）与社区讨论（HN, Discord, 博客）
 >
@@ -12,7 +14,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，补入当前 v1.7.0）
+### 1.1 已交付（历史至 v1.6，补入当前 v1.8.0）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -21,7 +23,8 @@
 | v1.4.0 | `/opsx:update` workflow、Kimi CLI、Mistral Vibe 支持 | `_digested/workflows/` 深挖了 workflow templates |
 | v1.5.0 | Stores（早期 beta）、sync workflow 进 core profile | `_digested/system/03-planning-home-与-store-模型.md` 覆盖了 store 模型 |
 | v1.6.0-beta.1 | Canonical resolution 统一、auto-approve CLI | — |
-| v1.7.0 | nested main specs、`skip_specs`、operation guidance / `instructions archive`、Purpose carry-through、early-sync no-op、Codex skills-only | 本轮三目录同步的当前依据 |
+| v1.7.0 | nested main specs、`skip_specs`、operation guidance / `instructions archive`、Purpose carry-through、early-sync no-op、Codex skills-only | v1.7.0 同步的当前依据 |
+| v1.8.0 | vendor-neutral `agents` 目标（`.agents/skills/`）、GitHub Copilot（本地 + opt-in cloud）、MiniMax/Rovo、`retire_capabilities`、`status.isPlanningComplete`、validate SHALL/MUST 放宽 + scenario-loss 前置、archive 可重跑命令 | v1.8.0 同步的当前依据（见 [`0005`](../../_digested/_change_log/0005-v1.7.0-to-v1.8.0.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
@@ -97,7 +100,7 @@
 
 - **Windsurf 用 workflows 而非 commands**：OpenSpec 生成的 `commands/opsx` 文件对 Windsurf 不兼容（[#591](https://github.com/Fission-AI/OpenSpec/issues/591)）。v1.0.2 甚至删除了用户已有的工作 Windsurf 配置。
 - **Cursor 双重加载**：从 `.claude/` 和 `.cursor/` 同时加载 skills 导致重复。
-- **Codex 历史 slash-command 回归**：[#890] 反映旧 `/opsx:*` 投递的问题；v1.7.0 的当前交付是 `$openspec-*` skills-only，不应再把它当 Codex 问题的现行 workaround。
+- **Codex 历史 slash-command 回归**：[#890] 反映旧 `/opsx:*` 投递的问题；当前交付是 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`），不应再把它当 Codex 问题的现行 workaround。
 - **多项目配置失败**：只有第一个项目生成 slash commands（[#195](https://github.com/Fission-AI/OpenSpec/issues/195)）。
 
 **根本原因**：OpenSpec 的 "universal delivery" 抽象层（同一套 workflow semantics → skills → commands → per-tool adapters）在面对真实工具差异时，adapter 层的健壮性不足。每增加一个工具支持，不是"零成本"，而是可能引入新的断裂点。
@@ -122,7 +125,7 @@ v1.0.0 是迄今为止最大的 breaking change：
 - **手动步骤**：`project.md` 不会自动删除，用户需要手动把有用内容迁移到 `config.yaml` 的 `context:` 字段
 - **迁移命令**：`openspec init`（会检测旧文件、引导清理）；CI 环境：`openspec init --force --tools claude`
 
-此后（v1.0.x–v1.6.x）的历史判断不能当作当前结论。v1.7.0 已实质改变 nested path、operation inputs、skip-spec change、archive/sync 与 Codex delivery；计划中的 schema 重命名仍应以当前 release note/源码验证。
+此后（v1.0.x–v1.6.x）的历史判断不能当作当前结论。v1.7.0 已实质改变 nested path、operation inputs、skip-spec change、archive/sync 与 Codex delivery，v1.8.0 又加入 `agents` 目标、GitHub Copilot、`retire_capabilities` 与 status/validate 的改动；计划中的 schema 重命名仍应以当前 release note/源码验证。
 
 ---
 

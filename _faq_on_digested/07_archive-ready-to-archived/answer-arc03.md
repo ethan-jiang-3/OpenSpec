@@ -159,7 +159,7 @@ fallback on EPERM/EXDEV: copyDirRecursive() + fs.rm(src)
 
 ## 参考来源
 
-源码引用以 v1.7.0 tag `4e16790` 为当前基线：
+源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/apply-change.ts` → `getApplyChangeSkillTemplate()` + `getOpsxApplyCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:apply [change-name]`；Codex v1.7.0 用 `$openspec-apply-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:apply [change-name]`；Codex v1.8.0 用 `$openspec-apply-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-apply-change`（skill）/ `OPSX: Apply`（command）
 > **独立 CLI 命令**：无——apply 没有对应的 `openspec apply` CLI 命令，它是纯 agent 模板，消费 `openspec instructions apply --json` 的运行时输出。
 > **profile**：core（大多数用户默认可见）
@@ -94,7 +94,7 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 | `ready` | 一切就绪，有 pending tasks | 读 contextFiles → 开始 task loop |
 | `all_done` | 全部 checkbox 已勾 | 祝贺，建议 archive |
 
-## v1.7.0：operation inputs 不等于 artifact rules
+## v1.8.0：operation inputs 不等于 artifact rules
 
 `openspec instructions apply --change X --json` 除了 `contextFiles`、progress、tasks 和 state，还可返回：
 
@@ -125,6 +125,8 @@ template 硬编码了三种输出格式：
 | 实施中 | `## Implementing: <name> (schema: <schema>)` + 逐 task 进度 |
 | 完成 | `## Implementation Complete` + progress + completed list |
 | 暂停 | `## Implementation Paused` + progress + issue + options |
+
+v1.8.0 起，进度计数与 `instructions apply` 的 task 列表共享同一个 parser（`src/utils/task-progress.ts`），并按**缩进子任务**计数：`list`、`view`、`instructions apply`、`archive` 对同一 tasks 文件的判断一致；checkbox 即使出现在 code fence / HTML comment / 缩进块里也会被计数（把示例清单当展示的 tasks 文件，可能被算成待办）。
 
 ## Guardrails
 

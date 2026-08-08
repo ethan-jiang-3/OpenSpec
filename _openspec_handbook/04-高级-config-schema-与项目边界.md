@@ -95,7 +95,7 @@ operations:
       - Review migration/rollback evidence before archive.
 ```
 
-**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类），不支持纯文本格式。v1.7.0 的 Apply/Archive 不是 artifact rule consumers：它们读取 project `context` 以及 `operations.apply/archive.guidance`；`rules.apply` / `rules.archive` 不会成为 operation 指令。
+**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类），不支持纯文本格式。v1.8.0（v1.7.0 起）的 Apply/Archive 不是 artifact rule consumers：它们读取 project `context` 以及 `operations.apply/archive.guidance`；`rules.apply` / `rules.archive` 不会成为 operation 指令。
 
 ### config.yaml vs schema：对比表
 
@@ -136,7 +136,7 @@ operations:
 
 ### 写一条配置前，先说出“谁会消费它”
 
-`config.yaml` 不是所有阶段共享的万能 prompt。把正确内容放进错误 consumer，效果仍等于没有配置。内置 `spec-driven` 在 v1.7.0 的路由是：
+`config.yaml` 不是所有阶段共享的万能 prompt。把正确内容放进错误 consumer，效果仍等于没有配置。内置 `spec-driven` 在 v1.8.0（v1.7.0 起）的路由是：
 
 | 阶段 | 自动拿到什么 | 这意味着什么 |
 |---|---|---|

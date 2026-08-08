@@ -4,11 +4,11 @@
 
 `src/core/templates/workflows/archive-change.ts` → `getArchiveChangeSkillTemplate()` + `getOpsxArchiveCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:archive [change-name]`，Codex v1.7.0 用 `$openspec-archive-change`；另有确定性 CLI `openspec archive <name>`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:archive [change-name]`，Codex v1.8.0 用 `$openspec-archive-change`；另有确定性 CLI `openspec archive <name>`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-archive-change`（skill）/ `OPSX: Archive`（command）
 > **独立 CLI 命令**：**有**——`openspec archive <name>` 做 programmatic validate → merge → move。host archive workflow 做 pre-flight checks + agent-driven sync + 手动 mv。**两条路径不同**：CLI 做完整替换式合并，agent workflow 做智能合并。
 > **profile**：core（大多数用户默认可见）
-> **v1.7.0 要点**：① 选择 change 后先读取 `openspec instructions archive --json` 的 context/operation guidance；② status 的 `skipped` specs artifact 视为满足；③ sync 仍必须 inline 并逐 capability 验证；④ CLI merge 对 fully early-synced operations 采用 no-op / warnings，而非无意义重写。
+> **v1.8.0 要点（v1.7.0 起）**：① 选择 change 后先读取 `openspec instructions archive --json` 的 context/operation guidance；② status 的 `skipped` specs artifact 视为满足；③ sync 仍必须 inline 并逐 capability 验证；④ CLI merge 对 fully early-synced operations 采用 no-op / warnings，而非无意义重写；⑤ 归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`（v1.8.0）。
 
 ## 一句话
 

@@ -4,7 +4,7 @@
 
 Propose 的 mechanical apply gate（tasks.md 存在）只是一个文件系统事实。真正能开始实施的 artifacts 需要经过一轮或多轮 Explore 审视——把 artifacts 当成 Explore 的调查对象，拿真实代码去校验，发现 gap 就修，修完再审，直到 artifacts 足够具体、一致、可实现。
 
-> **v1.7.0 补充。** `skip_specs: true` 是“本 change 没有 spec-level 行为变化”的正式 metadata，不是漏写 specs 的容错；此时 status 的 specs 是 `skipped`，迭代审视应确认这一判断本身成立。下面 `/opsx:*` 仍是 Claude 示例；Codex 以对应 `$openspec-*` skill 运行。
+> **v1.8.0 补充。** `skip_specs: true` 是“本 change 没有 spec-level 行为变化”的正式 metadata，不是漏写 specs 的容错；此时 status 的 specs 是 `skipped`，迭代审视应确认这一判断本身成立。下面 `/opsx:*` 仍是 Claude 示例；Codex 以对应 `$openspec-*` skill 运行（v1.8.0 下装在 `.agents/skills/`）。
 
 ```text
 Propose 产出 artifacts（mechanical apply-ready）
@@ -190,7 +190,7 @@ ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
 
 ## 参考来源
 
-源码引用以 v1.7.0 tag `4e16790` 为当前基线：
+源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

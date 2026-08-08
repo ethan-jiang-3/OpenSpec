@@ -17,6 +17,7 @@ _change_log/
 ├── 0002-v1.4.1-to-v1.5.0.md   # 第二次同步（stores 三合一）
 ├── 0003-v1.5.0-to-v1.6.0.md   # v1.6.0 + release 后 upstream 快照
 ├── 0004-v1.6.0-to-v1.7.0.md   # 实际源码合入 v1.7.0
+├── 0005-v1.7.0-to-v1.8.0.md   # 实际源码合入 v1.8.0（agents 目标、GitHub Copilot、retire_capabilities）
 ├── _plan-4-v1.7.0-current-docs.md # v1.7.0 当前资料同步计划（覆盖三个资料目录）
 └── ...
 ```
