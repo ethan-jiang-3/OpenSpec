@@ -208,7 +208,7 @@ apply:
 
 `apply.tracks` 指定用哪个文件追踪进度。它总是指向一个有 checkbox 的文件。
 
-`apply.instruction` 是 agent 在实施时收到的动态指导文字。
+`apply.instruction` 是 agent 在实施时收到的动态指导文字。v1.9.0 起共享 apply 模板还加了一条 **pause-on-scope** 护栏（`src/core/templates/workflows/apply-change.ts`）：任务需要的工作超出 spec/tasks 描述，或想靠 drop / narrow / defer / accept exceptions 塞进范围时，必须把新增范围摊开并暂停，不能默默缩小指定行为；只有指定行为全部落地才能勾 `- [x]`。这是 prompt 合同，不是 CLI 硬校验。
 
 ---
 

@@ -16,7 +16,7 @@
 输入：
 
 - 目标项目路径。
-- 可选 `--tools`，用于非交互指定配置哪些 AI 工具。
+- 可选 `--tools`，用于非交互指定配置哪些 AI 工具（v1.9.0 起含 `command-code`）。
 - 可选 `--profile`，覆盖全局配置中的 profile。
 - 全局配置中的 `profile`、`delivery`、`workflows`。
 - （v1.2.0+）自动检测项目目录中已存在的 AI 工具目录（如 `.claude/`、`.cursor/`），预选检测到的工具。
@@ -68,7 +68,7 @@
 - 它不是业务数据升级工具。
 - 它主要更新的是“工具接入层”。
 - v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
-- v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。
+- v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。v1.9.0 起，若 `.agents` 已被 `agents` 目标占用，遗留 Codex 升级不会劫持该树。
 
 ## 2. 发现当前项目里有什么
 
@@ -98,6 +98,7 @@
 
 - change 列表的“完成度”主要来自 tasks 进度，而不是 artifact graph。
 - `list` 是概览，不是 workflow 决策引擎。
+- v1.9.0 起，项目外跑 `list`（没有 OpenSpec root、也没有遗留 `openspec/project.md`）会失败并非零退出，不再假装空项目通过。`--json` 失败时带共享诊断而不是空数组。
 
 ### `openspec view`
 
@@ -159,6 +160,7 @@
 输入：
 
 - 指定的 change/spec，或通过 `--all`、`--changes`、`--specs` 批量发现的对象。
+- v1.9.0 起可选 `--archived`：只检查 `changes/archive/` 里 tasks 是否全部勾完（独立 scope，不改其他 validate 调用）。
 - strict 模式开关。
 - 并发配置。
 
@@ -172,11 +174,13 @@
 - 是进入 archive 前最关键的守门器之一。
 - 对 change 来说，重点检查 delta spec 结构和 scenario 完整性。
 - 对 spec 来说，重点检查正式规范结构与 requirement/scenario 完整性。
+- `--archived` 适合 CI / pre-commit，抓“归档时 tasks 没勾完”的工作；它不重验已应用的 delta。
 
 容易误解：
 
 - 它不是检查代码编译或测试结果。
 - 它主要检查的是 OpenSpec 文档语义结构。
+- `--all`/`--changes`/`--specs` 在项目外会失败（v1.9.0），不要把空结果当成“全部通过”。单条 `validate <name>` 不变。
 
 ## 5. 完成并 archive change
 

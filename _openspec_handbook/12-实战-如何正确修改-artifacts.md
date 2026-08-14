@@ -10,7 +10,7 @@ OpenSpec 有两种 profile（配置模式）：
 
 这里列出的 `/opsx:*` 是 Claude 的 OpenSpec workflow command，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`；Codex v1.8.0 使用 `$openspec-*` skills。下文命令表要按宿主 adapter 理解，不能把 slash 语法推广到所有工具。
 
-> **v1.8.0 artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的正式 metadata，不能和 delta spec 文件共存。配置方面，artifact `rules` 只影响 artifact 生成；Apply/Archive 读 project `context` 与 `operations.apply/archive.guidance`。（v1.7.0 引入，v1.8.0 不变。）
+> **v1.9.0 artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的正式 metadata，不能和 delta spec 文件共存。配置方面，artifact `rules` 只影响 artifact 生成；Apply/Archive 读 project `context` 与 `operations.apply/archive.guidance`。scenario-loss 认所有 `####` 子标题；`schema fork` 保留 YAML 格式。
 
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|

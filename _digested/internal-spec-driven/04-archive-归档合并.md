@@ -108,7 +108,7 @@ interface DeltaPlan {
 解析过程：
 1. 用 `splitTopLevelSections` 按 `##` headers 切分内容
 2. 大小写不敏感匹配四个 section 类型
-3. `parseRequirementBlocksFromSection()`：提取 `### Requirement:` header 和 body 内容（包括 `#### Scenario:`）
+3. `parseRequirementBlocksFromSection()`：提取 `### Requirement:` header 和 body 内容（包括所有 `#### ` 级 scenario；v1.9.0 起不限于字面 `#### Scenario:`）
 4. `parseRemovedNames()`：提取 requirement 名（可以是 `### Requirement:` header 或 bullet 中的引用）
 5. `parseRenamedPairs()`：解析 `FROM:` / `TO:` 对
 
@@ -315,7 +315,7 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 
 ---
 
-## 8. 当前行为摘要（v1.8.0）
+## 8. 当前行为摘要（v1.9.0）
 
 | 变更 | 影响位置 | 说明 |
 |---|---|---|
@@ -329,3 +329,6 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 | 重复 canonical 名拒绝 | `archive.ts` | main spec 存在重复 canonical requirement 名时拒绝归档，避免 delta reconciliation 压掉重复块之一（v1.8.0） |
 | note-loss 提示 | `archive.ts` | 重建 spec 会丢失 requirement 旁的 note（缩进 note、未识别 heading）时，先指名会删的内容与迁移位置；merge 本身不自动搬移（v1.8.0） |
 | 交互失败可重跑 | `archive.ts` 的 `confirmOrBlock()` | agent 以 stdin closed 跑 archive 时，每个被阻塞的确认会给出需要哪个 flag 和携带原 flags 的可粘贴重跑（如 `openspec archive <name> --skip-specs --yes`）；无 change 名时从 exit 0 吞错改为 exit 1 请求 change 名（v1.8.0） |
+| 非 TTY 无 ANSI | `src/utils/interactive.ts` | stdout/stdin 不是终端时 confirm 走纯文本；无 change 名时要求先传入名字，不画菜单。避免捕获日志里塞满 cursor-move 转义（v1.9.0） |
+| spec 重建保空白 | `specs-apply.ts` | 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF，避免 Markdown whitespace 检查失败（v1.9.0） |
+| scenario-loss 认所有 `####` | `requirement-text.ts` `SCENARIO_HEADER` | requirement 下任何非 fence 的 `#### ` 子标题都算 scenario；比较时剥可选 `Scenario:` 前缀（v1.9.0） |

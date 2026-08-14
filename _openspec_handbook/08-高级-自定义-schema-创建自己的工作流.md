@@ -8,7 +8,7 @@
 
 写完 config.yaml 之后，你迟早会遇到一个时刻：**config 的 rules 不够用了**。
 
-v1.8.0 先分清两种“不够”：Apply/Archive 只是需要短稳定项目步骤时，用 `operations.apply/archive.guidance`，不必 fork schema；只有想改变 artifact、依赖、template 或 apply gate/结构时，才需要自定义 schema。
+v1.9.0 先分清两种“不够”：Apply/Archive 只是需要短稳定项目步骤时，用 `operations.apply/archive.guidance`，不必 fork schema；只有想改变 artifact、依赖、template 或 apply gate/结构时，才需要自定义 schema。
 
 不是规则写得不够好——而是你发现，你想改的东西 config 根本管不到。你想让 proposal 问不同的问题、想让 specs 换一种格式、想让 tasks 少一个阶段、甚至想把整个 artifact 流程换成你自己的。这些 config.yaml 做不到。
 
@@ -170,7 +170,7 @@ openspec schema fork spec-driven my-custom
 #     tasks.md
 ```
 
-fork 之后再改 instruction 和 template——artifact 名和 DAG 默认和源 schema 一样。想改 DAG 也在这个基础改。
+fork 之后再改 instruction 和 template——artifact 名和 DAG 默认和源 schema 一样。想改 DAG 也在这个基础改。v1.9.0 起 fork **保留源 YAML 的注释、block-scalar 风格和 key 顺序**（原地改名，不再 parse 后再 dump），所以 fork 出来的 `schema.yaml` 看起来应该还像原来那份。
 
 ### Init（从零）
 

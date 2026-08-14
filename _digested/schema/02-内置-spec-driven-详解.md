@@ -14,7 +14,7 @@
 
 - **artifact DAG**（`requires`）：`proposal → {specs, design} → tasks` 的依赖是工具判断"下一个该生成什么 / 是否完成"的依据；同级推荐顺序按 schema 声明为 specs 再 design，自己加/漏 artifact 会破坏 `apply`/`status` 的判断。
 - **delta 操作段头**（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）：archive 靠它解析；写错段头 → delta 不被识别。
-- **格式**：`### Requirement: <name>`、scenario **必须 4 个 `#`**（`#### Scenario:`，写成 3 个或 bullet 会**静默失败**）、requirement 正文建议含 `SHALL`/`MUST`——v1.8.0 起这是 guidance 而非硬错误：正文整体缺失才 ERROR，正文在但缺关键字仅 WARNING（strict 模式才强制）。
+- **格式**：`### Requirement: <name>`、scenario **必须 4 个 `#`**（写成 3 个或 bullet 会**静默失败**）。约定写法是 `#### Scenario:`；v1.9.0 起 loss guard / 计数认 requirement 下任何 `#### ` 子标题（如 `#### Edge case`），但作者仍应写 `#### Scenario:`。requirement 正文建议含 `SHALL`/`MUST`——v1.8.0 起这是 guidance 而非硬错误：正文整体缺失才 ERROR，正文在但缺关键字仅 WARNING（strict 模式才强制）。
 - **能力契约**：proposal 列的 capability 必须与 `specs/<capability-path>/spec.md` 的相对路径一致。内置 guidance 默认举 flat kebab-case 名；v1.7.0 runtime 也支持 `identity/session` 这类 nested path，团队采用它时应在 config/AGENTS 明确约定。
 - **无行为 delta 的边界**：纯重构、工具或文档 change 可在 `.openspec.yaml` 设 `skip_specs: true`；它使 specs artifact 显式 skipped，且不能和任何 delta spec 文件共存。
 

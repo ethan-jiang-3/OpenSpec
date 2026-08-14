@@ -21,7 +21,7 @@
 | `list` | 人类 + 机器 | changes/specs 目录、task progress、mtime | 列表或 JSON 索引 | 帮助选择目标 change/spec | 否 |
 | `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard | 改善浏览体验 | 否 |
 | `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON | 帮助人工审阅和调试解析结果 | 否 |
-| `validate` | 人类 + 机器 | change delta specs、正式 specs | 合法性报告、退出码 | 决定是否需要修复、是否适合 archive | 否 |
+| `validate` | 人类 + 机器 | change delta specs、正式 specs；`--archived` 时为 archive 目录的 tasks | 合法性报告、退出码 | 决定是否需要修复、是否适合 archive；`--archived` 给 CI 抓未勾完的归档工作 | 否 |
 | `archive` | 人类 + OPSX | change 内容、主 specs、validate 结果 | 更新后的 specs、archive 目录、报告 | 结束 change 生命周期 | 是 |
 | `config` | 人类 | global config、workflow 选择 | 配置变更与摘要 | 影响后续 `init/update` 投递结果 | 是 |
 | `schema` | 高级用户/作者 | schema 搜索路径、schema.yaml、templates | schema 列表、校验结果、脚手架 | 改变 workflow 定义层 | 可能 |
@@ -31,7 +31,7 @@
 | `instructions apply` | agent workflow + 高级用户 | apply config、context files、tasks、project context、operation guidance | apply instruction 包 | 决定是否进入代码实施阶段 | 否 |
 | `instructions archive` | agent workflow + 高级用户 | change、project context、`operations.archive.guidance` | archive operation input | 为 archive skill 提供只读指引 | 否 |
 | `templates` | 高级用户/工具 | schema 解析路径、artifact templates | 模板路径与来源 | 帮助调试模板覆盖与解析 | 否 |
-| `schemas` | 高级用户/工具 | project/user/package schemas | schema 列表与来源 | 帮助发现可用 workflow 模型 | 否 |
+| `schemas` | 高级用户/工具 | project/user/package schemas（canonical root；可 `--store`） | schema 列表与来源 | 帮助发现可用 workflow 模型 | 否 |
 | `store register` | 人类 | 本地路径、store id、remote（可选） | `~/.openspec/stores/registry.yaml`、`.openspec-store/store.yaml` | 全局注册仓库 checkout | 是 |
 | `store list` | 人类 + 机器 | registry | store 列表及 backend | 发现已注册的 store | 否 |
 | `store unregister` | 人类 | store id | 从 registry 删除条目 | 注销不再需要的 store | 是 |

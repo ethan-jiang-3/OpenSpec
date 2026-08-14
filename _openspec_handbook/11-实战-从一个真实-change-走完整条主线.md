@@ -3,7 +3,7 @@
 > 前面的几篇已经把概念一层层拆开了。
 > 这一篇不再单独讲概念，而是用一个完整案例，把 `propose → apply → archive` 整条线真正走一遍。
 
-> **v1.8.0 实战校正。** 下文 `/opsx:*` 为 Claude 示例，Codex 运行相应 `$openspec-*` skills（v1.8.0 下装在 `.agents/skills/`）。case 中的 capability 可使用嵌套 relative path；新 capability delta 可写 `## Purpose`，archive 会带入新 main spec。若之前已正确 sync，archive 对完全一致 delta 允许幂等 no-op，但归档前仍必须验证。（v1.7.0 引入，v1.8.0 不变。）
+> **v1.9.0 实战校正。** 下文 `/opsx:*` 为 Claude 示例，Codex 运行相应 `$openspec-*` skills（装在 `.agents/skills/`）。case 中的 capability 可使用嵌套 relative path；新 capability delta 可写 `## Purpose`，archive 会带入新 main spec。若之前已正确 sync，archive 对完全一致 delta 允许幂等 no-op，但归档前仍必须验证。apply 时若任务超出 spec 范围，应停下来报，不要默默缩小指定行为。
 
 ---
 

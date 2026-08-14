@@ -115,7 +115,7 @@ openspec archive <change> -y
 
 ### 误区 1：以为 `validate` 能查出 specs 和代码对不上
 
-`validate` 是**真实的 `openspec` CLI 命令**（和 `archive` 同列，**不是** `/opsx:` slash 技能）——别误以为它不存在或是什么隐藏功能。但它只是**结构 linter**：只查文件结构（段头/`SHALL`/`MUST`/scenario/僵尸 change），**不跨文件对账、抓不出 specs↔代码漂移**（v1.8.0 起唯一例外：`validate <change>` 能拿到主 spec 时会对 MODIFIED 块做 scenario-loss 前置检测）；而且 `archive` 自己默认就先校验，平时不用单独跑它。所以"specs 对不对得上代码"靠走完四步圈的习惯，不是 `validate`。（完整边界见 [`02` 缺口一](../../_digested/specs_truth/02-漂移与噪声-为什么主specs会失真.md) 和 [`06` validate 参考](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
+`validate` 是**真实的 `openspec` CLI 命令**（和 `archive` 同列，**不是** `/opsx:` slash 技能）——别误以为它不存在或是什么隐藏功能。但它只是**结构 linter**：只查文件结构（段头/`SHALL`/`MUST`/scenario/僵尸 change），**不跨文件对账、抓不出 specs↔代码漂移**（v1.8.0 起唯一例外：`validate <change>` 能拿到主 spec 时会对 MODIFIED 块做 scenario-loss 前置检测；v1.9.0 起任何 `#### ` 子标题都算 scenario。`--archived` 另查 archive 里未勾完的 tasks，仍然不是代码对账）；而且 `archive` 自己默认就先校验，平时不用单独跑它。所以"specs 对不对得上代码"靠走完四步圈的习惯，不是 `validate`。（完整边界见 [`02` 缺口一](../../_digested/specs_truth/02-漂移与噪声-为什么主specs会失真.md) 和 [`06` validate 参考](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
 
 ### 误区 2：手改主 spec 最快
 
@@ -141,7 +141,7 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 
 ## 参考来源
 
-源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
+源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

@@ -1,6 +1,6 @@
 # 09 · 高级：Capability 规划、身份与 specs 漂移维护
 
-> **适用 OpenSpec v1.8.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
+> **适用 OpenSpec v1.9.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
 
 ## 先回答：为什么这事值得你操心
 
@@ -15,7 +15,7 @@
 | 标题或目录名被改、没走 RENAMED | 历史 delta 和当前 spec 全对不上 → 下一次正常的 archive 直接 `not found`、**整次 archive 原子中止**，工作卡在半路（本 repo 的 `simplify-skill-installation` 就是 16 条目标全 `not found`，连本该成功的部分也一并没落地）|
 | 废弃的 change 还挂在 active | agent 以为有一堆"进行中方向"，被假信号带偏，优先级和判断全乱 |
 
-更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，archive 回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**——`validate` 只做结构检查、不做跨文件对账，`archive` 只在那一刻匹配一次。（v1.8.0 起有一个收窄的例外：`validate <change>` 能拿到主 spec 时，会对 MODIFIED 块做 **scenario-loss 前置检测**——省略主 spec 仍有的 scenario 会直接报错；但 specs↔代码漂移仍要人巡检。）
+更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，archive 回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**——`validate` 只做结构检查、不做跨文件对账，`archive` 只在那一刻匹配一次。（v1.8.0 起有一个收窄的例外：`validate <change>` 能拿到主 spec 时，会对 MODIFIED 块做 **scenario-loss 前置检测**——省略主 spec 仍有的 scenario 会直接报错；v1.9.0 起任何 `####` 子标题都算。`--archived` 只查 archive 里 tasks 勾选。specs↔代码漂移仍要人巡检。）
 
 所以维护 specs 不是文档洁癖，而是**保住这套机制本身能成立的地基**。带着这个认知往下读，"specs 按什么组织、为什么会漂"就不再是冷知识——它直接告诉你地基为什么这么脆、你又该怎么守。
 
@@ -27,7 +27,7 @@
 
 - artifact 依赖图：`proposal → {specs, design} → tasks → apply`；在 `skip_specs: true` 的纯重构、工具或文档 change 中，specs artifact 会显式跳过；
 - delta 操作：`## ADDED / MODIFIED / REMOVED / RENAMED Requirements`；
-- 格式规则：每个 requirement 用 `### Requirement: <name>`、每个 scenario **必须** `#### Scenario:`（4 个 `#`，少了静默失败）、requirement 正文建议含 `SHALL`/`MUST`（v1.8.0 起是 guidance 而非硬错误：normal 模式缺失仅 WARNING，strict 模式才强制）；
+- 格式规则：每个 requirement 用 `### Requirement: <name>`、每个 scenario **必须 4 个 `#`**（少了静默失败）。约定写法是 `#### Scenario:`；v1.9.0 起 loss guard 把 requirement 下任何 `#### ` 子标题都算 scenario。requirement 正文建议含 `SHALL`/`MUST`（v1.8.0 起是 guidance 而非硬错误：normal 模式缺失仅 WARNING，strict 模式才强制）；
 - **capability 契约**：有 spec-level 行为改动时，proposal 列出的每个 capability 都应有对应的 `specs/<path>/spec.md`；`skip_specs: true` 只适用于没有此类改动的 change，且不能与 delta specs 共存。
 
 关键一句（schema 原文）：
@@ -153,7 +153,7 @@ graph TD
 
 ## 这就是 specs 漂移的根源
 
-`openspec/specs/` 号称 source of truth，但用着用着就和代码对不上了。根因就是上面这套身份模型 + 一个事实：**没有任何工具持续对账**（`validate` 只做结构检查、不做跨文件对账——v1.8.0 起仅在 `validate <change>` 对 MODIFIED 块做 scenario-loss 前置检测时读主 spec；`archive` 只在那一刻匹配一次）。
+`openspec/specs/` 号称 source of truth，但用着用着就和代码对不上了。根因就是上面这套身份模型 + 一个事实：**没有任何工具持续对账**（`validate` 只做结构检查、不做跨文件对账——v1.8.0 起仅在 `validate <change>` 对 MODIFIED 块做 scenario-loss 前置检测时读主 spec，v1.9.0 起任何 `####` 子标题都算；`archive` 只在那一刻匹配一次）。
 
 漂移，就是**两层"名字身份"失配**：
 

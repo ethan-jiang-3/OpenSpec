@@ -18,6 +18,8 @@ interface PlanningHome {
 
 `resolveCurrentPlanningHomeSync()` 从当前目录向上找 `openspec/` 目录。找不到时，如果 `allowImplicitRepoRoot !== false`，把当前目录当 implicit root。
 
+v1.9.0 起，**会误报空项目通过的命令关掉了这条 fallback**：`list` 只在 cwd 仍有遗留 `openspec/project.md` 时允许 implicit；`validate --all/--changes/--specs` 设 `allowImplicitRoot: false`。项目外跑它们会非零退出，不再 exit 0 报空列表。单条 `validate <name>` 和其他有意使用 implicit root 的工作流不变。`openspec schemas` 走同一套 canonical root selection，并接受 `--store <id>`。
+
 ## Store 模型
 
 多仓库协同通过 store 模型实现：

@@ -136,6 +136,7 @@ v1.8.0 起，进度计数与 `instructions apply` 的 task 列表共享同一个
 | Always read context files before starting | 不凭记忆 |
 | Task ambiguous → pause and ask | 不猜 |
 | Implementation reveals issues → suggest artifact updates | 不硬写 |
+| Task needs work beyond the spec → surface added scope and pause | 不默默缩小/推迟指定行为（v1.9.0） |
 | Keep changes minimal and scoped | 不夹带 |
 | Update checkbox immediately after each task | 不拖延 |
 | Use contextFiles from CLI, don't assume file names | 不硬编码 |

@@ -28,6 +28,7 @@
 - 核心对象：change/spec 列表。
 - 输出语义：概览。
 - 是否适合做 workflow 决策：有限。
+- v1.9.0：项目外不再 silent pass；仅遗留 `openspec/project.md` 项目保留 cwd fallback。
 - 主要边界：知道“有什么”，但不知道“下一步怎么走”。
 
 ### `view`
@@ -48,9 +49,9 @@
 ### `validate`
 
 - 角色：结构守门器。
-- 核心对象：change delta specs 与正式 specs。
+- 核心对象：change delta specs 与正式 specs；`--archived` 则是 archive 目录的 tasks 完成度。
 - 输出语义：是否合法、有哪些 issues、下一步修复建议。
-- 典型边界：它不管代码是否编译，不管测试是否通过，它主要管 OpenSpec 文档结构。
+- 典型边界：它不管代码是否编译，不管测试是否通过，它主要管 OpenSpec 文档结构。`--archived` 不重验已应用的 delta。bulk 标志（`--all/--changes/--specs`）在项目外非零退出。
 
 ### `archive`
 
@@ -96,7 +97,7 @@
 ### `schemas`
 
 - 角色：schema 发现接口。
-- 边界：暴露流程定义空间，不负责具体 change 生命周期。
+- 边界：暴露流程定义空间，不负责具体 change 生命周期。v1.9.0 起走 canonical root selection，接受 `--store <id>`，拒绝 `--store-path`。
 
 ## 五、配置与定制类
 

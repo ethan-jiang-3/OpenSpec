@@ -13,7 +13,7 @@
 **A**: 传统文档是"写完就不改"，OpenSpec 是"边做边改"。而且 OpenSpec 用 delta spec 表达增量变化，不是每次重写整份文档。
 
 ### Q3: 我必须用 AI 工具吗？
-**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、GitHub Copilot、Devin Desktop（原 Windsurf）、Kimi Code、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode、Trae、Oh My Pi、CodeArts Agent、Hermes Agent、ZCode、MiniMax Code、Rovo Dev CLI 等；另有 vendor-neutral 的 `agents` 目标（`--tools agents`，写入 `.agents/skills/`）。完整列表以当前 `openspec init` 输出为准。
+**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、GitHub Copilot、Devin Desktop（原 Windsurf）、Kimi Code、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode、Trae、Oh My Pi、CodeArts Agent、Hermes Agent、ZCode、MiniMax Code、Rovo Dev CLI、Command Code 等；另有 vendor-neutral 的 `agents` 目标（`--tools agents`，写入 `.agents/skills/`）。完整列表以当前 `openspec init` 输出为准。
 
 ---
 
@@ -41,6 +41,8 @@
 - 在 apply 过程中回头改 proposal/design
 - 跳过某些步骤（比如简单 change 可以不写 design）
 - 这就是"Actions, not phases"的意思
+
+v1.9.0 起 apply 模板要求：任务需要的工作超出 spec 描述时，停下来把新增范围摊开，不要默默缩小或推迟指定行为；勾完 checkbox 只表示指定行为已经落地。
 
 ### Q7: 什么时候该用 core profile，什么时候用 custom？
 **A**:
@@ -123,7 +125,9 @@ v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 sp
 
 v1.8.0 追加（archive 失败/被卡时的两种出路）：
 1. **退役整个 capability**：如果这个 change 的 REMOVED 拿掉了某 capability 的**最后一个 requirement**，archive 原本会以 "must have at least one requirement" 中止；在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后，archive 会删除该 capability 的整个 main spec。这适合"整个 capability 退役"，不能用来绕过真实行为变更。输出会列出被删 section，并给可粘贴的 `git checkout` 恢复命令；`--no-validate` 永不触发退役。
-2. **非交互下被确认阻塞**：agent/CI 里 stdin closed 时，archive 会指出缺哪个 flag 并给**携带原 flags 的可重跑命令**（如 `openspec archive <name> --skip-specs --yes`）——直接粘贴重跑即可，不必凭空猜参数；不带 change 名时它现在会以 exit 1 明确请求 change 名，而不是静默吞错。
+2. **非交互下被确认阻塞**：agent/CI 里 stdin closed 时，archive 会指出缺哪个 flag 并给**携带原 flags 的可重跑命令**（如 `openspec archive <name> --skip-specs --yes`）——直接粘贴重跑即可，不必凭空猜参数；不带 change 名时它现在会以 exit 1 明确请求 change 名，而不是静默吞错。v1.9.0 起非 TTY 不再往捕获日志里写 ANSI；无 change 名时要求先传入名字，不画菜单。
+
+想在 CI 里抓“归档时 tasks 没勾完”的工作，用独立的 `openspec validate --archived`（不改普通 `validate` 行为，也不重验已应用的 delta）。
 
 ### Q17: 不 archive 会怎样？
 **A**: specs/ 基线不会更新，下一个 change 就没有正确的基线。多人协作时会乱套。
@@ -223,6 +227,7 @@ specs/
 - **v1.6.0 新增**：Trae、Oh My Pi
 - **v1.7.0 新增**：CodeArts Agent、Hermes Agent、ZCode
 - **v1.8.0 新增**：MiniMax Code（全局 skills-only）、Atlassian Rovo Dev CLI、GitHub Copilot 一等支持（本地 skill + opt-in cloud agent）、vendor-neutral `agents` 目标（`.agents/skills/`，与 Codex 共享根）
+- **v1.9.0 新增**：Command Code（`.commandcode/skills/` + `/opsx-*` slash commands）
 - 也可以直接用 CLI（不用任何 AI 工具）
 
 ### Q27: 怎么安装 OpenSpec 到我的 AI 工具？

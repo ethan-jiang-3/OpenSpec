@@ -146,8 +146,11 @@ formatFile(content: CommandContent): string
 | Codex | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 skills-only；以 `$openspec-*` 调用，`.codex` 是 legacy 迁移源 |
 | agents（通用） | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 vendor-neutral 目标，与 Codex 共享 `.agents` 根 |
 | GitHub Copilot | `.github/skills/` 等 | v1.8.0 本地 skill + opt-in cloud coding-agent 文件（见下） |
+| Command Code | `.commandcode/skills/` + `.commandcode/commands/opsx-<id>.md` | v1.9.0 adapter-backed：skills 调用 `/openspec-*`，slash command 为 `/opsx-<id>` |
 
 这个差异很重要：不是所有 command artifacts 都在 repo root 下。delivery 层要尊重每个工具的发现机制。
+
+v1.9.0 起，遗留 Codex 升级路径也遵守同一条 one-writer 规则：若 `.agents` 已被 `agents` 目标占用（marker 或已有树），`openspec update` **不会**凭全局 `~/.codex/prompts` 把 skills 改写成 Codex 语法、也不会翻 ownership；跳过时该工具的 repo-local legacy 文件（如 `.codex/prompts/openspec-*.md`）一并保留。真正的首次 Codex 升级（还没有 `.agents` 树）不受影响。
 
 ## GitHub Copilot：本地 skill 与 opt-in cloud coding-agent
 
@@ -177,7 +180,7 @@ cloud 文件写入 `.github/` 是有侵入性的动作，所以由 `openspec ini
 | shared skill root ownership | `src/core/shared-skill-target.ts`（`.openspec-target` marker） |
 | GitHub Copilot cloud agent | `src/core/github-copilot/cloud-agent.ts` |
 | workflow templates | `src/core/templates/workflows/` |
-| command adapters | `src/core/command-generation/` |
+| command adapters | `src/core/command-generation/`（含 `adapters/command-code.ts`） |
 | init/update | `src/core/init.ts`、`src/core/update.ts` |
 | profile drift | `src/core/profile-sync-drift.ts` |
 | migration / cleanup | `src/core/migration.ts`、`src/core/legacy-cleanup.ts` |

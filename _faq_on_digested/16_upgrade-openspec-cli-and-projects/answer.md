@@ -1,6 +1,6 @@
 # 答案：两段式升级——先升全局 CLI，再对每个项目跑 `openspec update`
 
-> **源码基线**：以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
+> **源码基线**：以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
 
 ## 一句话结论
 
@@ -47,7 +47,7 @@ CLI 会识别自己是**怎么被装的**（`detectPackageManager()`），然后
 
 ### 为什么项目还要再动一次
 
-skills/commands 是 CLI **用自己当前版本的模板生成**的，生成文件里嵌入了 `OPENSPEC_VERSION`。旧 CLI 生成的文件只描述旧工具、旧 workflow、旧语义——例如 v1.8.0 的 `--tools agents`（`.agents/skills/`）、GitHub Copilot cloud 文件、`.openspec-target` ownership marker，旧 CLI 根本不知道。所以「升级全局 CLI」≠「项目自动跟上」。
+skills/commands 是 CLI **用自己当前版本的模板生成**的，生成文件里嵌入了 `OPENSPEC_VERSION`。旧 CLI 生成的文件只描述旧工具、旧 workflow、旧语义——例如 v1.9.0 的 Command Code / `validate --archived`，或 v1.8.0 的 `--tools agents`（`.agents/skills/`）、GitHub Copilot cloud 文件、`.openspec-target` ownership marker，旧 CLI 根本不知道。所以「升级全局 CLI」≠「项目自动跟上」。
 
 ### `openspec update` 在项目里做了什么（`src/core/update.ts` 的 `UpdateCommand`）
 
@@ -77,9 +77,11 @@ openspec update                          # 每个项目跑一次（或带 --forc
 
 `openspec update` 是从「当前这个 CLI」的模板生成文件的。**先跑 update、后升 CLI** = 用旧 CLI 生成旧文件，等于白做，升完还得再跑一遍。所以正确姿势是：先升全局 CLI（或让 `openspec update` 的交互提示替你升），**升完再对每个项目跑一次 `openspec update`**。
 
-## v1.8.0 的具体提醒（来自变更日志 0005）
+## v1.9.0 的具体提醒（来自变更日志 0006）
 
-`git merge` 拉进 v1.8.0 源码只会改 `git describe` 和 `package.json` 版本，**不会**改变 PATH 上的 CLI。要让 `--tools agents`、`--copilot-cloud`、`retire_capabilities` 真正可用，每台机器的全局 CLI 都要独立升级到 v1.8.0，然后各项目 `openspec update`（见 [`0005-v1.7.0-to-v1.8.0.md`](../../_digested/_change_log/0005-v1.7.0-to-v1.8.0.md) 的「验收基线」）。
+`git merge` 拉进 v1.9.0 源码只会改 `git describe` 和 `package.json` 版本，**不会**改变 PATH 上的 CLI。要让 `--tools command-code`、`validate --archived` 真正可用，每台机器的全局 CLI 都要独立升级到 v1.9.0，然后各项目 `openspec update`（见 [`0006-v1.8.0-to-v1.9.0.md`](../../_digested/_change_log/0006-v1.8.0-to-v1.9.0.md) 的「验收基线」）。v1.8.0 引入的 `--tools agents` / Copilot / `retire_capabilities` 仍然需要 ≥1.8.0 的 CLI。
+
+v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题：若该目录已被 `agents` 目标占用，不会改写成 Codex 语法，也不会清掉被跳过工具的 repo-local legacy 文件。
 
 ## 相关材料
 

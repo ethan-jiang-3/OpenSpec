@@ -1,6 +1,8 @@
 # 答案：OpenSpec 上游 Roadmap、主要问题与社区状况
 
-> **当前基线（2026-08-08）**：本地源码与 CLI 都是 OpenSpec **v1.8.0**（release tag `v1.8.0` = `d578896`；`e50bd09` 为其后增量）。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
+> **当前基线（2026-08-15）**：本地源码与 CLI 应对齐 OpenSpec **v1.9.0**（release tag `v1.9.0` = `2826b88`）。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
+>
+> **v1.9.0 对本 FAQ 的追加**：Command Code（`.commandcode`）；`validate --archived`；bulk `list`/`validate --all`/`schemas` 在项目外非零退出；scenario-loss 认所有 `####` 子标题；apply 超出 spec 必须停下来报；archive 非 TTY 无 ANSI、重建 spec 保空白；`schema fork` YAML 保真；遗留 Codex 升级不抢 `.agents`。#1523 task-numbering 已在 v1.8.0 合入点 `e50bd09` 覆盖。
 >
 > **v1.8.0 对本 FAQ 的追加**：新增 vendor-neutral `agents` 目标（`--tools agents`，与 Codex 共享 `.agents` 根）；GitHub Copilot 一等支持（本地 skill + opt-in cloud coding-agent 文件）；`retire_capabilities` 支持删除已空 capability 的 main spec；`status` 增加 `isPlanningComplete`；validate 的 SHALL/MUST 在 normal 模式降为 guidance、并前置检测 MODIFIED scenario-loss；archive 在无法交互时给出可重跑命令。
 >
@@ -14,7 +16,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，补入当前 v1.8.0）
+### 1.1 已交付（历史至 v1.6，补入当前 v1.9.0）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -25,6 +27,7 @@
 | v1.6.0-beta.1 | Canonical resolution 统一、auto-approve CLI | — |
 | v1.7.0 | nested main specs、`skip_specs`、operation guidance / `instructions archive`、Purpose carry-through、early-sync no-op、Codex skills-only | v1.7.0 同步的当前依据 |
 | v1.8.0 | vendor-neutral `agents` 目标（`.agents/skills/`）、GitHub Copilot（本地 + opt-in cloud）、MiniMax/Rovo、`retire_capabilities`、`status.isPlanningComplete`、validate SHALL/MUST 放宽 + scenario-loss 前置、archive 可重跑命令 | v1.8.0 同步的当前依据（见 [`0005`](../../_digested/_change_log/0005-v1.7.0-to-v1.8.0.md)） |
+| v1.9.0 | Command Code、`validate --archived`、bulk list/validate 拒绝空 implicit root、scenario 认所有 `####`、apply pause-on-scope、archive 非 TTY / spec 重建保真、`schema fork` YAML 保真、遗留 Codex 不抢 `.agents` | v1.9.0 同步的当前依据（见 [`0006`](../../_digested/_change_log/0006-v1.8.0-to-v1.9.0.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
@@ -125,7 +128,7 @@ v1.0.0 是迄今为止最大的 breaking change：
 - **手动步骤**：`project.md` 不会自动删除，用户需要手动把有用内容迁移到 `config.yaml` 的 `context:` 字段
 - **迁移命令**：`openspec init`（会检测旧文件、引导清理）；CI 环境：`openspec init --force --tools claude`
 
-此后（v1.0.x–v1.6.x）的历史判断不能当作当前结论。v1.7.0 已实质改变 nested path、operation inputs、skip-spec change、archive/sync 与 Codex delivery，v1.8.0 又加入 `agents` 目标、GitHub Copilot、`retire_capabilities` 与 status/validate 的改动；计划中的 schema 重命名仍应以当前 release note/源码验证。
+此后（v1.0.x–v1.6.x）的历史判断不能当作当前结论。v1.7.0 已实质改变 nested path、operation inputs、skip-spec change、archive/sync 与 Codex delivery，v1.8.0 又加入 `agents` 目标、GitHub Copilot、`retire_capabilities` 与 status/validate 的改动，v1.9.0 再加入 Command Code、`validate --archived` 与 scenario/root/fork 保真；计划中的 schema 重命名仍应以当前 release note/源码验证。
 
 ---
 

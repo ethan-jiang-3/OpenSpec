@@ -170,6 +170,8 @@ for each task where done = false:
 
 apply 的 task 顺序来自 `tasks.md`，不是 CLI 再算一次 DAG。CLI 只解析 checkbox 和进度。
 
+v1.9.0 起 apply 模板要求：若任务需要的工作**超出 spec/tasks 描述**，或你想靠缩小、推迟、接受例外来塞进范围，必须把新增范围摊开并暂停，不要默默吸收；只有指定行为全部落地才能勾 `- [x]`。这是 skill/command 文本，不是 CLI 硬门。
+
 ## Step 7：实施代码并更新 checkbox
 
 apply 是唯一真正修改业务代码的阶段。agent 可以改：
@@ -277,7 +279,7 @@ Completed this session:
 
 ## 参考来源
 
-源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
+源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

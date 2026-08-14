@@ -2,7 +2,7 @@
 
 本 FAQ 的 answer（hub [`answer.md`](answer.md) + 四条路 [`answer-beginner.md`](answer-beginner.md) / [`answer-intermediate.md`](answer-intermediate.md) / [`answer-expert.md`](answer-expert.md) / [`answer-guru.md`](answer-guru.md)）用到的所有源码与文档引用，集中在这里，避免分散在正文干扰阅读。
 
-源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线。`src/core/project-config.ts` 还解析 `operations`；Apply/Archive instructions 会接收 project `context` 和对应 `operations.*.guidance`。下方任何只列 context/rules、或说 Apply 不接收 config 的旧来源说明，均以这个当前边界为准。
+源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线。`src/core/project-config.ts` 还解析 `operations`；Apply/Archive instructions 会接收 project `context` 和对应 `operations.*.guidance`。下方任何只列 context/rules、或说 Apply 不接收 config 的旧来源说明，均以这个当前边界为准。
 
 ## 源码（OpenSpec CLI）
 

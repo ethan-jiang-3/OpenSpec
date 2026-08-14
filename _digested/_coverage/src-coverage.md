@@ -25,7 +25,7 @@
 | `src/commands/workset.ts`、`src/commands/workset-input.ts`、`src/commands/workset-prompts.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `src/commands/doctor.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter） |
 | `src/core/shared/skill-generation.ts` | `../mechanisms/02-tool-delivery.md` |
 | `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md` |
 | `src/core/init.ts`、`src/core/update.ts` | `../mechanisms/02-tool-delivery.md` |

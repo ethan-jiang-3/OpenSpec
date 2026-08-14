@@ -17,7 +17,7 @@
 
 主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。
 
-> **v1.8.0 当前边界。** capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（v1.8.0 下装在 `.agents/skills/`）。
+> **当前边界（v1.9.0）。** v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.9.0 起非 TTY 不画菜单；`validate --archived` 可单独检查 archive 里未勾完的 tasks。
 
 ![Archive-ready 到 archived 的流程](figures/archive-ready-to-archived.svg)
 
@@ -127,7 +127,7 @@ CLI 会调用 `Validator.validateChangeDeltaSpecs()`。这里如果有 ERROR，�
 Validation failed. Please fix the errors before archiving.
 ```
 
-这很重要：archive 是把 delta spec 写进正式 baseline 的入口，所以 delta spec 的结构错误不能被静默吸收。v1.8.0 额外把 archive 会拒绝的两种问题前置到 `validate`：① MODIFIED requirement 省略了主 spec 仍有的 scenario（在 authoring 阶段就失败，信息指名要抄回的 scenarios）；② main spec 中存在重复 canonical requirement 名时 archive 直接拒绝，避免 reconciliation 压掉重复块之一。
+这很重要：archive 是把 delta spec 写进正式 baseline 的入口，所以 delta spec 的结构错误不能被静默吸收。v1.8.0 额外把 archive 会拒绝的两种问题前置到 `validate`：① MODIFIED requirement 省略了主 spec 仍有的 scenario（在 authoring 阶段就失败，信息指名要抄回的 scenarios）；② main spec 中存在重复 canonical requirement 名时 archive 直接拒绝，避免 reconciliation 压掉重复块之一。v1.9.0 起 ① 的计数认 requirement 下任何 `#### ` 子标题（不只是字面 `#### Scenario:`）。
 
 ## Step 4：检查 tasks 完成度
 
@@ -333,6 +333,8 @@ Archive 'YYYY-MM-DD-<changeName>' already exists.
 > **v1.8.0 归档/同步边界。** 完全一致的 early-synced ADDED、MODIFIED、REMOVED、RENAMED 会作为幂等 no-op 被接受；近似命中（大小写、空白或不同内容）仍是错误。archive JSON 也可返回 warnings。已有日期前缀的 change 不会被再次叠加日期。
 >
 > **v1.8.0 追加。** ① 若 change 的 REMOVED 拿掉某 capability 最后一个 requirement，原本的 "Spec must have at least one requirement" 中止可在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后变成**删除该 capability 的 main spec**；没有 marker 时行为不变，错误信息会指明这个出路。`--no-validate` 永不触发退役。② archive 在无法交互提问（agent 的 stdin closed）时，会给出需要哪个 flag 与携带原 flags 的可重跑命令（如 `openspec archive <name> --skip-specs --yes`）；不带 change 名时从旧版 exit 0 吞错改为 exit 1 请求 change 名。
+>
+> **v1.9.0 追加。** 非 TTY（stdout 或 stdin 不是终端）时 confirm 走纯文本、不写 ANSI；无 change 名时要求先传入名字，不画交互菜单。重建 spec 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF。
 
 ## Step 12：移动 change 目录
 
@@ -424,7 +426,7 @@ openspec instructions archive --change "<name>" --json
 
 ## 参考来源
 
-源码引用以 v1.8.0（`e50bd09`；release tag `v1.8.0` = `d578896`）为当前基线：
+源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

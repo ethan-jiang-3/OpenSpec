@@ -4,21 +4,21 @@
 
 ## 一句话结论
 
-**从 flat 迁移到 nested 可行，v1.8.0 已完整支持（v1.7.0 起）。但这不是一次普通 archive——capability path 就是它的身份，没有 rename 操作。迁移是一次受控 rebaseline：先冻结 active changes，再搬 main specs，再逐一更新所有指向旧 path 的引用（delta、catalog、config、文档），最后验证并恢复。**
+**从 flat 迁移到 nested 可行，v1.7.0 起已完整支持（v1.9.0 仍如此）。但这不是一次普通 archive——capability path 就是它的身份，没有 rename 操作。迁移是一次受控 rebaseline：先冻结 active changes，再搬 main specs，再逐一更新所有指向旧 path 的引用（delta、catalog、config、文档），最后验证并恢复。**
 
 ---
 
 ## 前提：先确认你运行的是什么
 
-### v1.8.0 的行为基线
+### v1.9.0 的行为基线
 
 在开始之前必须确认环境：
 
 ```bash
-openspec --version  # 应输出 v1.8.0（或更高）
+openspec --version  # 应输出 v1.9.0（或更高）
 ```
 
-v1.8.0（v1.7.0 起）的 `discoverSpecFiles()` 会递归发现任意深度的 `spec.md`，并把**相对于 `specs/` 的目录路径**作为 capability ID。这意味着以下布局是完整生命周期支持的：
+v1.9.0（v1.7.0 起）的 `discoverSpecFiles()` 会递归发现任意深度的 `spec.md`，并把**相对于 `specs/` 的目录路径**作为 capability ID。这意味着以下布局是完整生命周期支持的：
 
 ```text
 openspec/specs/identity/session/spec.md

@@ -41,6 +41,8 @@ cd my-content-project
 openspec schema fork spec-driven writing-pipeline
 ```
 
+v1.9.0 起 fork 用 YAML Document API **原地改名**，保留源 schema 的注释、block-scalar 风格（`|` 不会被折成 `>`）和 key 顺序。不要假设 fork 会“重新 dump 一遍 YAML”。
+
 产物：
 ```
 openspec/schemas/writing-pipeline/

@@ -18,7 +18,9 @@ _change_log/
 ├── 0003-v1.5.0-to-v1.6.0.md   # v1.6.0 + release 后 upstream 快照
 ├── 0004-v1.6.0-to-v1.7.0.md   # 实际源码合入 v1.7.0
 ├── 0005-v1.7.0-to-v1.8.0.md   # 实际源码合入 v1.8.0（agents 目标、GitHub Copilot、retire_capabilities）
+├── 0006-v1.8.0-to-v1.9.0.md   # 实际源码合入 v1.9.0（Command Code、validate --archived、scenario ####、fork 保真）
 ├── _plan-4-v1.7.0-current-docs.md # v1.7.0 当前资料同步计划（覆盖三个资料目录）
+├── _plan-7-v1.9.0-sync-audit.md   # v1.9.0 当前资料同步审计
 └── ...
 ```
 

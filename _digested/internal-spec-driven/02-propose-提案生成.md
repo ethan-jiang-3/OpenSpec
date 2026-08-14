@@ -172,7 +172,7 @@ TO: ### Requirement: <new-name>
 
 **instruction 中的关键约束**：
 
-1. **Scenario 必须用 4 个 hashtag**（`#### Scenario:`）。用 3 个或 bullet 会**静默失败** —— 解析器不识别。
+1. **Scenario 必须用 4 个 hashtag**（`#### `）。用 3 个或 bullet 会**静默失败** —— 解析器不识别。约定写法是 `#### Scenario:`；v1.9.0 起 validate/archive 的 scenario-loss 把 requirement 下任何非 fence 的 `#### ` 子标题都算作 scenario（`#### Edge case` 也会被计数，省略它会在 authoring 阶段失败）。
 2. **每个 requirement 至少要有一个 scenario**。
 3. **MODIFIED 必须复制完整的 requirement block**（包括所有 scenario）—— "Common pitfall: Using MODIFIED with partial content loses detail at archive time."
 4. **用 SHALL/MUST** 写规范性需求，避免 should/may。v1.8.0 起 normal 模式下这条只是 guidance（缺失给 WARNING，非英语 spec 也能过），只有 `validate --strict` 才强制；写作建议不变。

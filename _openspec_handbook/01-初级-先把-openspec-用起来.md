@@ -2,7 +2,7 @@
 
 > 目标不是研究源码，而是先把它当工具用顺手。如果第一反应是"改个功能干嘛这么折腾"——很正常，这一篇先帮你把这股别扭解开。
 
-> **v1.8.0 使用提示。** 本章把 `/opsx:*` 保留为 Claude 的示例入口；Codex 使用 `$openspec-*` skills（如 `$openspec-propose-change`，v1.8.0 下装在 `.agents/skills/`）。两者都由宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
+> **v1.9.0 使用提示。** 本章把 `/opsx:*` 保留为 Claude 的示例入口；Codex 使用 `$openspec-*` skills（如 `$openspec-propose-change`，装在 `.agents/skills/`）。Command Code 用 `.commandcode/skills/` 与 `/opsx-*` commands。三者都由宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
 
 ---
 
