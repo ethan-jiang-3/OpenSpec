@@ -177,7 +177,7 @@ TO: ### Requirement: <new-name>
 3. **MODIFIED 必须复制完整的 requirement block**（包括所有 scenario）—— "Common pitfall: Using MODIFIED with partial content loses detail at archive time."
 4. **用 SHALL/MUST** 写规范性需求，避免 should/may。v1.8.0 起 normal 模式下这条只是 guidance（缺失给 WARNING，非英语 spec 也能过），只有 `validate --strict` 才强制；写作建议不变。
 5. MODIFIED 的 workflow：
-   > 1. 在 `openspec/specs/<capability-path>/spec.md` 中找到已有 requirement
+   > 1. 从 instructions JSON 读取 `planningHome.root`，在 `<planningHome.root>/openspec/specs/<capability-path>/spec.md` 中找到已有 requirement
    > 2. 复制完整的 requirement block（从 `### Requirement:` 到所有 scenario）
    > 3. 粘贴到 `## MODIFIED Requirements` 下，编辑以反映新行为
    > 4. 确保 header 文本完全匹配（对空白不敏感）
@@ -255,6 +255,14 @@ TO: ### Requirement: <new-name>
 
 5. 按依赖排序（先做什么后做什么）
 
+6. v1.10.0 起，每个 checkbox 必须在本项内声明如何验证完成，可用 test、command、observable behavior 或 delivered artifact；只有跨多个实现项的验证才单列 Integration Verification。例如：
+   ```markdown
+   - [ ] 1.1 Add the parser branch — verify: run `pnpm vitest parser`.
+   - [ ] 1.2 Expose the result — verify: invoke the CLI and observe the expected JSON field.
+   ```
+
+这条是 schema instruction 对生成质量的契约，不是 `openspec validate` 会逐条强制的硬规则。
+
 **tasks 在 DAG 中的位置**：`requires: [specs, design]`。是 DAG 最后一个 artifact。完成后 + 所有 applyRequires 满足 → propose 阶段完成。
 
 ---
@@ -295,6 +303,8 @@ specs done + design done → tasks 入度 0
 5. **写到 `resolvedOutputPath`**：绝对路径，agent 直接写
 
 新 capability 的 delta 可以在 requirements 前写 `## Purpose`；v1.7.0 archive 会把可读 Purpose 带入新 main spec。既有 main spec 的 Purpose 不会被 delta 覆盖；没有可读 Purpose 时才回退占位文字。
+
+v1.10.0 的 specs instruction 还把 main-spec 读写根固定为 instructions JSON 中的 `planningHome.root`。它可能指向当前 repo，也可能指向被选择的 store；不能从 cwd 拼 `openspec/specs/...`，也不能把 referenced-store 索引误解成自动加载 spec 正文。
 
 **agent 绝对不应该做的事**：
 - 把 `context`、`rules`、`<project_context>` 标签复制到 artifact 文件中

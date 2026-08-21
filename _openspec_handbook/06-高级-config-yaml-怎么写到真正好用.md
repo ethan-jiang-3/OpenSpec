@@ -3,7 +3,7 @@
 > 到了这一步，问题已经不是"全局约束该放哪"，而是更现实的一层：
 > **就算我知道它们该放进 `config.yaml`，那我到底该怎么写，才不会写成一堆正确但无用的话？**
 
-> **v1.8.0 配置路由。** `context` 进入 artifact instructions，也进入 Apply/Archive；`rules.<artifact>` 只进入同名 artifact；Apply/Archive 专属的短稳定步骤写到 `operations.apply/archive.guidance`。Explore 读取 context/rules，但没有 `operations.explore`。（v1.7.0 引入，v1.8.0 不变。）
+> **v1.10.0 配置路由。** `context` 进入 artifact instructions，也进入 Apply/Archive；`rules.<artifact>` 只进入同名 artifact；Apply/Archive 专属的短稳定步骤写到 `operations.apply/archive.guidance`。`init --language` 只是创建新 config 时写入语言 context 的快捷入口。
 
 本章是手册内唯一维护**可复制 YAML、字段消费者和验证命令**的配置写法页；[05](05-高级-项目级全局约束到底放哪.md) 只负责先判断一条信息该不该进入项目层。
 
@@ -189,6 +189,58 @@ graph TD
 ## `context` 到底该怎么写
 
 `context` 最常见的问题不是少，而是乱。
+
+### 多语言：greenfield 用 flag，brownfield 手改 context
+
+本节是手册中多语言配置的单一事实源。判断只看 config 是否已经存在：
+
+| 项目状态 | 做法 | 原因 |
+|---|---|---|
+| 尚无 `openspec/config.yaml` | `openspec init --language "Portuguese (pt-BR)"` | CLI 创建 config 并写入标准语言 context |
+| 已有 config，尚未写语言约束 | 手工合并到现有 `context: |` | `--language` 会拒绝覆盖，避免丢掉项目背景 |
+| 已有完全相同的三行 context | 可重复运行 init；不会改写内容 | 已满足同一语言种子 |
+| 想翻译结构 heading / `SHALL` / `MUST` | 不要这样做 | prose 可本地化；parser 契约词保持英文 |
+
+greenfield 的完整命令与结果：
+
+```bash
+openspec init --tools none --language "Portuguese (pt-BR)"
+```
+
+```yaml
+schema: spec-driven
+context: |
+  Language: Portuguese (pt-BR)
+  All artifacts must be written in Portuguese (pt-BR).
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+```
+
+brownfield 项目则保留原 context，把语言约束合并进去：
+
+```yaml
+schema: spec-driven
+context: |
+  Project: BuildFlow
+  Stack: TypeScript, React, Node.js
+  Language: 简体中文
+  All artifacts must be written in 简体中文.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+```
+
+合法的本地化 spec 仍长这样：
+
+```markdown
+## ADDED Requirements
+
+### Requirement: 导出任务
+系统 SHALL 允许有权限的用户导出当前筛选结果。
+
+#### Scenario: 导出当前筛选结果
+- **WHEN** 用户点击导出
+- **THEN** 系统返回与筛选条件一致的 CSV
+```
+
+`--language` 的值会先 trim；空值、多行、控制字符、双向/不可见格式字符会失败，序列化后的 context 也受项目 context 大小上限约束。这个 flag 不翻译已有 artifacts，也不改变 schema/template；它只把三行提示写进新 config，后续由 instructions consumer 传给 agent。
 
 很多人会把 `context` 写成：
 

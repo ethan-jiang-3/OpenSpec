@@ -72,13 +72,15 @@ archive    校验 + 把 delta 合进主 spec + 收档      ← ★ specs 只在�
 
 ```bash
 openspec new change fix-<something>      # 这一步就是 propose，脚手架出 change
+# 先从 status/instructions JSON 读取 planningHome.root
+# 再读 <planningHome.root>/openspec/specs/<capability>/spec.md 的完整 requirement
 # 编辑 changes/fix-<something>/specs/<capability>/spec.md：
 #   ## MODIFIED Requirements   ← 整块换成正确版本
 #   ## REMOVED Requirements    ← 要删的，只写名字
 openspec archive fix-<something> -y      # archive 会先校验，再把 delta 合进 spec
 ```
 
-注意：`MODIFIED` 是**整块替换**，名字要和当前 spec 里的标题**逐字一致**，否则 archive 报 not found。
+注意：`MODIFIED` 是**整块替换**，名字要和当前 spec 里的标题**逐字一致**，否则 archive 报 not found。v1.10.0 的 agent instruction 使用 resolved `planningHome.root`，store 场景不要硬编码 cwd 的 `openspec/specs/`；这仍不等于自动 retrieval。
 
 ### 招二：漏了能力（代码有、spec 没）→ propose 用 ADDED 补
 
@@ -103,8 +105,9 @@ openspec 没有"删除 change"的命令，这一步就是文件操作。拿不�
 ### 招四：archive 报 `not found` → 先 grep 当前标题，对齐 delta
 
 ```bash
-# 先看主 spec 里现在到底叫什么名字
-grep -nE "^### Requirement:" openspec/specs/<capability>/spec.md
+# 先从 status/instructions JSON 读取 planningHome.root，赋给 PLANNING_ROOT
+# 再看 resolved root 下的主 spec 现在到底叫什么名字
+grep -nE "^### Requirement:" "$PLANNING_ROOT/openspec/specs/<capability>/spec.md"
 # 把 delta 里的名字改成和 spec 逐字一致，再 archive
 openspec archive <change> -y
 ```
@@ -141,7 +144,7 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 
 ## 参考来源
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

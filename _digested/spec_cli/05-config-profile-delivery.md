@@ -21,11 +21,12 @@
 - `core` profile 会启用默认核心 workflows。
 - `custom` profile 允许用户自定义启用哪些 workflows。
 
-在当前源码里，`core` 默认工作流是 5 个：
+在当前源码里，`core` 默认工作流是 6 个：
 
 - `propose`
 - `explore`
 - `apply`
+- `update`
 - `sync`
 - `archive`
 
@@ -49,6 +50,10 @@
 “这套项目/用户要安装哪几条工作流路径？”
 
 ## 3. `delivery` 是怎么投递
+
+### custom profile 的依赖展开
+
+custom 选择 `archive` 或 `bulk-archive` 时，`getProfileWorkflows()` 会确保 `sync` 在第一个依赖者之前；若已有 `sync`，不重复也不重排其余项。展开后的结果仍是 custom selection，不因“碰巧含 core workflow”而降级成 core。
 
 `delivery` 决定“以什么形式把 workflow 安装进工具”。
 
@@ -98,6 +103,7 @@
 - 哪些工具需要版本更新。
 - 哪些工具虽然版本没变，但配置已经漂移，需要同步。
 - 哪些 workflow 现在不再启用，需要删除对应文件。
+- 本次实际更新的工具是否包含 IDE-resident surface；只有 registry 标为 `requiresIdeRestart` 且确实生成了对应 command/skill 时才提示 restart，CLI-only 工具更新不提示。
 
 所以 `update` 更像“声明式同步器”。
 

@@ -149,13 +149,17 @@ verification blocked until tasks
 - 把 Markdown 发布到 CMS。
 - 把非 spec artifact merge 成某个正式 baseline。
 
+## OpenCode command 参数
+
+若把 workflow 同时投递为 OpenCode command，v1.10.0 adapter 会注入 `$ARGUMENTS`，让用户输入传进生成命令。只在正文还没有该占位符时添加；自定义模板已经显式使用 `$ARGUMENTS` 时不会重复。这个占位符是 OpenCode 的 adapter 语法，不应机械复制到 Claude `/opsx:*` 或 Codex `$openspec-*` 入口。
+
 第一版应把这些写成 tasks：
 
 ```markdown
-- [ ] 3.1 Copy generated skill into the target runtime directory
-- [ ] 3.2 Run or document the target tool refresh step
-- [ ] 3.3 Verify the skill appears in the available skills list
-- [ ] 3.4 Record unresolved runtime assumptions in `verification.md`
+- [ ] 3.1 Copy generated skill into the target runtime directory — verify: list the installed file at the expected path
+- [ ] 3.2 Run or document the target tool refresh step — verify: capture the refresh result or documented command
+- [ ] 3.3 Check runtime discovery — verify: the skill appears in the available skills list
+- [ ] 3.4 Record unresolved runtime assumptions in `verification.md` — verify: inspect the file for every known assumption
 ```
 
 等这些动作稳定后，再考虑专门 delivery adapter 或 validator。

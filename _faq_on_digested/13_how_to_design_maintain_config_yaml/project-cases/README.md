@@ -2,7 +2,7 @@
 
 本目录保存四份**项目特定审计**。它们不是 `config.yaml` 模板，也不是对同类项目自动成立的建议。每份结论只用于解释对应项目为什么需要那样归位；审计其他项目时，必须重新阅读该项目的 schema、runtime owner、policy、代码和实际消费路径。
 
-> **v1.9.0 阅读校正。** 个案中凡是“Apply 不会重收 config”之类表述，只应理解为“artifact `rules` 不会进入 Apply”。当前 OpenSpec 会把 project `context` 与 `operations.apply/archive.guidance` 分别交给 Apply/Archive；这不改变这些案例对 runtime owner、change-local artifacts 与 deterministic evidence 的分析。
+> **v1.10.0 阅读校正。** 个案中凡是“Apply 不会重收 config”之类表述，只应理解为“artifact `rules` 不会进入 Apply”。当前 OpenSpec 会把 project `context` 与 `operations.apply/archive.guidance` 分别交给 Apply/Archive；`init --language` 也只是向新 config 的 context 种入语言偏好。这不改变这些历史案例对 runtime owner、change-local artifacts 与 deterministic evidence 的分析。
 
 先读父目录的通用主线：
 

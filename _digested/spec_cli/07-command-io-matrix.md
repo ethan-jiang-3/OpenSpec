@@ -16,7 +16,7 @@
 
 | 命令 | 主要受众 | 输入来源 | 直接输出 | 间接影响 | 是否改状态 |
 | --- | --- | --- | --- | --- | --- |
-| `init` | 人类 + 工具集成 | 项目路径、global config、工具目录 | `openspec/` 基础设施、skills/commands、安装报告 | 决定外部工具能否使用 OpenSpec 工作流 | 是 |
+| `init` | 人类 + 工具集成 | 项目路径、global config、工具目录、可选 `--language` | `openspec/` 基础设施、skills/commands、安装报告；greenfield language context | 决定外部工具能否使用 OpenSpec 工作流；已有 config 不被 language flag 覆盖 | 是 |
 | `update` | 人类 + 工具集成 | 当前版本、配置、已配置工具 | 更新后的 skills/commands、同步报告 | 决定工具侧工作流是否与配置一致 | 是 |
 | `list` | 人类 + 机器 | changes/specs 目录、task progress、mtime | 列表或 JSON 索引 | 帮助选择目标 change/spec | 否 |
 | `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard | 改善浏览体验 | 否 |

@@ -100,6 +100,8 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 �
 - `blocked`: 依赖未满足，暂时不应创建。
 - `skipped`: schema 的 specs artifact 被 change metadata 中的 `skip_specs: true` 显式跳过。该标记只适用于没有 spec-level 行为变化的 change，且不得与任何非隐藏 delta spec 文件共存。
 
+`skip_specs` 有两种来源：作者为纯重构/工具/文档 change 手工声明；或 v1.10.0 在 `new change` 解析到一个不产生 specs artifact 的 schema 时自动写入。后者会归一化 `./specs/`、`specs/` 和 Windows separator；两种来源进入 status 后的 `skipped` 语义相同。
+
 ### 它影响谁
 
 - 人类用户会据此决定下一步该写 proposal、spec、design 还是 tasks。

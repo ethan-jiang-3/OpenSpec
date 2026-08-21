@@ -57,6 +57,7 @@ openspec new change build-my-agent --schema agent-dev-driven
 
 - OpenSpec 没有模型 eval——evals 只能断言产物形状（grep、文件存在），不能判断 agent 输出质量。
 - `openspec change --long` 的进度计数硬编码了 `tasks.md` 文件名——和 spec-driven 一样的限制。
+- **fork 不会自动继承上游 instruction 更新。** 本示例已手工追随 v1.10.0：每条 checkbox task 自带 verification，MODIFIED 主 spec 从 `planningHome.root` 解析。以后升级 OpenSpec 仍需把内置 `schemas/spec-driven/schema.yaml` 与这个 fork 做语义 diff；`openspec update` 不会重写项目 schema。
 
 ---
 

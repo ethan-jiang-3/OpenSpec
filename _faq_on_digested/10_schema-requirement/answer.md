@@ -20,7 +20,7 @@ proposal → specs → tasks → apply
 |----------|-------------------|-------------------------------|
 | `proposal` | proposal | 问题陈述 + 利益相关者 + 范围 + 约束 + 期望结果 + 用户画像 + 原始用户故事 + 问答审计追踪（合并了传统 RE 的 discovery + needs） |
 | `specs` | specs | **PRD 本身**——FR-N 功能需求（MoSCoW）、NFR、精炼用户故事、验收标准、风险、术语表、Approval 章节、Developer Handoff Notes |
-| `tasks` | tasks | 4 组 checkbox：Proposal → Specification → Review & Validation → Approval & Handoff |
+| `tasks` | tasks | 4 组 checkbox：Proposal → Specification → Review & Validation → Approval & Handoff；每条 task 自带 verification |
 | `apply` | apply | 迭代引擎——审查、沟通、修改、签收、交接。所有重沟通的工作在这里 |
 
 ### 和 spec-driven 差在哪
@@ -30,7 +30,7 @@ proposal → specs → tasks → apply
 | `proposal` | **内容更厚**。spec-driven 的 proposal 是 Why + What Changes + Capabilities + Impact；requirement-driven 的 proposal 在这基础上加了 Stakeholders、User Personas、Raw User Stories、Edge Cases、Clarifying Questions。因为需求工程的前期获取比代码工程重得多 |
 | `specs` | **格式不同**。spec-driven 的 specs 是 delta ops（ADDED/MODIFIED/REMOVED）+ Scenario 块；requirement-driven 的 specs 是 PRD 格式——FR-N、NFR、User Stories 表格、Approval 章节。但 `generates: "specs/**/*.md"` 和 `id: specs` 不变 |
 | `design` | **去掉**。需求工程不需要实现方案 |
-| `tasks` | checklist 内容不同。spec-driven 的 tasks 是代码实现清单；requirement-driven 的 tasks 是需求工程清单（Proposal → Specs → Review → Approval → Handoff） |
+| `tasks` | checklist 内容不同。spec-driven 的 tasks 是代码实现清单；requirement-driven 的 tasks 是需求工程清单（Proposal → Specs → Review → Approval → Handoff）。本示例追随 v1.10.0 的生成契约，每条 checkbox 都声明可观察的 verification，而不是只在末尾笼统“review”。 |
 | `apply` | **完全不同**。spec-driven 的 apply 是"读 design，写代码，勾 tasks"；requirement-driven 的 apply 是"读 specs，跟人沟通，迭代修改，推动签收，准备交接" |
 
 ## 关键设计决策
@@ -94,6 +94,7 @@ agent 走完 proposal → specs → tasks 的 artifact 生成后，在 apply 阶
 - **利益相关者不在线时流程阻塞**：apply 依赖利益相关者反馈。如果利益相关者不回复，agent 只能记录问题、标记 blocked、等下次会话。这是需求工程本身的属性
 - **不替代专业 RE 工具**：适合小团队或早期项目的需求定义，不适合审批流、基线管理、需求矩阵追踪等重型 RE 流程
 - **review 质量上限是 agent 能力**：agent 可以检查一致性和完整性，但不能替代有经验的工程师对可行性的判断
+- **verification 是 schema instruction/示例质量，不是 CLI 硬校验**：`openspec validate` 不会替你判断 stakeholder confirmation 是否真实。
 
 ---
 

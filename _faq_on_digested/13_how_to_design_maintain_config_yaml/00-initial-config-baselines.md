@@ -26,6 +26,14 @@ next_read:
 
 它遵守 `internal-spec-driven` 的三个边界：schema 定义 workflow，artifact DAG 传递一次 change 的事实，`config.yaml` 只为 planning artifact 提供简短、稳定的项目 guidance。它不会把 runtime 控制逻辑、运行状态或 Apply 专属流程伪装成 config rule。
 
+greenfield 项目若只需先固定 artifact prose 语言，可用 v1.10.0 的：
+
+```bash
+openspec init --language "Portuguese (pt-BR)"
+```
+
+它创建带 language context 的新 `config.yaml`；若 config 已存在则失败且不覆盖，此时应手工合并 context。该 flag 不替你选择下文的 authority baseline，也不本地化结构 heading 或 `SHALL`/`MUST`。
+
 ## 先做分类，不要先套 YAML
 
 OpenSpec 的 Host Agent 存在于所有项目的开发过程，因而**不是**分类依据。看的是下游产品运行时：

@@ -21,9 +21,11 @@
 | `test/core/openspec-root.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `test/core/worksets.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `test/core/command-generation/`、`test/core/shared/` | `../mechanisms/02-tool-delivery.md` |
-| `test/core/completions/`、`test/commands/completion.test.ts` | `../mechanisms/05-cli-infra.md` |
+| `test/core/completions/`、`test/core/completion-tip.test.ts`、`test/cli-e2e/completion-tip.test.ts`、`test/commands/completion.test.ts` | `../mechanisms/05-cli-infra.md` |
 | `test/core/parsers/`、`test/core/validation*.test.ts`、`test/core/converters/` | `../mechanisms/03-spec-model.md` |
 | `test/core/templates/` | `../mechanisms/04-workflow-templates.md` |
+| `test/core/templates/main-spec-paths.test.ts` | `../schema/02-内置-spec-driven-详解.md`、`../internal-spec-driven/02-propose-提案生成.md` |
+| `test/package-install-scripts.test.ts` | `../mechanisms/05-cli-infra.md` |
 | `test/telemetry/`、`test/commands/feedback.test.ts` | `../mechanisms/05-cli-infra.md` |
 | `test/specs/` | `_coverage/specs-coverage.md` |
 | `test/vocabulary-sweep.test.ts` |术语扫描测试 |

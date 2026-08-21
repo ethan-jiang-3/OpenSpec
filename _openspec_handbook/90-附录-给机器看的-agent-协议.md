@@ -2,7 +2,7 @@
 
 > 这一篇不是给第一次上手的人看的，而是给想研究"OpenSpec 怎么喂给宿主 agent"的人看的。
 >
-> **适用版本**：本文以 OpenSpec v1.9.0 为准；涵盖 `--json` 输出、PlanningHome 路由，以及 Apply/Archive operation inputs。首次遥测披露在 `--json` 时会被推迟，避免污染机器输出。
+> **适用版本**：本文以 OpenSpec v1.10.0 为准；涵盖 `--json` 输出、PlanningHome 路由、store-aware specs instruction，以及 Apply/Archive operation inputs。首次遥测披露和 completion tip 在 `--json` 时都会被推迟，避免污染机器输出。
 
 ---
 
@@ -46,7 +46,7 @@
 | 命令 | 机器拿来做什么 | 人类可理解成 |
 |------|---------------|-------------|
 | `openspec status --json` | 判断当前 change 到哪一步了、哪些 artifact 已完成 | 看项目仪表盘 |
-| `openspec instructions <artifact> --json` | 生成某个 artifact 时拿到模板、规则、上下文、输出路径 | 拿到一份"写作任务单" |
+| `openspec instructions <artifact> --json` | 生成某个 artifact 时拿到模板、规则、上下文、输出路径和 `planningHome` | 拿到一份"写作任务单" |
 | `openspec instructions apply --json` | 获取 Apply 的 artifact 文件、项目 context 与 apply guidance | 拿到一份"实施任务单" |
 | `openspec instructions archive --json` | 获取 Archive 的项目 context 与 archive guidance | 拿到一份"归档前置输入" |
 | `openspec schemas` | 获取可用的 change 结构定义 | 看有哪几种工作流骨架 |
@@ -95,6 +95,13 @@ sequenceDiagram
 {
   "changeName": "add-task-csv-export",
   "schemaName": "spec-driven",
+  "planningHome": {
+    "kind": "repo",
+    "root": "/srv/stores/platform-api",
+    "changesDir": "/srv/stores/platform-api/openspec/changes",
+    "defaultSchema": "spec-driven"
+  },
+  "changeRoot": "/srv/stores/platform-api/openspec/changes/add-task-csv-export",
   "artifacts": [
     { "id": "proposal", "outputPath": "proposal.md", "status": "done" },
     { "id": "specs",    "outputPath": "specs/**/*.md", "status": "done" },
@@ -113,6 +120,8 @@ sequenceDiagram
 ```
 
 **字段说明**：
+- `planningHome.root`：这次 change 实际所属 OpenSpec root。specs instruction 要求从 `<root>/openspec/specs/<capability-path>/spec.md` 读取 main spec；它可能来自 `--store`、项目 `store:` pointer、global default store 或当前 repo。
+- `planningHome.changesDir`：active/archive change 的确定性父目录；不要从 cwd 猜。
 - `artifacts[].status`：`done`（文件存在）| `ready`（依赖满足、可写）| `blocked`（缺依赖）| `skipped`（change 声明 `skip_specs` 后跳过、视为已满足）
 - `isPlanningComplete`：所有非 skipped planning artifact 都存在才算完成（v1.8.0 主字段；`isComplete` 是兼容别名，二者同值）
 - `nextSteps`：数组，给 agent 的建议下一步命令
@@ -123,6 +132,12 @@ sequenceDiagram
 ```json
 {
   "changeName": "add-task-csv-export",                             // 所属 change
+  "planningHome": {
+    "kind": "repo",
+    "root": "/srv/stores/platform-api",
+    "changesDir": "/srv/stores/platform-api/openspec/changes",
+    "defaultSchema": "spec-driven"
+  },
   "artifactPath": "openspec/changes/add-task-csv-export/design.md", // 实际输出路径
   "resolvedOutputPath": "openspec/changes/add-task-csv-export/design.md", // 应该写到的绝对/相对路径
   "template": "# Design\n\n## Approach\n## Decisions\n## Risks\n",  // 文本模板
@@ -144,6 +159,8 @@ sequenceDiagram
 - `rules`：项目级约束，确保生成的内容符合团队规范
 - `dependencies`：生成前应该先读哪些 artifact，确保内容一致
 
+当 artifact 是 `specs` 且要写 MODIFIED delta 时，机器必须使用 `planningHome.root` 定位 main spec，不能把 `artifactPath`、cwd 或调用 CLI 的 repo root 当成 main-spec root。这个字段解决 root；它不自动检索“哪些 capability 与当前需求相关”。
+
 机器真正依赖的是这些结构化字段，而不是给人阅读的文档。
 
 ---
@@ -164,7 +181,9 @@ sequenceDiagram
 - skill/command 是"投递方式"
 - CLI 是"运行时事实来源"
 
-`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose` 触发动作；Codex 则使用 `$openspec-propose` 等 skills。无论入口语法如何，动作执行过程中仍然要回到 `openspec status --json`、`openspec instructions ... --json` 这些 CLI API。
+`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，通常使用 `/openspec-propose` 或 `@openspec-propose`。Codex、Zed 与 vendor-neutral `agents` 共用 `.agents/skills/`，OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`。
+
+OpenCode 同时有 skills 和 `.opencode/commands/opsx-*.md` command。v1.10.0 的 adapter 会在生成 command 时加入 `$ARGUMENTS`，把用户在 command 后输入的参数交给 workflow；模板正文已有等价参数占位时不会再重复追加。不要把这个占位符复制到 Claude、Codex 或 Zed 的调用语法里。
 
 ---
 

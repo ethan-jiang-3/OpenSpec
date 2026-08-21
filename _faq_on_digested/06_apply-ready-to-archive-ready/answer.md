@@ -30,8 +30,8 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、�
 | APP-05 | read contextFiles | 读取 `contextFiles` 中所有 artifact 文件，不能凭记忆写代码。 |
 | APP-06 | show progress | 展示 schema、progress、remaining tasks 和 CLI 返回的 instruction。 |
 | APP-07 | pick pending task | 从 `tasks` 中选择下一个未完成 task。 |
-| APP-08 | implement code | 按 task 做最小、聚焦的真实代码修改，并按项目方式验证。 |
-| APP-09 | update checkbox | task 完成后立即把 tracking file 中对应 checkbox 改成 done。 |
+| APP-08 | implement + verify | 按 task 做最小、聚焦的真实代码修改，并执行该 task 声明的 verification。 |
+| APP-09 | update checkbox | verification 通过后才把 tracking file 中对应 checkbox 改成 done。 |
 | APP-10 | loop/re-read progress | 继续下一个 pending task；必要时重新获取 apply instructions 刷新进度。 |
 | APP-11 | pause guard | 任务不清、设计问题、错误阻塞或用户中断时暂停。 |
 | APP-12 | all tasks done | tracking file 中所有 checkbox tasks 都已完成。 |
@@ -163,7 +163,7 @@ Remaining tasks:
 for each task where done = false:
   announce task
   implement minimal code change
-  run relevant validation if possible
+  run the verification declared by that task
   update checkbox in tasks.md
   continue
 ```
@@ -189,19 +189,21 @@ docs if task requires
 Working on task 3/7: Add OAuth callback route
 ```
 
-完成后立即更新 tracking file：
+完成并通过该 task 自带的 verification 后，立即更新 tracking file：
 
 ```markdown
-- [ ] 2.1 Add OAuth callback route
+- [ ] 2.1 Add OAuth callback route — verify: run the focused callback tests
 ```
 
 变成：
 
 ```markdown
-- [x] 2.1 Add OAuth callback route
+- [x] 2.1 Add OAuth callback route — verify: run the focused callback tests
 ```
 
 这一步很重要：OpenSpec 的 apply progress 来自 `tasks.md` checkbox，不来自 agent 的口头总结。
+
+若 verification 无法执行或失败，保持 `- [ ]` 并暂停说明原因；不能先勾选再把验证留给“最后统一跑”。这项约束来自 v1.10.0 的 tasks 生成契约与 apply 工作方式，不改变既有 pause-on-scope 结论。
 
 ## Step 8：暂停条件
 
@@ -279,7 +281,7 @@ Completed this session:
 
 ## 参考来源
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

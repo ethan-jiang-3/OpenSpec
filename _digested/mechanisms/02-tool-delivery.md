@@ -74,14 +74,16 @@ repo-local init/update 根据 global config 的 `delivery` 分流：
 
 这张表描述的是投递策略，不是每个工具都必然支持三种形态。v1.8.0 的 Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.agents/skills/openspec-*/SKILL.md`（v1.7.0 时代是 `.codex/skills/`），不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
 
-### v1.8.0：共享 `.agents` 根与 vendor-neutral `agents` 目标
+### v1.10.0：共享 `.agents` 根与三方目标
 
 v1.8.0 引入两个相关变化：
 
 1. **新增 vendor-neutral `agents` 目标**（`--tools agents`）：把 skills 装进 `.agents/skills/openspec-*/SKILL.md`，这是 AGENTS.md 兼容 assistant 的共享落点，不属于任何单一工具。`--tools all` 会包含它并创建 `.agents/skills/`。检测键是 `.agents/skills` 而非 `.agents` 根（框架常为别的东西用 `.agents/`）。
 2. **Codex 迁入同一个 `.agents` 根**：`codex` 的 `skillsDir` 从 `.codex` 改为 `.agents`（`.codex` 变成 `legacySkillsDirs`），update 会原地迁移旧 `.codex` 树并保留用户定制文件。
 
-因此 `.agents/skills/` 现在可能同时被 `agents` 与 `codex` 两个目标使用。共享根同一时刻只能有一个 active writer：`src/core/shared-skill-target.ts` 用 `.openspec-target` marker 文件记录谁在写这个根；没有 marker 时按已生成文件的 invocation 语法推断（`$openspec-` → codex，`/openspec-` → agents），找不到归属且已有 canonical 树时保留既有的 `agents` 含义。`--tools codex` 与 `--tools agents` 并发选择时由该逻辑收敛到单个 writer。
+3. **新增 Zed Agent 目标**（`--tools zed`）：skills-only，写 `.agents/skills/openspec-*/SKILL.md`，检测 `.zed` 或已有 `.agents/skills`；Zed v1.4.2+ 的 built-in Agent 以 `/openspec-*` 或 `@openspec-*` 调用，并受 Zed worktree trust 约束，External Agents/Terminal 不在该支持范围。
+
+因此 `.agents/skills/` 现在由 `agents`、`codex`、`zed` 三方共享。共享根同一时刻只能有一个 active writer：`src/core/shared-skill-target.ts` 用 `.openspec-target` marker 记录谁在写；多方同时选择时收敛为一棵兼容树，而不是重复生成。裸 `.agents/` 不代表 skills；检测使用 `.agents/skills`，Zed 还可由 `.zed` 精确识别。
 
 profile 决定安装哪些 workflow，delivery 决定以什么形态投递。两者组合起来回答两个不同问题：
 
@@ -144,11 +146,15 @@ formatFile(content: CommandContent): string
 |------|--------------|------|
 | Claude | `.claude/commands/opsx/<id>.md` | 项目内 command 文件，带 frontmatter |
 | Codex | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 skills-only；以 `$openspec-*` 调用，`.codex` 是 legacy 迁移源 |
-| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 vendor-neutral 目标，与 Codex 共享 `.agents` 根 |
+| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | vendor-neutral 目标，与 Codex、Zed 共享 `.agents` 根 |
 | GitHub Copilot | `.github/skills/` 等 | v1.8.0 本地 skill + opt-in cloud coding-agent 文件（见下） |
 | Command Code | `.commandcode/skills/` + `.commandcode/commands/opsx-<id>.md` | v1.9.0 adapter-backed：skills 调用 `/openspec-*`，slash command 为 `/opsx-<id>` |
+| Zed Agent | `.agents/skills/openspec-*/SKILL.md` | v1.10.0 skills-only；Zed v1.4.2+ 用 `/openspec-*` 或 `@openspec-*`，不生成 `/opsx` command |
+| OpenCode | `.opencode/commands/opsx-<id>.md` | 接受输入的 command 在完整 `**Input**` block 后注入一次 `**Provided arguments**: $ARGUMENTS` |
 
 这个差异很重要：不是所有 command artifacts 都在 repo root 下。delivery 层要尊重每个工具的发现机制。
+
+OpenCode 只有在正文没有 `$ARGUMENTS`/位置参数占位符、且 Input 不是 `None required` 时才注入；已有占位符绝不重复。这是 adapter 的参数传递修复，不应套到 Zed 的 skill invocation 上。
 
 v1.9.0 起，遗留 Codex 升级路径也遵守同一条 one-writer 规则：若 `.agents` 已被 `agents` 目标占用（marker 或已有树），`openspec update` **不会**凭全局 `~/.codex/prompts` 把 skills 改写成 Codex 语法、也不会翻 ownership；跳过时该工具的 repo-local legacy 文件（如 `.codex/prompts/openspec-*.md`）一并保留。真正的首次 Codex 升级（还没有 `.agents` 树）不受影响。
 
@@ -180,7 +186,7 @@ cloud 文件写入 `.github/` 是有侵入性的动作，所以由 `openspec ini
 | shared skill root ownership | `src/core/shared-skill-target.ts`（`.openspec-target` marker） |
 | GitHub Copilot cloud agent | `src/core/github-copilot/cloud-agent.ts` |
 | workflow templates | `src/core/templates/workflows/` |
-| command adapters | `src/core/command-generation/`（含 `adapters/command-code.ts`） |
+| command adapters | `src/core/command-generation/`（含 `adapters/command-code.ts`、`adapters/opencode.ts`） |
 | init/update | `src/core/init.ts`、`src/core/update.ts` |
 | profile drift | `src/core/profile-sync-drift.ts` |
 | migration / cleanup | `src/core/migration.ts`、`src/core/legacy-cleanup.ts` |

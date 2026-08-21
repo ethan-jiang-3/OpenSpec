@@ -11,6 +11,7 @@
 - 改变项目状态：会。
 - 改变工具状态：会。
 - 主要风险：误以为只是在本地建目录，实际上它会生成工具侧产物并可能清理旧产物。
+- `--language` 边界：flag 只负责 greenfield config seed；生成的三行 context 才是后续 artifact instructions 的输入，结构约束仍由 schema 提供。已有 config 不覆盖，应手工编辑 `context`。
 
 ### `update`
 
@@ -19,6 +20,7 @@
 - 改变项目业务内容：通常不会。
 - 改变工具工作流外壳：会。
 - 主要风险：用户以为不会删除内容，但它会清理被取消选中的 workflow 产物。
+- v1.10.0 的 restart 提示是条件性的：只有本次实际影响了 registry 中标记 `requiresIdeRestart` 的 IDE surface 才显示；仅更新 CLI/即时加载 skills 的工具不提示。
 
 ## 二、发现与浏览类
 
@@ -106,6 +108,12 @@
 - 角色：全局工作流配置器。
 - 核心对象：profile、delivery、workflow selection。
 - 影响：下次 `init` / `update` 如何生成工具侧工作流。
+
+### `feedback`
+
+- 角色：低敏感度反馈提交器。
+- title 将空白归一化并按 72 字符上限截断；GitHub issue body 的 Summary 始终保留用户完整原 message，可选 details 另放一节。
+- `gh` 不可用、未认证或提交失败时回显同一完整 body 和预填 URL，不把 title 截断误传导到正文。
 
 ### `schema`
 

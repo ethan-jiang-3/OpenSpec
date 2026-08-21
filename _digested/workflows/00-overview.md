@@ -52,12 +52,13 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | archive | `/opsx:archive [name]` | `openspec-archive-change` | **有**：`openspec archive`（路径不同） | **core** |
 | bulk-archive | `/opsx:bulk-archive` | `openspec-bulk-archive-change` | 无 | custom |
 | onboard | `/opsx:onboard` | `openspec-onboard` | 无 | custom |
-| **update** | `/opsx:update [name]` | `openspec-update-change` | 无 | custom（v1.6.0 新增） |
+| **update** | `/opsx:update [name]` | `openspec-update-change` | 无 | **core**（v1.6.0 新增；现已进入默认集） |
 
-> 表中 `/opsx:*` 是 command adapter（例如 Claude Code）的示例，不是通用调用语法。Codex 是 skills-only，使用 `$openspec-explore`、`$openspec-apply`、`$openspec-archive-change` 等（v1.8.0 下装在 `.agents/skills/`）；其他 host 应以实际安装的 command/skill 名为准。
+> 表中 `/opsx:*` 是 command adapter（例如 Claude Code）的示例，不是通用调用语法。Codex 使用 `$openspec-*`；Zed Agent 使用 `/openspec-*` 或 `@openspec-*`。v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 三方共享 `.agents/skills/`（见 `../mechanisms/02-tool-delivery.md`）；其他 host 应以实际安装的 command/skill 名为准。
 
-> **core profile**（默认）：propose, explore, apply, sync, archive —— 5 个。大多数用户只看到这些。
+> **core profile**（默认）：propose, explore, apply, update, sync, archive —— 6 个。大多数用户只看到这些。
 > **custom profile**：需在 `customWorkflows` 中显式启用，才能解锁全部 12 个。
+> custom 选择 `archive` 或 `bulk-archive` 时会自动在第一个依赖者前补 `sync`；已有 `sync` 不重复、不重排，profile 仍保持 custom。
 
 ## 四类 workflow
 

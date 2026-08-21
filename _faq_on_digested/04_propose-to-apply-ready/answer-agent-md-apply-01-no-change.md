@@ -30,10 +30,10 @@ proposal -> specs/design -> tasks -> apply
 最关键的是 `tasks.md`。默认 `/opsx:apply` 会根据 checkbox 执行任务，所以 task 必须把目标文件说清楚：
 
 ```markdown
-- [ ] 1.1 Create `skills/research-agent/SKILL.md` with trigger rules, workflow steps, and guardrails
-- [ ] 1.2 Add `commands/research-collect.md` with input contract and output format
-- [ ] 1.3 Add `verification.md` with three sample prompts and expected behavior
-- [ ] 1.4 Check links and paths across generated Markdown files
+- [ ] 1.1 Create `skills/research-agent/SKILL.md` with trigger rules, workflow steps, and guardrails — verify: inspect every required section
+- [ ] 1.2 Add `commands/research-collect.md` with input contract and output format — verify: invoke it with a representative input
+- [ ] 1.3 Add `verification.md` with three sample prompts and expected behavior — verify: run all three prompts
+- [ ] 1.4 Check links and paths across generated Markdown files — verify: the link checker exits successfully
 ```
 
 这样即使默认 apply 文案说 “Make the code changes required”，agent 也能从 task 和 contextFiles 看出实际要改的是 Markdown/skill/command 文件。

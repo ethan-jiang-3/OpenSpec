@@ -1,6 +1,6 @@
 # 09 · 高级：Capability 规划、身份与 specs 漂移维护
 
-> **适用 OpenSpec v1.9.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
+> **适用 OpenSpec v1.10.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
 
 ## 先回答：为什么这事值得你操心
 
@@ -12,7 +12,7 @@
 |---|---|
 | spec 说"有"、代码早没了（冻结）| agent 拿过时前提去 propose / apply → 产出错误或要返工的代码；写出去的 delta 一 archive 还可能 `not found`、整批回滚 |
 | 代码新上了、spec 没记（漏报）| agent 在 specs 里找不到这块 capability 的契约 → 只能瞎猜或被迫读源码，行为不可预测、质量打折 |
-| 标题或目录名被改、没走 RENAMED | 历史 delta 和当前 spec 全对不上 → 下一次正常的 archive 直接 `not found`、**整次 archive 原子中止**，工作卡在半路（本 repo 的 `simplify-skill-installation` 就是 16 条目标全 `not found`，连本该成功的部分也一并没落地）|
+| 标题或目录名被改、没走 RENAMED | 历史 delta 和当前 spec 全对不上 → 下一次正常的 archive 直接 `not found`、**整次 archive 在 mutation 前中止**，工作卡在半路（本 repo 的 `simplify-skill-installation` 就是 16 条目标全 `not found`，连本该成功的部分也一并没落地）|
 | 废弃的 change 还挂在 active | agent 以为有一堆"进行中方向"，被假信号带偏，优先级和判断全乱 |
 
 更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，archive 回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**——`validate` 只做结构检查、不做跨文件对账，`archive` 只在那一刻匹配一次。（v1.8.0 起有一个收窄的例外：`validate <change>` 能拿到主 spec 时，会对 MODIFIED 块做 **scenario-loss 前置检测**——省略主 spec 仍有的 scenario 会直接报错；v1.9.0 起任何 `####` 子标题都算。`--archived` 只查 archive 里 tasks 勾选。specs↔代码漂移仍要人巡检。）
@@ -158,7 +158,7 @@ graph TD
 漂移，就是**两层"名字身份"失配**：
 
 - **capability 层失配**：delta 指向的 capability 相对路径，在 `openspec/specs/` 里对不上——要么"设计了没建"、要么"路径改名了"、要么"早删了"。**表现：archive 一个 change 时，目标 spec 不存在或对不上；或一堆 change 悬空挂在 active。**
-- **requirement 层失配**：delta 的 `MODIFIED`/`REMOVED` 指向的标题，在当前主 spec 里找不到——标题被别的 archive 改写过、大小写变了、或手改过。**表现：archive 报 `... not found`，整批原子回滚。**
+- **requirement 层失配**：delta 的 `MODIFIED`/`REMOVED` 指向的标题，在当前主 spec 里找不到——标题被别的 archive 改写过、大小写变了、或手改过。**表现：archive 报 `... not found`，整批在 mutation 前中止。**
 
 两层是**同一个病**（名字身份失配），只是发生在不同层。再加上"有代码无 spec"（反向漂移：capability 上线了 specs 没记）、"废弃 change 仍挂 active"（噪声）等，specs 就慢慢配不上"source of truth"这个名号了——而 agent 还把它当事实读，于是被带偏。
 
@@ -172,6 +172,17 @@ graph TD
 - **apply 改代码时，顺手想一句"这段 spec 还准吗"。** 这是最廉价的对齐动作。
 - **偶尔巡检**：`openspec list` / `openspec validate --all` 能抓结构坏死（僵尸 change）；但**别把"validate 干净"当成"specs 对齐"**——它查不出 capability/requirement 的名字失配和 specs↔代码漂移。
 - **别手改主 spec 文件**。要改就写 change（delta）再 archive；手改没有任何工具追踪，下次 delta 一撞就 `not found`。
+
+### 退役前先证明“可干净合并”
+
+删除最后一个 requirement 不等于整个文件只剩可安全删除的标准结构。退役 review 至少检查：
+
+1. 所有 REMOVED requirement 都能精确命中最新 main spec。
+2. main spec 没有 `## Notes`、orphan paragraph、非 canonical section 或残留 `###` heading。
+3. 其他 active change 没有继续 MODIFIED 这个 capability。
+4. 清理后才在合法 `.openspec.yaml` 声明 `retire_capabilities: true`。
+
+若有未归属内容，v1.10.0 会列出 blocking lines 并拒绝删除；marker 此时不是出路。把仍有价值的治理信息迁入 `## Purpose` 或 canonical requirement，或者经 review 手工删除，再重跑 archive。详细反例与修复步骤见 [12](12-实战-如何正确修改-artifacts.md)。
 
 ## 真要拆分、合并或改 path：把它当成 rebaseline，不是普通 archive
 

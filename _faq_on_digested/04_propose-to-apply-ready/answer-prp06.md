@@ -65,6 +65,14 @@ agent 的使用方式：
 | `rules` | artifact-specific 项目规则，只约束 agent，不写进 artifact。 |
 | `unlocks` | 完成当前 artifact 后下一轮可能 ready 的 artifacts。 |
 
+`planningHome.root` 是当前 change 所属 planning home 的 resolved root，可能来自 repo-local root、store pointer、显式 `--store` 或 global default store。凡 instruction 要读取现有 main spec，路径应是：
+
+```text
+<planningHome.root>/openspec/specs/<capability-path>/spec.md
+```
+
+它不是让 shell 直接使用尖括号字面量，也不表示 CLI 会自动替 agent 检索相关 spec。
+
 ## dependencies 怎么来
 
 schema 中每个 artifact 有 `requires`：
@@ -109,7 +117,7 @@ JSON 模式下，agent 解析 `dependencies`，再结合 `changeDir` 或 `artifa
 
 ```markdown
 ## 1. Group
-- [ ] 1.1 Task
+- [ ] 1.1 Task — verify: <test, command, observable behavior, or artifact inspection>
 ```
 
 `instruction` 是语义规则。例如 `tasks` instruction 告诉 agent：
@@ -118,7 +126,10 @@ JSON 模式下，agent 解析 `dependencies`，再结合 `changeDir` 或 `artifa
 checkbox format is required
 tasks should be small enough
 order tasks by dependency
+every checkbox task includes its own verification
 ```
+
+verification 应指向 test、command、可观察行为或产物检查；只有跨多个实现 task 的验证才单列 Integration Verification。CLI 的 `validate` 仍不硬校验这项写作质量。
 
 对于 `specs`，instruction 还会强调：
 
@@ -192,7 +203,7 @@ agent 不是靠猜测写 artifacts，而是每轮都从 CLI 获取当前 artifac
 
 ## 参考来源
 
-源码引用基于 commit `750a03c`：
+源码引用以 v1.10.0（`1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
@@ -200,3 +211,4 @@ agent 不是靠猜测写 artifacts，而是每轮都从 CLI 获取当前 artifac
 | `src/core/artifact-graph/instruction-loader.ts` | `generateInstructions()`、`getDependencyInfo()`、template/context/rules 组装 |
 | `schemas/spec-driven/schema.yaml` | proposal/specs/design/tasks 的 template、instruction、requires |
 | `src/core/templates/workflows/propose.ts` | propose skill 如何消费 instructions JSON |
+| `test/core/templates/main-spec-paths.test.ts` | store-aware main-spec instruction |

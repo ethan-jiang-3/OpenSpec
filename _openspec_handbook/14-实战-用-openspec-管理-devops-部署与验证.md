@@ -3,7 +3,7 @@
 > 这一篇讲的是：实现已经写出来以后，怎么把部署、验证、回滚也纳入 OpenSpec 的 change 闭环。
 > OpenSpec 不是 CI/CD 系统，但它很适合把部署这件事讲清楚、做有序、验有据。
 
-> **v1.8.0 实施/归档提示。** 将持续的部署检查短语写进 `operations.apply.guidance`，将 archive 前的发布证据检查写进 `operations.archive.guidance`；二者与 project `context` 分别进入 Apply/Archive。不要把它们误写成 `rules.apply` / `rules.archive`，也不要把 prompt 当作 CI 的替代。（v1.7.0 引入，v1.8.0 不变。）
+> **v1.10.0 实施/归档提示。** 将持续的部署检查写进 `operations.apply/archive.guidance`，但每个生成的 task 仍要在同一 checkbox 中声明 verification；只有跨多项工作的系统检查才单列 Integration Verification。prompt 不替代 CI。
 
 ---
 
@@ -81,33 +81,33 @@ flowchart LR
 # Tasks
 
 ## 1. Implementation
-- [x] Add backend CSV export endpoint
-- [x] Add frontend export button
-- [x] Add authorization checks
-- [x] Add unit and integration tests
+- [x] Add backend CSV export endpoint — verify: API integration test returns filtered CSV
+- [x] Add frontend export button — verify: component test finds the action for authorized staff
+- [x] Add authorization checks — verify: unauthorized request returns 403
+- [x] Add unit and integration tests — verify: targeted test command passes
 
 ## 2. Pre-deploy checks
-- [x] Run unit tests
-- [x] Run integration tests
-- [x] Confirm CSV injection sanitization
-- [x] Confirm no schema migration is required
+- [x] Run unit tests — verify: unit-test command exits 0
+- [x] Run integration tests — verify: integration-test command exits 0
+- [x] Confirm CSV injection sanitization — verify: malicious spreadsheet formulas are escaped in a focused test
+- [x] Confirm no schema migration is required — verify: schema diff is empty
 
 ## 3. Staging deployment
-- [ ] Deploy to staging
-- [ ] Run task export smoke test in staging
-- [ ] Verify exported rows match active filters
-- [ ] Check application logs for export errors
+- [ ] Deploy to staging — verify: release dashboard reports the target build healthy
+- [ ] Run task export smoke test in staging — verify: smoke command exits 0
+- [ ] Verify exported rows match active filters — verify: row count and IDs equal the UI result
+- [ ] Check application logs for export errors — verify: no new export errors appear in the deployment window
 
 ## 4. Production rollout
-- [ ] Deploy to production during normal release window
-- [ ] Run production smoke test with staff account
-- [ ] Verify p95 export latency remains under 5 seconds
-- [ ] Monitor errors for 30 minutes after deploy
+- [ ] Deploy to production during normal release window — verify: production reports the intended build healthy
+- [ ] Run production smoke test with staff account — verify: a filtered CSV downloads successfully
+- [ ] Verify p95 export latency remains under 5 seconds — verify: dashboard query stays below threshold
+- [ ] Monitor errors for 30 minutes after deploy — verify: error-rate alert remains clear for the full window
 
 ## 5. Archive readiness
-- [ ] Record deploy evidence in final summary
-- [ ] Confirm no rollback was required
-- [ ] Archive change
+- [ ] Record deploy evidence in final summary — verify: summary links the release, smoke run, and dashboard
+- [ ] Confirm no rollback was required — verify: release record shows healthy or records the rollback decision
+- [ ] Archive change — verify: active change is absent and dated archive directory exists
 ```
 
 这不是把 OpenSpec 变成 CI/CD。真正的 deploy 仍然由你的发布系统执行。
@@ -207,14 +207,14 @@ OpenSpec 不跑自动化，但 `tasks.md` 可以明确调用哪些自动化。
 
 ```markdown
 ## 3. Staging verification
-- [ ] Run `npm run test:e2e -- --grep "task export"`
-- [ ] Run `scripts/smoke/export-tasks.sh staging`
-- [ ] Attach CI run URL to final summary
+- [ ] Run `npm run test:e2e -- --grep "task export"` — verify: command exits 0
+- [ ] Run `scripts/smoke/export-tasks.sh staging` — verify: command exits 0 and downloads a valid CSV
+- [ ] Attach CI run URL to final summary — verify: URL is present and accessible to reviewers
 
 ## 4. Production verification
-- [ ] Run `scripts/smoke/export-tasks.sh production`
-- [ ] Check dashboard: API error rate, p95 latency, export count
-- [ ] Confirm no new Sentry errors for export endpoint
+- [ ] Run `scripts/smoke/export-tasks.sh production` — verify: command exits 0 and downloads a valid CSV
+- [ ] Check dashboard: API error rate, p95 latency, export count — verify: all three remain within the rollout guard
+- [ ] Confirm no new Sentry errors for export endpoint — verify: deployment-window search returns no regression
 ```
 
 注意这里的动作仍然是你已有工具在执行。
@@ -296,28 +296,28 @@ implementation done
 
 ```markdown
 ## Deployment readiness
-- [ ] All implementation tasks complete
-- [ ] Tests passing locally or in CI
-- [ ] Migration impact reviewed
-- [ ] Rollback plan documented
-- [ ] Monitoring dashboard or alert path identified
+- [ ] All implementation tasks complete — verify: no earlier checkbox remains open
+- [ ] Tests passing locally or in CI — verify: required check suite is green
+- [ ] Migration impact reviewed — verify: design records migration/no-migration conclusion
+- [ ] Rollback plan documented — verify: design names trigger, owner, and action
+- [ ] Monitoring dashboard or alert path identified — verify: tasks link the dashboard or alert
 
 ## Staging
-- [ ] Deploy to staging
-- [ ] Run smoke tests
-- [ ] Verify logs and metrics
-- [ ] Confirm stakeholder acceptance if needed
+- [ ] Deploy to staging — verify: target build reports healthy
+- [ ] Run smoke tests — verify: smoke command exits 0
+- [ ] Verify logs and metrics — verify: no guard threshold is breached
+- [ ] Confirm stakeholder acceptance if needed — verify: acceptance evidence is linked
 
 ## Production
-- [ ] Deploy to production
-- [ ] Run production smoke tests
-- [ ] Monitor error rate and latency
-- [ ] Record deploy link / CI run / dashboard evidence
+- [ ] Deploy to production — verify: target build reports healthy
+- [ ] Run production smoke tests — verify: smoke command exits 0
+- [ ] Monitor error rate and latency — verify: rollout window stays within documented guards
+- [ ] Record deploy link / CI run / dashboard evidence — verify: final summary contains all required links
 
 ## Completion
-- [ ] Rollback not required, or rollback result recorded
-- [ ] Specs still match shipped behavior
-- [ ] Archive change
+- [ ] Rollback not required, or rollback result recorded — verify: release record states the final decision
+- [ ] Specs still match shipped behavior — verify: reviewer compares shipped flow with delta scenarios
+- [ ] Archive change — verify: active change is absent and dated archive directory exists
 ```
 
 ---

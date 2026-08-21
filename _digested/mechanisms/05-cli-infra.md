@@ -41,6 +41,20 @@ openspec completion __complete <type>
 
 生成器消费同一个 `COMMAND_REGISTRY`，但脚本语法分成 bash、zsh、fish、PowerShell。installers 负责写 completion script、更新 shell profile、创建 backup、返回 warnings/instructions。这一层最容易碰到用户环境差异。
 
+### v1.10.0：安装期脚本改为首次运行 tip
+
+发布包不再包含 npm `postinstall`；registry install 因而没有 install lifecycle script，也不再触发相关 allow-scripts 警告。源码/git/directory install 仍可能因 package 的 `prepare` 构建，不能把“无 postinstall”误写成“所有安装方式绝不运行脚本”。
+
+completion 提示移到 root commander 的 `postAction`：命令自身输出之后，第一次可读的交互运行只向 **stderr** 打印一次 `openspec completion install`，不自动安装。以下情况抑制或 defer：
+
+- `CI` 或 `OPENSPEC_NO_COMPLETIONS=1`：不显示；
+- completion 已安装、shell 未检测到/不支持：retire，一次性消费；
+- `--json`、completion 命令自身、stderr 非 TTY：defer，不设置 seen，留给以后可读运行。
+
+“运行”在这里准确指**到达 root `postAction` 的 action**。action 正常 return，或失败时只设置 `process.exitCode`，commander 仍会运行 hook；因此 `change validate` 这类非零退出也可能显示/消费 tip。若 action 的 catch 直接调用 `process.exit(1)`，进程会在 hook 前终止，这次失败既不显示也不消费 tip，下一次真正到达 `postAction` 的 eligible run 才处理。completion tip 与 telemetry shutdown 都受这个边界约束。
+
+seen flag 写 global config 时使用 raw read/merge + 临时文件 rename，不调用会合入默认值的 `getGlobalConfig()`，避免顺带 stamp `profile`/`delivery` 并破坏一次性 profile migration。
+
 ## telemetry：低信息量、低阻塞
 
 telemetry 在 `src/telemetry/`。它的边界：
@@ -54,6 +68,8 @@ telemetry 在 `src/telemetry/`。它的边界：
 
 CLI 在 `preAction` 里显示首次 notice 并 track command，在 `postAction` shutdown。
 
+v1.10.0 的首次 telemetry notice 改写 stderr；`--json` 仍 defer 且不设置 `noticeSeen`，让 stdout 保持单一 JSON 文档，并把 disclosure 留给下一次非 JSON 运行。
+
 工程含义是：telemetry 只提供粗粒度使用信号，不能成为命令成功与否的依赖，也不能接触项目内容。
 
 ## feedback：agent workflow 和 CLI 提交分层
@@ -64,6 +80,8 @@ feedback 有两层：
 - CLI command：实际提交 GitHub issue 或输出 manual URL。
 
 CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在或未认证时，不报失败，而是输出可手动提交的内容和预填 URL。
+
+反馈 title 会归一化空白并截到 72 字符（grapheme-safe、省略号）；body 的 `## Summary` 始终保留原始完整 message，可选 details 另列。title 截断不会丢掉 GitHub issue body，也不会在 gh 失败的 manual fallback 中丢失。
 
 它不上传源码、不收集项目文件，只附加 version/platform/timestamp metadata。这个边界和 telemetry 一样重要：反馈通道应该帮助维护项目，但不能变成隐式数据采集。
 

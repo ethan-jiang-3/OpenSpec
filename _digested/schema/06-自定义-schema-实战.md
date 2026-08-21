@@ -133,6 +133,16 @@ apply:
 
 依赖图：`proposal → tasks → apply`
 
+因为这个 schema 归一化后没有任何 `specs/` 输出（`./specs/...`、`specs/...` 和 Windows separator 会统一判断），v1.10.0 的 `openspec new change --schema rapid` 会自动写：
+
+```yaml
+schema: rapid
+created: 2026-08-21
+skip_specs: true
+```
+
+schema 作者不必伪造 specs artifact，也不必让用户手工补 marker；status/instructions 会把 specs 语义视为 skipped。若 schema 实际生成 delta，或 change 后来引入 spec-level 行为变化，必须移除 marker并写真实 specs，不能把它当通用绕过开关。
+
 ### 例 2：Research-first（先调研）
 
 在提案之前加一个调研阶段：

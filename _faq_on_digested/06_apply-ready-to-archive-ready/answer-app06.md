@@ -69,7 +69,7 @@ Keep changes minimal and focused
 - 沿用项目既有 patterns。
 - 不夹带无关重构。
 - 不提前实现后续 task 的大块内容。
-- 有验证路径就尽量运行相关测试或检查。
+- 执行该 task 声明的 verification；失败或无法执行时不勾选。
 
 如果一个 task 实施时发现必须大幅改变 design，说明 planning artifact 可能需要更新，而不是硬继续。
 
@@ -78,24 +78,24 @@ Keep changes minimal and focused
 未完成：
 
 ```markdown
-- [ ] 2.1 Add OAuth callback route
+- [ ] 2.1 Add OAuth callback route — verify: run the focused callback tests
 ```
 
 完成后：
 
 ```markdown
-- [x] 2.1 Add OAuth callback route
+- [x] 2.1 Add OAuth callback route — verify: run the focused callback tests
 ```
 
 解析器也接受：
 
 ```markdown
-- [X] 2.1 Add OAuth callback route
+- [X] 2.1 Add OAuth callback route — verify: run the focused callback tests
 ```
 
 但建议统一用小写 `x`。
 
-完成 task 后应立即更新 checkbox。不要等一批任务都做完再统一改，因为中途暂停时进度会丢失。
+完成 task 并通过其 verification 后应立即更新 checkbox。不要等一批任务都做完再统一改，因为中途暂停时进度会丢失。
 
 ## progress 如何变化
 
@@ -160,7 +160,7 @@ archive 仍然需要用户显式触发。
 
 ## 参考来源
 
-源码引用基于 commit `ff4576f`：
+源码引用以 v1.10.0（`1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

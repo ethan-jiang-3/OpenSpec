@@ -2,14 +2,17 @@
 
 本 FAQ 的 answer（hub [`answer.md`](answer.md) + 四条路 [`answer-beginner.md`](answer-beginner.md) / [`answer-intermediate.md`](answer-intermediate.md) / [`answer-expert.md`](answer-expert.md) / [`answer-guru.md`](answer-guru.md)）用到的所有源码与文档引用，集中在这里，避免分散在正文干扰阅读。
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线。`src/core/project-config.ts` 还解析 `operations`；Apply/Archive instructions 会接收 project `context` 和对应 `operations.*.guidance`。下方任何只列 context/rules、或说 Apply 不接收 config 的旧来源说明，均以这个当前边界为准。
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线。`src/core/project-config.ts` 还解析 `operations`；Apply/Archive instructions 会接收 project `context` 和对应 `operations.*.guidance`。下方任何只列 context/rules、或说 Apply 不接收 config 的旧来源说明，均以这个当前边界为准。
 
 ## 源码（OpenSpec CLI）
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/config-prompts.ts:9-39` | init 写的 stub 内容（`schema: spec-driven` + context/rules 注释示例）——agent 照此格式填 |
-| `src/core/init.ts:598-620` | `createConfig()`：只在文件不存在时写 stub，不交互式收集 |
+| `src/core/init.ts` | `--language` 只为新 config 种入 language context；已有 config、空值、多行、控制字符或超长输入会拒绝 |
+| `src/core/config-prompts.ts` | config stub 与 language context 序列化 |
+| `src/cli/index.ts` | `init --language <language>` CLI surface |
+| `openspec/specs/cli-init/spec.md`、`test/core/init.test.ts` | flag 行为、已有 config 不覆盖与输入边界 |
 | `src/commands/config.ts:268-279` | `openspec config` 只管全局 JSON；preAction 钩子拒绝 project scope（*"Project-local config is not yet implemented"*） |
 | `src/commands/schema.ts:870-887` | `schema init --default` 写 `defaultSchema`——init 外唯一写 config.yaml 的地方（不碰 context/rules） |
 | `src/core/templates/workflows/propose.ts:64-65,103-105` | agent 把 context/rules 当只读约束（"do NOT include in output"） |

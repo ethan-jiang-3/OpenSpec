@@ -123,9 +123,14 @@ v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 sp
 
 完全相同、已 early-sync 的 delta 可以是 no-op；内容近似但不同仍必须人工重基线，不能期待自动合并。
 
-v1.8.0 追加（archive 失败/被卡时的两种出路）：
-1. **退役整个 capability**：如果这个 change 的 REMOVED 拿掉了某 capability 的**最后一个 requirement**，archive 原本会以 "must have at least one requirement" 中止；在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后，archive 会删除该 capability 的整个 main spec。这适合"整个 capability 退役"，不能用来绕过真实行为变更。输出会列出被删 section，并给可粘贴的 `git checkout` 恢复命令；`--no-validate` 永不触发退役。
-2. **非交互下被确认阻塞**：agent/CI 里 stdin closed 时，archive 会指出缺哪个 flag 并给**携带原 flags 的可重跑命令**（如 `openspec archive <name> --skip-specs --yes`）——直接粘贴重跑即可，不必凭空猜参数；不带 change 名时它现在会以 exit 1 明确请求 change 名，而不是静默吞错。v1.9.0 起非 TTY 不再往捕获日志里写 ANSI；无 change 名时要求先传入名字，不画菜单。
+退役失败要按三分支判断：
+1. **只缺授权 marker**：REMOVED 拿掉最后一个 requirement，重建结果没有未归属内容时，CLI 才建议在合法 `.openspec.yaml` 中加 `retire_capabilities: true`。
+2. **有 blocking content**：main spec 仍有 `## Notes`、orphan paragraph/section 等内容时，CLI 列出 blocking lines；加 marker 也不会放行。先把有价值内容移入 `## Purpose`/canonical requirement，或经 review 删除，再重跑。
+3. **marker cannot be honored**：值类型错误、metadata/schema 无效或授权在运行中变化时，CLI 报具体原因并保持文件不变。
+
+完整反例和三步修复见 [12 实战·如何正确修改 artifacts](12-实战-如何正确修改-artifacts.md#capability-退役marker-不是万能绕过开关)。
+
+v1.8.0 以来还有一个非交互边界：agent/CI 里 stdin closed 时，archive 会指出缺哪个 flag 并给**携带原 flags 的可重跑命令**（如 `openspec archive <name> --skip-specs --yes`）——直接粘贴重跑即可，不必凭空猜参数；不带 change 名时它现在会以 exit 1 明确请求 change 名，而不是静默吞错。v1.9.0 起非 TTY 不再往捕获日志里写 ANSI；无 change 名时要求先传入名字，不画菜单。
 
 想在 CI 里抓“归档时 tasks 没勾完”的工作，用独立的 `openspec validate --archived`（不改普通 `validate` 行为，也不重验已应用的 delta）。
 
@@ -155,6 +160,9 @@ profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schem
 
 ### Q20: `.openspec.yaml` 是什么？
 **A**: change 目录里的配置文件，记录这次 change 用哪套 schema。大多数情况下自动生成，不需要手动改。
+
+### Q20a: 怎样让新项目用中文或其他语言写 artifacts？
+**A**: 新项目用 `openspec init --language "简体中文"`；它会在新 config 的 `context` 写语言提示。已有 config 时该命令会失败且不覆盖，请手工合并 context。artifact prose 可本地化，但 `## ADDED Requirements`、`### Requirement:`、`#### Scenario:` 与 `SHALL`/`MUST` 保持英文。完整 YAML 和判断表见 [01](01-初级-先把-openspec-用起来.md#新项目想让-artifacts-使用中文或其他语言) 与 [06](06-高级-config-yaml-怎么写到真正好用.md#多语言greenfield-用-flagbrownfield-手改-context)。
 
 ---
 
@@ -235,7 +243,16 @@ specs/
 1. 在项目里运行 `openspec init`（v1.2.0+ 会自动检测已安装的工具并预选）
 2. 也可以手动指定：`openspec init --tools claude,cursor`
 3. 运行 `openspec update` 确保 skills/commands 是最新的
-4. 重启 AI 工具，使用该宿主安装的入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change` 等 skills
+4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change`，Zed 为 `/openspec-propose` 或 `@openspec-propose`
+
+### Q27a: Zed 和 Codex 为什么都写 `.agents/skills/`？
+**A**: v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 共用一个 OpenSpec 管理的 skill 树。Zed 是 skills-only，要求 Zed ≥ 1.4.2 且 worktree 已信任；OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不创建/修改根 `AGENTS.md`。
+
+### Q27b: 为什么全局安装后没有 completion 提示？
+**A**: npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction` 的交互式 CLI 运行才会在 stderr 一次提示 `openspec completion install`；JSON、非 TTY 和 completion 子命令会 defer，CI、已安装 completions、不可支持 shell 或 `OPENSPEC_NO_COMPLETIONS=1` 会保持安静。只设置 `process.exitCode` 的失败仍会进 hook；直接 `process.exit(1)` 的失败跳过 hook且不消费提示。
+
+### Q27c: custom profile 只选 archive，为什么还出现 sync？
+**A**: archive/bulk-archive 依赖 sync。v1.10.0 会在第一个依赖项前自动插入 sync；已有 sync 不重复、不重排，custom 也不会因此变成 core。
 
 ### Q28: 为什么有 `.claude/` 和 `openspec/` 两个目录？
 **A**: 

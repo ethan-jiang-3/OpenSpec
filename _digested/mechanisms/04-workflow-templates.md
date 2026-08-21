@@ -79,6 +79,8 @@ workflow template
 
 `archive` 模板是 agent 层的收尾操作手册。它先读取 `openspec instructions archive --json`（project `context` 与 `operations.archive.guidance`），检查是否需要 sync、是否完成 tasks、是否适合调用 CLI archive；sync 必须 inline 完成并对全部 capability 重新验证后才移动 change。v1.8.0（v1.7.0 起）下，正确 early-sync 的完全一致 delta 会在 archive 中保持幂等 no-op，仍需阻断近似匹配或真实 drift；归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`。CLI archive 源码机制见 `../internal-spec-driven/04-archive-归档合并.md`。
 
+不要把 agent template 的通用 guardrails 和 CLI 的 content-specific refusal 混为一谈。v1.10.0 中，真正分析空 capability 的 orphan/Notes、列 blocking lines、清理控制字符并判断 marker 能否 honor 的是 `src/core/archive.ts`；template 负责指导 agent 调用和响应结果，不自行复刻该 parser/判定。
+
 `bulk-archive` 面向多个 completed changes。它的风险不在单个 merge 算法，而在选择和确认：哪些 changes 完成、哪些跳过、是否逐个验证、失败时如何报告 partial results。
 
 ## onboard 与 feedback 的特殊性

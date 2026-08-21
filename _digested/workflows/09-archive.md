@@ -10,6 +10,7 @@
 > **profile**：core（大多数用户默认可见）
 > **v1.8.0 要点（v1.7.0 起）**：① 选择 change 后先读取 `openspec instructions archive --json` 的 context/operation guidance；② status 的 `skipped` specs artifact 视为满足；③ sync 仍必须 inline 并逐 capability 验证；④ CLI merge 对 fully early-synced operations 采用 no-op / warnings，而非无意义重写；⑤ 归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`（v1.8.0）。
 > **v1.9.0 追加**：非 TTY 时 confirm 无 ANSI、无 change 名则要求先传入名字；重建 spec 保留 `## Requirements` 周围空行且以单个 LF 结尾；scenario-loss 认所有 `####` 子标题。
+> **v1.10.0 追加**：CLI retirement 失败分为“只缺 marker”“有 blocking content”“marker 已读但不可 honor/仍被内容阻塞”三路；只有第一路建议添加 marker。
 
 ## 一句话
 
@@ -23,6 +24,8 @@ archive 是 agent 层的收尾操作手册。它和 `openspec archive` CLI 命�
 | spec update | `buildUpdatedSpec()` → `writeUpdatedSpec()` | 调 `openspec-sync-specs` skill |
 | 是否可跳过 | `--skip-specs` / `--no-validate` | 用户可选择 "Archive without syncing" |
 | 谁来执行 | CLI 进程 | agent 调 `mv` 命令 |
+
+CLI 列中的完整 mutation 边界是：全量预构建 → 全量 rebuilt validation → fingerprints/snapshots → 写入或退役 → verified move。写入、退役或 move 失败时会尽力恢复 snapshots 和 active change；并发修改使安全恢复不可能时显式报告 rollback failure。host workflow 的手动 `mv` 不实现这套 CLI transaction；源码细节见 [`../internal-spec-driven/04-archive-归档合并.md`](../internal-spec-driven/04-archive-归档合并.md)。
 
 ## CLI 命令调用序列
 
@@ -138,6 +141,16 @@ template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然�
 | Never archive while spec sync is still in flight | inline sync + verify before mv（v1.6.0 新增 guardrail） |
 | If delta specs exist, always run sync assessment | 不跳过对比 |
 | Route Cancel as stop | 不 archive，changeRoot 完整（v1.6.0 新增） |
+
+## retirement 失败的操作步骤
+
+当 `openspec archive` 移除 capability 最后一个 requirement 时：
+
+1. 若输出只说缺授权，在有效 `.openspec.yaml` 中加入 `retire_capabilities: true` 后重跑。
+2. 若输出列出 blocking lines（例如 `## Notes` 或 orphan prose），不要先加 marker；把它们迁入 `## Purpose`/canonical requirement，或经 review 人工删除 spec。
+3. 若 marker 已存在，按输出修复无法 honor 的具体原因（无效 YAML、未知/坏 schema、非 boolean 值），或清理仍会随整文件删除的 blocking content。
+
+CLI 最多安全展示 3 条 blocking line、每条 200 code points，控制字符转为 `?`；这属于 CLI 的 content-specific refusal。host archive template 只负责 pre-flight/sync/move，不应被描述为自己实现了这套退役内容分析。
 
 ## 和 FAQ 的衔接
 

@@ -465,7 +465,7 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 
 ## 参考来源
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线；v1.10.0 未改变 Explore 的 stance、分流或只读边界：
 
 | 来源 | 用到的结论 |
 |---|---|

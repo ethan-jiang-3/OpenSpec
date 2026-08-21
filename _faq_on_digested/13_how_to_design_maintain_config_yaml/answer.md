@@ -49,6 +49,10 @@ Archive 的稳定项目步骤              -> config.operations.archive.guidance
 
 对每句话先问：谁消费、在何时消费、是否需要在 artifact 中留痕、是否应由机器证明。答案会自然决定位置。
 
+### language context 的落点
+
+v1.10.0 的 `openspec init --language "<language>"` 只是把一条语言偏好写入**新项目**的 `config.context`。因此它会被 artifact instructions 消费，也会随 project context 到达 Apply/Archive；它不是 schema 字段、翻译引擎或结构本地化开关。已有 config 时 init 拒绝覆盖，应手工合并到现有 context。artifact prose 可本地化，但结构 heading 与 `SHALL`/`MUST` 保持英文，确保 parser/validator 契约不变。
+
 在写第一版前，再问“下游运行时谁拥有 Flow”：传统程序、MD/Agent 控制 Flow，或程序/Graph 控制 Flow。这个分类决定 project profile 应描述哪张 authority map；它不是新的 config 字段。两种混合模型的边界和初稿分别见 [`00-initial-config-baselines.md`](00-initial-config-baselines.md)。
 
 ## 实际写法

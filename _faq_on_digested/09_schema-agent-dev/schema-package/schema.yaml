@@ -37,7 +37,7 @@ artifacts:
 
       Create one spec file per capability listed in the proposal's Capabilities section.
       - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
-      - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
+      - Modified capabilities: use the existing spec folder name from <planningHome.root>/openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
 
       Delta operations (use ## headers):
       - **ADDED Requirements**: New capabilities
@@ -53,7 +53,7 @@ artifacts:
       - Every requirement MUST have at least one scenario.
 
       MODIFIED requirements workflow:
-      1. Locate the existing requirement in openspec/specs/<capability>/spec.md
+      1. Locate the existing requirement in <planningHome.root>/openspec/specs/<capability>/spec.md using the resolved planning home from instructions/status
       2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios)
       3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
       4. Ensure header text matches exactly (whitespace-insensitive)
@@ -118,27 +118,31 @@ artifacts:
       - Each task MUST be a checkbox: `- [ ] X.Y Task description`
       - Tasks should be small enough to complete in one session
       - Order tasks by dependency (what must be done first?)
+      - Every checkbox task MUST include its own verification: a test, command,
+        observable behavior, or artifact inspection
+      - Use a separate Integration Verification task only when the check spans
+        multiple implementation tasks
 
       Example:
       ```
       ## 1. Skills
 
-      - [ ] 1.1 Write skills/data-export.md per design Skill definitions
-      - [ ] 1.2 Write skills/refund-handling.md per design Skill definitions
+      - [ ] 1.1 Write skills/data-export.md per design Skill definitions — verify: inspect the file against the skill contract
+      - [ ] 1.2 Write skills/refund-handling.md per design Skill definitions — verify: run the normal and refusal eval prompts
 
       ## 2. Commands
 
-      - [ ] 2.1 Write commands/export.md per design Command definitions
+      - [ ] 2.1 Write commands/export.md per design Command definitions — verify: invoke the command with sample arguments
 
       ## 3. Harness Integration
 
-      - [ ] 3.1 Copy skill files to target harness directory
-      - [ ] 3.2 Copy command files to target harness directory
-      - [ ] 3.3 Run eval cases and verify all pass
+      - [ ] 3.1 Copy skill files to target harness directory — verify: list the installed files
+      - [ ] 3.2 Copy command files to target harness directory — verify: list the installed commands
+      - [ ] 3.3 Run eval cases — verify: all expected assertions pass
       ```
 
       Reference specs for what needs to be built, design for how to build it.
-      Each task should be verifiable - you know when it's done.
+      Verification is part of each task, not an optional final reminder.
     requires:
       - specs
       - design

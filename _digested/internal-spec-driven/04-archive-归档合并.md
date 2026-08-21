@@ -15,7 +15,7 @@ archive 是整个 change 生命周期的终点。它做三件事：验证 change
 
 ![archive 三方架构实例化](figures/04-archive-flow.svg)
 
-`openspec archive` 来自 `src/core/archive.ts` 的 `ArchiveCommand.execute()`。逻辑上可分为三大阶段（validate → merge → move），但代码内部实际是**四步**顺序执行：① 结构/delta 验证 → ② tasks 完成检查 → ③ delta spec 合并写入（调用 `buildUpdatedSpec` / `writeUpdatedSpec`）→ ④ archive 移动。下面的图示把 ② 归入 Validate 的范畴，按逻辑阶段呈现：
+`openspec archive` 来自 `src/core/archive.ts` 的 `ArchiveCommand.execute()`。逻辑上可分为三大阶段（validate → merge → move），但 mutation 边界更准确地说是：① 结构/delta 验证与 tasks 检查 → ② 全量预构建 → ③ 全量 rebuilt validation → ④ 捕获 snapshots 后写入/退役 → ⑤ verified move。mutation 后任何一步失败都会尝试恢复 snapshots 和 active change；并发修改阻止安全恢复时显式报告 rollback failure。
 
 ```
 Phase 1: Validate
@@ -24,14 +24,16 @@ Phase 1: Validate
 
 Phase 2: Merge（除非 --skip-specs）
   ├── 找到所有 delta spec
-  ├── 逐一构建更新后的 spec（buildUpdatedSpec）
-  ├── 验证重建后的 spec
-  └── 写入主 specs 目录
+  ├── 全量构建更新后的 specs（buildUpdatedSpec）
+  ├── 全量验证重建后的 specs
+  ├── 检查 fingerprints 并捕获 mutation snapshots
+  └── 写入或退役主 specs
 
 Phase 3: Move
   ├── 创建 archive/ 目录
-  ├── 生成archive 名 YYYY-MM-DD-<changeName>
-  └── mv changeDir → archive/
+  ├── 无日期前缀时生成 YYYY-MM-DD-<changeName>
+  ├── rename；EPERM/EXDEV 时走 private staging + verified copy
+  └── 失败时尽力恢复 main specs 与 active change
 ```
 
 ---
@@ -46,12 +48,13 @@ Phase 3: Move
 
 `archive.ts:113-151`：扫描 `<changeDir>/specs/` 下每个子目录中带 delta header 的文件（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）。
 
-如果发现 delta spec，用 `Validator.validateChangeDeltaSpecs()`（`src/core/validation/validator.ts`）严格验证：
+如果发现 delta spec，用 `Validator.validateChangeDeltaSpecs()`（`src/core/validation/validator.ts`）做结构与内容验证：
 
 | 检查项 | 级别 |
 |--------|------|
 | 缺少 `## Requirements` section 中的 `### Requirement:` header | ERROR |
-| ADDED/MODIFIED requirement 缺少 SHALL/MUST | ERROR |
+| ADDED/MODIFIED requirement 正文缺失 | ERROR |
+| requirement 正文存在但缺少 SHALL/MUST | WARNING（显示但不阻止 archive） |
 | requirement 缺少 scenario | ERROR |
 | 同一 section 内 requirement 名重复 | ERROR |
 | 同一 requirement 出现在多个 section 中（如同时 ADDED 和 MODIFIED） | ERROR |
@@ -214,9 +217,9 @@ const rebuilt = [parts.before, parts.headerLine, reqBody, parts.after]
 
 CLI 会先对所有 `SpecUpdate` 调用 `buildUpdatedSpec()`，把 rebuilt 内容准备好；如果这一步任何一个 spec 失败，会在写入前中止并提示 "No files were changed."。
 
-随后在实际写入每个重建后的 spec 之前，用 `Validator.validateSpecContent()`（`src/core/validation/validator.ts`）验证。如果有 ERROR，**整个 archive 在写入前中断**，change 目录仍在原地。
+随后先对 prepared 列表中所有需要写回的 rebuilt spec 运行 `Validator.validateSpecContent()`（`src/core/validation/validator.ts`）。只有**全部 rebuilt validation 通过**，才会检查 archive 目标、验证输入 fingerprint、捕获每个 mutation target 的 snapshot，然后进入写入/退役阶段。
 
-需要注意的是：一旦进入实际 `writeUpdatedSpec()` 写入阶段，CLI 没有事务式回滚。如果写入过程中发生 I/O 异常，已经写入的文件不会自动恢复。
+写入、退役或最终移动 change 失败时，CLI 会调用 `restoreSpecSnapshots()`，并在 change 已移动时尝试把 archive 目录移回 active 位置。因此当前边界是“尽力事务式回滚”，不是“写过就不恢复”。若并发外部修改使安全恢复不再可能，CLI 会保留现场并显式报告 `Rollback also failed`；这种 rollback failure 才需要人工按报错路径恢复。
 
 ### 3.8 已 early-sync 的 delta 不再一律失败
 
@@ -231,8 +234,11 @@ v1.7.0 识别“agent sync 已把同一内容写入 main spec”的正常模式�
 ### 4.1 生成archive 名
 
 ```typescript
-const archiveName = `${YYYY-MM-DD}-${changeName}`;
-// 例: "2026-06-14-add-dark-mode"
+const archiveName = /^\d{4}-\d{2}-\d{2}-/.test(changeName)
+  ? changeName
+  : `${formatLocalDate()}-${changeName}`;
+// "add-dark-mode" -> "2026-06-14-add-dark-mode"
+// "2026-06-01-add-dark-mode" -> 保持原名，不重复前缀
 ```
 
 ### 4.2 冲突检测
@@ -241,22 +247,18 @@ const archiveName = `${YYYY-MM-DD}-${changeName}`;
 
 ### 4.3 移动
 
-`moveDirectory()` (`archive.ts:36-48`)：先用 `fs.rename()` 尝试原子移动。如果失败且错误码为 `EPERM` 或 `EXDEV`（Windows 常见），降级为递归复制+删除：
+`moveDirectory()` 先用 `fs.rename()` 尝试原子移动。如果失败且错误码为 `EPERM` 或 `EXDEV`（Windows/跨设备常见），不会直接从仍可能被编辑的 active path 复制并删除，而是：
 
-```typescript
-async function moveDirectory(src: string, dest: string): Promise<void> {
-  try {
-    await fs.rename(src, dest);           // 首选原子操作
-  } catch (err) {
-    if (err.code === 'EPERM' || err.code === 'EXDEV') {
-      await copyDirRecursive(src, dest);   // 复制
-      await fs.rm(src, { recursive: true, force: true });  // 删除源
-    } else {
-      throw err;
-    }
-  }
-}
+```text
+active source
+  -> rename 到同级私有 .openspec-move-<uuid>
+  -> fingerprint staged source
+  -> 复制到目标
+  -> 验证 source/destination fingerprint 与 archived deltas
+  -> 删除 staged source
 ```
+
+复制或验证失败时，CLI 清理自己创建的目标并把 staged source 改回 active path。若最后清理 staged source 失败但目标已是唯一完整副本，则保留完整目标并给 recovery 错误，而不是为追求表面原子性再把目标删除。
 
 ### 4.4 最终状态
 
@@ -315,7 +317,7 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 
 ---
 
-## 8. 当前行为摘要（v1.9.0）
+## 8. 当前行为摘要（v1.10.0）
 
 | 变更 | 影响位置 | 说明 |
 |---|---|---|
@@ -325,10 +327,20 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 | early-sync no-op | `specs-apply.ts` | 完全一致的 ADDED/MODIFIED、已移除 REMOVED、已改名 RENAMED 不造成无意义失败或重写（v1.7.0） |
 | parser / drift robustness | `requirement-blocks.ts` / `code-fence.ts` | BOM、fenced code 不再造成假 delta 或 scenario drift（v1.7.0） |
 | inline verified sync | `archive-change.ts` | agent sync 后逐 capability 验证才允许移动 change；Cancel 保留 changeRoot（v1.7.0） |
-| **retire_capabilities** | `.openspec.yaml` marker（`archive.ts` / `specs-apply.ts`） | change 的 REMOVED 拿掉某 capability 最后一个 requirement 时，声明 `retire_capabilities: true` 可让 archive 删除整个 main spec，而不是以 "at least one requirement" 中止；无 marker 时行为不变。退役只发生在 spec 确实无法保留时，输出会列出被删 section 并给可粘贴的 `git checkout` 恢复命令；`--no-validate` 永不触发退役。与退役 capability 的 in-flight MODIFIED change 会 validate 通过、archive 拒绝（v1.8.0） |
+| **retire_capabilities** | `.openspec.yaml` marker（`archive.ts` / `specs-apply.ts`） | change 的 REMOVED 拿掉某 capability 最后一个 requirement 时，声明 `retire_capabilities: true` 可让 archive 删除整个 main spec，而不是以 "at least one requirement" 中止；无 marker 时行为不变。退役只发生在 spec 确实无法保留时，输出会列出被删 section 并给可粘贴的 `git checkout` 恢复命令；`--no-validate` 永不触发退役。与退役 capability 的 in-flight MODIFIED change 会 validate 通过、archive 拒绝（v1.8.0；v1.10.0 的 blocked-content 细分见下） |
 | 重复 canonical 名拒绝 | `archive.ts` | main spec 存在重复 canonical requirement 名时拒绝归档，避免 delta reconciliation 压掉重复块之一（v1.8.0） |
 | note-loss 提示 | `archive.ts` | 重建 spec 会丢失 requirement 旁的 note（缩进 note、未识别 heading）时，先指名会删的内容与迁移位置；merge 本身不自动搬移（v1.8.0） |
 | 交互失败可重跑 | `archive.ts` 的 `confirmOrBlock()` | agent 以 stdin closed 跑 archive 时，每个被阻塞的确认会给出需要哪个 flag 和携带原 flags 的可粘贴重跑（如 `openspec archive <name> --skip-specs --yes`）；无 change 名时从 exit 0 吞错改为 exit 1 请求 change 名（v1.8.0） |
 | 非 TTY 无 ANSI | `src/utils/interactive.ts` | stdout/stdin 不是终端时 confirm 走纯文本；无 change 名时要求先传入名字，不画菜单。避免捕获日志里塞满 cursor-move 转义（v1.9.0） |
 | spec 重建保空白 | `specs-apply.ts` | 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF，避免 Markdown whitespace 检查失败（v1.9.0） |
 | scenario-loss 认所有 `####` | `requirement-text.ts` `SCENARIO_HEADER` | requirement 下任何非 fence 的 `#### ` 子标题都算 scenario；比较时剥可选 `Scenario:` 前缀（v1.9.0） |
+
+### v1.10.0：retirement 的三分支
+
+| 重建后状态 | archive 的诊断 | 正确处理 |
+|---|---|---|
+| 空 capability，除 title/Purpose/requirements 外无内容，且只缺 marker | 提示添加 `retire_capabilities: true` | 在有效 `.openspec.yaml` 中与 `schema:` 并列添加后重跑 |
+| 空 capability，但有 `## Notes`、orphan section、requirement 外注释等 unaccounted content | 列出 blocking lines；不会建议 marker | 把内容移入 `## Purpose` 或 canonical requirement，或人工删除 spec，再重跑 |
+| marker 已存在但不能 honor，或 marker 有效但仍有 blocking content | 报具体 invalid reason，或明确“declares retire_capabilities, but ...” | 先修 YAML/schema/boolean marker，或清理 blocking content；marker 不能绕过内容丢失保护 |
+
+安全输出也有硬边界：blocking content 最多展示 3 行，每行按 Unicode code point 截到 200，超出加省略号并汇总剩余行数；NUL–US、DEL 等控制字符替换为 `?`。marker 无法 honor 的 reason 同样清理控制字符，避免伪造终端行或重绘屏幕。

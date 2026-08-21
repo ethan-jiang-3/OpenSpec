@@ -17,7 +17,7 @@
 
 主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。
 
-> **当前边界（v1.9.0）。** v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.9.0 起非 TTY 不画菜单；`validate --archived` 可单独检查 archive 里未勾完的 tasks。
+> **当前边界（v1.10.0）。** v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
 
 ![Archive-ready 到 archived 的流程](figures/archive-ready-to-archived.svg)
 
@@ -36,7 +36,7 @@
 | ARC-09 | validate rebuilt specs | 写入前调用 `validateSpecContent()` 验证 rebuilt 主 spec。 |
 | ARC-10 | write main specs | 把 rebuilt 内容写回 `openspec/specs/<capability-path>/spec.md`。 |
 | ARC-11 | archive target check | 生成 `YYYY-MM-DD-<change>`，检查目标 archive 目录是否已存在。 |
-| ARC-12 | move change dir | 创建 archive 目录并移动 active change；必要时 copy + remove fallback。 |
+| ARC-12 | move change dir | 创建 archive 目录并移动 active change；EPERM/EXDEV 时走私有 staging、verified copy 和可恢复 fallback。 |
 | ARC-13 | archive summary | 输出 change 已归档和 spec update totals。 |
 | ARC-14 | archived handoff | change 不再 active；主 specs 成为新的 formal baseline。 |
 
@@ -172,8 +172,10 @@ openspec/changes/<change>/specs/<capability-path>/spec.md
 并映射到：
 
 ```text
-openspec/specs/<capability-path>/spec.md
+<planningHome.root>/openspec/specs/<capability-path>/spec.md
 ```
+
+这里的 `planningHome.root` 来自 status/instructions JSON；CLI 自身也使用 resolved planning home。它可能是 repo-local root 或 store root，不能在 agent workflow 中硬编码 cwd 下的 `openspec/specs/`。
 
 每个 `SpecUpdate` 记录：
 
@@ -263,7 +265,7 @@ RENAMED -> REMOVED -> MODIFIED -> ADDED
 
 ## Step 9：验证 rebuilt spec
 
-构建完所有 rebuilt specs 后，CLI 遍历 prepared 列表。对每个 rebuilt spec，在写该 spec 前调用：
+构建完所有 rebuilt specs 后，CLI 先遍历完整 prepared 列表，对每个需要写回的 rebuilt spec 调用：
 
 ```text
 Validator.validateSpecContent(specName, rebuilt)
@@ -276,9 +278,9 @@ Validation errors in rebuilt spec for <specName> (will not write changes)
 Aborted. No files were changed.
 ```
 
-这条提示在当前失败点之前成立：如果失败发生在第一个待写 spec，确实没有 spec 被写入；如果前面的 spec 已经验证并写入，后续 spec 再失败，CLI 没有事务式回滚，已经写入的主 spec 不会自动恢复。
+这条提示对所有 rebuilt validation 都成立：validation 全部完成后才捕获 main-spec snapshots，并进入写入/退役和 change move。后续 I/O、retirement 或 move 失败时，CLI 会用 snapshots 恢复已尝试 mutation 的主 specs；若 change 已移动，也会尝试移回 active 目录。
 
-换句话说，`buildUpdatedSpec()` 阶段是全量预构建，失败会在任何写入前中止；`validateSpecContent()` 和 `writeUpdatedSpec()` 是逐项执行，进入写入循环后没有跨 spec transaction。
+这是尽力事务式回滚，不是数据库事务。若并发进程在 archive 期间改了同一目标，CLI 会拒绝覆盖不匹配的 fingerprint；若这同时阻止安全恢复，会显式报告 `Rollback also failed` 并保留现场供人工处理。
 
 ## Step 10：写回主 specs
 
@@ -335,6 +337,14 @@ Archive 'YYYY-MM-DD-<changeName>' already exists.
 > **v1.8.0 追加。** ① 若 change 的 REMOVED 拿掉某 capability 最后一个 requirement，原本的 "Spec must have at least one requirement" 中止可在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后变成**删除该 capability 的 main spec**；没有 marker 时行为不变，错误信息会指明这个出路。`--no-validate` 永不触发退役。② archive 在无法交互提问（agent 的 stdin closed）时，会给出需要哪个 flag 与携带原 flags 的可重跑命令（如 `openspec archive <name> --skip-specs --yes`）；不带 change 名时从旧版 exit 0 吞错改为 exit 1 请求 change 名。
 >
 > **v1.9.0 追加。** 非 TTY（stdout 或 stdin 不是终端）时 confirm 走纯文本、不写 ANSI；无 change 名时要求先传入名字，不画交互菜单。重建 spec 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF。
+>
+> **v1.10.0 退役三分支。** REMOVED 清空最后一个 requirement 时，不要把 “加 marker” 当万能修复：
+>
+> 1. **仅缺授权 marker**：main spec 除可理解的 Purpose/Requirements 外没有残留内容，错误才建议在 `.openspec.yaml` 加 `retire_capabilities: true`。
+> 2. **存在 unaccounted content**：例如 `## Notes`、orphan text 或残余 `###` heading。archive 会列出 blocking lines；必须先迁移、删除或归位这些内容。此时 marker 也无效，提示不会误导你去加 marker。
+> 3. **marker 存在但不可 honor**：YAML 形状、boolean 类型或 schema resolution 无效时，archive 同时报告具体 reason；不会把无效 metadata 当删除授权。
+>
+> blocking content 输出会移除控制字符、每行最多展示 200 字符，只列前三行并报告剩余数量；marker reason 也会清理控制字符，避免终端注入。修好内容与 metadata 后再重跑，`--no-validate` 仍不会触发退役。
 
 ## Step 12：移动 change 目录
 
@@ -424,9 +434,13 @@ openspec instructions archive --change "<name>" --json
 
 没有内置 unarchive。archive 后 active change 消失，恢复需要手工移动目录或重建 change。
 
+### 误区 6：空 capability 失败时加 marker 总能解决
+
+不能。marker 只授权删除一个已经能被 merge/validator 完整解释的空 capability。若 `## Notes`、orphan 文本或残余 heading 会随文件一起丢失，archive 必须 hard stop 并列出 blocking lines；先处理内容，不能靠 marker 绕过。
+
 ## 参考来源
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
@@ -436,6 +450,8 @@ openspec instructions archive --change "<name>" --json
 | `src/core/parsers/requirement-blocks.ts` | delta spec parsing、requirement block parsing、name normalization |
 | `src/core/parsers/spec-structure.ts` | main spec 结构错误检查 |
 | `src/utils/task-progress.ts` | archive 阶段 task checkbox 统计 |
+| `src/utils/change-metadata.ts` | retirement marker 是否可 honor 及安全 reason |
+| `test/core/archive.test.ts` | marker-only、blocked-content、invalid-marker 三分支与 bounded output |
 | `src/cli/index.ts` | `archive [change-name]` command 和 flags |
 | `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板层行为 |
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven sync 模板 |

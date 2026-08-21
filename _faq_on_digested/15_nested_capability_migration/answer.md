@@ -4,21 +4,21 @@
 
 ## 一句话结论
 
-**从 flat 迁移到 nested 可行，v1.7.0 起已完整支持（v1.9.0 仍如此）。但这不是一次普通 archive——capability path 就是它的身份，没有 rename 操作。迁移是一次受控 rebaseline：先冻结 active changes，再搬 main specs，再逐一更新所有指向旧 path 的引用（delta、catalog、config、文档），最后验证并恢复。**
+**从 flat 迁移到 nested 可行，v1.7.0 起已完整支持（v1.10.0 仍如此）。但这不是一次普通 archive——capability path 就是它的身份，没有 rename 操作。迁移是一次受控 rebaseline：先冻结 active changes，再搬 main specs，再逐一更新所有指向旧 path 的引用（delta、catalog、config、文档），最后验证并恢复。**
 
 ---
 
 ## 前提：先确认你运行的是什么
 
-### v1.9.0 的行为基线
+### v1.10.0 的行为基线
 
 在开始之前必须确认环境：
 
 ```bash
-openspec --version  # 应输出 v1.9.0（或更高）
+openspec --version  # 应输出 v1.10.0（或更高）
 ```
 
-v1.9.0（v1.7.0 起）的 `discoverSpecFiles()` 会递归发现任意深度的 `spec.md`，并把**相对于 `specs/` 的目录路径**作为 capability ID。这意味着以下布局是完整生命周期支持的：
+v1.10.0（v1.7.0 起）的 `discoverSpecFiles()` 会递归发现任意深度的 `spec.md`，并把**相对于 `specs/` 的目录路径**作为 capability ID。这意味着以下布局是完整生命周期支持的：
 
 ```text
 openspec/specs/identity/session/spec.md
@@ -35,7 +35,7 @@ list、show、validate、change parser、apply、archive 全部使用同一条�
 | capability **没有 rename 操作** | 没有 `RENAMED` 段来声明"auth 改名为 identity/login"。这只能靠你手动完成 |
 | requirement 有 RENAMED（FROM/TO） | 如果你同时要改 requirement 标题，可以在 delta 里走正规手续 |
 | delta 与 main spec 必须同路径才命中 | `changes/<id>/specs/auth/spec.md` 只会 archive 到 `specs/auth/spec.md`。不会自动"猜到"新地址 |
-| archive 是原子、fail-fast 的 | 一个 delta 找不到目标 → 整批不落地。所以迁移期间绝不能有 active delta 指向已经不存在的旧 path |
+| archive 在写前全量 fail-fast | 一个 delta 找不到目标会在 mutation 前让整批不落地；mutation 后失败则按 snapshot 尽力回滚。所以迁移期间绝不能有 active delta 指向已经不存在的旧 path |
 | nested path 是命名空间，不含继承或自动聚合 | `identity` 和 `identity/session` 是两个独立 capability。父目录不会自动继承、汇总或加载子 spec |
 
 这些不是设计缺陷——它们是 identity 模型的直接推论。理解这些约束，下面的步骤就都是必然的。
@@ -44,7 +44,7 @@ list、show、validate、change parser、apply、archive 全部使用同一条�
 
 上面那六条约束不是"最好遵守"的软建议。每一条背后都有一个具体的、被真实项目验证过的失败模式。按严重程度排列：
 
-**风险 1：path 就是身份，没有 rename——archive 会原子回滚。** 把 `auth/` 搬到 `identity/login/` 后，OpenSpec 眼里旧 capability 已经死了、新 capability 是新创建的。任何仍指向 `auth` 的 delta，下次 archive 时直接 `not found`。archive 是原子的——一个 delta 找不到目标，整批全部回滚，连本该成功的新 capability 创建也一并丢弃。本 repo 自己的 `simplify-skill-installation` change 就真实遇到过：16 条 requirement 操作全部 `not found`，一个坏全盘不落。更危险的是，搬完目录**没有任何工具会主动告诉你"还有 3 个 active delta 指向旧 path"**——要到下次 archive 炸了才知道。
+**风险 1：path 就是身份，没有 rename——archive 会在写前整批中止。** 把 `auth/` 搬到 `identity/login/` 后，OpenSpec 眼里旧 capability 已经死了、新 capability 是新创建的。任何仍指向 `auth` 的 delta，下次 archive 时直接 `not found`。这一错误发生在 mutation 前，所以整批不落地，连本该成功的新 capability 创建也不会单独写入。本 repo 自己的 `simplify-skill-installation` change 就真实遇到过：16 条 requirement 操作全部 `not found`，一个坏全盘不落。更危险的是，搬完目录**没有任何工具会主动告诉你"还有 3 个 active delta 指向旧 path"**——要到下次 archive 炸了才知道。
 
 **风险 2：active delta 是悬空炸弹。** 迁移期间，每个 `changes/<id>/specs/<old-path>/spec.md` 还指向旧 ID。如果你搬了 main specs 但没碰这些 delta，它们立刻变成孤儿。这也是为什么 Phase 2 的 active-change 清册被标为"最关键的一步"——你必须明确知道每个 active delta 的最终命运，不能靠猜。
 
@@ -425,7 +425,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ## 不推荐的做法
 
-- **直接 `git mv` 然后假装什么都没发生**：active delta 会变成悬空引用。下次 archive 时 `not found`，整批回滚
+- **直接 `git mv` 然后假装什么都没发生**：active delta 会变成悬空引用。下次 archive 时 `not found`，整批在 mutation 前中止
 - **把迁移伪装成一次普通 archive**：写一个 change 的 delta 是 `RENAMED`（capability 层没有这个操作）。archive 只会看到旧 path 不存在、新 path 是 ADDED——这丢掉了所有历史 requirement 的连续性
 - **把旧 path 留在原地当"转发"**：比如 `specs/auth/spec.md` 里只写"see identity/authorization"——discovery 会把它当成一个合法 capability，agent 会被两份 spec 搞混
 - **把完整 catalog 塞进 `config.context`**：这会把导航数据变成每次 prompt 都注入、很快过时、且受 50KB 上限的第二份 baseline
@@ -458,7 +458,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ### 本仓库一手研究
 - [`../../_digested/specs_truth/_research-nested-capability-paths.md`](../../_digested/specs_truth/_research-nested-capability-paths.md) — v1.7.0 源码核验：discovery、生命周期、同路径映射
 - [`../../_digested/spec-driven-capability/`](../../_digested/spec-driven-capability/00-map.md) — capability 切分、taxonomy、catalog 协议、演进治理（全 4 章 + governance template）
-- [`../../_digested/specs_truth/01-机理-主specs如何被delta构造.md`](../../_digested/specs_truth/01-机理-主specs如何被delta构造.md) — 两层 name-as-identity、archive 原子性、fail-fast
+- [`../../_digested/specs_truth/01-机理-主specs如何被delta构造.md`](../../_digested/specs_truth/01-机理-主specs如何被delta构造.md) — 两层 name-as-identity、archive 写前 fail-fast 与失败回滚
 - [`../../_digested/mechanisms/03-spec-model.md`](../../_digested/mechanisms/03-spec-model.md) — parser/schema/validator 分工、recursive discovery
 
 ### Handbook

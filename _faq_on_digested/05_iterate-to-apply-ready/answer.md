@@ -78,7 +78,7 @@ ITR-02 把姿态切换到"审视"——假设 artifacts 可能有问题，逐项
 - **proposal**：scope 精确吗？Impact 列的文件真实存在吗？有显式 Not included 吗？
 - **specs**：每个 requirement 至少一个可测 scenario？有正常 + 边界？MODIFIED 是完整 block 不是 patch？
 - **design**（若存在）：技术假设在真实代码里成立吗？提到的 abstraction 存在吗？
-- **tasks**：每个 task 具体到 agent 看到就知道改哪个文件？粒度合理吗？
+- **tasks**：每个 task 具体到 agent 看到就知道改哪个文件？粒度合理吗？每条 checkbox 是否自带 test、command、observable behavior 或 artifact inspection 形式的 verification？
 - **一致性**：proposal ↔ specs ↔ tasks scope 一致吗？
 
 输出是一份审视摘要，标注 ✓/⚠/✗，直接喂给 Step 4。
@@ -136,6 +136,7 @@ ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
 - specs 的每个 requirement 至少有 1 个可测试 scenario（含正常 + 至少 1 个边界）
 - 如果 change 涉及跨模块、新依赖、数据迁移或安全——design 存在且技术决策明确
 - 每个 task 具体到 agent 看到就能执行（知道改哪个文件、改成什么样）
+- 每条 checkbox task 都声明自己的 verification；跨 task 的集成验证才单列
 - artifacts 之间没有矛盾（proposal scope = specs 覆盖 = tasks 范围）
 - 用真实代码校验过，没有"artifact 说存在但代码里不存在"的文件或接口
 
@@ -190,7 +191,7 @@ ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
 
 ## 参考来源
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

@@ -10,7 +10,7 @@ OpenSpec 有两种 profile（配置模式）：
 
 这里列出的 `/opsx:*` 是 Claude 的 OpenSpec workflow command，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`；Codex v1.8.0 使用 `$openspec-*` skills。下文命令表要按宿主 adapter 理解，不能把 slash 语法推广到所有工具。
 
-> **v1.9.0 artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的正式 metadata，不能和 delta spec 文件共存。配置方面，artifact `rules` 只影响 artifact 生成；Apply/Archive 读 project `context` 与 `operations.apply/archive.guidance`。scenario-loss 认所有 `####` 子标题；`schema fork` 保留 YAML 格式。
+> **v1.10.0 artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的 metadata。每条 task 自带 verification；capability 退役若仍有未归属内容会被阻止。配置方面，artifact `rules` 只影响 artifact 生成，Apply/Archive 读 project `context` 与对应 operation guidance。
 
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
@@ -59,8 +59,10 @@ openspec config profile
 # 步骤 2：更新 AI 工具的 skills
 openspec update
 
-# 步骤 3：重启 Claude Code 或你的 AI 工具
+# 步骤 3：只在 update 实际刷新了 IDE 驻留的 commands/skills 且 CLI 给出提示时重启
 ```
+
+`openspec update` 的重启提示是条件性的：Cursor、Cline 等 IDE 驻留 surface 实际生成了新 commands/skills 时才提示；Claude Code、Codex、OpenCode 等 CLI-only 工具通常会立即读文件，不应笼统要求重启所有 AI 工具。
 
 ### 本文档的假设
 
@@ -970,7 +972,7 @@ rm -rf openspec/changes/add-task-csv-export/
 
 | 文件 | 推荐修改方式 | 关键风险 |
 |------|--------------|----------|
-| `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把 delta spec 写成全量重写；**REMOVED 拿掉某 capability 最后一个 requirement 时 archive 会以 "at least one requirement" 中止**——若要整 capability 退役，需在 `.openspec.yaml` 声明 `retire_capabilities: true`（v1.8.0） |
+| `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把 delta spec 写成全量重写；REMOVED 最后一个 requirement 时，先清理未归属内容，再用合法 `retire_capabilities: true` 明确授权删除 |
 | `design.md` | 实现发现方案变化时及时回头修改，说明原因和风险 | 只改代码不改设计，后人看不到真实取舍 |
 | `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节；**v1.8.0 起缩进的子任务也计入进度**（`  - [ ] 1.1.1` 会阻止 "✓ Complete"），别只盯顶层 checkbox |
 | `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析（`retire_capabilities` 与 `schema:` 并存，见上） |
@@ -981,6 +983,64 @@ rm -rf openspec/changes/add-task-csv-export/
 - 技术路径变了，优先改 design
 - 执行拆解变了，优先改 tasks
 - change 的 schema/元数据变了，才考虑 `.openspec.yaml`
+
+#### tasks：可追踪不等于可验证
+
+v1.10.0 的内置 tasks instruction 要求每个 checkbox 自己回答“如何证明完成”。下面这种写法能被进度 parser 追踪，却不符合生成契约：
+
+```markdown
+## 1. Export
+- [ ] 1.1 Implement CSV export
+- [ ] 1.2 Add tests
+```
+
+应改成：
+
+```markdown
+## 1. Export
+- [ ] 1.1 Implement filtered CSV export — verify: API integration test returns only rows matching status/date filters
+- [ ] 1.2 Add authorization guard — verify: unauthorized request returns 403 and creates no export
+
+## 2. Integration Verification
+- [ ] 2.1 Exercise UI → API → download end to end — verify: `pnpm test:e2e -- --grep "filtered CSV export"` passes
+```
+
+verification 可以是 test、command、可观察行为或交付 artifact；只有最后一条这种跨多个 implementation tasks 的系统检查才单列。`openspec validate` 会检查 Markdown/delta 的结构和最低门槛，但不会因 `1.1` 没写 verification 而新增专门硬错误；这仍是 schema instruction 与 reviewer 应守的质量合同。
+
+#### capability 退役：marker 不是万能绕过开关
+
+先看这个 main spec 尾部：
+
+```markdown
+## Requirements
+
+### Requirement: Legacy Export
+The system SHALL provide the legacy export.
+
+#### Scenario: Export succeeds
+- **WHEN** a user exports
+- **THEN** the legacy file is returned
+
+## Notes
+
+Owned by the platform team.
+```
+
+若 delta REMOVED 最后一个 requirement，archive 有三种分支：
+
+| 重建结果 | 正确处理 |
+|---|---|
+| 只剩标准 Purpose/空壳，且未声明 marker | CLI 才会建议在合法 `.openspec.yaml` 加 `retire_capabilities: true` |
+| 仍有 `## Notes`、orphan paragraph/section 等未归属内容 | archive 列出 blocking lines；此时加 marker也不会放行 |
+| marker 已写但 metadata 类型/schema 无效，或 marker 已变更 | CLI 报 `cannot be honored` / 授权变化原因，不删除文件 |
+
+blocking content 的三步修复：
+
+1. 打开 CLI 列出的 main spec，而不是只改 delta。
+2. 把仍有行为意义的内容移进 `## Purpose` 或某个 canonical requirement；无意义内容经 review 后删除。不要把 `## Notes` 机械改名来蒙混。
+3. 重新 validate/archive；只有清理后确实只差删除授权，才加 `retire_capabilities: true`。
+
+输出只展示前 3 条 blocking lines；控制字符会替换为 `?`，单行最多展示 200 个 code points，剩余行以计数说明。这既防终端注入，也不会让超长 note 淹没修复建议。任何失败路径都保持 main spec 和 active change 不变。
 
 改完这些文件后，再运行：
 

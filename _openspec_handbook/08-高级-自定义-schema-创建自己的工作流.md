@@ -8,7 +8,7 @@
 
 写完 config.yaml 之后，你迟早会遇到一个时刻：**config 的 rules 不够用了**。
 
-v1.9.0 先分清两种“不够”：Apply/Archive 只是需要短稳定项目步骤时，用 `operations.apply/archive.guidance`，不必 fork schema；只有想改变 artifact、依赖、template 或 apply gate/结构时，才需要自定义 schema。
+v1.10.0 先分清两种“不够”：Apply/Archive 只是需要短稳定项目步骤时，用 `operations.apply/archive.guidance`，不必 fork schema；只有想改变 artifact、依赖、template 或 apply gate/结构时，才需要自定义 schema。
 
 不是规则写得不够好——而是你发现，你想改的东西 config 根本管不到。你想让 proposal 问不同的问题、想让 specs 换一种格式、想让 tasks 少一个阶段、甚至想把整个 artifact 流程换成你自己的。这些 config.yaml 做不到。
 
@@ -106,6 +106,18 @@ openspec schema fork spec-driven my-domain
 proposal 和 specs 通常不用大动——"为什么要做"和"spec 化要交付什么"在大多数领域是相通的。动的就是 design（"怎么设计"）和 tasks（"怎么拆任务"）——因为不同领域的"设计"和"执行"确实不一样。
 
 **关键原则**：artifact 名不变，用户心智模型不变。不管写的是代码、agent、固件还是别的什么，proposal/specs/design/tasks 这四个动词用户已经会了。不要为了"领域感"发明新名字。
+
+**fork 会冻结 instruction。** `openspec schema fork spec-driven ...` 复制的是当时版本；以后升级 CLI 不会把上游 instruction 自动灌进你的 fork。升级到 v1.10.0 后，逐项对照内置 tasks instruction，至少保留：
+
+```yaml
+instruction: |
+  - Each task MUST state how to verify completion in that checkbox:
+    a test, command, observable behavior, or delivered artifact.
+  - Use a separate Integration Verification task only when it spans
+    multiple implementation tasks.
+```
+
+如果 fork 仍生成 `- [ ] Implement X` 这类无 verification 的 task，它不会因为 `schema validate` 通过就自动变好；该命令校验 schema 结构，不审查每条任务是否具体可验证。
 
 ### Level 3：fork schema，增删改 artifact
 
@@ -352,8 +364,9 @@ openspec schema validate my-schema --verbose
 
 ### 6. apply.instruction 保持简短
 
+❌ 太长——把沟通方法论、审查 checklist、质量标准全塞进 YAML：
+
 ```yaml
-# ❌ 太长——把沟通方法论、审查 checklist、质量标准全塞进 YAML
 apply:
   instruction: |
     你现在进入执行阶段。你的角色是需求工程推动者……
@@ -378,8 +391,11 @@ apply:
     ## 交接
     补齐 Handoff Notes：复杂度、集成点、建议顺序、已知未知、联系人
     （……总共 80+ 行）
+```
 
-# ✅ 简短——只写执行循环和 done 标准
+✅ 简短——只写执行循环和 done 标准：
+
+```yaml
 apply:
   instruction: |
     Execute the workflow using the checklist:

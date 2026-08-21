@@ -13,7 +13,7 @@
 | `config-loading` | `../schema/05-四层注入机制.md`、`../internal-spec-driven/06-config-yaml-机制与约束.md` |
 | `cli-archive` | `../internal-spec-driven/04-archive-归档合并.md` |
 | `specs-sync-skill` | `../mechanisms/04-workflow-templates.md` |
-| `command-generation`、`ai-tool-paths`、`cli-init`、`cli-update`、`global-config` | `../mechanisms/02-tool-delivery.md`、`../spec_cli/05-config-profile-delivery.md` |
+| `command-generation`、`ai-tool-paths`、`cli-init`、`cli-update`、`global-config` | `../mechanisms/02-tool-delivery.md`、`../spec_cli/01-human-facing-cli.md`、`../spec_cli/05-config-profile-delivery.md` |
 | `cli-completion` | `../mechanisms/05-cli-infra.md` |
 | `telemetry` | `../mechanisms/05-cli-infra.md` |
 | `cli-feedback` | `../mechanisms/05-cli-infra.md`、`../mechanisms/04-workflow-templates.md` |

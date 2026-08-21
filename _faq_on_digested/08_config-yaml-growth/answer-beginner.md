@@ -2,7 +2,7 @@
 
 ## 一句话
 
-你是普通程序员（不熟 SDD 细节，也不想精通 config）。先说结论：OpenSpec 给 config.yaml 的辅助几乎为零，但 **config 基本为空也能跑**，而且最省力的路是**抄一个有经验的人的 config.yaml 改改**，不用从零写。撞墙了再升级到 [`answer-intermediate.md`](answer-intermediate.md)。
+你是普通程序员（不熟 SDD 细节，也不想精通 config）。先说结论：OpenSpec 不会替你收集一般项目 rules，但 v1.10.0 给新项目增加了一个窄而实用的入口：`openspec init --language "<language>"` 会把 artifact 语言偏好种进新 `config.yaml`。其他 context/rules 仍要抄范本或让 agent 帮你整理。撞墙了再升级到 [`answer-intermediate.md`](answer-intermediate.md)。
 
 ## 先认清楚这个文件
 
@@ -55,11 +55,17 @@ operations:
 
 `context` 分两块（产品语言 + 跨平台要求），`rules` 跨三个 artifact，每条都具体可执行；`operations` 只放 Apply/Archive 真正需要的稳定步骤。**这就是长出来的样子——也是你下面该抄的范本。**
 
-## 普通人的路：现状几乎没有辅助
+## 普通人的路：language 有快捷入口，一般规则仍没有向导
 
 先认清处境（这样你不会怪自己）。逐条对源码，普通人能用的辅助**几乎为零**：
 
-**1. `openspec init` 不交互式问你。** 它只写一个 stub（`src/core/config-prompts.ts:9-39`，由 `src/core/init.ts:614` 的 `serializeConfig({ schema: DEFAULT_SCHEMA })` 生成）：
+**1. `openspec init` 不交互式收集一般 context/rules。** 不带 flag 时仍写 stub；新项目若只想指定 artifact 语言，可用：
+
+```bash
+openspec init --language "Chinese (zh-CN)"
+```
+
+它在新 `config.yaml` 的 `context` 中写入语言 guidance。已有 config 时命令明确失败且不覆盖；空值、多行、控制/不可见字符或超过 50KB context 上限也会拒绝。artifact 的 prose 可以按指定语言输出，但结构 heading、`SHALL`/`MUST` 等规范关键词保持英文。除此之外，init 仍不问技术栈、领域或质量优先级；默认 stub 类似：
 
 ```yaml
 schema: spec-driven
@@ -76,7 +82,7 @@ schema: spec-driven
 # ...（同样是注释例子）
 ```
 
-`schema` 那行是唯一真正生效的内容，`context` 和 `rules` **全是注释掉的示例**。init 全程不问你技术栈、不问领域、不问质量优先级。
+不带 `--language` 时，`schema` 那行是唯一真正生效的内容，`context` 和 `rules` **全是注释掉的示例**。
 
 **2. `openspec config` 是个陷阱。** 它名字看着就是干这个的（`config set / edit / reset / list`），但 `src/commands/config.ts:268-279`：
 
@@ -99,21 +105,22 @@ schema: spec-driven
 
 ```text
 普通人的现实：
-  init 给你 stub（context/rules 注释掉）
+  新项目可用 --language 种入一条 language context
+  其他情况 init 给你 stub（context/rules 注释掉）
     + customization.md 一页例子
     + 写错了才有 warning
-    - 没有交互式引导
+    - 没有一般项目 context/rules 的交互式引导
     - 没有项目级 config 命令
     - agent 没被指示帮你建
 ```
 
-这不是你的错，是 OpenSpec 当前的产品缺口。
+语言以外的部分仍是 OpenSpec 当前的产品缺口。
 
 ## 普通人现实能干啥
 
 现状是"几乎没辅助"，但别慌——你能跑起来，而且有一条最省力的路：**别从零写，去抄一个有经验的人的 config.yaml**。
 
-1. **接受 config 基本为空也能跑。** stub 里 `schema: spec-driven` 一行够用，spec-driven 默认工作流就能起步，第一个 change 不需要任何 context/rules。
+1. **新项目先决定是否需要语言 flag。** 需要中文等 artifact prose 时用 `openspec init --language "Chinese (zh-CN)"`；已有项目不要重跑覆盖，直接手改 `context`。不需要时，stub 里 `schema: spec-driven` 一行也够用。
 2. **抄一个有经验的人的 config.yaml，改成你的项目。** 这是最现实的路——让别人踩过的坑、沉淀的 context/rules 给你打底，你只改技术栈/领域。去哪找：
    - 这个 repo 自己的 [`../../openspec/config.yaml`](../../openspec/config.yaml)——OpenSpec 团队 dogfood 的成品，最现成的范本（就是上面那段）。
    - 你团队里已经在用 openspec 的项目，或同事的 config。
@@ -141,15 +148,15 @@ schema: spec-driven
 
 不行。`openspec config` 只管全局 JSON，对项目 yaml 是硬编码拒绝（`src/commands/config.ts:276`）。这个名字是最大的误导。
 
-### 误区 2：以为 `openspec init` 会交互式引导你填 config
+### 误区 2：以为 `openspec init` 会交互式引导你填完整 config
 
-不会。init 全程不问 context/rules，只写 stub（`config-prompts.ts:9-39`）。`docs/customization.md:22-27` 说它 "walks you through creating a config interactively" 是个 doc bug——代码没这个功能。
+不会。v1.10.0 的 `--language` 只是 greenfield language context 快捷入口，不会收集一般项目背景或 rules；已有 config 时还会拒绝覆盖。
 
 ## 结论
 
 ```text
 1. config.yaml 是项目全局层：定义 context（所有 artifact 共享，也给 Apply/Archive）+ rules（按 artifact）+ operations guidance（仅 Apply/Archive）。
-2. 普通人现状几乎没有辅助（init stub / config 陷阱 / agent 没引导）——这是 OpenSpec 的产品缺口，不是你的错。
+2. 新项目可用 init --language 种入语言 context；一般 context/rules 仍缺少向导（config 陷阱 / agent 没引导）。
 3. 最省力的路：别从零写，抄一个有经验的人的 config.yaml（dogfood 范本 / 同事的 / handbook 06 的 sample），改改技术栈和领域先用着。
 4. config 基本为空也能跑；撞墙了（要精确控制 / agent 老犯同类错）再升级 intermediate（agent 帮你建）或 expert（自己写）。
 5. 怎么从产品源头补这个缺口（给 skill 加引导 / 加 CLI 命令）是 contributor 级的事，见 answer-expert.md。

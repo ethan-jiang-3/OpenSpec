@@ -15,6 +15,8 @@
 | `design` | `design.md` | `proposal` | 记录实现方法、技术决定、风险与迁移。 |
 | `tasks` | `tasks.md` | `specs`、`design` | 把实现拆成可追踪、可验证的 checkbox。 |
 
+v1.10.0 把“可验证”具体化为：每个 checkbox 自身写 test、command、observable behavior 或 delivered artifact；跨多个实现项的验证才另列 Integration Verification。这仍是 schema instruction，不是 validator 的逐项质量硬校验。
+
 `apply` 不是第五个 artifact。它是 schema 中与 `artifacts` 并列的独立 block，因此：
 
 - `rules.proposal`、`rules.specs`、`rules.design`、`rules.tasks` 才是这个 schema 的合法 artifact rules。
@@ -119,6 +121,7 @@ Archive 的 validation 也不能被概括成“保证四个 artifact 的内容�
 
 - `dependencies` 来自 schema 的直接 `requires`，负责把本次 change 已完成的上游 artifact 路由给下游。
 - `references` 来自 project config，负责提供外部 store specs 的只读发现索引。
+- `specs` artifact 的 main-spec 路径根来自 instruction payload 的 `planningHome.root`。MODIFIED 读取和既有 Purpose 直编都使用 `<planningHome.root>/openspec/specs/<capability-path>/spec.md`；这不等于 references 自动 retrieval。
 
 当前四个 artifact 的直接 dependency payload 是：
 
@@ -134,6 +137,10 @@ tasks.dependencies    = [specs, design]
 `rules` 只属于 artifact instructions，不会因为 schema 中有 Apply block 就自动进入 Apply。v1.7.0 的 project `context` 会进入 Apply/Archive，额外 operation guidance 放在 `operations.apply/archive.guidance`；完整阶段边界见 [`07-config-yaml-上下文路由源码深挖.md`](07-config-yaml-上下文路由源码深挖.md)。
 
 ## 6. Apply block 的精确语义
+
+### no-spec schema 的实例 marker
+
+若解析后的 schema 根本不产生 specs artifact（路径归一化后没有 `specs/` 下的输出），v1.10.0 的 `openspec new change` 会自动在 `.openspec.yaml` 写 `skip_specs: true`。识别会统一 `./specs/`、`specs/` 与 Windows separator，避免同一输出因写法不同被误判。由此产生的 specs 状态是 `skipped`；schema 作者无需伪造 specs artifact，也无需手写 marker。若 schema 实际产生 specs，或 change 后来发生 spec-level 行为变化，则不能用 marker 绕过真实 delta。
 
 内置 schema 的 Apply block 是：
 

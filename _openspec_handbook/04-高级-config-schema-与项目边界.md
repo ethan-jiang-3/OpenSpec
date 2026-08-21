@@ -298,6 +298,15 @@ schema 决定：
 
 所以 change 的实际解析顺序，通常会优先看 change 自己，再回退到项目默认。
 
+v1.10.0 还会在**当前 schema 根本不产生 specs artifact**时，由 `openspec new change` 自动写入：
+
+```yaml
+schema: docs-only
+skip_specs: true
+```
+
+CLI 会把 `./specs/`、`specs/` 与 Windows separator 等价归一后再判断，因此 schema 作者不必为了“让 spec-driven validator 满意”伪造一个 specs artifact，也不必手工补 marker。反过来，schema 有 specs 输出但某个 change 恰好没有行为变化时，仍由作者明确声明；有真实行为变化时不能借 marker 绕过 delta。
+
 ---
 
 ## profile 又是什么
@@ -333,6 +342,8 @@ schema 管的是：
    - core：你只有 6 个命令（propose/explore/apply/update/sync/archive）
    - custom：自选命令（可以额外启用 new/continue/ff/verify/bulk-archive/onboard 等）
    - 这是"入口层"的选择
+
+   v1.10.0 会展开 custom profile 的依赖：若选择 `archive` 或 `bulk-archive` 却漏了 `sync`，CLI 会在第一个依赖它的 workflow 前自动插入 `sync`；已有 `sync` 时不重复、不重排。例如 `[verify, archive]` 解析为 `[verify, sync, archive]`。这不会把 custom 降级成 core，也不会自动加入其他 core workflows。
 
 **⚠️ 警告**：
 - 切换 profile 可能会删除或添加 workflow 文件

@@ -142,8 +142,13 @@ openspec/changes/archive/YYYY-MM-DD-<change>/
 
 ```text
 fs.rename()
-fallback on EPERM/EXDEV: copyDirRecursive() + fs.rm(src)
+fallback on EPERM/EXDEV:
+  rename source to a private sibling staging path
+  copy and verify fingerprints/archived deltas
+  remove staging source
 ```
+
+fallback 失败会清理不完整目标并恢复 active source；若 destination 已是唯一完整副本但 staging cleanup 失败，则保留完整 destination 并报告 recovery 状态。
 
 完成后 active change 目录消失，archived change 目录保留全部原 artifacts 和 `.openspec.yaml`。
 
@@ -159,7 +164,7 @@ fallback on EPERM/EXDEV: copyDirRecursive() + fs.rm(src)
 
 ## 参考来源
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

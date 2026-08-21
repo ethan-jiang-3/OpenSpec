@@ -18,6 +18,7 @@
 - 目标项目路径。
 - 可选 `--tools`，用于非交互指定配置哪些 AI 工具（v1.9.0 起含 `command-code`）。
 - 可选 `--profile`，覆盖全局配置中的 profile。
+- 可选 `--language <language>`：只在 greenfield 初始化时为新 `openspec/config.yaml` 种下 `context`，要求 artifact prose 使用该语言，同时保留英文结构 headings 与 `SHALL/MUST`。它不是持续的语言开关。
 - 全局配置中的 `profile`、`delivery`、`workflows`。
 - （v1.2.0+）自动检测项目目录中已存在的 AI 工具目录（如 `.claude/`、`.cursor/`），预选检测到的工具。
 
@@ -37,6 +38,7 @@
 
 - 它不是只创建一个目录。
 - 它更像“给项目安装一套工作流接入层”。
+- 若已有 config，`--language` 拒绝覆盖并要求手工把语言说明加入 `context`；空值、多行、控制/不可见格式字符以及导致 context 超过 50KB 的值会在写文件前失败。
 
 ### `openspec update`
 
@@ -69,6 +71,9 @@
 - 它主要更新的是“工具接入层”。
 - v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
 - v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。v1.9.0 起，若 `.agents` 已被 `agents` 目标占用，遗留 Codex 升级不会劫持该树。
+- v1.10.0 起该共享根由 Codex、Zed Agent 与 vendor-neutral `agents` 三方协调；Zed 的 tool id 是 `zed`。`update` 只有实际更新带 `requiresIdeRestart` 的 IDE-resident surface 才提示重启；CLI-only/skills 即时加载工具通常不提示。
+
+首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。完整边界见 `../mechanisms/05-cli-infra.md`。
 
 ## 2. 发现当前项目里有什么
 

@@ -35,6 +35,7 @@
 | `src/core/templates/workflows/` | `../mechanisms/04-workflow-templates.md` |
 | `src/core/templates/skill-templates.ts`、`src/core/templates/types.ts`、`src/core/templates/index.ts` | `../mechanisms/04-workflow-templates.md`、`../mechanisms/02-tool-delivery.md` |
 | `src/core/completions/` | `../mechanisms/05-cli-infra.md` |
+| `src/core/completion-tip.ts` | `../mechanisms/05-cli-infra.md` |
 | `src/commands/completion.ts` | `../mechanisms/05-cli-infra.md` |
 | `src/telemetry/`、`src/commands/feedback.ts` | `../mechanisms/05-cli-infra.md` |
 | `src/core/change-metadata/`、`src/utils/change-metadata.ts`、`src/core/change-status-policy.ts` | `../internal-spec-driven/03-apply-实施执行.md`、`../spec_cli/03-workflow-runtime-api.md` |

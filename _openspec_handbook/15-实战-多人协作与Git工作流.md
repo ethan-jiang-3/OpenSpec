@@ -2,7 +2,7 @@
 
 > 多人用 OpenSpec + Git 时，**绝大多数冲突都来自一件事：有人忘了"一个 change = 一个分支、PR 合并后立即 archive"这条纪律。** 这一篇把这条纪律拆成 4 个场景（独立功能 / 有依赖 / 改同一个 spec / 紧急 bugfix），告诉你每一步敲哪条命令、archive 顺序错会怎样、怎么用 PR 串行化避免基线不一致。
 
-> **v1.9.0 协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。两个 change 若触及同一 capability relative path（可嵌套）仍需串行化/重基线；正确 early-sync 后 archive 对完全一致 delta 是 no-op，但不能跳过 review 或用它掩盖不同内容。CI 可用 `openspec validate --archived` 抓归档时未勾完的 tasks。
+> **v1.10.0 协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。同 path 仍需串行化/重基线；退役还必须同时处理在途 MODIFIED 与 main spec 中的 orphan content。
 
 ---
 
@@ -355,7 +355,8 @@ git commit -m "Sync with add-request-filter changes"
 - 尽量错开时间，避免并行修改同一个 spec
 - 如果必须并行，后 archive 的人要用 `/opsx:sync` 同步，并手动审查 delta spec 是否仍然准确
 - `/opsx:sync` 在当前 core profile 中默认可用
-- **退役 vs 在途修改（v1.8.0）**：若某人用 `retire_capabilities: true` 退役整个 capability（REMOVED 拿掉最后一个 requirement），而另一个 in-flight change 仍在 MODIFIED 它——后者的 `validate` 会通过，但 `archive` 会以 "target spec does not exist" 拒绝。退役 change 要先 archive（让 main spec 真正消失），或把在途的 MODIFIED 改成对别的 capability 的 ADDED。
+- **退役 vs 在途修改**：若某人退役整个 capability，而另一个 in-flight change 仍在 MODIFIED 它——后者可能到 archive 才因 target 不存在而失败。退役 PR 必须盘点同 path 的 active changes，先完成/取消/重基线，而不是把 marker 当作抢占所有权。
+- **退役 vs orphan content（v1.10.0）**：即使 `retire_capabilities: true` 已声明，main spec 里的 `## Notes`、orphan paragraph/section 等未归属内容也会阻止删除。CLI 会列 blocking lines；团队要先决定迁入 `## Purpose`/canonical requirement 还是经 review 删除，不能让退役者单方面抹掉其他人的治理信息。
 
 ---
 

@@ -174,17 +174,17 @@ for each update:
 Aborted. No files were changed.
 ```
 
-所有 rebuilt 内容都准备好后，CLI 遍历 prepared 列表。对每个 rebuilt spec，写入该 spec 前调用：
+所有 rebuilt 内容都准备好后，CLI 先遍历完整 prepared 列表，对每个需要写回的 rebuilt spec 调用：
 
 ```text
 Validator.validateSpecContent(specName, rebuilt)
 ```
 
-有 ERROR 时会在当前 spec 写入前中止。
+任何一个有 ERROR 都会在**所有 spec 写入前**中止。
 
-验证通过后才对当前 spec 调 `writeUpdatedSpec()`，并输出 operation counts。
+全部 validation 通过后，CLI 检查 archive 目标与输入 fingerprint，捕获各 mutation target 的 snapshot，再执行 `writeUpdatedSpec()` / retirement 并输出 operation counts。
 
-这个边界要说精确：`buildUpdatedSpec()` 是全量预构建，失败不会写任何 spec；但 rebuilt validation 和写入是逐项交替执行的。进入写入循环后，如果前一个 spec 已写入、后一个 spec 验证失败或 I/O 失败，CLI 没有跨 spec transaction 回滚。
+这个边界要说精确：全量预构建和全量 rebuilt validation 都在 mutation 前完成。进入 mutation 后若任一写入、retirement 或最终 move 失败，CLI 用 snapshots 恢复已尝试的主-spec mutation，并在需要时把 change 从 archive 移回 active。它是尽力事务式回滚；并发修改导致 fingerprint 不再匹配时会显式报告 rollback failure，而不是静默覆盖现场。
 
 ## 和 `/opsx:sync` 的差异
 
@@ -204,7 +204,7 @@ CLI archive 的 merge 是 programmatic merge：
 
 ## 参考来源
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|

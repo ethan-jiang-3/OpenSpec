@@ -96,6 +96,8 @@ artifacts:
       - 每个任务必须是 checkbox：`- [ ] X.Y 任务描述`
       - 任务应该小到可以在一个会话中完成
       - 按依赖顺序排列任务（哪些必须先完成？）
+      - 每个 checkbox 必须内嵌自己的 verification：test、command、可观察结果或 artifact inspection
+      - 只有跨多个实施任务的验证才单列 Integration Verification
 
       参考 proposal.md 了解背景和利益相关者，specs 了解需要跟踪的需求条目。
 
@@ -105,7 +107,7 @@ artifacts:
       - 3. Review & Validation（审查和验证）
       - 4. Approval & Handoff（批准和交接）
 
-      每个任务应该是可验证的——你知道它什么时候完成。
+      verification 是每个任务的一部分，不是最后统一补一句“review”。
     requires:
       - proposal
       - specs

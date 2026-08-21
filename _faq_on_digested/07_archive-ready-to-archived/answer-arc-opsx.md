@@ -119,7 +119,7 @@ mv "<changeRoot>" "<planningHome.changesDir>/archive/YYYY-MM-DD-<name>"
 
 它要求 agent 根据 status JSON 中的路径移动目录。
 
-CLI archive 则调用 `moveDirectory()`，优先 `fs.rename()`，必要时 fallback copy + remove。
+CLI archive 则调用 `moveDirectory()`，优先 `fs.rename()`；EPERM/EXDEV 时先把 source 改名到私有 staging path，再执行 fingerprint-protected copy、验证和可恢复清理。
 
 两者最终文件系统目标相同，但执行机制不同。
 

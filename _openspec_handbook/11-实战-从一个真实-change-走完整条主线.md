@@ -3,7 +3,7 @@
 > 前面的几篇已经把概念一层层拆开了。
 > 这一篇不再单独讲概念，而是用一个完整案例，把 `propose → apply → archive` 整条线真正走一遍。
 
-> **v1.9.0 实战校正。** 下文 `/opsx:*` 为 Claude 示例，Codex 运行相应 `$openspec-*` skills（装在 `.agents/skills/`）。case 中的 capability 可使用嵌套 relative path；新 capability delta 可写 `## Purpose`，archive 会带入新 main spec。若之前已正确 sync，archive 对完全一致 delta 允许幂等 no-op，但归档前仍必须验证。apply 时若任务超出 spec 范围，应停下来报，不要默默缩小指定行为。
+> **v1.10.0 实战校正。** 下文 `/opsx:*` 为 Claude 示例。每条 tasks checkbox 都把 verification 写在同一条内；单列 Integration Verification 只覆盖跨任务行为。这个要求来自 schema instruction，不是 validate 新硬校验。
 
 ---
 
@@ -391,19 +391,18 @@ size is small for the current staff workflow.
 # Tasks
 
 ## 1. Backend export support
-- [ ] 1.1 Add export endpoint for filtered orders
-- [ ] 1.2 Reuse existing order filter parsing
-- [ ] 1.3 Generate CSV response with stable column ordering
+- [ ] 1.1 Add export endpoint for filtered orders — verify: endpoint integration test returns a CSV response
+- [ ] 1.2 Reuse existing order filter parsing — verify: filter parity test covers status and date range
+- [ ] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the finance column order
 
 ## 2. Frontend integration
-- [ ] 2.1 Add Export CSV button on the Orders page
-- [ ] 2.2 Send current filter state to export endpoint
-- [ ] 2.3 Handle loading and error states
+- [ ] 2.1 Add Export CSV button on the Orders page — verify: component test finds the action for authorized staff
+- [ ] 2.2 Send current filter state to export endpoint — verify: UI test asserts the request query equals visible filters
+- [ ] 2.3 Handle loading and error states — verify: component tests observe disabled/loading and error feedback states
 
-## 3. Verification
-- [ ] 3.1 Add tests for exported filter correctness
-- [ ] 3.2 Verify unauthorized users cannot export
-- [ ] 3.3 Verify CSV columns match finance expectations
+## 3. Integration Verification
+- [ ] 3.1 Exercise the complete authorized export flow — verify: `pnpm test:e2e -- --grep "filtered CSV export"` passes
+- [ ] 3.2 Exercise the unauthorized flow — verify: e2e request returns 403 and no file downloads
 ```
 
 这一步的作用非常实际：
@@ -473,9 +472,9 @@ size is small for the current staff workflow.
 然后把 task 勾掉：
 
 ```markdown
-- [x] 1.1 Add export endpoint for filtered orders
-- [x] 1.2 Reuse existing order filter parsing
-- [ ] 1.3 Generate CSV response with stable column ordering
+- [x] 1.1 Add export endpoint for filtered orders — verify: endpoint integration test returns a CSV response
+- [x] 1.2 Reuse existing order filter parsing — verify: filter parity test covers status and date range
+- [ ] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the finance column order
 ```
 
 这时 `tasks.md` 本身就成了 change 的实施状态记录。
@@ -526,7 +525,7 @@ OpenSpec 更鼓励你当场修正 change。
 新增一个任务，比如：
 
 ```markdown
-- [ ] 1.4 Add non-paginated export query path
+- [ ] 1.4 Add non-paginated export query path — verify: integration test exports rows beyond the first UI page
 ```
 
 ### 这一步非常能体现 OpenSpec 的设计思想
@@ -560,20 +559,19 @@ openspec/changes/add-task-csv-export/
 
 ```markdown
 ## 1. Backend export support
-- [x] 1.1 Add export endpoint for filtered orders
-- [x] 1.2 Reuse existing order filter parsing
-- [x] 1.3 Generate CSV response with stable column ordering
-- [x] 1.4 Add non-paginated export query path
+- [x] 1.1 Add export endpoint for filtered orders — verify: endpoint integration test returns a CSV response
+- [x] 1.2 Reuse existing order filter parsing — verify: filter parity test covers status and date range
+- [x] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the finance column order
+- [x] 1.4 Add non-paginated export query path — verify: integration test exports rows beyond the first UI page
 
 ## 2. Frontend integration
-- [x] 2.1 Add Export CSV button on the Orders page
-- [x] 2.2 Send current filter state to export endpoint
-- [x] 2.3 Handle loading and error states
+- [x] 2.1 Add Export CSV button on the Orders page — verify: component test finds the action for authorized staff
+- [x] 2.2 Send current filter state to export endpoint — verify: UI test asserts the request query equals visible filters
+- [x] 2.3 Handle loading and error states — verify: component tests observe disabled/loading and error feedback states
 
-## 3. Verification
-- [x] 3.1 Add tests for exported filter correctness
-- [x] 3.2 Verify unauthorized users cannot export
-- [x] 3.3 Verify CSV columns match finance expectations
+## 3. Integration Verification
+- [x] 3.1 Exercise the complete authorized export flow — verify: `pnpm test:e2e -- --grep "filtered CSV export"` passes
+- [x] 3.2 Exercise the unauthorized flow — verify: e2e request returns 403 and no file downloads
 ```
 
 这时从 change 管理角度说，它已经准备进入 closing 阶段。

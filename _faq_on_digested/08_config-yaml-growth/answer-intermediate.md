@@ -60,6 +60,14 @@ Explore 谈清楚"该改什么"之后，落地写进 config 就是这几步（�
 
 `context` 是注入**所有** artifact 的不变背景。补它的分工：
 
+如果项目尚未有 `openspec/config.yaml`，且当前只需要固定 artifact prose 的语言，v1.10.0 可先运行：
+
+```bash
+openspec init --language "Japanese (ja-JP)"
+```
+
+这是 greenfield seed。已有 config 的 brownfield 项目会被拒绝覆盖，应让 agent 在现有 `context` 中手工加入同类 guidance。无论哪条路径，本地化的是 prose；Markdown 结构 heading、`SHALL`/`MUST` 规范关键词保持英文。
+
 | 谁负责 | 补什么 |
 |---|---|
 | **agent 自己推断** | 技术栈、语言、框架、包管理器（读 `package.json` 就有） |

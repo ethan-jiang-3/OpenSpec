@@ -34,7 +34,7 @@ rules:
   tasks:
     - Every task must be a Markdown checkbox.
     - Every implementation task should name the target file or directory when possible.
-    - Mark install/publish/verification actions as separate tasks.
+    - Every checkbox task must include its own test, command, observable result, or artifact inspection.
 
 operations:
   apply:
@@ -51,18 +51,18 @@ operations:
 ```markdown
 ## 1. Agent Contract
 
-- [ ] 1.1 Create `skills/<name>/SKILL.md` with trigger rules, workflow steps, and guardrails
-- [ ] 1.2 Add `commands/<name>.md` with accepted inputs and expected output format
+- [ ] 1.1 Create `skills/<name>/SKILL.md` with trigger rules, workflow steps, and guardrails — verify: inspect all contract sections
+- [ ] 1.2 Add `commands/<name>.md` with accepted inputs and expected output format — verify: invoke it with representative arguments
 
 ## 2. Verification
 
-- [ ] 2.1 Add `verification.md` with sample prompts and expected behavior
-- [ ] 2.2 Run a Markdown link/path consistency check
+- [ ] 2.1 Add `verification.md` with sample prompts and expected behavior — verify: run each prompt and record the observed result
+- [ ] 2.2 Run a Markdown link/path consistency check — verify: the checker exits successfully
 
 ## 3. Delivery
 
-- [ ] 3.1 Copy or reference generated files in the target agent runtime location
-- [ ] 3.2 Verify the target tool can see the new skill/command
+- [ ] 3.1 Copy or reference generated files in the target agent runtime location — verify: list the installed files
+- [ ] 3.2 Check target-tool discovery — verify: the new skill/command appears in the tool
 ```
 
 这里的关键是：把“实现”翻译成具体文件动作。OpenSpec apply 可以执行 checklist，但不会替你猜 agent runtime 的安装/发布细节。

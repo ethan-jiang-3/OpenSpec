@@ -21,24 +21,20 @@ npm install -g @fission-ai/openspec
 │     /Users/bowhead/.nvm/versions/node/v20.19.6/bin/openspec
 │       → ../lib/node_modules/@fission-ai/openspec/bin/openspec.js
 │
-├─3─ postinstall 触发（与命令注册无关）
-│     package.json:53: "postinstall": "node scripts/postinstall.js"
-│     只打印一行 shell completion 提示，不参与命令注册
-│
 ▼ 用户执行 openspec
 │
-├─4─ 内核读取 shebang
+├─3─ 内核读取 shebang
 │     bin/openspec.js:1: #!/usr/bin/env node
 │     └─> 内核调用 node 执行此文件
 │
-├─5─ 入口文件三行代码
+├─4─ 入口文件三行代码
 │     bin/openspec.js 完整内容：
 │       #!/usr/bin/env node
 │       import '../dist/cli/index.js';
 │
 │     这是唯一入口。真正的 CLI 在 dist/cli/index.js
 │
-├─6─ TypeScript 编译产物
+├─5─ TypeScript 编译产物
 │     src/cli/index.ts ──tsc──> dist/cli/index.js
 │
 │     build.js → execFileSync(tsc) → 编译所有 src/**/*.ts
@@ -46,7 +42,7 @@ npm install -g @fission-ai/openspec
 │
 │     编译时从不打包成二进制，只是 .ts → .js
 │
-└─7─ dist/cli/index.js 才是真正的 CLI
+├─6─ dist/cli/index.js 才是真正的 CLI
       commander 构建：
         program.name('openspec')
         ├── init、update、list、view
@@ -61,7 +57,13 @@ npm install -g @fission-ai/openspec
         ├── templates、schemas
         ├── new change
         └── feedback
-      program.parse() 接管 process.argv
+│     program.parseAsync() 接管 process.argv
+│
+└─7─ 首次交互运行的 postAction
+      命令 action 收尾后尝试在 stderr 提示：
+      Tip: Run 'openspec completion install' for shell completions
+      JSON、CI、非 TTY、completion 子命令、已安装/不支持 shell，
+      或 OPENSPEC_NO_COMPLETIONS=1 时不提示
 ```
 
 ## 三个关键机制拆解
@@ -109,11 +111,18 @@ $ file $(which openspec)
 | `src/cli/index.ts` | CLI 源码（commander），所有命令的注册 |
 | `build.js` | 构建脚本，调用 tsc 编译 |
 | `tsconfig.json` | TypeScript 配置，rootDir=src → outDir=dist |
-| `scripts/postinstall.js` | 与命令注册无关，只打印 completion 提示 |
+| `src/core/completion-tip.ts` | 首次 eligible `postAction` 中的 completion 提示；只写 stderr，并记录 one-shot 状态 |
+| `src/telemetry/index.ts` | 首次 telemetry notice；写 stderr，避免污染 stdout/JSON |
 
 ## 不是什么
 
 - **不是二进制可执行文件** — 没有 Go/Rust 编译，没有 nexe/pkg 打包
 - **不是 shell 脚本** — 是 Node.js 脚本，靠 shebang 执行
 - **不是 Python** — 虽然 `#!/usr/bin/env` 模式在 Python 脚本里也很常见，但这里是 node
-- **postinstall 不参与命令注册** — 命令在 `npm install` 完成解压后就已经通过 `bin` 字段注册了，postinstall hook 是在那之后才跑的
+- **没有现行 postinstall 链路** — v1.10.0 的 registry 安装包没有 install lifecycle script，因此不会再出现 completion postinstall 文案或 allow-scripts 警告；git/directory 安装仍可能因 `prepare` 构建。
+
+## 为什么全局安装后不再立即提示 completion
+
+v1.10.0 删除了 npm `postinstall`。completion 提示改为 CLI 的 `postAction`：首次符合条件的运行、且 stderr 是 TTY 时才出现；即使命令用 `process.exitCode` 报失败，收尾 hook 仍可执行。反过来，action 若直接调用 `process.exit(1)`，会跳过 hook，这次失败不会显示或消费提示。若命令属于 JSON/机器输出，提示会 defer；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制当前环境中的提示。提示写入全局 config 的 `completionTipSeen` 后只展示一次；读写使用 raw config，不能顺带把默认 profile 等字段写回。
+
+telemetry 的首次 notice 也只写 **stderr**。因此脚本可以继续把 stdout 当机器接口；JSON 运行会延后 notice，不会把提示混进 JSON。

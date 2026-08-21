@@ -45,7 +45,7 @@ Phase 3:
 
 Phase 4:
   openspec instructions apply --change "<name>" --json
-  [逐 task 实施 + 更新 checkbox]
+  [逐 task 实施 + 执行该项 `— verify:` + 更新 checkbox]
 
 Phase 5:
   openspec status --change "<name>" --json
@@ -82,6 +82,8 @@ Phase 2 的代码扫描是自动化的——agent 搜索五种信号：
 | debug 残留 | `rg "console\.log\|debugger"` | 高——简单删除 |
 
 agent 被要求选一个**小且明确**的任务（~15-20 分钟可完成），而不是大重构。
+
+v1.10.0 的 onboard 模板让生成的每条 task 自带 `— verify: <test/command/observable/artifact>`。Apply 时先执行该 verification，有证据后才勾选；跨多个实现 task 的端到端检查才单列 Integration Verification。这是教学模板与 schema instruction 的生成契约，不代表 `openspec validate` 新增逐项验证硬校验。
 
 ## Guardrails
 

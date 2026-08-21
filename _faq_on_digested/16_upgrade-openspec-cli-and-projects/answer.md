@@ -1,6 +1,6 @@
 # 答案：两段式升级——先升全局 CLI，再对每个项目跑 `openspec update`
 
-> **源码基线**：以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
+> **源码基线**：以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
 
 ## 一句话结论
 
@@ -56,7 +56,7 @@ skills/commands 是 CLI **用自己当前版本的模板生成**的，生成文�
 3. **迁移已安装工具**：`migrateIfNeededShared`——v1.8.0 里最典型的就是 **Codex 的 `.codex` skill 树原地迁到共享的 `.agents/skills/`**，保留用户定制文件。
 4. **智能检测哪个工具该重生成**：比较项目里已生成文件的版本戳与当前 CLI 版本，只重生成过期的；全部 up-to-date 且没新工具时输出「All tools are up to date」并收工。
 5. **按 delivery 重新生成**：`skills` / `commands` / `both` 由全局 config 的 `delivery` 决定。
-6. **处理共享根 ownership**：`.agents` 被 `agents` 与 `codex` 共用时，用 `.openspec-target` marker 判定谁是 active writer，避免互相覆盖（`src/core/shared-skill-target.ts`）。
+6. **处理共享根 ownership**：`.agents/skills` 被 `agents`、`codex` 与 v1.10.0 的 `zed` 三方共用时，用 `.openspec-target` marker 判定谁是 active writer，避免互相覆盖（`src/core/shared-skill-target.ts`）。Zed 是 skills-only，使用 `/openspec-*` 或 `@openspec-*`；Codex 仍用 `$openspec-*`，不要混写。
 7. **legacy 清理**：删掉 OpenSpec 历史上留的托管文件（v1.8.0 修了 CoStrict/Junie 目录误删 bug，现在只删 `openspec-*.md` 这类可识别托管文件，**永不删用户内容**）。
 8. **Copilot cloud 文件**：`openspec update` 从不提示——只刷新「已 opt-in」或「旧项目已存在 managed cloud 文件（视为隐含 opt-in）」的 Copilot 项目；用户自己改过的文件永不覆盖/删除；opt-out 只删 managed 文件。
 
@@ -83,10 +83,18 @@ openspec update                          # 每个项目跑一次（或带 --forc
 
 v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题：若该目录已被 `agents` 目标占用，不会改写成 Codex 语法，也不会清掉被跳过工具的 repo-local legacy 文件。
 
+## v1.10.0 的具体提醒（来自完整同步记录 0007）
+
+- registry 包已删除 `postinstall`，全局安装不再打印 completion 文案，也不再触发 allow-scripts 警告；git/directory install 仍可能通过 `prepare` 构建。
+- completion 提示改到首次符合条件、且 action 真正到达 root `postAction` 的 CLI 运行收尾阶段，只写 **stderr** 且只显示一次；设置 `process.exitCode` 的失败仍到达 hook，直接 `process.exit(1)` 的失败则跳过且不消费提示。JSON、CI、非 TTY、completion 子命令、已安装/不支持 shell 会 defer/suppress，`OPENSPEC_NO_COMPLETIONS=1` 可显式抑制。
+- `openspec update` 只在本轮实际更新了需要 reload 的 IDE-resident commands/skills 时打印 `Restart your IDE for changes to take effect.`。只更新 CLI-only 工具时不提示，不能再把“每次 update 后都重启”当通则。
+- 新工具 `zed` 写 `.agents/skills/openspec-*/SKILL.md`，与 Codex、vendor-neutral `agents` 共用受控根；Zed Agent 至少需 v1.4.2，且 untrusted worktree 不开放 project-local skills。
+- 其他升级后可见能力还包括 `init --language`、OpenCode `$ARGUMENTS`、no-spec schema 自动 marker、custom archive profile 自动加入 sync，以及更安全的 capability retirement 诊断。它们进一步说明 CLI 升级与逐项目 update 是两个步骤：前者升级命令/核心行为，后者刷新项目里的投递面。
+
 ## 相关材料
 
-- 投递层总论（init/update/delivery/tool 目录）：[`../_digested/spec_cli/01-human-facing-cli.md`](../_digested/spec_cli/01-human-facing-cli.md)、[`../_digested/spec_cli/05-config-profile-delivery.md`](../_digested/spec_cli/05-config-profile-delivery.md)
-- 工具投递与共享根/ownership marker：[`../_digested/mechanisms/02-tool-delivery.md`](../_digested/mechanisms/02-tool-delivery.md)
+- 投递层总论（init/update/delivery/tool 目录）：[`../../_digested/spec_cli/01-human-facing-cli.md`](../../_digested/spec_cli/01-human-facing-cli.md)、[`../../_digested/spec_cli/05-config-profile-delivery.md`](../../_digested/spec_cli/05-config-profile-delivery.md)
+- 工具投递与共享根/ownership marker：[`../../_digested/mechanisms/02-tool-delivery.md`](../../_digested/mechanisms/02-tool-delivery.md)
 - 升级命令选择 + 自升级判定：`src/core/version-check.ts`（`GLOBAL_UPGRADE_COMMANDS`、`canSelfUpgrade`、`shouldOfferUpgrade`）
 - update 命令入口 + 触发点：`src/cli/index.ts`（`update` 命令的 `.action`）
 - 项目内重投递：`src/core/update.ts`（`UpdateCommand`）、`src/core/shared-skill-target.ts`

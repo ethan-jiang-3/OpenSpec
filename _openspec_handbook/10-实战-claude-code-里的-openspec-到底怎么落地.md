@@ -122,6 +122,8 @@ openspec update
 
 刷新 Claude Code 入口层。
 
+v1.10.0 的结束提示按**本次实际生成的 surface**判断：只有某个需要 IDE reload 的工具确实收到新 commands/skills，CLI 才打印 `Restart your IDE ...`。Claude Code 这类 CLI 宿主通常直接读取刷新后的文件，不会因为和某个 IDE 工具同时配置就被笼统要求重启；如果 update 没打印重启提示，就不要把重启当固定步骤。
+
 > **模型切换是 Claude Code 层的事，不影响 OpenSpec。** OpenSpec 的 `status`、`instructions`、schema、artifacts 都不因换模型而变。需要切模型时，在 Claude Code 的 settings 或启动环境里配置 endpoint/key/model，结束后恢复原配置即可——不要把 API key 写进项目文件。
 
 ---

@@ -18,7 +18,7 @@ agent 用自己的 LLM 推理并写文件
 当前 profile 逻辑在 `src/core/profiles.ts`：
 
 ```text
-core   → propose / explore / apply / sync / archive
+core   → propose / explore / apply / update / sync / archive
 custom → 用户配置的 workflows
 ```
 
@@ -42,7 +42,9 @@ repo-local `init/update` 会根据 delivery：
 
 但 delivery 是意图，工具能力才是上限。v1.8.0 的 Codex 没有 command surface：它始终接收 `.agents/skills/openspec-*/SKILL.md`（v1.7.0 时代是 `.codex/skills/`），并以 `$openspec-*` skill 调用；旧的托管 Codex prompts 会在有 replacement skill 时由 `update` 清理，`.codex` 旧 skill 树会原地迁移到 `.agents` 并保留用户定制。不要把 `/opsx:*` 当成 Codex 的调用语法。
 
-v1.8.0 同时新增 vendor-neutral `agents` 目标（`--tools agents`），与 Codex 共享 `.agents` 根。共享根同一时刻只能有一个 active writer，由 `src/core/shared-skill-target.ts` 的 `.openspec-target` marker 决定归属（详见 `mechanisms/02-tool-delivery.md`）。v1.9.0 把同一规则接到遗留 Codex 升级路径：已有 `agents` 占用时，update 不再凭 `~/.codex/prompts` 劫持该树。另增 Command Code（`--tools command-code`）：skills 在 `.commandcode/skills/`，commands 在 `.commandcode/commands/opsx-<id>.md`。
+v1.10.0 下 vendor-neutral `agents`、Codex 与 Zed Agent 三方共享 `.agents/skills`。共享根同一时刻只能有一个 active writer，由 `src/core/shared-skill-target.ts` 的 `.openspec-target` marker 决定归属（详见 `mechanisms/02-tool-delivery.md`）；Zed 是 skills-only，不要套用 Codex 的 `$...` 调用。另增 Command Code（`--tools command-code`）：skills 在 `.commandcode/skills/`，commands 在 `.commandcode/commands/opsx-<id>.md`。
+
+custom profile 还有 dependency expansion：只要选择 `archive` 或 `bulk-archive` 而列表中没有 `sync`，resolver 会把 `sync` 插在第一个依赖者前；已有 `sync` 不重复、不重排，返回的 profile 仍是 custom，不降级为 core。
 
 
 ## skills 与 commands 的区别

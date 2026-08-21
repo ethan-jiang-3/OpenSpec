@@ -2,7 +2,7 @@
 
 > **Store 是可选的跨仓库 OpenSpec 引用机制：声明哪些已 checkout 的 OpenSpec root 与当前项目相关，并给人或 agent 一个按需读取它们的入口。** 它不是多仓库协调层，也不是本地 main specs 变大后的默认解法；单仓库项目通常不需要它。
 
-> **v1.8.0 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。`openspec view` 同样按 resolved root 展示，支持 `--store`。（v1.7.0 引入，v1.8.0 不变。）
+> **v1.10.0 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。specs artifact instruction 现在显式返回 `planningHome.root`，agent 必须以它定位 main spec。
 
 ---
 
@@ -157,6 +157,36 @@ openspec view --store platform-api # 明确查看指定 store
 4. 需要 operation guidance 时，再分别检查 `instructions apply` / `instructions archive`；不要期待 artifact rules 自动进入这两个 operation。
 
 这也是为什么 store 不适合作为“多处 guidance 拼装器”：真正的项目配置必须写在最终被解析为 planning root 的位置。
+
+### MODIFIED delta：不要把 cwd 当成 main-spec root
+
+v1.10.0 修复的是 **specs instruction 给 agent 的路径合同**，不是新增自动 spec retrieval。一个 change 在 store 中时，当前 shell 的仓库与 main spec 所在 root 可能不同：
+
+```text
+错误：<当前工作目录>/openspec/specs/identity/session/spec.md
+正确：<instructions JSON 的 planningHome.root>/openspec/specs/identity/session/spec.md
+```
+
+`<planningHome.root>` 是说明用占位符，不是可直接复制进 shell 的字面目录。排错时先读取 JSON：
+
+```bash
+openspec instructions specs --change add-session-expiry --store platform-api --json
+```
+
+然后依次检查：
+
+1. `planningHome.root` 是否是预期 store checkout。
+2. `changeRoot` 是否也位于该 planning home 的 `openspec/changes/` 下。
+3. 用 JSON 中的真实 `planningHome.root` 拼出 `openspec/specs/<capability-path>/spec.md`。
+4. 对 MODIFIED，先从这个文件复制完整 requirement（含全部 scenarios），再编辑 delta。
+
+例如 JSON 返回 `"planningHome":{"root":"/srv/stores/platform-api",...}`，目标就是：
+
+```text
+/srv/stores/platform-api/openspec/specs/identity/session/spec.md
+```
+
+不要回退到当前 repo 的 `./openspec/specs/...`，也不要因此声称 CLI 已自动选择了“相关” capability：root resolution 只回答**去哪个 OpenSpec root 读**，catalog/`list --specs`/`show` 与 change scope 仍负责回答**读哪份 spec**。
 
 ## 五、设计原则
 

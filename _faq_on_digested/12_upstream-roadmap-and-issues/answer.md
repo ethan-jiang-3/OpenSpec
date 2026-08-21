@@ -1,6 +1,8 @@
 # 答案：OpenSpec 上游 Roadmap、主要问题与社区状况
 
-> **当前基线（2026-08-15）**：本地源码与 CLI 应对齐 OpenSpec **v1.9.0**（release tag `v1.9.0` = `2826b88`）。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
+> **当前基线（2026-08-21）**：本地源码与 CLI 应对齐 OpenSpec **v1.10.0**（release tag `v1.10.0` = `1ebddd1`）。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
+>
+> **v1.10.0 对本 FAQ 的追加**：`init --language`；Zed Agent 与 `.agents/skills/` 三方 ownership；store-aware `planningHome.root` main-spec instruction；每 task verification；no-spec schema 自动 `skip_specs`；retirement blocked-content 三分支；custom archive profile 自动补 sync；OpenCode `$ARGUMENTS`；删除 npm postinstall 并改为首次 CLI stderr completion tip；telemetry notice 写 stderr；update 只在 IDE-resident surface 变化时提示 restart；feedback 长正文保持完整。后七项不都出现在简短 release notes，因此以完整 commit range、源码和测试为准。
 >
 > **v1.9.0 对本 FAQ 的追加**：Command Code（`.commandcode`）；`validate --archived`；bulk `list`/`validate --all`/`schemas` 在项目外非零退出；scenario-loss 认所有 `####` 子标题；apply 超出 spec 必须停下来报；archive 非 TTY 无 ANSI、重建 spec 保空白；`schema fork` YAML 保真；遗留 Codex 升级不抢 `.agents`。#1523 task-numbering 已在 v1.8.0 合入点 `e50bd09` 覆盖。
 >
@@ -16,7 +18,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，补入当前 v1.9.0）
+### 1.1 已交付（历史至 v1.6，补入当前 v1.10.0）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -28,6 +30,7 @@
 | v1.7.0 | nested main specs、`skip_specs`、operation guidance / `instructions archive`、Purpose carry-through、early-sync no-op、Codex skills-only | v1.7.0 同步的当前依据 |
 | v1.8.0 | vendor-neutral `agents` 目标（`.agents/skills/`）、GitHub Copilot（本地 + opt-in cloud）、MiniMax/Rovo、`retire_capabilities`、`status.isPlanningComplete`、validate SHALL/MUST 放宽 + scenario-loss 前置、archive 可重跑命令 | v1.8.0 同步的当前依据（见 [`0005`](../../_digested/_change_log/0005-v1.7.0-to-v1.8.0.md)） |
 | v1.9.0 | Command Code、`validate --archived`、bulk list/validate 拒绝空 implicit root、scenario 认所有 `####`、apply pause-on-scope、archive 非 TTY / spec 重建保真、`schema fork` YAML 保真、遗留 Codex 不抢 `.agents` | v1.9.0 同步的当前依据（见 [`0006`](../../_digested/_change_log/0006-v1.8.0-to-v1.9.0.md)） |
+| v1.10.0 | 多语言 init、Zed、store-aware specs instruction、task verification、no-spec 自动 marker、retirement blocked-content、profile sync 依赖、OpenCode 参数、completion/telemetry stderr、条件化 restart、feedback 保真 | v1.10.0 完整 commit-range 依据（见 [`0007`](../../_digested/_change_log/0007-v1.9.0-to-v1.10.0.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
@@ -128,7 +131,7 @@ v1.0.0 是迄今为止最大的 breaking change：
 - **手动步骤**：`project.md` 不会自动删除，用户需要手动把有用内容迁移到 `config.yaml` 的 `context:` 字段
 - **迁移命令**：`openspec init`（会检测旧文件、引导清理）；CI 环境：`openspec init --force --tools claude`
 
-此后（v1.0.x–v1.6.x）的历史判断不能当作当前结论。v1.7.0 已实质改变 nested path、operation inputs、skip-spec change、archive/sync 与 Codex delivery，v1.8.0 又加入 `agents` 目标、GitHub Copilot、`retire_capabilities` 与 status/validate 的改动，v1.9.0 再加入 Command Code、`validate --archived` 与 scenario/root/fork 保真；计划中的 schema 重命名仍应以当前 release note/源码验证。
+此后（v1.0.x–v1.6.x）的历史判断不能当作当前结论。v1.7.0 已实质改变 nested path、operation inputs、skip-spec change、archive/sync 与 Codex delivery，v1.8.0 又加入 `agents` 目标、GitHub Copilot、`retire_capabilities` 与 status/validate 的改动，v1.9.0 再加入 Command Code、`validate --archived` 与 scenario/root/fork 保真；v1.10.0 又改变多语言初始化、Zed/delivery、schema instructions、retirement、profile、completion/telemetry/update/feedback。计划中的能力仍应以当前 release tag、源码和测试验证，不能只看 CHANGELOG。
 
 ---
 
@@ -147,7 +150,7 @@ v1.0.0 是迄今为止最大的 breaking change：
 
 | Q | A |
 |---|---|
-| Slash commands 不出现怎么办？ | 运行 `openspec update` → 重启 IDE → 检查 `.claude/skills/` 是否有文件。确认在 AI chat 里输入（不是终端） |
+| Slash commands 不出现怎么办？ | 运行 `openspec update`；仅当输出提示更新了 IDE-resident commands/skills 时重启 IDE。CLI-only 工具更新通常不需重启。再检查目标工具目录，并确认在 AI chat 里输入（不是终端） |
 | Terminal vs AI Chat 的区别？ | `openspec ...` 在终端；agent 入口由宿主决定（Claude `/opsx:*`，Codex `$openspec-*`） |
 | 怎么升级？ | `npm install -g @fission-ai/openspec@latest` 然后每个项目里执行 `openspec update` |
 | 怎么自定义？ | `openspec/config.yaml` 的 `context:` / `rules:` / `operations:` / `schema:` 字段；自定义 schema 用 `openspec schema fork spec-driven my-workflow` |

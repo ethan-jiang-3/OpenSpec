@@ -248,6 +248,26 @@ rules:
 
 ## 6. 实践建议
 
+### 6.0 两条语言配置路径
+
+新项目可直接：
+
+```bash
+openspec init --language "Portuguese (pt-BR)"
+```
+
+它只在新 config 中种下合法 YAML string：
+
+```yaml
+schema: spec-driven
+context: |
+  Language: Portuguese (pt-BR)
+  All artifacts must be written in Portuguese (pt-BR).
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+```
+
+已有 `openspec/config.yaml` 时 flag 拒绝覆盖，应手工把同等说明合并进 `context`。language 先 trim；空值、多行、控制/不可见格式字符被拒绝，格式化后的 context 仍受 50KB 字节上限。可本地化的是 proposal/spec/design/tasks 的 prose；`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、`### Requirement:`、`#### Scenario:` 与规范关键字 `SHALL/MUST` 保持英文，normal/strict 的 validator 边界不因此改变。
+
 ### 6.1 rules 应该按 artifact 角色写
 
 不同 artifact 在 DAG 中有不同角色，rules 应该匹配这种角色差异：
@@ -294,14 +314,18 @@ rules:
 
 ### 6.4 弱规则不如不写
 
+弱规则（没有判断力，浪费 token）：
+
 ```yaml
-# 弱 —— 没有判断力，浪费 token
 rules:
   proposal:
     - Write clean code
     - Follow best practices
+```
 
-# 强 —— 有对象、有约束、有判断方向
+强规则（有对象、有约束、有判断方向）：
+
+```yaml
 rules:
   proposal:
     - Changes affecting the authorization module must reference existing auth spec requirements

@@ -8,6 +8,8 @@
 
 主 specs（`openspec/specs/<capability-path>/spec.md`）通常由 delta spec 经 `archive` 累加而来；`openspec archive` 是唯一的**确定性**主 spec 写入 CLI。host 的 sync workflow 也能在 archive 前直接改 main spec，但那是 agent 驱动的智能 merge，随后 archive 会按当前基线做幂等检查。理解这个区分，后面的失真和修法才不会把两条路径混为一谈。
 
+路径也有两层语义：agent 在生成 MODIFIED delta 或直编 Purpose 时，必须从 `openspec instructions ... --json` 读取 `planningHome.root`，再访问 `<planningHome.root>/openspec/specs/...`；CLI archive 的 deterministic merge 则由 root selection 把 source/target 解析成真实文件路径。前者是 instruction contract，后者是 CLI 实现路径；v1.10.0 修复的是前者硬编码 cwd 的问题，不新增自动 retrieval，也不能把 `<planningHome.root>` 当 shell 里的字面目录。
+
 ## 先定位：日常工作流圈里，archive 是哪一步
 
 日常四步 **explore → propose → apply → archive**：前三步是 `/opsx:` slash 技能（agent 驱动），**archive 是 `openspec` CLI 命令**——也是这四步里**唯一会写主 spec**的一步（specs 只在这一步更新）。`validate`/`list`/`view` 是另一类 CLI 工具命令，只读不写、不在这个圈里（CLI/slash 完整对照表见 `README.md`）。
@@ -34,7 +36,7 @@ openspec/changes/<id>/specs/<capability-path>/spec.md   ← delta（提案要改
 
 | 入口 | 性质 | 是否移动 change 到 archive |
 |------|------|----------------------------|
-| `openspec archive <change>` | **唯一的确定写入 CLI 动词**，原子、fail-fast | 是 |
+| `openspec archive <change>` | **唯一的确定写入 CLI 动词**；写前全量 fail-fast，mutation 后失败用 snapshot 尽力回滚 | 是 |
 | host 的 sync workflow（Codex: `$openspec-sync-specs`；Claude command adapter 常显示 `/opsx:sync`） | LLM 读 delta + 主 spec 再对齐，非确定、幂等 | 否（它只改 spec） |
 
 > 注意：**没有 `openspec apply` 命令**。`applySpecs()` 是 `archive` 内部调用的引擎函数，不是一个对外 CLI 动词（`src/cli/index.ts` 里 `.command('archive')` 有、`.command('apply')` 没有）。对外能以确定规则写主 spec 的路径就 `archive` 一条；想在归档前做更灵活的整段重写，走 host 的 sync workflow（它本质是让 agent 手动改 spec）。
@@ -146,7 +148,7 @@ Aborted. No files were changed.
 | BOM / fenced code 解析边界 | `src/core/parsers/requirement-blocks.ts`、`src/core/parsers/code-fence.ts` |
 | 落盘 | `src/core/specs-apply.ts` — `writeUpdatedSpec` |
 | 内部引擎（被 archive 调用） | `src/core/specs-apply.ts` — `applySpecs` |
-| archive 流程（原子、移动 change） | `src/core/archive.ts` |
+| archive 流程（全量写前校验、snapshot 回滚、移动 change） | `src/core/archive.ts` |
 | CLI 命令注册（证实无 `apply`） | `src/cli/index.ts` |
 | /opsx:sync LLM 模板 | `src/core/templates/workflows/sync-specs.ts` |
 

@@ -111,6 +111,8 @@ apply:
 - MODIFIED 要求复制完整 requirement（防止 archive 时信息丢失）
 - 新 capability 的 delta 可写 `## Purpose`；archive 会将它带入新 main spec。既有 main spec 的 Purpose 不由 delta 改写。
 - `skip_specs: true` 时不要创建 delta spec；instructions/status 会将 specs 标为 skipped。
+- v1.10.0 的 instruction 明确要求先从 `openspec instructions ... --json` 读取 `planningHome.root`：MODIFIED step 1 必须读 `<planningHome.root>/openspec/specs/<capability-path>/spec.md`；直接修改既有 main spec 的 Purpose 也使用同一 resolved root。这里修的是 agent instruction 的 store-aware 路径，不是 archive/sync 新增了 store 能力，也不代表 CLI 会自动检索 referenced store 的 spec 正文。
+- prose 可以按 `config.context` 中的语言要求本地化；结构标题（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、`### Requirement:`、`#### Scenario:`）保持英文。规范性文字仍推荐 `SHALL`/`MUST`：normal 模式缺关键字是 warning，strict 模式会把 warning 计为失败。
 
 ### design（技术设计）
 
@@ -136,6 +138,16 @@ apply:
 - 强制 checkbox 格式：`- [ ] X.Y Task description`
 - 要求按依赖排序
 - 每个任务要小到可在一个 session 完成
+- 每个 checkbox 自身必须写明 verification，例如测试、命令、可观察行为或交付 artifact；只有验证横跨多个实现任务时，才另列 `Integration Verification`。
+
+推荐示例：
+
+```markdown
+- [ ] 1.1 Implement language seeding — verify: run the init language test and inspect `openspec/config.yaml`.
+- [ ] 1.2 Reject an existing config — verify: confirm the command exits non-zero and leaves the file byte-for-byte unchanged.
+```
+
+这是 schema instruction / agent 生成契约，不是 `openspec validate` 新增的硬校验；validator 仍主要检查 OpenSpec 文档结构与 checkbox tracking。
 
 ---
 

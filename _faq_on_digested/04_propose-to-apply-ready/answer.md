@@ -18,7 +18,7 @@ change name / description
 
 OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责创建 change 容器、解释 schema 和文件状态、给出路径和 instructions；agent 负责读取上下文、生成 artifact 内容并写文件。
 
-> **v1.8.0 当前边界。** `/opsx:apply` 是 Claude 写法；Codex 使用 `$openspec-apply-change`（v1.8.0 下装在 `.agents/skills/`）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；specs 会显式为 `skipped`，但不得同时存在非隐藏 delta spec 文件。
+> **v1.10.0 当前边界。** `/opsx:apply` 是 Claude 写法；Codex 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；若 resolved schema 根本不生成 specs artifact，`new change` 会自动写入该 marker。真实行为变化仍不能借 marker 绕过 specs。
 
 ![Propose 到 apply-ready 的流程](figures/propose-to-apply-ready.svg)
 
@@ -102,7 +102,8 @@ createChange()
 
 1. 解析 schema：显式 `--schema` -> project config -> planning home default schema。
 2. 创建 change 目录。
-3. 写 `.openspec.yaml`。
+3. 判断 resolved schema 是否生成 specs artifact；不生成时自动设置 `skip_specs: true`。
+4. 写 `.openspec.yaml`。
 
 `.openspec.yaml` 类似：
 
@@ -110,6 +111,16 @@ createChange()
 schema: spec-driven
 created: "2026-06-14"
 ```
+
+no-spec schema 的 metadata 则类似：
+
+```yaml
+schema: docs-only
+created: "2026-06-14"
+skip_specs: true
+```
+
+`./specs/`、`specs/` 与 Windows separator 会先归一化再判断。这个自动 marker 是 schema 形状的推导结果，不要求作者伪造一个 specs artifact。
 
 重要边界：`openspec new change` **不创建** `proposal.md`、`design.md`、`specs/**/*.md` 或 `tasks.md`。它只创建容器和 metadata。artifact 文件由 agent 后续按 instructions 写入。
 
@@ -233,6 +244,14 @@ specs/**/*.md
 
 因此一个 change 可以创建多个 capability delta specs。v1.8.0（v1.7.0 起）的 capability 是 `specs/` 下的相对 path，允许 `identity/session/spec.md` 这样的嵌套路径；delta 必须使用同一相对 path，根级 `changes/<change>/specs/spec.md` 无效。
 
+创建 **MODIFIED** delta 前，主 spec 的当前版本必须从 instructions/status JSON 的 `planningHome.root` 解析：
+
+```text
+<planningHome.root>/openspec/specs/<capability-path>/spec.md
+```
+
+不要硬编码当前 repo 的 `openspec/specs/`。这是 v1.10.0 的 store-aware instruction 修复，不代表 OpenSpec 新增了自动检索相关 main spec 的能力。
+
 ### design
 
 `design` 也依赖 `proposal`，和 `specs` 并行。
@@ -261,13 +280,15 @@ schema instruction 说 design 不是流水账；它应该用于跨模块、新�
 默认 apply 阶段会解析 checkbox：
 
 ```markdown
-- [ ] 1.1 Implement session storage
-- [ ] 1.2 Add integration tests
+- [ ] 1.1 Implement session storage — verify: run the focused storage tests
+- [ ] 1.2 Add integration tests — verify: run the new integration test file
 ```
+
+v1.10.0 的 schema instruction 要求**每条 checkbox task 自带 verification**，形式可以是 test、command、observable behavior 或 artifact inspection；只有跨多个实现 task 的验证才适合另列 `Integration Verification`。这是生成契约，不是 `openspec validate` 新增的硬校验。
 
 `tasks.md` 完成后，默认 `apply.requires: [tasks]` 被满足。
 
-如果 change 只是重构、工具或文档等不改变 spec-level 行为的工作，则在 metadata 写 `skip_specs: true`，status 会将 specs 标为 `skipped` 而不是要求写一份虚假的零 delta spec；真实行为变化不能用它绕过 specs。
+如果 change 只是重构、工具或文档等不改变 spec-level 行为的工作，则可在 metadata 写 `skip_specs: true`，status 会将 specs 标为 `skipped` 而不是要求写一份虚假的零 delta spec；no-spec schema 会由 `new change` 自动写 marker。真实行为变化不能用它绕过 specs。
 
 ## Step 6：每写完一个 artifact，都重新解释状态
 
@@ -389,13 +410,16 @@ planning artifacts 已经足够让 apply skill 读取上下文和任务清单
 
 ## 参考来源
 
-源码引用以 v1.9.0（`2826b88`；release tag `v1.9.0` = `2826b88`）为当前基线：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/propose.ts` | propose skill 的完整步骤、循环、guardrails 和输出要求 |
 | `src/commands/workflow/new-change.ts` | `openspec new change` 的 CLI 行为和 JSON/human 输出 |
 | `src/utils/change-utils.ts` | change name 校验、schema 解析优先级、目录创建和 `.openspec.yaml` 写入 |
+| `test/commands/artifact-workflow.test.ts` | no-spec schema 的 `new change` 自动 marker |
+| `test/core/artifact-graph/outputs.test.ts` | `./specs/`、`specs/` 与 Windows separator 归一化 |
+| `test/core/templates/main-spec-paths.test.ts` | MODIFIED 主 spec 路径使用 `planningHome.root` |
 | `src/commands/workflow/status.ts` | `status --json` 如何加载 change context 并输出 status |
 | `src/commands/workflow/instructions.ts` | artifact instructions 和 apply instructions 的生成与输出 |
 | `src/core/artifact-graph/instruction-loader.ts` | `formatChangeStatus()` 和 `generateInstructions()` 的核心字段 |
