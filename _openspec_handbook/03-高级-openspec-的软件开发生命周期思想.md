@@ -3,7 +3,7 @@
 > 这一篇不再讲"按钮在哪""命令怎么敲"，而是讲 OpenSpec 对软件开发这件事本身的理解。
 > 它放在高级区最前面，因为先理解这套生命周期思想，后面的 config、schema、store 才不会变成孤立机制。
 
-> **v1.10.0 现实边界。** 主 specs 可以按嵌套 capability path 切分，却不会自动检索“当前相关”的 specs；agent 仍需按 change scope 选择上下文。本文 `/opsx:*` 为 Claude 示例；tasks 的逐项 verification 是本版新增的 schema instruction 合同。
+> **v1.11.0 现实边界。** 主 specs 可以按嵌套 capability path 切分，却不会自动检索“当前相关”的 specs；agent 仍需按 change scope 选择上下文。本文 `/opsx:*` 为 Claude 示例；tasks 的逐项 verification 是本版新增的 schema instruction 合同。
 
 ---
 
@@ -262,7 +262,7 @@ OpenSpec 的做法，本质上是在降低混乱。
 > - `design`：选 OIDC——甲方已有 Identity Provider，比 SAML 轻
 > - `tasks`：先接 IdP → 做角色映射 → 补监理界面 → 写验收测试
 
-> **v1.10.0 tasks 契约**：内置 schema 要求每个 checkbox task 在同一条描述中声明 verification（test、command、可观察行为或交付 artifact）；只有横跨多个 implementation tasks 的集成验证才适合单列。这是 agent 的 schema instruction / 生成契约，不是 `openspec validate` 新增的语义质量硬校验。可复制的 bad/good 对照见 [12](12-实战-如何正确修改-artifacts.md)。
+> **v1.11.0 tasks 契约**：内置 schema 要求每个 checkbox task 在同一条描述中声明 verification（test、command、可观察行为或交付 artifact）；只有横跨多个 implementation tasks 的集成验证才适合单列。这是 agent 的 schema instruction / 生成契约，不是 `openspec validate` 新增的语义质量硬校验。可复制的 bad/good 对照见 [12](12-实战-如何正确修改-artifacts.md)。
 
 ### explore：change 出来后，反复打磨它的手段
 

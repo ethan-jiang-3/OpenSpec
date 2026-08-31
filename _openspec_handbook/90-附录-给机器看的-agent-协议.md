@@ -2,7 +2,7 @@
 
 > 这一篇不是给第一次上手的人看的，而是给想研究"OpenSpec 怎么喂给宿主 agent"的人看的。
 >
-> **适用版本**：本文以 OpenSpec v1.10.0 为准；涵盖 `--json` 输出、PlanningHome 路由、store-aware specs instruction，以及 Apply/Archive operation inputs。首次遥测披露和 completion tip 在 `--json` 时都会被推迟，避免污染机器输出。
+> **适用版本**：本文以 OpenSpec v1.11.0 为准；涵盖 `--json` 输出、PlanningHome 路由、store-aware specs instruction，以及 Apply/Archive operation inputs。首次遥测披露和 completion tip 在 `--json` 时都会被推迟，避免污染机器输出。
 
 ---
 

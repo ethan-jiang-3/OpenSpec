@@ -1,6 +1,6 @@
 # 09 · 高级：Capability 规划、身份与 specs 漂移维护
 
-> **适用 OpenSpec v1.10.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
+> **适用 OpenSpec v1.11.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
 
 ## 先回答：为什么这事值得你操心
 
@@ -211,7 +211,7 @@ openspec validate <affected-change> --type change --strict
 | 每个 proposal | 查过 catalog/既有 path；New 或 Modified 有理由；近义 capability 已排除 |
 | 每个 archive | delta path 与 main path 一致；新 capability 有可读 Purpose；没有遗留 active change 指向旧 path |
 | 跨 domain change | 用 impact matrix 说明哪些 path 修改、仅验证或明确排除 |
-| 定期巡检 | 是否有过粗 spec、同义 path、`TBD` Purpose、失效 catalog 条目或长期 active delta |
+| 定期巡检 | 是否有过粗 spec、同义 path、`TBD` Purpose（v1.11.0 `openspec validate` 会自动检测 archive 遗留的 placeholder，warning 级）、失效 catalog 条目或长期 active delta |
 | taxonomy 重构前 | rebaseline 计划、active-change inventory、迁移验证与明确 owner |
 
 ## 压缩结论

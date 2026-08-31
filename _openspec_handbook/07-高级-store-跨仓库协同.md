@@ -2,7 +2,7 @@
 
 > **Store 是可选的跨仓库 OpenSpec 引用机制：声明哪些已 checkout 的 OpenSpec root 与当前项目相关，并给人或 agent 一个按需读取它们的入口。** 它不是多仓库协调层，也不是本地 main specs 变大后的默认解法；单仓库项目通常不需要它。
 
-> **v1.10.0 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。specs artifact instruction 现在显式返回 `planningHome.root`，agent 必须以它定位 main spec。
+> **v1.11.0 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。specs artifact instruction 现在显式返回 `planningHome.root`，agent 必须以它定位 main spec。
 
 ---
 
