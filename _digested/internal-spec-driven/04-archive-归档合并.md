@@ -156,10 +156,12 @@ after:    ""（Requirements section 之后的文字）
 // 1. 在 map 中查找 from → 找不到报错
 // 2. 检查 to 是否已被占用 → 已占用报错
 // 3. 获取 from 的 block，改写 header 行
-// 4. 删除旧 key，插入新 key
+// 4. 删除旧 key，用新 key 替换
 ```
 
 为什么 RENAMED 必须最先做？因为如果 RENAMED 在后，MODIFIED 只能引用旧名字，导致改名后 MODIFIED 的内容丢失。
+
+**v1.11.0 修复**：rename 操作现在使用 `orderedKeys` 列表追踪位置标识。rename 更新 key 而不把块移到 spec 尾部（之前的 Map delete+set 会将条目移到插入顺序末尾），因此 RENAMED + MODIFIED 同一条时 rename 保持在原位置，archive diff 更易读。
 
 #### 第二：REMOVED（`specs-apply.ts:269-281`）
 
@@ -191,12 +193,23 @@ after:    ""（Requirements section 之后的文字）
 
 为什么 ADDED 最后？因为如果在 RENAMED 之前做 ADDED，RENAMED 的 TO 可能和 ADDED 冲突检测为假阴性。ADDED 应该检测合并后的最终状态。
 
-### 3.6 重建 spec
+### 3.6 重建 spec（v1.11.0 修复 rename 保序）
+
+v1.11.0 前 rename 操作通过 Map delete+set 将块移到 insertion-order 尾部。v1.11.0 使用 `orderedKeys` 列表独立追踪位置标识：
 
 ```typescript
-// 保持原有顺序，新加的内容追加到末尾
-const keptOrder = [];
-for (const block of parts.bodyBlocks) {
+// orderedKeys 保持源块的顺序标识，rename 更新 key 不移动尾部
+const orderedKeys = parts.bodyBlocks.map((b) => normalizeRequirementName(b.name));
+// ... rename 操作更新 orderedKeys[index] = to 而非 delete+set
+// 重建时按 orderedKeys 顺序而非 Map 迭代顺序
+for (let index = 0; index < parts.bodyBlocks.length; index++) {
+  const key = orderedKeys[index];
+  const replacement = nameToBlock.get(key);
+  ...
+}
+```
+
+新内容（ADDED）仍追加到末尾。保留的块中有 `## Scenario:` 等被 MODIFIED 吸收的 tail 内容时，会检测 `firstForeignTail` 并标记 loss 信息。ocks) {
   const key = normalizeRequirementName(block.name);
   const replacement = nameToBlock.get(key);
   if (replacement) keptOrder.push(replacement);  // 原有或替换

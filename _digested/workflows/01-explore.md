@@ -105,7 +105,7 @@ template 里写了 8 条 guardrail：
 | **Don't fake understanding** — 不清楚就深挖 | 软约束 |
 | **Don't rush** — 探索是思考时间，不是任务时间 | 姿态 |
 | **Don't force structure** — 让模式自然浮现 | 姿态 |
-| **Don't auto-capture** — 提议保存洞察，但不替用户决定 | 硬约束 |
+| **Don't auto-capture** — 提议保存洞察，但不替用户决定。只读工具和命令不需要确认；在第一次写操作之前（含 `openspec new change`），命名拟创建/编辑的 artifacts 或文件，ask a direct yes/no question，在单独的 user message 中等待确认。答案设计/澄清问题不是写入授权。 | 硬约束 |
 | **Do visualize** — 好图胜过千言 | 鼓励 |
 | **Do explore the codebase** — 扎根现实 | 鼓励 |
 | **Do question assumptions** — 包括用户的和你自己的 | 鼓励 |

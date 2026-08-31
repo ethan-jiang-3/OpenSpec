@@ -45,6 +45,7 @@
 - 核心对象：单个 change 或 spec。
 - 输出语义：对象内容与解析结果。
 - 主要边界：展示已有内容，不做工作流编排。
+- v1.11.0 新增 `--diff`：对 MODIFIED requirement 输出彩色 unified diff（增量行绿色、删除行红色），ADDED 输出全文，REMOVED 输出 Reason/Migration，RENAMED 输出 FROM/TO。`--json --diff` 保留既有 payload 形状，MODIFIED delta 增补 `diff` 和 `warning` 字段。`--store <id>` 解析 main spec 指向该 store。
 
 ## 三、校验与治理类
 
@@ -74,6 +75,7 @@
 
 - 角色：状态投影器。
 - 边界：告诉你“到哪一步”，不告诉你具体该写什么内容。
+- v1.11.0 新增 `--all`：一个进程返回全部 active change 状态。JSON envelope 含 `{ "changes": [<status>, ...], "root" }`，按 change name 排序。单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。与 `--change <name>` 互斥。
 
 ### `instructions <artifact>`
 
@@ -174,7 +176,7 @@
 ### `list` vs `status`
 
 - `list` 看总览。
-- `status` 看单个 change 的流程状态。
+- `status` 看单个 change 的流程状态（`--all` 时看全部 active change）。
 
 ### `show` vs `instructions`
 

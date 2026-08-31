@@ -302,7 +302,9 @@ Applying changes to openspec/specs/user-auth/spec.md:
 
 多 capability change 会输出 totals。
 
-这一步之后，`openspec/specs/` 代表新的 formal baseline。对新 capability，delta 中可读的 `## Purpose` 会随 archive 写入新 main spec；只有缺失或不可读时才回退 TBD placeholder，既有 main spec 的 Purpose 不会被 delta 覆盖。后续 explore/propose 都应该以这里为当前 capability 基线。
+这一步之后，`openspec/specs/` 代表新的 formal baseline。对新 capability，delta 中可读的 `## Purpose` 会随 archive 写入新 main spec；只有缺失或不可读时才回退 TBD placeholder，既有 main spec 的 Purpose 不会被 delta 覆盖。
+
+**v1.11.0 起**：`openspec validate` 会检测这个 archive 写入的 placeholder（`TBD - created by archiving change ...`），默认给出 WARNING。`--strict` 下报 error。检测使用与 writer 相同的定义常量（`PURPOSE_PLACEHOLDER_PREFIX` + `PURPOSE_PLACEHOLDER_SUFFIX`），所以 spelling 不会漂移。fence 内的引用不计，`TBD`/`TODO` 在 Purpose 开头也匹配，在句子中间则视为有效 Purpose。后续 explore/propose 都应该以这里为当前 capability 基线。
 
 ## Step 11：生成 archive 目标并检查冲突
 

@@ -20,6 +20,7 @@ _change_log/
 ├── 0005-v1.7.0-to-v1.8.0.md   # 实际源码合入 v1.8.0（agents 目标、GitHub Copilot、retire_capabilities）
 ├── 0006-v1.8.0-to-v1.9.0.md   # 实际源码合入 v1.9.0（Command Code、validate --archived、scenario ####、fork 保真）
 ├── 0007-v1.9.0-to-v1.10.0.md  # 完全同步 v1.10.0（多语言、Zed、store-aware instructions、task verification）
+├── 0008-v1.10.0-to-v1.11.0.md  # 完全同步 v1.11.0（show --diff、status --all、explore 写入前确认、Antigravity → .agents/、Purpose 占位符检测）
 ├── _plan-4-v1.7.0-current-docs.md # v1.7.0 当前资料同步计划（覆盖三个资料目录）
 ├── _plan-7-v1.9.0-sync-audit.md   # v1.9.0 当前资料同步审计
 ├── _plan-8-v1.10.0-full-sync.md   # v1.10.0 源码与三套资料的可恢复完全同步计划

@@ -72,6 +72,7 @@
 - v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
 - v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。v1.9.0 起，若 `.agents` 已被 `agents` 目标占用，遗留 Codex 升级不会劫持该树。
 - v1.10.0 起该共享根由 Codex、Zed Agent 与 vendor-neutral `agents` 三方协调；Zed 的 tool id 是 `zed`。`update` 只有实际更新带 `requiresIdeRestart` 的 IDE-resident surface 才提示重启；CLI-only/skills 即时加载工具通常不提示。
+- v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
 
 首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。完整边界见 `../mechanisms/05-cli-infra.md`。
 
@@ -137,17 +138,18 @@
 
 - item 名称。
 - 当前项目中可发现的 change IDs 和 spec IDs。
-- 可能附带的显示 flags，比如 change 的 `--deltas-only`。
+- 可能附带的显示 flags，比如 change 的 `--deltas-only`、`--diff`（v1.11.0 新增）。
 
 输出：
 
 - 人类可读内容。
-- 或 `--json` 结构化内容。
+- 或 `--json` 结构化内容（`--diff` 时 MODIFIED delta 增补 `diff` 和 `warning` 字段）。
 
 影响：
 
 - 是“看对象内容”的通用入口。
 - 适合调试文档结构和解析结果。
+- v1.11.0 的 `--diff` 让审阅者直接看清 delta 相对 main spec 真正改了哪些行（绿色新增、红色删除），不再需要人工文件 diff。
 
 容易误解：
 
@@ -288,15 +290,17 @@
 
 - 这是把”一个新需求/change”正式放进 OpenSpec 生命周期的起点。
 
-### `openspec status --change <name>`
+### `openspec status`
 
 本质目标：
 
-- 告诉你当前 change 的 artifact 走到哪一步，哪些已完成，哪些被阻塞。
+- 告诉你 change 的 artifact 走到哪一步，哪些已完成，哪些被阻塞。
+- 默认看单个 change（`--change <name>`），v1.11.0 新增 `--all` 一次看全部 active change。
 
 对人类意义：
 
 - 它比单纯看目录更清楚，因为它把依赖关系解释出来了。
+- `--all` 适合 dashboards 和 CI，一个进程返回全部状态，单个 change 失败不阻塞其余。
 
 ### `openspec instructions <artifact> --change <name>`
 

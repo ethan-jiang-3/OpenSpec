@@ -74,16 +74,23 @@ repo-local init/update 根据 global config 的 `delivery` 分流：
 
 这张表描述的是投递策略，不是每个工具都必然支持三种形态。v1.8.0 的 Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.agents/skills/openspec-*/SKILL.md`（v1.7.0 时代是 `.codex/skills/`），不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
 
-### v1.10.0：共享 `.agents` 根与三方目标
+### v1.10.0→v1.11.0：共享 `.agents` 根与通用写入权仲裁
 
-v1.8.0 引入两个相关变化：
+v1.8.0 起 `.agents/skills/` 由 `agents`、`codex`、`zed` 三方共享。v1.11.0 将共享根仲裁从硬编码三元组升级为通用 `resolveSharedSkillWriters()` 机制：
 
-1. **新增 vendor-neutral `agents` 目标**（`--tools agents`）：把 skills 装进 `.agents/skills/openspec-*/SKILL.md`，这是 AGENTS.md 兼容 assistant 的共享落点，不属于任何单一工具。`--tools all` 会包含它并创建 `.agents/skills/`。检测键是 `.agents/skills` 而非 `.agents` 根（框架常为别的东西用 `.agents/`）。
-2. **Codex 迁入同一个 `.agents` 根**：`codex` 的 `skillsDir` 从 `.codex` 改为 `.agents`（`.codex` 变成 `legacySkillsDirs`），update 会原地迁移旧 `.codex` 树并保留用户定制文件。
+1. **Antigravity 迁入 `.agents/` 共享根**（v1.11.0）：`antigravity` 的 `skillsDir` 从 `.agent` 改为 `.agents`（`.agent` 变成 `legacySkillsDirs`），旧 `.agent/workflows/openspec-*.md` 在 update 时被迁移或保留用户定制。检测键现在是 `.agent` 或 `.agents/workflows`（而非裸 `.agents/` 根）。
 
-3. **新增 Zed Agent 目标**（`--tools zed`）：skills-only，写 `.agents/skills/openspec-*/SKILL.md`，检测 `.zed` 或已有 `.agents/skills`；Zed v1.4.2+ 的 built-in Agent 以 `/openspec-*` 或 `@openspec-*` 调用，并受 Zed worktree trust 约束，External Agents/Terminal 不在该支持范围。
+2. **通用写入权仲裁**（v1.11.0 新增 `src/core/shared-skill-target.ts` 的 `resolveSharedSkillWriters`）：不再硬编码 Codex/Zed/agents 三方的排序规则。该函数遍历所有选中工具的 `skillsDir`，对每个共享物理根（如 `.agents/skills/`）选出一个 active writer：
+   - **已有 compatible owner**（通过 `.openspec-target` marker 或推断）胜出。
+   - **skills-native 渲染器优先于 adapter-backed**，因为其引用可被共享树的所有消费者使用。
+   - **新根默认指向 Codex**，因为其渲染器同时包含 Codex 和通用 skill 调用形式。
+   - 只有 active writer 生成 skill 文件；其他共享同一根的选中工具仍能独立写入 command surface（如 Antigravity 在 Codex 拥有 `.agents/skills/` 写入权时仍可安装 `.agents/workflows/` command 文件）。
 
-因此 `.agents/skills/` 现在由 `agents`、`codex`、`zed` 三方共享。共享根同一时刻只能有一个 active writer：`src/core/shared-skill-target.ts` 用 `.openspec-target` marker 记录谁在写；多方同时选择时收敛为一棵兼容树，而不是重复生成。裸 `.agents/` 不代表 skills；检测使用 `.agents/skills`，Zed 还可由 `.zed` 精确识别。
+3. **`openspec init` 和 `openspec update` 均使用同一仲裁**：`init.ts` 和 `update.ts` 都调用 `resolveSharedSkillWriters`，确保初始化和增量更新使用相同的写入权判定。
+
+4. **遗留检测改进**（`src/core/shared/tool-detection.ts`）：`getConfiguredTools` 现在也检测有 legacy skills 的 adapter-backed 工具，避免 `openspec update` 因未检测到旧 `.agent/` 树而重置 Antigravity。
+
+因此 `.agents/skills/` 的写入权规则不再是三方协议，而是一个可扩展的通用仲裁策略：任一新工具只要共享 `skillsDir` 都能自动参与，无需修改仲裁代码。
 
 profile 决定安装哪些 workflow，delivery 决定以什么形态投递。两者组合起来回答两个不同问题：
 
@@ -146,8 +153,9 @@ formatFile(content: CommandContent): string
 |------|--------------|------|
 | Claude | `.claude/commands/opsx/<id>.md` | 项目内 command 文件，带 frontmatter |
 | Codex | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 skills-only；以 `$openspec-*` 调用，`.codex` 是 legacy 迁移源 |
-| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | vendor-neutral 目标，与 Codex、Zed 共享 `.agents` 根 |
+| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | vendor-neutral 目标，与 Codex、Zed、Antigravity 共享 `.agents` 根 |
 | GitHub Copilot | `.github/skills/` 等 | v1.8.0 本地 skill + opt-in cloud coding-agent 文件（见下） |
+| Antigravity | `.agents/skills/` + `.agents/workflows/opsx-<id>.md` | v1.11.0 从 `.agent` 迁入 `.agents`；共享技能根通过 `resolveSharedSkillWriters` 仲裁。`.agent` 是 legacy 迁移源 |
 | Command Code | `.commandcode/skills/` + `.commandcode/commands/opsx-<id>.md` | v1.9.0 adapter-backed：skills 调用 `/openspec-*`，slash command 为 `/opsx-<id>` |
 | Zed Agent | `.agents/skills/openspec-*/SKILL.md` | v1.10.0 skills-only；Zed v1.4.2+ 用 `/openspec-*` 或 `@openspec-*`，不生成 `/opsx` command |
 | OpenCode | `.opencode/commands/opsx-<id>.md` | 接受输入的 command 在完整 `**Input**` block 后注入一次 `**Provided arguments**: $ARGUMENTS` |
@@ -156,7 +164,7 @@ formatFile(content: CommandContent): string
 
 OpenCode 只有在正文没有 `$ARGUMENTS`/位置参数占位符、且 Input 不是 `None required` 时才注入；已有占位符绝不重复。这是 adapter 的参数传递修复，不应套到 Zed 的 skill invocation 上。
 
-v1.9.0 起，遗留 Codex 升级路径也遵守同一条 one-writer 规则：若 `.agents` 已被 `agents` 目标占用（marker 或已有树），`openspec update` **不会**凭全局 `~/.codex/prompts` 把 skills 改写成 Codex 语法、也不会翻 ownership；跳过时该工具的 repo-local legacy 文件（如 `.codex/prompts/openspec-*.md`）一并保留。真正的首次 Codex 升级（还没有 `.agents` 树）不受影响。
+v1.9.0/.11.0 起，遗留迁移路径遵守同一条 one-writer 规则：若 `.agents` 已被某个工具占用（marker 或已有树），`openspec update` **不会**凭全局信号把 skills 改写成另一工具语法、也不会翻 ownership。`resolveSharedSkillWriters` 决定哪个工具是 active writer，其他共享同一物理根的工具跳过 skill 生成但保留 command surface。跳过时该工具的 repo-local legacy 文件（如 `.agent/workflows/` 或 `.codex/prompts/openspec-*.md`）一并保留。真正的首次安装（还没有 `.agents` 树）不受影响。
 
 ## GitHub Copilot：本地 skill 与 opt-in cloud coding-agent
 

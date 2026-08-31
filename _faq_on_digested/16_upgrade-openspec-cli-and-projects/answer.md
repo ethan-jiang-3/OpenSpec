@@ -83,6 +83,19 @@ openspec update                          # 每个项目跑一次（或带 --forc
 
 v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题：若该目录已被 `agents` 目标占用，不会改写成 Codex 语法，也不会清掉被跳过工具的 repo-local legacy 文件。
 
+## v1.11.0 的具体提醒（来自同步记录 0008）
+
+- `openspec show <change> --diff`：对 MODIFIED requirement 输出彩色 unified diff，`--json --diff` 增补 `diff` 和 `warning` 字段；`--store <id>` 可对 store 做 diff。
+- `openspec status --all`：一个进程扫全部 active change；JSON 含 `{ "changes": [...], "root" }` 稳定排序 envelope；单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。
+- **Antigravity 迁移**：从 `.agent` 迁入共享 `.agents/` 根，通过 `resolveSharedSkillWriters()` 通用仲裁与 Codex/Zed/`agents` 共用共享 root。旧 `.agent/` 树在 update 时迁移。
+- Explore 写入前确认：`openspec explore` 在写入前必须明确命名拟创建的 artifacts 或文件、ask a direct yes/no question、在单独的 user message 中等待确认。回答设计问题不再被误认为写入授权。
+- `schema init --default` 修复：写入 loader 实际读取的 `schema` 键，失败时回滚两个文件。
+- `openspec validate` 新增 `## Purpose` 占位符 warning：archive 遗留的 `TBD - created by archiving change ...` 会被检测到（默认 warning，`--strict` 才 fail）。
+- archive rename 保序：RENAMED requirement 保持在原位置，不再移到 spec 尾部。
+- 上游删除了 `openspec/schemas/agent-dev-driven/` 和 `requirement-driven/` 两个不再维护的内置 schema。
+- Fish completion 不再回退到文件路径建议。
+- Explore 图例改纯 ASCII。
+
 ## v1.10.0 的具体提醒（来自完整同步记录 0007）
 
 - registry 包已删除 `postinstall`，全局安装不再打印 completion 文案，也不再触发 allow-scripts 警告；git/directory install 仍可能通过 `prepare` 构建。
