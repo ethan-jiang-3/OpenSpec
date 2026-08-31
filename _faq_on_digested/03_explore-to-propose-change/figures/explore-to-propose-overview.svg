@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 760" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#475569"/>
+    </marker>
+    <linearGradient id="user" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="agent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="cli" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <linearGradient id="code" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7ed"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <linearGradient id="decision" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef9c3"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <style>
+      .box { stroke-width: 1.2; rx: 8; }
+      .label { fill: #0f172a; font-weight: 700; }
+      .small { fill: #475569; font-size: 12px; }
+      .tiny { fill: #64748b; font-size: 11px; }
+      .arrow { stroke: #475569; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+      .dash { stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="760" fill="#ffffff"/>
+  <text x="560" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">Explore 如何收敛到 propose change</text>
+  <text x="560" y="55" text-anchor="middle" class="small">CLI 提供状态，代码提供事实，agent 负责把两者合成为 change 边界判断</text>
+
+  <rect x="50" y="92" width="220" height="76" class="box" fill="url(#user)" stroke="#cbd5e1"/>
+  <text x="160" y="120" text-anchor="middle" class="label">EXP-01 用户意图</text>
+  <text x="160" y="144" text-anchor="middle" class="small">想法 / 痛点 / 方向</text>
+  <text x="160" y="160" text-anchor="middle" class="tiny">还不是 change 边界</text>
+
+  <rect x="340" y="92" width="250" height="76" class="box" fill="url(#agent)" stroke="#93c5fd"/>
+  <text x="465" y="120" text-anchor="middle" class="label">EXP-02 Explore stance</text>
+  <text x="465" y="144" text-anchor="middle" class="small">只探索，不实施代码</text>
+  <text x="465" y="160" text-anchor="middle" class="tiny">把输入当作 hypothesis</text>
+
+  <rect x="670" y="92" width="360" height="76" class="box" fill="url(#decision)" stroke="#facc15"/>
+  <text x="850" y="120" text-anchor="middle" class="label">EXP-03 不直接 propose</text>
+  <text x="850" y="144" text-anchor="middle" class="small">先确认已有状态、代码事实、影响面</text>
+  <text x="850" y="160" text-anchor="middle" class="tiny">避免制造空泛 artifacts 或重复 change</text>
+
+  <path d="M270,130 L340,130" class="arrow"/>
+  <path d="M590,130 L670,130" class="arrow"/>
+
+  <rect x="60" y="230" width="470" height="168" class="box" fill="url(#cli)" stroke="#86efac"/>
+  <text x="295" y="260" text-anchor="middle" class="label">EXP-04 OpenSpec 状态调查</text>
+  <text x="92" y="292" class="small">1. openspec list --json</text>
+  <text x="112" y="316" class="tiny">看 active changes 是否存在，避免重复或错过已有上下文</text>
+  <text x="92" y="348" class="small">2. 如命中已有 change：status --change X --json</text>
+  <text x="112" y="372" class="tiny">读取 changeRoot / artifactPaths / actionContext / artifacts</text>
+
+  <rect x="590" y="230" width="470" height="168" class="box" fill="url(#code)" stroke="#fdba74"/>
+  <text x="825" y="260" text-anchor="middle" class="label">EXP-05 真实项目调查</text>
+  <text x="622" y="292" class="small">读 openspec/specs/ 能力基线</text>
+  <text x="622" y="320" class="small">读源码、README/docs、API/CLI/UI 表面</text>
+  <text x="622" y="348" class="small">读测试、数据模型、集成点、既有 patterns</text>
+  <text x="622" y="376" class="tiny">如果 specs 为空，就从代码反推出事实 baseline</text>
+
+  <path d="M465,168 C465,195 295,195 295,230" class="arrow"/>
+  <path d="M465,168 C465,195 825,195 825,230" class="arrow"/>
+
+  <rect x="300" y="470" width="520" height="122" class="box" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="560" y="500" text-anchor="middle" class="label">EXP-06 合成问题地图</text>
+  <text x="330" y="532" class="small">当前状态：代码/规格现在怎么工作</text>
+  <text x="330" y="556" class="small">目标状态：用户真正想改变什么</text>
+  <text x="330" y="580" class="small">差距 / 影响面 / 风险 / 未知数</text>
+
+  <path d="M295,398 C295,435 480,435 480,470" class="arrow"/>
+  <path d="M825,398 C825,435 640,435 640,470" class="arrow"/>
+
+  <rect x="70" y="660" width="170" height="54" class="box" fill="#e0f2fe" stroke="#7dd3fc"/>
+  <text x="155" y="684" text-anchor="middle" class="label">EXP-07 继续 Explore</text>
+  <text x="155" y="704" text-anchor="middle" class="tiny">scope 还不稳</text>
+
+  <rect x="270" y="660" width="170" height="54" class="box" fill="#f0fdf4" stroke="#86efac"/>
+  <text x="355" y="684" text-anchor="middle" class="label">EXP-08 更新已有 change</text>
+  <text x="355" y="704" text-anchor="middle" class="tiny">属于当前 scope</text>
+
+  <rect x="470" y="660" width="170" height="54" class="box" fill="#fef3c7" stroke="#fbbf24"/>
+  <text x="555" y="684" text-anchor="middle" class="label">EXP-09 propose 一个</text>
+  <text x="555" y="704" text-anchor="middle" class="tiny">一个清晰增量</text>
+
+  <rect x="670" y="660" width="170" height="54" class="box" fill="#ffedd5" stroke="#fb923c"/>
+  <text x="755" y="684" text-anchor="middle" class="label">EXP-10 propose 多个</text>
+  <text x="755" y="704" text-anchor="middle" class="tiny">能力/风险边界不同</text>
+
+  <rect x="870" y="660" width="170" height="54" class="box" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="955" y="684" text-anchor="middle" class="label">EXP-11 不创建 change</text>
+  <text x="955" y="704" text-anchor="middle" class="tiny">只需理解或太小</text>
+
+  <path d="M560,592 C560,625 155,625 155,660" class="arrow"/>
+  <path d="M560,592 C560,625 355,625 355,660" class="arrow"/>
+  <path d="M560,592 L560,660" class="arrow"/>
+  <path d="M560,592 C560,625 755,625 755,660" class="arrow"/>
+  <path d="M560,592 C560,625 955,625 955,660" class="arrow"/>
+
+  <text x="560" y="630" text-anchor="middle" class="tiny">第一个真正的决策点：是否 formalize，以及 formalize 成几个 change</text>
+</svg>

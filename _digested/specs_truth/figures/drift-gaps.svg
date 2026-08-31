@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" font-family="monospace" font-size="11">
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#555"/></marker>
+    <marker id="arrowR" markerWidth="9" markerHeight="7" refX="9" refY="3.5" orient="auto"><path d="M0,0 L9,3.5 L0,7 Z" fill="#b91c1c"/></marker>
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/></linearGradient>
+    <linearGradient id="engineGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dcfce7"/><stop offset="100%" stop-color="#bbf7d0"/></linearGradient>
+    <linearGradient id="dataGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff7ed"/><stop offset="100%" stop-color="#fed7aa"/></linearGradient>
+    <linearGradient id="truthGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="100%" stop-color="#86efac"/></linearGradient>
+    <linearGradient id="badGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fee2e2"/><stop offset="100%" stop-color="#fecaca"/></linearGradient>
+    <linearGradient id="warnGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#fde68a"/></linearGradient>
+  </defs>
+
+  <rect width="1000" height="560" fill="#fafafa" rx="4"/>
+  <text x="500" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#222">图2 · 漂移如何进入与积累（漏的管子）</text>
+
+  <!-- ideal pipe -->
+  <rect x="40" y="50" width="160" height="44" rx="5" fill="url(#dataGrad)" stroke="#fdba74"/>
+  <text x="120" y="68" text-anchor="middle" font-size="10" font-weight="bold" fill="#c2410c">delta</text>
+  <text x="120" y="83" text-anchor="middle" font-size="8" fill="#c2410c">提案要改什么</text>
+  <line x1="200" y1="72" x2="238" y2="72" stroke="#555" marker-end="url(#arrow)"/>
+  <rect x="240" y="50" width="180" height="44" rx="5" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="330" y="68" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">openspec archive</text>
+  <text x="330" y="83" text-anchor="middle" font-size="8" fill="#1d4ed8">受控流水线</text>
+  <line x1="420" y1="72" x2="458" y2="72" stroke="#555" marker-end="url(#arrow)"/>
+  <rect x="460" y="50" width="220" height="44" rx="5" fill="url(#truthGrad)" stroke="#22c55e"/>
+  <text x="570" y="68" text-anchor="middle" font-size="10" font-weight="bold" fill="#14532d">openspec/specs/</text>
+  <text x="570" y="83" text-anchor="middle" font-size="8" fill="#14532d">理想：始终 = 现实</text>
+  <text x="720" y="76" font-size="9" fill="#15803d">✓ 理想情况</text>
+
+  <!-- crack line -->
+  <text x="500" y="118" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">实际：三道结构性缺口让管子漏 ↓</text>
+
+  <!-- three gaps -->
+  <rect x="40" y="128" width="300" height="96" rx="5" fill="url(#badGrad)" stroke="#fca5a5"/>
+  <text x="190" y="148" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">缺口① validate 逐文件</text>
+  <text x="190" y="166" text-anchor="middle" font-size="9" fill="#b91c1c">validateChangeDeltaSpecs() 只读</text>
+  <text x="190" y="180" text-anchor="middle" font-size="9" fill="#b91c1c">changeDir/specs/，基本不读主 spec（仅 scenario-loss）</text>
+  <text x="190" y="198" text-anchor="middle" font-size="9" fill="#b91c1c">⇒ MODIFIED/REMOVED 指向</text>
+  <text x="190" y="212" text-anchor="middle" font-size="9" fill="#b91c1c">不存在的东西，validate 全过</text>
+
+  <rect x="350" y="128" width="300" height="96" rx="5" fill="url(#badGrad)" stroke="#fca5a5"/>
+  <text x="500" y="148" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">缺口② 匹配只在 archive</text>
+  <text x="500" y="166" text-anchor="middle" font-size="9" fill="#b91c1c">且只看这一次</text>
+  <text x="500" y="184" text-anchor="middle" font-size="9" fill="#b91c1c">一次 archive 成功就写入真相</text>
+  <text x="500" y="198" text-anchor="middle" font-size="9" fill="#b91c1c">从此被盲信</text>
+  <text x="500" y="212" text-anchor="middle" font-size="9" fill="#b91c1c">不再回看是否仍自洽</text>
+
+  <rect x="660" y="128" width="300" height="96" rx="5" fill="url(#badGrad)" stroke="#fca5a5"/>
+  <text x="810" y="148" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">缺口③ 无审计/修复命令</text>
+  <text x="810" y="166" text-anchor="middle" font-size="9" fill="#b91c1c">无 log / repair / regenerate</text>
+  <text x="810" y="180" text-anchor="middle" font-size="9" fill="#b91c1c">无 prune / clean / audit</text>
+  <text x="810" y="198" text-anchor="middle" font-size="9" fill="#b91c1c">无 apply（只有 archive 写）</text>
+  <text x="810" y="212" text-anchor="middle" font-size="9" fill="#b91c1c">⇒ "对不对得上" 全靠人</text>
+
+  <line x1="500" y1="228" x2="500" y2="248" stroke="#b91c1c" marker-end="url(#arrowR)"/>
+  <text x="513" y="244" font-size="9" font-weight="bold" fill="#b91c1c">钻成六类噪声</text>
+
+  <text x="500" y="262" text-anchor="middle" font-size="10" font-weight="bold" fill="#b45309">六条噪声缝（附本 repo 实证）</text>
+
+  <!-- six seams 3x2 -->
+  <rect x="40"  y="272" width="300" height="100" rx="5" fill="url(#warnGrad)" stroke="#fcd34d"/>
+  <circle cx="58" cy="290" r="9" fill="#b45309"/><text x="58" y="294" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">1</text>
+  <text x="74" y="294" font-size="10" font-weight="bold" fill="#b45309">悬空 delta 目标</text>
+  <text x="52" y="316" font-size="8" fill="#92400e">change 指向不存在的能力目录</text>
+  <text x="52" y="332" font-size="8" fill="#92400e">例：add-change-stacking-awareness</text>
+  <text x="52" y="346" font-size="8" fill="#92400e">    → change-stacking-workflow/（无）</text>
+  <text x="52" y="360" font-size="8" fill="#92400e">    add-global-install-scope 等</text>
+
+  <rect x="350" y="272" width="300" height="100" rx="5" fill="url(#warnGrad)" stroke="#fcd34d"/>
+  <circle cx="368" cy="290" r="9" fill="#b45309"/><text x="368" y="294" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">2</text>
+  <text x="384" y="294" font-size="10" font-weight="bold" fill="#b45309">有代码无 spec</text>
+  <text x="362" y="316" font-size="8" fill="#92400e">发运了能力，specs 沉默</text>
+  <text x="362" y="332" font-size="8" fill="#92400e">例：src/commands/context-store.ts</text>
+  <text x="362" y="346" font-size="8" fill="#92400e">    src/commands/initiative.ts</text>
+  <text x="362" y="360" font-size="8" fill="#92400e">    （无对应能力 spec）</text>
+
+  <rect x="660" y="272" width="300" height="100" rx="5" fill="url(#warnGrad)" stroke="#fcd34d"/>
+  <circle cx="678" cy="290" r="9" fill="#b45309"/><text x="678" y="294" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">3</text>
+  <text x="694" y="294" font-size="10" font-weight="bold" fill="#b45309">冻结 spec</text>
+  <text x="672" y="316" font-size="8" fill="#92400e">spec 停在旧代码</text>
+  <text x="672" y="332" font-size="8" fill="#92400e">例：cli-view spec 写</text>
+  <text x="672" y="346" font-size="8" fill="#92400e">    "✗ No openspec directory"</text>
+  <text x="672" y="360" font-size="8" fill="#92400e">    代码已无 "✗"</text>
+
+  <rect x="40"  y="382" width="300" height="100" rx="5" fill="url(#warnGrad)" stroke="#fcd34d"/>
+  <circle cx="58" cy="400" r="9" fill="#b45309"/><text x="58" y="404" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">4</text>
+  <text x="74" y="404" font-size="10" font-weight="bold" fill="#b45309">废弃仍 active change</text>
+  <text x="52" y="426" font-size="8" fill="#92400e">僵尸 change 污染 list / validate</text>
+  <text x="52" y="442" font-size="8" fill="#92400e">例：workspace-* 系列（自带</text>
+  <text x="52" y="456" font-size="8" fill="#92400e">    "deferred" 说明）</text>
+  <text x="52" y="470" font-size="8" fill="#92400e">    proposal-only：validate 报 No deltas</text>
+
+  <rect x="350" y="382" width="300" height="100" rx="5" fill="url(#warnGrad)" stroke="#fcd34d"/>
+  <circle cx="368" cy="400" r="9" fill="#b45309"/><text x="368" y="404" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">5</text>
+  <text x="384" y="404" font-size="10" font-weight="bold" fill="#b45309">平行权威层未对齐</text>
+  <text x="362" y="426" font-size="8" fill="#92400e">initiatives/ 与 specs/ 各说各话</text>
+  <text x="362" y="442" font-size="8" fill="#92400e">例：conventions spec 的</text>
+  <text x="362" y="456" font-size="8" fill="#92400e">    Project Structure 没提</text>
+  <text x="362" y="470" font-size="8" fill="#92400e">    initiatives/ 这一层</text>
+
+  <rect x="660" y="382" width="300" height="100" rx="5" fill="url(#warnGrad)" stroke="#fcd34d"/>
+  <circle cx="678" cy="400" r="9" fill="#b45309"/><text x="678" y="404" text-anchor="middle" font-size="9" font-weight="bold" fill="#fff">6</text>
+  <text x="694" y="404" font-size="10" font-weight="bold" fill="#b45309">身份脆弱性</text>
+  <text x="672" y="426" font-size="8" fill="#92400e">标题被改 → delta 默默失配</text>
+  <text x="672" y="442" font-size="8" fill="#92400e">例：simplify-skill-installation</text>
+  <text x="672" y="456" font-size="8" fill="#92400e">    16 条 MODIFIED 目标全失配</text>
+  <text x="672" y="470" font-size="8" fill="#92400e">    archive 报 not found</text>
+
+  <rect x="40" y="498" width="920" height="44" rx="4" fill="#f9fafb" stroke="#e5e7eb"/>
+  <text x="500" y="516" text-anchor="middle" font-size="9" fill="#4b5563">三道缺口合起来 = OpenSpec 用 archive 管住了"写 specs 那一刻"的可靠，但写下去之后没有任何工具持续盯着它对不对。</text>
+  <text x="500" y="532" text-anchor="middle" font-size="9" font-weight="bold" fill="#b91c1c">所以 specs 的长期质量 = 前置纪律 + 定期巡检，不是某个命令的责任。</text>
+</svg>

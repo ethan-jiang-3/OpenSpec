@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" font-family="sans-serif" font-size="11">
+  <defs>
+    <marker id="arrowR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#555"/>
+    </marker>
+    <marker id="arrowL" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#999"/>
+    </marker>
+    <marker id="arrowLoop" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#f59e0b"/>
+    </marker>
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="cliGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcfce7"/><stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <linearGradient id="fsGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7ed"/><stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <linearGradient id="userGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f3f4f6"/><stop offset="100%" stop-color="#e5e7eb"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1000" height="720" fill="#fafafa" rx="4"/>
+
+  <!-- Title -->
+  <text x="500" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#333">propose 的三方架构实例化</text>
+
+  <!-- ========== COLUMN HEADERS ========== -->
+  <rect x="20" y="36" width="140" height="24" rx="4" fill="url(#userGrad)" stroke="#d1d5db"/>
+  <text x="90" y="52" text-anchor="middle" font-size="10" fill="#666">User</text>
+
+  <rect x="180" y="36" width="300" height="24" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="330" y="52" text-anchor="middle" font-size="10" fill="#2563eb">Host Agent</text>
+
+  <rect x="500" y="36" width="210" height="24" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
+  <text x="605" y="52" text-anchor="middle" font-size="10" fill="#16a34a">OpenSpec CLI</text>
+
+  <rect x="730" y="36" width="250" height="24" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
+  <text x="855" y="52" text-anchor="middle" font-size="10" fill="#ea580c">文件系统</text>
+
+  <!-- ========== PHASE A: CREATE CHANGE ========== -->
+  <rect x="10" y="68" width="980" height="72" rx="4" fill="none" stroke="#e5e7eb" stroke-dasharray="4,2"/>
+  <text x="20" y="84" font-size="9" fill="#999">Phase A · 创建 change</text>
+
+  <!-- User trigger + Agent + CLI + FS 水平一行 -->
+  <rect x="20" y="92" width="135" height="38" rx="4" fill="url(#userGrad)" stroke="#d1d5db"/>
+  <text x="87" y="107" text-anchor="middle" font-size="9" fill="#666">/opsx:propose</text>
+  <text x="87" y="121" text-anchor="middle" font-size="8" fill="#999">add-dark-mode</text>
+
+  <line x1="155" y1="111" x2="178" y2="111" stroke="#555" marker-end="url(#arrowR)"/>
+
+  <rect x="185" y="88" width="290" height="46" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="330" y="104" text-anchor="middle" font-size="9" fill="#2563eb">1. 从用户输入导出 kebab-case name</text>
+  <text x="330" y="118" text-anchor="middle" font-size="9" fill="#2563eb">2. openspec new change "add-dark-mode"</text>
+  <text x="330" y="131" text-anchor="middle" font-size="8" fill="#888">（--schema 可显式指定）</text>
+
+  <line x1="475" y1="111" x2="498" y2="111" stroke="#555" marker-end="url(#arrowR)"/>
+
+  <rect x="505" y="92" width="200" height="38" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
+  <text x="605" y="107" text-anchor="middle" font-size="9" fill="#16a34a">createDir()</text>
+  <text x="605" y="121" text-anchor="middle" font-size="9" fill="#16a34a">writeChangeMetadata()</text>
+
+  <line x1="705" y1="111" x2="728" y2="111" stroke="#555" marker-end="url(#arrowR)"/>
+
+  <rect x="735" y="93" width="240" height="36" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
+  <text x="855" y="108" text-anchor="middle" font-size="9" fill="#ea580c">openspec/changes/add-dark-mode/</text>
+  <text x="855" y="122" text-anchor="middle" font-size="8" fill="#c2410c">（空目录 + .openspec.yaml）</text>
+
+  <!-- ========== PHASE B: DAG LOOP ========== -->
+  <rect x="10" y="155" width="980" height="420" rx="6" fill="none" stroke="#93c5fd" stroke-width="1.2" stroke-dasharray="6,3"/>
+  <text x="22" y="172" font-size="10" fill="#2563eb" font-weight="bold">Phase B · 按 DAG 顺序逐一创建 artifact（核心循环）</text>
+
+  <!-- Iteration flow (vertical within loop) -->
+
+  <!-- Step B1: status call -->
+  <text x="22" y="195" font-size="8" fill="#94a3b8">每次迭代开始</text>
+
+  <rect x="185" y="202" width="290" height="28" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="330" y="220" text-anchor="middle" font-size="9" fill="#2563eb">openspec status --change "X" --json</text>
+
+  <line x1="475" y1="216" x2="498" y2="216" stroke="#555" marker-end="url(#arrowR)"/>
+
+  <rect x="505" y="198" width="200" height="36" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
+  <text x="605" y="213" text-anchor="middle" font-size="9" fill="#16a34a">loadChangeContext()</text>
+  <text x="605" y="227" text-anchor="middle" font-size="8" fill="#16a34a">→ 构建 ArtifactGraph（Kahn 拓扑）</text>
+
+  <rect x="735" y="196" width="240" height="40" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
+  <text x="855" y="211" text-anchor="middle" font-size="8" fill="#ea580c">扫描 change 目录 → DAG 状态：</text>
+  <text x="855" y="224" text-anchor="middle" font-size="8" fill="#ea580c">proposal: ready  |  specs: blocked</text>
+  <text x="855" y="234" text-anchor="middle" font-size="8" fill="#ea580c">design: blocked  |  tasks: blocked</text>
+
+  <!-- Return arrow (CLI → Agent, dashed) -->
+  <path d="M505,216 L485,216 L485,250 L475,250" stroke="#999" fill="none" stroke-dasharray="3,2" marker-end="url(#arrowL)"/>
+  <text x="495" y="260" text-anchor="middle" font-size="8" fill="#999">返回状态 JSON（一列 artifacts + requires）</text>
+
+  <!-- Step B2: pick ready + call instructions -->
+  <rect x="185" y="272" width="290" height="24" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="330" y="288" text-anchor="middle" font-size="9" fill="#2563eb">选一个 ready artifact → 调用 instructions</text>
+
+  <rect x="185" y="304" width="290" height="28" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="330" y="322" text-anchor="middle" font-size="9" fill="#2563eb">openspec instructions &lt;artifact&gt; --json</text>
+
+  <line x1="475" y1="318" x2="498" y2="318" stroke="#555" marker-end="url(#arrowR)"/>
+
+  <!-- CLI: 4-layer injection -->
+  <rect x="505" y="296" width="200" height="72" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
+  <text x="605" y="312" text-anchor="middle" font-size="9" fill="#16a34a" font-weight="bold">generateInstructions()</text>
+  <text x="605" y="326" text-anchor="middle" font-size="8" fill="#16a34a">① 读 config.context</text>
+  <text x="605" y="338" text-anchor="middle" font-size="8" fill="#16a34a">② 读 config.rules[artifactId]</text>
+  <text x="605" y="350" text-anchor="middle" font-size="8" fill="#16a34a">③ 读 artifact.instruction</text>
+  <text x="605" y="362" text-anchor="middle" font-size="8" fill="#16a34a">④ 加载 template.md</text>
+
+  <!-- FS: schema + template + config -->
+  <rect x="735" y="296" width="240" height="72" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
+  <text x="855" y="312" text-anchor="middle" font-size="8" fill="#ea580c">schemas/spec-driven/</text>
+  <text x="855" y="325" text-anchor="middle" font-size="8" fill="#ea580c">├ schema.yaml</text>
+  <text x="855" y="338" text-anchor="middle" font-size="8" fill="#ea580c">└ templates/&lt;artifact&gt;.md</text>
+  <text x="855" y="351" text-anchor="middle" font-size="8" fill="#ea580c">openspec/config.yaml</text>
+  <text x="855" y="364" text-anchor="middle" font-size="8" fill="#c2410c">（context + rules）</text>
+
+  <!-- Return: instructions back to agent -->
+  <path d="M505,340 L490,340 L490,384 L475,384" stroke="#999" fill="none" stroke-dasharray="3,2" marker-end="url(#arrowL)"/>
+  <text x="500" y="396" text-anchor="middle" font-size="8" fill="#999">返回 4 层组合后的 instructions</text>
+
+  <!-- Step B3: write artifact -->
+  <rect x="185" y="408" width="290" height="28" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="330" y="426" text-anchor="middle" font-size="9" fill="#2563eb">agent 在 resolvedOutputPath 写 artifact 文件</text>
+
+  <line x1="475" y1="422" x2="728" y2="422" stroke="#555" marker-end="url(#arrowR)"/>
+
+  <rect x="735" y="410" width="240" height="24" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
+  <text x="855" y="426" text-anchor="middle" font-size="9" fill="#ea580c">&lt;artifact&gt;.md 写入 change 目录</text>
+
+  <!-- Step B4: check condition -->
+  <rect x="185" y="450" width="290" height="26" rx="4" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="330" y="467" text-anchor="middle" font-size="9" fill="#92400e">applyRequires 中的 artifact 全部 done?</text>
+
+  <!-- Loop back -->
+  <path d="M185,463 L160,463 L160,216 L185,216" stroke="#f59e0b" fill="none" stroke-width="1.2" stroke-dasharray="5,2" marker-end="url(#arrowLoop)"/>
+  <text x="148" y="340" text-anchor="middle" font-size="8" fill="#f59e0b" transform="rotate(-90,148,340)">否 · 继续循环</text>
+
+  <!-- Exit label -->
+  <text x="340" y="495" text-anchor="middle" font-size="9" fill="#16a34a">是 → 退出循环</text>
+
+  <!-- DAG info box (bottom of loop) -->
+  <rect x="185" y="506" width="520" height="58" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="0.8"/>
+  <text x="195" y="520" font-size="8" fill="#16a34a">spec-driven 的 artifact DAG：proposal (入度0) → specs / design (入度1) → tasks (入度2, apply gate)</text>
+  <text x="195" y="534" font-size="8" fill="#16a34a">getBuildOrder() 用 Kahn 算法对 requires 做拓扑排序，确定创建顺序</text>
+  <text x="195" y="548" font-size="8" fill="#16a34a">getNextArtifacts(completed) 运行时判断哪些 artifact 的 requires 已满足</text>
+  <text x="195" y="560" font-size="8" fill="#16a34a">applyRequires: [tasks] 意味着 tasks artifact "done"（文件存在）才能进入 apply 阶段</text>
+
+  <!-- ========== PHASE C: DONE ========== -->
+  <rect x="10" y="585" width="980" height="58" rx="4" fill="none" stroke="#e5e7eb" stroke-dasharray="4,2"/>
+  <text x="20" y="600" font-size="9" fill="#999">Phase C · 最终展示</text>
+
+  <rect x="185" y="607" width="290" height="26" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="330" y="624" text-anchor="middle" font-size="9" fill="#2563eb">openspec status --change "X"（文本模式，给人看）</text>
+
+  <line x1="475" y1="620" x2="498" y2="620" stroke="#555" marker-end="url(#arrowR)"/>
+
+  <rect x="505" y="608" width="200" height="24" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
+  <text x="605" y="624" text-anchor="middle" font-size="9" fill="#16a34a">所有 artifact: done ✓</text>
+
+  <!-- ========== LEGEND ========== -->
+  <rect x="10" y="655" width="980" height="58" rx="4" fill="#f9fafb" stroke="#e5e7eb"/>
+  <text x="25" y="674" font-size="8" fill="#999">图例</text>
+
+  <rect x="70" y="664" width="44" height="14" rx="2" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="117" y="675" font-size="8" fill="#666">Host Agent</text>
+
+  <rect x="185" y="664" width="44" height="14" rx="2" fill="url(#cliGrad)" stroke="#86efac"/>
+  <text x="232" y="675" font-size="8" fill="#666">OpenSpec CLI</text>
+
+  <rect x="310" y="664" width="44" height="14" rx="2" fill="url(#fsGrad)" stroke="#fdba74"/>
+  <text x="357" y="675" font-size="8" fill="#666">文件系统</text>
+
+  <rect x="415" y="664" width="44" height="14" rx="2" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="462" y="675" font-size="8" fill="#666">条件判断</text>
+
+  <path d="M505,671 L540,671" stroke="#f59e0b" stroke-dasharray="5,2" stroke-width="1.2"/>
+  <text x="557" y="675" font-size="8" fill="#666">循环（沿左侧回线）</text>
+
+  <line x1="640" y1="671" x2="678" y2="671" stroke="#555" marker-end="url(#arrowR)"/>
+  <text x="683" y="675" font-size="8" fill="#666">请求/调用（实线 →）</text>
+
+  <line x1="810" y1="671" x2="770" y2="671" stroke="#999" stroke-dasharray="3,2" marker-end="url(#arrowL)"/>
+  <text x="820" y="675" font-size="8" fill="#666">返回（虚线 ←）</text>
+
+  <text x="25" y="698" font-size="8" fill="#999">
+    CLI = 确定性计算引擎：读文件、算 DAG 状态、组装 instruction 上下文。Agent = 智能体：理解用户意图、决定创建顺序、写内容。
+    文件系统 = 唯一事实源：artifact 文件的存在即状态。Schema = 控制面：声明 artifact DAG、requires、apply gate。
+  </text>
+</svg>

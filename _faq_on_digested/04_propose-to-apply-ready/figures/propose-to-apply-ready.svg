@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 860" font-family="Arial, 'Noto Sans CJK SC', sans-serif" font-size="14">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#475569"/>
+    </marker>
+    <linearGradient id="user" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="agent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bfdbfe"/>
+    </linearGradient>
+    <linearGradient id="cli" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <linearGradient id="fs" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff7ed"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <linearGradient id="gate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef9c3"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <style>
+      .box { stroke-width: 1.2; rx: 8; }
+      .label { fill: #0f172a; font-weight: 700; }
+      .small { fill: #475569; font-size: 12px; }
+      .tiny { fill: #64748b; font-size: 11px; }
+      .arrow { stroke: #475569; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+      .loop { stroke: #f59e0b; stroke-width: 1.4; fill: none; stroke-dasharray: 6 4; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="860" fill="#ffffff"/>
+  <text x="590" y="34" text-anchor="middle" font-size="20" font-weight="700" fill="#0f172a">Propose 如何走到 Apply-Ready</text>
+  <text x="590" y="58" text-anchor="middle" class="small">agent 生成 artifacts；CLI 解释 schema 和文件状态；applyRequires gate 决定能否交给 apply</text>
+
+  <rect x="60" y="95" width="220" height="72" class="box" fill="url(#user)" stroke="#cbd5e1"/>
+  <text x="170" y="122" text-anchor="middle" class="label">PRP-01 change input</text>
+  <text x="170" y="146" text-anchor="middle" class="small">name / description</text>
+
+  <rect x="350" y="95" width="220" height="72" class="box" fill="url(#agent)" stroke="#93c5fd"/>
+  <text x="460" y="122" text-anchor="middle" class="label">PRP-02 new change</text>
+  <text x="460" y="146" text-anchor="middle" class="small">openspec new change</text>
+
+  <rect x="640" y="95" width="220" height="72" class="box" fill="url(#fs)" stroke="#fdba74"/>
+  <text x="750" y="122" text-anchor="middle" class="label">PRP-03 metadata/schema</text>
+  <text x="750" y="146" text-anchor="middle" class="small">.openspec.yaml</text>
+
+  <path d="M280,131 L350,131" class="arrow"/>
+  <path d="M570,131 L640,131" class="arrow"/>
+
+  <rect x="60" y="225" width="300" height="88" class="box" fill="url(#cli)" stroke="#86efac"/>
+  <text x="210" y="254" text-anchor="middle" class="label">PRP-04 status DAG</text>
+  <text x="210" y="278" text-anchor="middle" class="small">status --change X --json</text>
+  <text x="210" y="296" text-anchor="middle" class="tiny">done / ready / blocked</text>
+
+  <rect x="440" y="225" width="300" height="88" class="box" fill="url(#agent)" stroke="#93c5fd"/>
+  <text x="590" y="254" text-anchor="middle" class="label">PRP-05 ready artifact</text>
+  <text x="590" y="278" text-anchor="middle" class="small">proposal, specs, design, tasks</text>
+  <text x="590" y="296" text-anchor="middle" class="tiny">选当前依赖已满足的节点</text>
+
+  <rect x="820" y="225" width="300" height="88" class="box" fill="url(#cli)" stroke="#86efac"/>
+  <text x="970" y="254" text-anchor="middle" class="label">PRP-06 instructions JSON</text>
+  <text x="970" y="278" text-anchor="middle" class="small">instructions artifact --json</text>
+  <text x="970" y="296" text-anchor="middle" class="tiny">template / instruction / paths</text>
+
+  <path d="M750,167 C750,200 210,200 210,225" class="arrow"/>
+  <path d="M360,269 L440,269" class="arrow"/>
+  <path d="M740,269 L820,269" class="arrow"/>
+
+  <rect x="140" y="380" width="270" height="84" class="box" fill="url(#agent)" stroke="#93c5fd"/>
+  <text x="275" y="408" text-anchor="middle" class="label">PRP-07 read dependencies</text>
+  <text x="275" y="432" text-anchor="middle" class="small">读已完成 artifacts</text>
+  <text x="275" y="448" text-anchor="middle" class="tiny">dependencies -> context</text>
+
+  <rect x="455" y="380" width="270" height="84" class="box" fill="url(#agent)" stroke="#93c5fd"/>
+  <text x="590" y="408" text-anchor="middle" class="label">PRP-08 write artifact</text>
+  <text x="590" y="432" text-anchor="middle" class="small">写 resolvedOutputPath</text>
+  <text x="590" y="448" text-anchor="middle" class="tiny">template + instruction</text>
+
+  <rect x="770" y="380" width="270" height="84" class="box" fill="url(#cli)" stroke="#86efac"/>
+  <text x="905" y="408" text-anchor="middle" class="label">PRP-09 status loop</text>
+  <text x="905" y="432" text-anchor="middle" class="small">重新运行 status --json</text>
+  <text x="905" y="448" text-anchor="middle" class="tiny">文件状态重新解释</text>
+
+  <path d="M970,313 C970,350 275,350 275,380" class="arrow"/>
+  <path d="M410,422 L455,422" class="arrow"/>
+  <path d="M725,422 L770,422" class="arrow"/>
+  <path d="M905,380 C905,335 590,335 590,313" class="loop"/>
+
+  <rect x="400" y="535" width="380" height="92" class="box" fill="url(#gate)" stroke="#facc15"/>
+  <text x="590" y="565" text-anchor="middle" class="label">PRP-10 applyRequires gate</text>
+  <text x="590" y="590" text-anchor="middle" class="small">schema.apply.requires 全部 done?</text>
+  <text x="590" y="608" text-anchor="middle" class="tiny">spec-driven 默认 requires: [tasks]</text>
+
+  <path d="M905,464 C905,510 590,510 590,535" class="arrow"/>
+
+  <rect x="80" y="700" width="230" height="74" class="box" fill="url(#cli)" stroke="#86efac"/>
+  <text x="195" y="728" text-anchor="middle" class="label">PRP-11 final status</text>
+  <text x="195" y="752" text-anchor="middle" class="small">给人看完整状态</text>
+
+  <rect x="350" y="700" width="230" height="74" class="box" fill="url(#cli)" stroke="#86efac"/>
+  <text x="465" y="728" text-anchor="middle" class="label">PRP-12 apply instructions</text>
+  <text x="465" y="752" text-anchor="middle" class="small">instructions apply --json</text>
+
+  <rect x="620" y="700" width="230" height="74" class="box" fill="url(#fs)" stroke="#fdba74"/>
+  <text x="735" y="728" text-anchor="middle" class="label">PRP-13 contextFiles/tasks</text>
+  <text x="735" y="752" text-anchor="middle" class="small">上下文文件 + task progress</text>
+
+  <rect x="890" y="700" width="230" height="74" class="box" fill="#f0fdf4" stroke="#86efac"/>
+  <text x="1005" y="728" text-anchor="middle" class="label">PRP-14 apply-ready handoff</text>
+  <text x="1005" y="752" text-anchor="middle" class="small">/opsx:apply 可以开始</text>
+
+  <path d="M590,627 C590,668 195,668 195,700" class="arrow"/>
+  <path d="M310,737 L350,737" class="arrow"/>
+  <path d="M580,737 L620,737" class="arrow"/>
+  <path d="M850,737 L890,737" class="arrow"/>
+
+  <text x="590" y="655" text-anchor="middle" class="tiny">否：回到 ready artifact 继续生成；是：进入 apply handoff</text>
+</svg>

@@ -1,0 +1,396 @@
+# 06 — config.yaml 的机制与约束
+
+前五篇讲的是 schema 驱动的四条命令。但还有一层控制面经常被忽略：`openspec/config.yaml`。它不定义工作流的结构（那是 schema 的事），但会在 artifact 指令、Apply/Archive operation inputs，以及 Explore 会话初始化时被读取。
+
+这篇从源码出发，精确说明 config.yaml 是什么、有什么约束、如何被使用、以及怎样利用它。
+
+---
+
+## 1. config.yaml 是什么
+
+位于 `<projectRoot>/openspec/config.yaml`（也接受 `.yml`）。它是 **项目级的配置补丁**，叠加在 schema 之上。
+
+**它不是什么**：
+- 不是 schema（不定义 artifact DAG）
+- 不是 spec（不定义系统能力）
+- 不是 change 元数据（不写 `.openspec.yaml` 里的东西）
+
+**它是**：一份告诉 OpenSpec CLI "在这个项目里，AI agent 在生成内容时应该知道哪些背景、遵守哪些约束"的配置文件。
+
+---
+
+## 2. Zod Schema：精确的类型约束
+
+定义在 `src/core/project-config.ts`：
+
+```typescript
+const ProjectConfigSchema = z.object({
+  schema: z
+    .string()
+    .min(1)
+    .describe('The workflow schema to use (e.g., "spec-driven")'),
+  context: z
+    .string()
+    .optional()
+    .describe('Project context injected into all artifact instructions'),
+  rules: z
+    .record(
+      z.string(),
+      z.array(z.string())
+    )
+    .optional()
+    .describe('Per-artifact rules, keyed by artifact ID'),
+  operations: z.object({
+    apply: z.object({ guidance: z.array(z.string()).optional() }).optional(),
+    archive: z.object({ guidance: z.array(z.string()).optional() }).optional(),
+  }).optional(),
+  store: z.string().optional(),
+});
+```
+
+> **注意**：Zod schema 中 `context` 字段**只有 `z.string().optional()`，没有 `.max(...)` 约束**。50KB 的长度上限是**在 `readProjectConfig()` 运行时手动检查**的（`project-config.ts:102-103`，用 `Buffer.byteLength` 比对 `MAX_CONTEXT_SIZE`），不在 Zod 类型定义里。Zod schema 在这里主要起"类型推导 + 文档"作用；真正的逐字段容错解析逻辑写在 `readProjectConfig()` 函数体中，而非依赖 `ProjectConfigSchema.safeParse()` 整体校验。
+
+### 字段约束表
+
+| 字段 | 必填 | 类型 | 约束 | 默认值 |
+|------|------|------|------|--------|
+| `schema` | 是 | `string` | 非空 | 无（`openspec init` 自动写入 `spec-driven`） |
+| `context` | 否 | `string` | 最大 **50KB**（51,200 字节，运行时检查） | 无 |
+| `rules` | 否 | `Record<string, string[]>` | key 应为合法的 artifact ID | 无 |
+| `operations` | 否 | object | 只接受 `apply` / `archive`；各自只接受字符串数组 `guidance` | 无 |
+| `store` | 否 | `string` | config-only root 的 store fallback；不是 operation prompt | 无 |
+| `references` | 否 | string 或 `{id, remote}` 数组 | 由 `readProjectConfig()` 专门解析；为 artifact/Apply 提供索引 | 无 |
+
+当前项目级 `openspec/config.yaml` 的已消费顶层字段是 `schema`、`context`、`rules`、`operations`、`store` 与 `references`。其中 `rules` 只属于 artifact prompt 注入层；`context` 同时进入 artifact 与 operation input；`operations` 只为 Apply/Archive 提供 advisory guidance；`schema` 属于 workflow schema 选择层；`store` / `references` 处理 root 与跨 store 上下文。
+
+如果 YAML 顶层额外写了其他 key，例如 `team:`、`metadata:`、`owner:`，当前实现会被 YAML parser 读到，但不会成为 OpenSpec 的运行时配置。结果就是：**静默忽略，不报错，也不生效**；不要把自定义 metadata 与上述已消费字段混在一起期待它被 workflow 使用。
+
+### 50KB 限制
+
+`project-config.ts:45`：
+```typescript
+const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
+```
+
+如果 `context` 字段超过 50KB，**该 context 字段被忽略并打印 warning**（不截断，全有或全无）。注意：只是忽略 `context` 字段，**不影响 config 的其他字段** —— `schema` 和 `rules` 照常生效（`project-config.ts:101-110`）。
+
+### rules key 验证
+
+`config.yaml` 的 `rules` 字段 key 不强制与 schema 的 artifact ID 匹配 —— 但你写了一个不存在的 artifact ID，会在**每次 session 首次生成指令时**产生一个 warning：
+
+```
+Warning: config.yaml rules contains unknown artifact ID "review" for schema "spec-driven"
+```
+
+验证逻辑在 `validateConfigRules()` / `generateInstructions()` in `src/core/artifact-graph/instruction-loader.ts`：
+```typescript
+if (projectConfig?.rules) {
+  const validArtifactIds = new Set(context.graph.getAllArtifacts().map(a => a.id));
+  const warnings = validateConfigRules(projectConfig.rules, validArtifactIds, context.schemaName);
+  for (const warning of warnings) {
+    if (!shownWarnings.has(warning)) {
+      console.warn(warning);
+      shownWarnings.add(warning);  // 每个 session 只警告一次
+    }
+  }
+}
+```
+
+---
+
+## 3. config.yaml 在何时被读取
+
+config.yaml 不是在启动时一次性全局读取的，而是**在需要时才读**。具体时机：
+
+### 时机 1：`openspec instructions <artifact>` 调用时
+
+`src/core/artifact-graph/instruction-loader.ts`：
+```typescript
+let projectConfig = null;
+if (effectiveProjectRoot) {
+  try {
+    projectConfig = readProjectConfig(effectiveProjectRoot);
+  } catch {
+    // 读不到就跳过，不阻塞指令生成
+  }
+}
+```
+
+即每次 agent 调用 `openspec instructions proposal --change X --json`，都会重新读 config.yaml。这保证了**最新修改立即生效**，不需要重启或重新 init。
+
+### 时机 2：`openspec new change` 创建 change 时
+
+`change-utils.ts:132-147`：读取 `config.schema` 来决定新 change 的默认 schema。
+
+### 时机 3：Apply / Archive / Explore
+
+- `openspec instructions apply --change X --json` 读取 `context` 与 `operations.apply.guidance`，同时返回 change-local `contextFiles`。
+- `openspec instructions archive --change X --json` 读取 `context` 与 `operations.archive.guidance`；Archive agent workflow 在归档前调用它。确定性的 `openspec archive` CLI 不把 prompt guidance 变成 merge 规则。
+- Explore workflow 从 resolved root 直接读取 `context` 和 `rules`，作为会话/写 artifact 时的约束；它不消费 `operations`。
+
+### status 的边界
+
+`openspec status` 会通过 change metadata / schema / planning home 构造 artifact 状态、`nextSteps` 和 `actionContext`。
+
+其中 `actionContext` 来自 planning home、project root 和 artifact IDs（`src/core/change-status-policy.ts` 的 `buildActionContext()`），**不是**从 project context 或 artifact rules 注入。
+
+### resilience 设计
+
+config 读取失败（文件不存在、YAML 解析错误、字段类型不匹配）**不会抛异常中断流程**。每个消费点都有独立的 try/catch，失败时降级为空 config。
+
+---
+
+## 4. context、rules 与 operation guidance 如何进入指令
+
+### 4.1 context 的注入
+
+来自 `config.context`。在 `generateInstructions()` (`src/core/artifact-graph/instruction-loader.ts`)：
+
+```typescript
+const configContext = projectConfig?.context?.trim() || undefined;
+```
+
+注入后的效果（printInstructionsText 的格式化输出）：
+
+```xml
+<project_context>
+<!-- This is background information for you. Do NOT include this in your output. -->
+
+Project: ProcureFlow
+Domain: Internal procurement request and approval platform
+Stack: TypeScript, React, Node.js, PostgreSQL
+</project_context>
+```
+
+**关键**：`context` 位于 `<!-- -->` 注释中，且明确标注 "Do NOT include this in your output"。它是给 AI agent 看的背景信息，**不是给输出文件的内容**。
+
+### 4.2 rules 的注入
+
+来自 `config.rules[artifactId]`。在 `generateInstructions()` (`src/core/artifact-graph/instruction-loader.ts`)：
+
+```typescript
+const rulesForArtifact = projectConfig?.rules?.[artifactId];
+const configRules = rulesForArtifact && rulesForArtifact.length > 0 ? rulesForArtifact : undefined;
+```
+
+注入后的效果：
+
+```xml
+<rules>
+<!-- These are constraints for you to follow. Do NOT include this in your output. -->
+- Keep proposals under 500 words
+- Always include a "Non-goals" section
+</rules>
+```
+
+同样位于注释中，同样标注 "Do NOT include in your output"。
+
+### 4.3 context vs rules 的区别
+
+| | context | rules |
+|------|------|------|
+| **作用范围** | 所有 artifact 共享 | 按 artifact ID 分别注入 |
+| **内容类型** | 项目背景信息（技术栈、领域等） | 可执行的工程约束 |
+| **AI 怎么用** | 理解项目上下文 | 遵守具体规则 |
+| **典型长度** | 屏幕半页 | 3-5 条规则 |
+| **注入位置** | `<project_context>` 标签 | `<rules>` 标签 |
+
+### 4.4 `operations`：给 Apply / Archive 的专用 guidance
+
+```yaml
+operations:
+  apply:
+    guidance:
+      - Keep data migrations reversible.
+  archive:
+    guidance:
+      - Confirm compatibility evidence before archiving.
+```
+
+`operations.apply.guidance` 和 `operations.archive.guidance` 是两条独立 operation surface。它们与 `context` 一起分别出现在 `openspec instructions apply`、`openspec instructions archive` 的 JSON 中；它们是 agent 应考虑的提醒，不能绕过 CLI `blocked` 状态、root 选择、validator 或 archive merge。
+
+这也解释了一个常见边界：`rules.tasks` 可以约束任务清单的写法，却不会在 Apply 时重复注入；要给实施期稳定提醒，写 `operations.apply.guidance`，不是 `rules.apply`。
+
+---
+
+## 5. config.yaml 与 schema.yaml 的交互
+
+### 5.1 `config.schema` 是桥梁
+
+```yaml
+# config.yaml
+schema: spec-driven     # 选择用哪个 schema
+```
+
+这个字段决定了：
+- `openspec new change` 创建 change 时用哪个 schema
+- `openspec instructions` 加载哪个 DAG 的 artifact 定义
+- `openspec status` 在 metadata 缺失时可通过 schema 解析回退链确定用哪个 DAG 判断 artifact 状态；正常新 change 会优先使用 `.openspec.yaml` 中已写入的 schema
+
+### 5.2 rules key 校验依赖 schema
+
+`config.rules` 的 key（artifact ID）是否合法，取决于所选 schema 定义了哪些 artifact：
+
+```yaml
+# config.yaml
+schema: spec-driven
+rules:
+  proposal: [...]    # ✓ spec-driven 有 proposal artifact
+  specs: [...]       # ✓ spec-driven 有 specs artifact
+  review: [...]      # ✗ spec-driven 没有 review → 会产生 warning
+```
+
+### 5.3 context 的 50KB 限制是全局的
+
+无论选什么 schema，`context` 字段共享同一个 50KB 上限。这是运行时硬限制，不在 schema 定义中。
+
+---
+
+## 6. 实践建议
+
+### 6.0 两条语言配置路径
+
+新项目可直接：
+
+```bash
+openspec init --language "Portuguese (pt-BR)"
+```
+
+它只在新 config 中种下合法 YAML string：
+
+```yaml
+schema: spec-driven
+context: |
+  Language: Portuguese (pt-BR)
+  All artifacts must be written in Portuguese (pt-BR).
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+```
+
+已有 `openspec/config.yaml` 时 flag 拒绝覆盖，应手工把同等说明合并进 `context`。language 先 trim；空值、多行、控制/不可见格式字符被拒绝，格式化后的 context 仍受 50KB 字节上限。可本地化的是 proposal/spec/design/tasks 的 prose；`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、`### Requirement:`、`#### Scenario:` 与规范关键字 `SHALL/MUST` 保持英文，normal/strict 的 validator 边界不因此改变。
+
+### 6.1 rules 应该按 artifact 角色写
+
+不同 artifact 在 DAG 中有不同角色，rules 应该匹配这种角色差异：
+
+```yaml
+rules:
+  proposal:
+    # proposal 是 scope 文档 → 约束 scope
+    - Each proposal must identify affected existing capabilities
+    - Breaking changes must be explicitly called out with **BREAKING**
+
+  specs:
+    # specs 是行为规约 → 约束行为完整性
+    - Every requirement must have at least one unhappy-path scenario
+    - Role-sensitive behavior must include explicit authorization scenarios
+
+  design:
+    # design 是技术方案 → 约束技术决策质量
+    - Design decisions must include the alternative that was rejected and why
+    - Migration risk must be explicitly assessed
+
+  tasks:
+    # tasks 是实施清单 → 约束可追踪性
+    - Each task group must reference the spec requirement it implements
+    - Tasks must be ordered by dependency
+```
+
+### 6.2 context 应包含"不变的背景"，不包含"这次要做什么"
+
+- **放**：技术栈、领域术语、质量优先级、兼容性约束
+- **不放**：这个 sprint 的目标、当前 change 的具体内容、临时的技术决策
+
+因为 context 会被注入到**所有** artifact 的所有指令中，临时内容会反复干扰 agent。
+
+### 6.3 新项目从 4 行 context + 1-2 条 rules 开始
+
+```
+context: 项目名、领域、技术栈、质量优先级
+rules:
+  proposal: 1-2 条最关键的 scope 约束
+```
+
+不要一开始写满。在用了几个 change 之后，看 agent 反复犯什么错误，再针对性地加 rules。
+
+### 6.4 弱规则不如不写
+
+弱规则（没有判断力，浪费 token）：
+
+```yaml
+rules:
+  proposal:
+    - Write clean code
+    - Follow best practices
+```
+
+强规则（有对象、有约束、有判断方向）：
+
+```yaml
+rules:
+  proposal:
+    - Changes affecting the authorization module must reference existing auth spec requirements
+    - New public API endpoints must document their error response contract
+```
+
+---
+
+## 7. 常见误用（从源码角度看为什么是误用）
+
+### 误用 1：把 rules 当成 "所有 artifact 都用同一套规则"
+
+`config.rules` 是按 artifact ID 分别注入的。如果你写：
+
+```yaml
+rules:
+  all:
+    - Write good code
+```
+
+`all` 不是合法的 artifact ID → 每次生成指令都会收到 warning → 这条规则**永远不会被注入**。
+
+**正确做法**：明确写清楚每条规则属于哪个 artifact：
+
+```yaml
+rules:
+  proposal:
+    - ...
+  specs:
+    - ...
+```
+
+### 误用 2：在 context 里写 PRD
+
+context 50KB 限制的存在是有原因的 —— 太长的 context 会挤占 agent 的注意力。如果把 PRD 的详细功能列表放进 context，agent 在面对每个 artifact 时都会被这些细节干扰。
+
+**更合适的做法**：PRD 级别的详细需求应该放在 `openspec/specs/` 中作为主 spec，然后在 proposal 中引用。
+
+### 误用 3：在 rules 里引用只有当前 change 才相关的信息
+
+```yaml
+rules:
+  tasks:
+    - The CSV export must use RFC 4180 format
+```
+
+这条规则只对 "add-csv-export" 这个 change 有意义。它应该写在那个 change 的 spec 中，而不是全局 config。
+
+### 误用 4：context 超过 50KB
+
+超过后**该字段被忽略并 warning**（全有或全无）。如果你发现 agent 好像看不到你的 context，检查文件大小。
+
+---
+
+## 8. config.yaml 的解析容错策略
+
+`readProjectConfig()` (`project-config.ts`) 的设计是 **逐字段 fail-open**（field-by-field resilient parsing），而非用 `ProjectConfigSchema.safeParse()` 做整体校验：
+
+1. 文件不存在 → 返回 `null`（`project-config.ts:72`）
+2. YAML 解析失败 → warn 并返回 `null`（catch 块，`:157-160`）
+3. `schema` 字段缺失或无效 → warn，返回的 config 中**不含 `schema` 字段**。**默认值 `'spec-driven'` 的回退发生在消费端** `resolveSchemaForChange`（`change-metadata.ts`），不在 `readProjectConfig` 内部
+4. `context` 超过 50KB → 忽略 `context` 字段并 warning（其他字段不受影响）
+5. `context` 不是 string → 忽略
+6. `rules` 不是合法 record → 忽略
+7. `rules` 中有未知 artifact ID → warning，不阻断
+8. 未知顶层 key → 不报错、不 warning，但也不会生效；不要依赖它承载自定义 metadata
+
+这种设计的意图是：**config 不应该成为工作流的中断点**。即使 config 写得不好，agent 仍然可以工作 —— 只是质量可能下降。
