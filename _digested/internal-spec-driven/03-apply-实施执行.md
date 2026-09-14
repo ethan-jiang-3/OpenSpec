@@ -68,6 +68,14 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 - **`tasks`**：解析后的 checkbox 列表，每个带 label 和 done 状态
 - **`missingArtifacts`**（仅缺少 required artifact 时）：哪些 artifact 还没创建。注意：tracks 文件缺失或 tasks.md 没有 checkbox 也会 `blocked`，但不一定有 `missingArtifacts`
 
+### 2.4 v1.13.0：无 spec 警告 + 完整缺失链
+
+v1.13.0 修了 apply 门控的两个盲区（`src/commands/workflow/instructions.ts`，`generateApplyInstructions` / `applyInstructionsCommand`）：
+
+1. **无 delta spec 的 change 不再假装 ready**。apply 只按 `apply.requires` 门控，所以 `tasks.md` 先于 specs 写好的 change 读作 ready to implement——但这是 `openspec validate` 会拒绝的状态。v1.13.0 起 `instructions apply` 对该 change 报 warning（text + `--json` 的 warning 字段），点名两条出路：写 specs，或声明 `skip_specs: true`。有 specs、声明 `skip_specs`、或仍被自己必需 artifact 挡住的 change 不受影响。
+
+2. **blocked 报完整 build order 缺失链**。之前只报第一跳——change 只有 proposal 时报告 `Missing artifacts: tasks`，而 tasks 依赖的 specs 也缺失，读起来像「直接从 proposal 写 tracking 文件」。v1.13.0 用 `collectMissingPrerequisites` 收集完整链：文本输出 `Not created yet, in build order: <chain>`，`--json` 输出 `missingPrerequisites` 数组。补救命令是 `openspec instructions <artifact> --change <name>`（CLI 命令），不再引用 `openspec-continue-change` skill——core profile 不装它。
+
 ---
 
 ## 3. Checkbox 解析机制

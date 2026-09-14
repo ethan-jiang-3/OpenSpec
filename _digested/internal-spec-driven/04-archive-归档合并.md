@@ -115,6 +115,18 @@ interface DeltaPlan {
 4. `parseRemovedNames()`：提取 requirement 名（可以是 `### Requirement:` header 或 bullet 中的引用）
 5. `parseRenamedPairs()`：解析 `FROM:` / `TO:` 对
 
+### 3.2.1 v1.13.0：delta section 是 list，列表标记全接受
+
+`DeltaPlan` 的 section 解析在 v1.13.0 有两处保真修复（`src/core/parsers/requirement-blocks.ts`）：
+
+1. **sections 从 title-keyed record 改为按书写顺序的 list**。之前重复写同一 header（如两个 `## ADDED Requirements`，或 fence 示例自带重复 header）时，后写的覆盖先写的，大小写折叠 lookup 只返回第一个匹配——被丢弃副本里的 requirement 在 validate/merge 之前就没了，但 `validate` 报零问题、`archive` 报成功，主 spec 悄悄和已审阅的 delta 不一致。现在每个 section 保留自己的出现次序和行号；lookup 返回所有匹配 section；`FROM:`/`TO:` 按 section 配对，一份里的 `FROM:` 不会和另一份的 `TO:` 配对。
+
+2. **REMOVED 的 bullet 形式与 RENAMED 的 `FROM:`/`TO:` 行接受 `[-*+]` 全部 CommonMark 列表标记**。之前硬编码 `-`，用 `*`/`+` 写的删除/改名 delta 匹配不到任何东西——`validate` 报 valid、`archive` 退出 0，但需求根本没动。`FROM:`/`TO:` bullet 保持可选；`### Requirement:` header 形式不变。
+
+### 3.2.2 v1.13.0：scenario bullet 换行不再挡退役
+
+`retire_capabilities` 之前拒绝任何 scenario bullet 换行到第二行的 spec——续行被当成 merge 无法归属的内容，退役被整个阻塞，且提示 marker 的 hint 也被吞掉。v1.13.0 把续行读成同一条 bullet；`+` 列表标记也被正确识别（之前只认 `-`/`*`，`+` 写的 scenario 全部报 unaccounted，capability 完全无法退役）。
+
 ### 3.3 预验证（合并前）
 
 `specs-apply.ts:113-200`，在修改任何文件之前先做六重检查（前五项是"重复/冲突"类，最后一项是"空 delta"防护）：
@@ -225,6 +237,8 @@ const rebuilt = [parts.before, parts.headerLine, reqBody, parts.after]
 ```
 
 **对顺序的尊重**：已有的 requirement 保持它们原来的相对位置。新的 requirement 追加到 Requirements section 末尾。这避免了每次archive 打乱整个 spec，让 git diff 可读。
+
+**v1.13.0：空行压缩不碰代码 fence**。`buildUpdatedSpec()` 末尾的空行压缩（`.replace(/\n{3,}/g, '\n\n')`）之前是无差别作用于整个重建文档——需求里 YAML block scalar、Python、expected-output 样例只要含两个以上连续空行，archive 每次跑都会「整理」一次，而空白在那些上下文里携带语义。v1.13.0 改用 `collapseBlankRunsOutsideFences`（复用模块内已有的 `buildCodeFenceMask`），只在 fence 外折叠空行；fence 内原样保留。fence 外行为不变：只有真正空行算 blank，纯空格行永不作为折叠边界。
 
 ### 3.7 写前验证
 

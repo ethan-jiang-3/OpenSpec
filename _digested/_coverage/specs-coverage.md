@@ -37,3 +37,11 @@
 | `ci-nix-validation` | 更偏仓库工程/发布支撑 |
 | `openspec-conventions` | 横跨所有专题，当前分散覆盖 |
 | `docs-agent-instructions` | 和 workflow templates / docs 维护有关 |
+
+## v1.12.0→v1.13.0 新增/变更的 specs
+
+| spec | 变化 | 说明 |
+|------|------|------|
+| `cli-validate` | v1.12.0 扩展 | `--report findings`、advisory merge preflight findings（上游 `openspec/changes/add-validation-findings-report/` 的 design/tasks 是权威来源） |
+| `ai-tool-paths` | v1.12.0 微调 | docs 对齐当前行为（#1707） |
+| `cli-artifact-workflow` | v1.13.0 微调 | 覆盖 apply no-spec 警告路径（以 `openspec/specs/cli-artifact-workflow/spec.md` 为准） |

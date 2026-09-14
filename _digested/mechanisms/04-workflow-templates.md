@@ -96,6 +96,8 @@ workflow template
 - template 是跨工具复用的 workflow 语义；tool delivery 再把它投递成不同 agent 的 skill/command 外壳。
 - 修改 template 会改变 agent 行为，即使 TypeScript 源码没有变化，也应当视为产品行为变更。
 - **v1.8.0 当前模板契约**：① propose/continue/ff 写完 artifact 后从磁盘重读依赖文件；② 同级 ready artifact 的推荐顺序由 schema 声明顺序决定（内置为 specs 后 design，二者仍可并行）；③ schema artifact `instruction` 是生成时的权威指令；④ `skip_specs: true` 会把 specs 设为显式 skipped，不再把无 spec-level 变化的 change 卡住（①②③④ v1.7.0 引入）；⑤ propose 聚焦 planning，澄清 material ambiguity 后再建 change，实现交给 apply（v1.8.0）。
+- **v1.12.0 引导补强**：propose/ff 起草 artifact 前先检查相关项目代码、测试、文档——计划反映现有实现，而不是把发现推迟成实施任务；explore 的提问依赖感知（先查代码库，再问 repo 自己答不了的事实，并推荐默认值）。
+- **v1.13.0 spec-inventory guidance**：`openspec list --specs` 此前没有出现在任何生成的 skill/command/artifact 指令里——agent 被要求「先读现有 specs」时却枚举了 changes。现在 explore skill 与 command 同时列出 spec inventory 与 change list 并区分二者；proposal/specs 指令里「研究现有能力」「delta 路径匹配现有 spec」两步带 `--store "<id>"`；capability 读取用 `openspec show "<spec-id>" --type spec --json --no-scenarios`。filtered read 只是概览——agent 决策前仍需读完整 spec（含 scenarios）。
 
 ## 源码锚点
 

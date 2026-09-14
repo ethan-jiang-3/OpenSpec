@@ -103,6 +103,15 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 
 它们不替代任何 CLI state、task、完成判定或 schema instruction。`rules.tasks` 只在生成 `tasks.md` 时使用；`rules.apply` 没有消费者。若要给 Apply 写长期提醒，正确位置是 `operations.apply.guidance`，强制约束仍应落在 tests、lint 或 CI。
 
+## v1.13.0：apply 不再假装「ready to implement」是完整的
+
+apply 的门控只按 schema 的 `apply.requires` 判定——`tasks.md` 先于 specs 写好的 change，之前读作 ready to implement，但 `openspec validate` 本就拒绝这种状态。v1.13.0 起 `instructions apply` 会：
+
+1. **无 spec delta 时警告**（text + `--json` 的 warning 字段），点名两条出路：先写 specs，或声明 `skip_specs: true`（该 change 真的不改任何 spec 化行为时）。
+2. **报完整缺失链**：被阻塞的 apply 之前只报第一跳（`Missing artifacts: tasks`），而 tasks 依赖的 specs 也缺时读起来像「直接写 tracking 文件」。现在按 build order 报 `missingPrerequisites`（文本 `Not created yet, in build order: ...`，`--json` 数组），补救命令是 `openspec instructions <artifact> --change <name>`——不再引用 `openspec-continue-change` skill（core profile 不装它）。
+
+有 specs、声明 `skip_specs`、或仍被自己的必需 artifact 挡住的 change 不受影响。
+
 ## Fluid Workflow Integration
 
 apply template 明确写了它不是 phase lock：

@@ -21,6 +21,8 @@ _change_log/
 ├── 0006-v1.8.0-to-v1.9.0.md   # 实际源码合入 v1.9.0（Command Code、validate --archived、scenario ####、fork 保真）
 ├── 0007-v1.9.0-to-v1.10.0.md  # 完全同步 v1.10.0（多语言、Zed、store-aware instructions、task verification）
 ├── 0008-v1.10.0-to-v1.11.0.md  # 完全同步 v1.11.0（show --diff、status --all、explore 写入前确认、Antigravity → .agents/、Purpose 占位符检测）
+├── 0009-v1.11.0-to-v1.12.0.md  # 完全同步 v1.12.0（validate --report findings、Code Assistant、.gitkeep、IDE restart 共享、propose/explore 引导）
+├── 0010-v1.12.0-to-v1.13.0.md  # 完全同步 v1.13.0（apply 无-spec 警告 + missingPrerequisites 链、parser 三修复、archive fence 保真、update 损坏检测、spec-inventory guidance）
 ├── _plan-4-v1.7.0-current-docs.md # v1.7.0 当前资料同步计划（覆盖三个资料目录）
 ├── _plan-7-v1.9.0-sync-audit.md   # v1.9.0 当前资料同步审计
 ├── _plan-8-v1.10.0-full-sync.md   # v1.10.0 源码与三套资料的可恢复完全同步计划

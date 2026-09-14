@@ -110,6 +110,11 @@ template 里写了 8 条 guardrail：
 | **Do explore the codebase** — 扎根现实 | 鼓励 |
 | **Do question assumptions** — 包括用户的和你自己的 | 鼓励 |
 
+## v1.12.0→v1.13.0：依赖感知提问与 spec-inventory
+
+- **v1.12.0（#1017）**：explore 模板的提问改为依赖感知——推荐默认值、先查代码库，再问 repo 自己答得了的事实。它和「Do explore the codebase」guardrail 配合：探索期的问题应聚焦用户判断，而不是让 agent 问一个 `grep` 就能回答的问题。
+- **v1.13.0（#1700）**：explore skill 与 command 同时列出 **spec inventory**（`openspec list --specs`）与 **change list**（`openspec list --json`）并区分二者——之前 agent 被要求「先读现有 specs」时枚举的是 changes。capability 读取用 `openspec show "<spec-id>" --type spec --json --no-scenarios`。filtered read 只是概览：agent 决策前仍需读完整 spec（含 scenarios）。
+
 ## 和 FAQ 的衔接
 
 FAQ `03_explore-to-propose-change/` 是从 "Explore 怎么判断是否 propose" 的角度分析的。本文件是从 "template 源码给了 agent 什么指令" 的角度分析的。两者互补——FAQ 讲的是 agent 实际会做什么工程判断，本文件讲的是 template 为这些判断提供了什么框架。

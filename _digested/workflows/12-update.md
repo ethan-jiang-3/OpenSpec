@@ -132,6 +132,14 @@ v1.6.0 引入、在 v1.7.0 仍可用的 update workflow，就是这个循环中*
 - "update vs start fresh" 判断（修改意图 vs 精炼细节）
 - 和 continue/apply/archive 的衔接路径
 
+## v1.12.0→v1.13.0：update 的工具侧行为补强
+
+注意区分**两层 update**：`update-change.ts`（本文：agent 修订 planning artifact 的 workflow）与 `src/core/update.ts`（`openspec update`：把 CLI 的 skills/commands 同步到工具侧文件系统）。下面两条属于后者，但影响同一份文档的读者：
+
+- **共享 IDE restart 提示（v1.12.0）**：`openspec init` 和 `openspec update` 共用 `src/core/shared/ide-restart.ts` 的同一句提示（`Restart your IDE to refresh commands.` / `...skills.`），message 也覆盖「移除 workflow」场景，不再声称生成了新文件。
+- **损坏 command 文件检测（v1.13.0）**：`openspec update` 之前只比对 skill 文件的 `generatedBy` 版本戳——skill 是新版本就报「All up to date」，但旁边手改/截断的 command 文件完全没被检查。现在也比对 command 文件内容（只针对 skills+commands 都配置的工具；commands-only 路径不变），`--force` 之外多了一条自动修复路径。
+- **遗漏 workflow 提示（v1.13.0）**：init/update 输出用 `formatOptionalWorkflowsNote` 列出 profile 没装的 workflow（`new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard`）和 `openspec config profile` 命令。
+
 ## Guardrails
 
 | Guardrail | 含义 |

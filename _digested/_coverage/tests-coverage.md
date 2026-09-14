@@ -22,10 +22,11 @@
 | `test/core/worksets.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `test/core/command-generation/`、`test/core/shared/` | `../mechanisms/02-tool-delivery.md` |
 | `test/core/completions/`、`test/core/completion-tip.test.ts`、`test/cli-e2e/completion-tip.test.ts`、`test/commands/completion.test.ts` | `../mechanisms/05-cli-infra.md` |
-| `test/core/parsers/`、`test/core/validation*.test.ts`、`test/core/converters/` | `../mechanisms/03-spec-model.md` |
-| `test/core/templates/` | `../mechanisms/04-workflow-templates.md` |
+| `test/core/parsers/`、`test/core/validation*.test.ts`、`test/core/converters/` | `../mechanisms/03-spec-model.md`（v1.13.0 新增 `test/core/specs-apply.fence-preservation.test.ts`、`test/core/validation.archive-preflight.test.ts`） |
+| `test/core/templates/` | `../mechanisms/04-workflow-templates.md`（v1.13.0 新增 `test/core/templates/spec-inventory.test.ts`） |
 | `test/core/templates/main-spec-paths.test.ts` | `../schema/02-内置-spec-driven-详解.md`、`../internal-spec-driven/02-propose-提案生成.md` |
-| `test/package-install-scripts.test.ts` | `../mechanisms/05-cli-infra.md` |
+| `test/package-install-scripts.test.ts` | `../mechanisms/05-cli-infra.md`（v1.12.0 git 安装免 pnpm） |
+| `test/core/update.test.ts` | `../mechanisms/02-tool-delivery.md`（v1.13.0 command-drift 检测 `test/core/shared/tool-detection-command-drift.test.ts`） |
 | `test/telemetry/`、`test/commands/feedback.test.ts` | `../mechanisms/05-cli-infra.md` |
 | `test/specs/` | `_coverage/specs-coverage.md` |
 | `test/vocabulary-sweep.test.ts` |术语扫描测试 |

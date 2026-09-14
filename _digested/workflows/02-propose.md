@@ -102,6 +102,12 @@ These guide what you write, but should never appear in the output
 - 纯重构、工具或文档工作可在 `.openspec.yaml` 声明 `skip_specs: true`。此时 specs 是 `skipped`，而不是待生成的空文件；若需求出现 spec-level 行为变化，必须移除 marker 后再写 delta。
 - nested layout 使用 `specs/<capability-path>/spec.md`，如 `specs/identity/session/spec.md`；默认 schema 文案仍偏 flat，团队应在 config/AGENTS 明确路径约定。
 
+## v1.12.0→v1.13.0：先读代码、先加载上下文
+
+- **v1.12.0（#1737）**：propose 和 ff 模板在起草 artifact 前引导 agent 检查相关项目代码、测试、文档——计划反映现有实现，而不是把基础发现推迟成实施任务。
+- **v1.13.0（#1657）**：规划前加载所选项目/store root 的 `context`（遵守 config 优先级与验证上限）；无 root 时不写任何文件就停止并建议初始化，不再隐式创建 root。
+- **v1.13.0（#1700）**：spec-driven 的 propose/specs 指令里，「研究现有能力」与「delta 路径匹配现有 spec」两步带 `--store "<id>"`；capability 读取用 `openspec show "<spec-id>" --type spec --json --no-scenarios`，resolve 到与 list 相同的 root。
+
 ## Guardrails
 
 | Guardrail | 含义 |

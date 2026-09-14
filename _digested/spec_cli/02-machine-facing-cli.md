@@ -90,6 +90,8 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - `tasks`: 从 tracking file 解析出来的任务项
 - `context` 与 `guidance`：项目 `context` 以及 `operations.apply.guidance`（如有）。它们是 operation input，不是 artifact rules。
 - `missingArtifacts`: 缺少哪些 prerequisite artifacts
+- v1.13.0 起 `missingPrerequisites`: 完整 build order 缺失链（不再只报第一跳），同时出现在文本输出（`Not created yet, in build order: ...`）
+- v1.13.0 起 warning 字段: change 无 delta specs 且未声明 `skip_specs: true` 时，apply 报 warning，给出两条出路（先写 specs / 声明 `skip_specs`）
 - `instruction`: 当前阶段应执行什么
 
 对机器的意义：
@@ -190,6 +192,21 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - implementation gate
 
 正因如此，`--json` 输出和内部 graph / instruction loader 层才如此重要。
+
+### v1.12.0：`validate --report findings --json` 是独立报告类型
+
+`openspec validate --report findings --all|--changes|--specs|--archived --json` 产出**独立**的 report 对象，不是 full 报告的过滤子集：
+
+```json
+{ "report": { "kind": "validation-findings", "scope": "<bulk-scope>" }, ... }
+```
+
+要点：
+
+- 只包含有 error/warning/information 的条目，同时保留全量运行的总数和退出码。
+- 必须配显式批量 scope，不能带 item name，`archived` 与 active scope 不能混用；违规时输出 `invalid_validation_report_request`（severity error，附 `fix` 文本）。
+- delta 与 main spec 的合并冲突作为 informational findings 出现在报告里（不改退出码）；文件系统读取错误保留为 error。
+- 默认 `--report full` 形状完全不变——机器接口的向后兼容由「findings 是独立 kind」保证。
 
 **v1.3.1 重要修复**：此前 `--json` 模式下，spinner 的进度文本仍会泄漏到 stderr，导致 agent 在合并 stdout+stderr 时 JSON 解析失败。v1.3.1 修复了这个问题 —— `--json` flag 传入后，完全抑制 spinner 输出，agent 可以安全合并 stdout/stderr。
 

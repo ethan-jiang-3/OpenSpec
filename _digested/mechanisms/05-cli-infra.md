@@ -55,6 +55,15 @@ completion 提示移到 root commander 的 `postAction`：命令自身输出之�
 
 seen flag 写 global config 时使用 raw read/merge + 临时文件 rename，不调用会合入默认值的 `getGlobalConfig()`，避免顺带 stamp `profile`/`delivery` 并破坏一次性 profile migration。
 
+### v1.12.0：PowerShell completion 文档化
+
+`openspec completion install` 对 PowerShell 的 managed 配置方式（脚本位置、profile 写入、backup）在 `docs/cli.md` 有正式文档（#1070）。Fish 之外的 shell 面此前只有生成器实现，现在 PowerShell 的 setup 路径有可查文档。
+
+### v1.12.0：npm git 安装免 pnpm + Node 20 chalk 兼容
+
+- **git 安装免 pnpm**（#792）：`npm install github:...` 这类 git 安装时，package `prepare` 脚本改为 `node build.js`（不再假设 pnpm 在场）。此前 pnpm 是构建前置依赖，git 安装会因缺 pnpm 失败；现在 install scripts 测试（`test/package-install-scripts.test.ts`）覆盖了这条路径。
+- **Node 20 chalk 兼容**（#1747）：依赖解析保持 Node 20 LTS 可用的 chalk 版本，避免新依赖树把 chalk 解析到 Node 22+ 才能用的版本。安装面（npm/pnpm/bun/yarn/volta）对 Node 20 用户都保持可用。
+
 ## telemetry：低信息量、低阻塞
 
 telemetry 在 `src/telemetry/`。它的边界：

@@ -25,20 +25,24 @@
 | `src/commands/workset.ts`、`src/commands/workset-input.ts`、`src/commands/workset-prompts.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `src/commands/doctor.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter） |
+| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter；v1.12.0 含 Code Assistant adapter `adapters/codeassistant.ts`） |
 | `src/core/shared/skill-generation.ts` | `../mechanisms/02-tool-delivery.md` |
-| `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md` |
-| `src/core/init.ts`、`src/core/update.ts` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 起 tool-detection 有 command-drift 检测） |
+| `src/core/init.ts`、`src/core/update.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 `.gitkeep` + 共享 restart；v1.13.0 损坏 command 检测） |
+| `src/core/shared/ide-restart.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 新增） |
+| `src/core/onboarding-commands.ts` | `../mechanisms/02-tool-delivery.md`（v1.13.0 `formatOptionalWorkflowsNote`） |
 | `src/core/migration.ts`、`src/core/legacy-cleanup.ts`、`src/core/profile-sync-drift.ts` | `../mechanisms/02-tool-delivery.md` |
-| `src/core/parsers/`、`src/core/validation/`、`src/core/schemas/` | `../mechanisms/03-spec-model.md` |
+| `src/core/parsers/`、`src/core/validation/`、`src/core/schemas/` | `../mechanisms/03-spec-model.md`（v1.13.0 delta sections 改 list、`[-*+]` 标记、advisory merge preflight） |
 | `src/core/list.ts`、`src/core/view.ts`、`src/core/converters/json-converter.ts` | `../mechanisms/03-spec-model.md` |
-| `src/core/templates/workflows/` | `../mechanisms/04-workflow-templates.md` |
+| `src/core/templates/workflows/` | `../mechanisms/04-workflow-templates.md`（v1.12.0 propose/ff 先读代码、explore 依赖感知；v1.13.0 spec-inventory guidance） |
 | `src/core/templates/skill-templates.ts`、`src/core/templates/types.ts`、`src/core/templates/index.ts` | `../mechanisms/04-workflow-templates.md`、`../mechanisms/02-tool-delivery.md` |
 | `src/core/completions/` | `../mechanisms/05-cli-infra.md` |
 | `src/core/completion-tip.ts` | `../mechanisms/05-cli-infra.md` |
-| `src/commands/completion.ts` | `../mechanisms/05-cli-infra.md` |
+| `src/commands/completion.ts` | `../mechanisms/05-cli-infra.md`（v1.12.0 PowerShell managed setup 文档化） |
 | `src/telemetry/`、`src/commands/feedback.ts` | `../mechanisms/05-cli-infra.md` |
 | `src/core/change-metadata/`、`src/utils/change-metadata.ts`、`src/core/change-status-policy.ts` | `../internal-spec-driven/03-apply-实施执行.md`、`../spec_cli/03-workflow-runtime-api.md` |
+| `src/commands/workflow/instructions.ts` | `../internal-spec-driven/03-apply-实施执行.md`（v1.13.0 no-spec 警告 + `missingPrerequisites` 链） |
+| `src/core/specs-apply.ts` | `../internal-spec-driven/04-archive-归档合并.md`（v1.13.0 fence 外空行压缩） |
 | `src/core/id.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 
 ## 部分覆盖

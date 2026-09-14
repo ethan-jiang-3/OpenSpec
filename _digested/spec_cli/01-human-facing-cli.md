@@ -168,6 +168,8 @@
 
 - 指定的 change/spec，或通过 `--all`、`--changes`、`--specs` 批量发现的对象。
 - v1.9.0 起可选 `--archived`：只检查 `changes/archive/` 里 tasks 是否全部勾完（独立 scope，不改其他 validate 调用）。
+- v1.12.0 起可选 `--report full|findings`（**必须**配显式批量 scope `--all`/`--changes`/`--specs`/`--archived` 之一，不能带 item name，`archived` 与 active scope 不能混用）：`findings` 只返回有 error/warning/information 的条目，保留全量运行的总数和退出码；`full` 是默认报告不变。
+- v1.12.0 起，delta 与 main spec 的合并冲突报为 informational findings（成功报告里也出现，不改退出码）；文件系统读取错误保留为 error，不误判成「spec 缺失」。
 - strict 模式开关。
 - 并发配置。
 
@@ -317,6 +319,9 @@
 本质目标：
 
 - 输出 apply 阶段的实施说明，包括 artifact context files、项目 `context`、`operations.apply.guidance`、task 进度和阻塞状态。
+- v1.13.0 起：change 无 delta specs 且未声明 `skip_specs: true` 时，输出 warning（这是 `openspec validate` 本会拒绝的状态）并给出两条出路：先写 specs，或声明 `skip_specs`。
+- v1.13.0 起：被阻塞的 apply 报**完整缺失链**（`missingPrerequisites`，按 build order 收集），不再是只报第一跳；文本输出 `Not created yet, in build order: ...`，`--json` 输出 `missingPrerequisites` 数组。
+- v1.13.0 起：补救指引给 CLI 命令（`openspec instructions <artifact> --change <name>`），不再引用 `openspec-continue-change` skill（core profile 不装它）。
 
 对人类意义：
 
