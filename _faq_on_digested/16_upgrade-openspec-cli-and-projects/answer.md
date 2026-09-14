@@ -1,6 +1,6 @@
 # 答案：两段式升级——先升全局 CLI，再对每个项目跑 `openspec update`
 
-> **源码基线**：以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
+> **源码基线**：以 v1.13.0（release tag `v1.13.0` = `9d4e5974`）为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
 
 ## 一句话结论
 
@@ -76,6 +76,16 @@ openspec update                          # 每个项目跑一次（或带 --forc
 ## 为什么顺序不能反
 
 `openspec update` 是从「当前这个 CLI」的模板生成文件的。**先跑 update、后升 CLI** = 用旧 CLI 生成旧文件，等于白做，升完还得再跑一遍。所以正确姿势是：先升全局 CLI（或让 `openspec update` 的交互提示替你升），**升完再对每个项目跑一次 `openspec update`**。
+
+## v1.12.0 → v1.13.0 的具体提醒（来自同步记录 0009/0010）
+
+- **`openspec validate --report findings`（v1.12.0）**：批量校验时可只输出有 error/warning/information 的条目，保留全量总数和退出码。必须配显式 scope（`--all`/`--changes`/`--specs`/`--archived`），不能带 item name，`archived` 与 active scope 不能混用；默认 `full` 报告不变。同版本起，delta 与 main spec 的合并冲突在 validate 阶段就以 informational findings 亮出来——archive 会拒绝的东西 validate 就能看到。
+- **`openspec update` 检测损坏的 command 文件（v1.13.0）**：以前只比对 skill 文件的 `generatedBy` 版本戳，skill 是新的就报「All up to date」，旁边手改/截断的 command 文件完全没被检查（`--force` 是唯一修复路径）。现在 update 也比对 command 文件内容，自动修复。只影响 skills+commands 都配置的工具。
+- **`openspec init`/`update` 会列出 profile 遗漏的工作流（v1.13.0）**：输出里会点名 `new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard` 可以用 `openspec config profile` 加上。没装的命令不再读起来像「setup 坏了」。
+- **`openspec instructions apply` 无 spec 警告（v1.13.0）**：change 没有 delta specs 且没声明 `skip_specs: true` 时，apply 报 warning 并给两条出路（写 specs / 声明 `skip_specs`）；被阻塞的 apply 报完整 `missingPrerequisites` 链而不是只报第一跳。
+- **新工具（v1.12.0）**：SourceCraft Code Assistant 写 `.codeassistant/commands/opsx-<id>.md`（VS Code 扩展 slash command）。
+- **`.gitkeep`（v1.12.0）**：`openspec init` 给空目录写 `.gitkeep`，空目录结构在 Git 里保得住。
+- **升级后可见能力**：parser 三修复（重复 section 全应用、`*`/`+` 列表标记、scenario 换行）、archive fence 内空行保真、propose 先读项目代码、explore 依赖感知提问——这些说明 CLI 升级与逐项目 update 是两个步骤：前者升级命令/核心行为，后者刷新项目里的投递面。
 
 ## v1.9.0 的具体提醒（来自变更日志 0006）
 

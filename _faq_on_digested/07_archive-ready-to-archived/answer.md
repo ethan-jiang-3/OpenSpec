@@ -17,7 +17,7 @@
 
 主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。
 
-> **当前边界（v1.10.0）。** v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
+> **当前边界（v1.13.0）。** v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；v1.13.0 修复了 fence 内空行被整理、`*`/`+` 标记读不出来、重复 section 只应用一份、scenario 换行挡住退役；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
 
 ![Archive-ready 到 archived 的流程](figures/archive-ready-to-archived.svg)
 
@@ -442,14 +442,14 @@ openspec instructions archive --change "<name>" --json
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
+源码引用以 v1.13.0（release tag `v1.13.0` = `9d4e5974`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/archive.ts` | `ArchiveCommand.execute()` 主流程、validation、task warning、spec updates、move directory |
-| `src/core/specs-apply.ts` | `findSpecUpdates()`、`buildUpdatedSpec()`、`writeUpdatedSpec()` 和 delta merge 顺序 |
-| `src/core/validation/validator.ts` | proposal/delta/main spec validation 语义 |
-| `src/core/parsers/requirement-blocks.ts` | delta spec parsing、requirement block parsing、name normalization |
+| `src/core/specs-apply.ts` | `findSpecUpdates()`、`buildUpdatedSpec()`、`writeUpdatedSpec()` 和 delta merge 顺序；v1.13.0 起 fence 外空行压缩（`collapseBlankRunsOutsideFences`） |
+| `src/core/validation/validator.ts` | proposal/delta/main spec validation 语义；v1.12.0 起 advisory merge preflight 报 informational findings |
+| `src/core/parsers/requirement-blocks.ts` | delta spec parsing、requirement block parsing、name normalization；v1.13.0 sections 改 list、`[-*+]` 标记、wrapped bullet |
 | `src/core/parsers/spec-structure.ts` | main spec 结构错误检查 |
 | `src/utils/task-progress.ts` | archive 阶段 task checkbox 统计 |
 | `src/utils/change-metadata.ts` | retirement marker 是否可 honor 及安全 reason |
@@ -457,5 +457,7 @@ openspec instructions archive --change "<name>" --json
 | `src/cli/index.ts` | `archive [change-name]` command 和 flags |
 | `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板层行为 |
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven sync 模板 |
-| [`../../_digested/internal-spec-driven/04-archive-归档合并.md`](../../_digested/internal-spec-driven/04-archive-归档合并.md) | archive validate/merge/move 机制消化 |
+| [`../../_digested/internal-spec-driven/04-archive-归档合并.md`](../../_digested/internal-spec-driven/04-archive-归档合并.md) | archive validate/merge/move 机制消化（含 v1.13.0 保真修复） |
 | [`../06_apply-ready-to-archive-ready/answer.md`](../06_apply-ready-to-archive-ready/answer.md) | archive-ready 的前置状态 |
+
+**v1.13.0 对 Archive 的影响**：① 代码 fence 内的连续空行不再被压缩（YAML block scalar、Python、expected-output 样例保真）；② `*`/`+` 列表标记写的 REMOVED/RENAMED delta 会被正确应用（之前静默不生效但报成功）；③ 重复 section header 的每一份 body 都被应用；④ scenario bullet 换行的 spec 不再挡住 `retire_capabilities`，`+` marker 也能被识别。这些修复的共同教训：archive 报「成功」不代表 delta 一定被应用了——v1.12.0 起 validate 的 advisory merge preflight 会在归档前就把合并冲突亮出来。

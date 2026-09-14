@@ -281,15 +281,17 @@ Completed this session:
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
+源码引用以 v1.13.0（release tag `v1.13.0` = `9d4e5974`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/apply-change.ts` | apply skill 的完整步骤、guardrails、输出格式和 fluid workflow 说明 |
-| `src/commands/workflow/instructions.ts` | `generateApplyInstructions()`、task checkbox 解析、state/progress/contextFiles 输出 |
+| `src/commands/workflow/instructions.ts` | `generateApplyInstructions()`、task checkbox 解析、state/progress/contextFiles 输出；v1.13.0 起 no-spec 警告 + `missingPrerequisites` 完整缺失链 |
 | `src/core/artifact-graph/outputs.ts` | required artifact 输出文件判定 |
 | `src/core/artifact-graph/instruction-loader.ts` | change context 和 artifact 文件收集 |
 | `src/core/change-status-policy.ts` | `actionContext`（repo-local）的语义 |
 | `schemas/spec-driven/schema.yaml` | 默认 `apply.requires: [tasks]`、`tracks: tasks.md` 和 apply instruction |
-| [`../../_digested/internal-spec-driven/03-apply-实施执行.md`](../../_digested/internal-spec-driven/03-apply-实施执行.md) | apply gate、checkbox、实施循环、暂停条件 |
+| [`../../_digested/internal-spec-driven/03-apply-实施执行.md`](../../_digested/internal-spec-driven/03-apply-实施执行.md) | apply gate、checkbox、实施循环、暂停条件；v1.13.0 门控盲区修复 |
 | [`../04_propose-to-apply-ready/answer.md`](../04_propose-to-apply-ready/answer.md) | apply-ready 的前置状态 |
+
+**v1.13.0 对 Apply 的影响**：apply 只按 `apply.requires` 门控，所以「tasks 先于 specs 写好」的 change 曾读作 ready——但这是 `openspec validate` 会拒绝的状态。v1.13.0 起 `instructions apply` 对该 change 报 warning 并给两条出路（写 specs / `skip_specs: true`）；被阻塞的 apply 报完整 build order 缺失链（`missingPrerequisites`），不再只报第一跳。
