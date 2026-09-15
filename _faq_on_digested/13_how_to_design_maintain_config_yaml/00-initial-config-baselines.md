@@ -26,7 +26,7 @@ next_read:
 
 它遵守 `internal-spec-driven` 的三个边界：schema 定义 workflow，artifact DAG 传递一次 change 的事实，`config.yaml` 只为 planning artifact 提供简短、稳定的项目 guidance。它不会把 runtime 控制逻辑、运行状态或 Apply 专属流程伪装成 config rule。
 
-greenfield 项目若只需先固定 artifact prose 语言，可用 v1.10.0 的：
+greenfield 项目若只需先固定 artifact prose 语言，可用：
 
 ```bash
 openspec init --language "Portuguese (pt-BR)"

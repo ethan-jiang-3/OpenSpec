@@ -17,7 +17,7 @@
 
 ## spec
 
-spec 是正式规范空间里的 capability 定义，位于 `openspec/specs/<capability-path>/spec.md`。v1.7.0 支持任意深度路径，例如 `identity/session`；capability ID 就是 `specs/` 下的相对路径，而不只是末级目录名。
+spec 是正式规范空间里的 capability 定义，位于 `openspec/specs/<capability-path>/spec.md`。支持任意深度路径，例如 `identity/session`；capability ID 就是 `specs/` 下的相对路径，而不只是末级目录名。
 
 不要把 spec 和 change 混为一谈：
 
@@ -128,7 +128,7 @@ rules 不是模板本身，而是模板之上的行为约束。
 
 ## operations / operation guidance
 
-`operations.apply.guidance` 和 `operations.archive.guidance` 是 v1.7.0 为实施、归档 workflow 准备的 operation input；二者与项目级 `context` 一起分别进入 `openspec instructions apply` 和 `openspec instructions archive`。Explore 读取项目 `context` / artifact `rules`，但没有 `operations.explore`。
+`operations.apply.guidance` 和 `operations.archive.guidance` 是为实施、归档 workflow 准备的 operation input；二者与项目级 `context` 一起分别进入 `openspec instructions apply` 和 `openspec instructions archive`。Explore 读取项目 `context` / artifact `rules`，但没有 `operations.explore`。
 
 ## skipped
 

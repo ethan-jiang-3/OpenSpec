@@ -2,7 +2,7 @@
 
 ## 一句话
 
-你是普通程序员（不熟 SDD 细节，也不想精通 config）。先说结论：OpenSpec 不会替你收集一般项目 rules，但 v1.10.0 给新项目增加了一个窄而实用的入口：`openspec init --language "<language>"` 会把 artifact 语言偏好种进新 `config.yaml`。其他 context/rules 仍要抄范本或让 agent 帮你整理。撞墙了再升级到 [`answer-intermediate.md`](answer-intermediate.md)。
+你是普通程序员（不熟 SDD 细节，也不想精通 config）。先说结论：OpenSpec 不会替你收集一般项目 rules，但给新项目增加了一个窄而实用的入口：`openspec init --language "<language>"` 会把 artifact 语言偏好种进新 `config.yaml`。其他 context/rules 仍要抄范本或让 agent 帮你整理。撞墙了再升级到 [`answer-intermediate.md`](answer-intermediate.md)。
 
 ## 先认清楚这个文件
 
@@ -13,8 +13,8 @@
 | `schema` | 用哪个工作流（默认 `spec-driven`） |
 | `context` | 项目背景，注入到**所有** artifact 的指令 |
 | `rules` | 按 artifact ID 分的约束，只注入给对应 artifact |
-| `operations.apply.guidance` | v1.7.0 的 Apply 专属项目指引，和 context 一起进入 apply instructions |
-| `operations.archive.guidance` | v1.7.0 的 Archive 专属项目指引，和 context 一起进入 archive instructions |
+| `operations.apply.guidance` | Apply 专属项目指引，和 context 一起进入 apply instructions |
+| `operations.archive.guidance` | Archive 专属项目指引，和 context 一起进入 archive instructions |
 
 `rules.apply` / `rules.archive` 不会生效；Explore 会读取 `context` / artifact `rules`，但没有 `operations.explore`。
 
@@ -150,7 +150,7 @@ schema: spec-driven
 
 ### 误区 2：以为 `openspec init` 会交互式引导你填完整 config
 
-不会。v1.10.0 的 `--language` 只是 greenfield language context 快捷入口，不会收集一般项目背景或 rules；已有 config 时还会拒绝覆盖。
+不会。`--language` 只是 greenfield language context 快捷入口，不会收集一般项目背景或 rules；已有 config 时还会拒绝覆盖。
 
 ## 结论
 

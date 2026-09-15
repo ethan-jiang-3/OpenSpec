@@ -8,7 +8,7 @@
 
 主 specs（`openspec/specs/<capability-path>/spec.md`）通常由 delta spec 经 `archive` 累加而来；`openspec archive` 是唯一的**确定性**主 spec 写入 CLI。host 的 sync workflow 也能在 archive 前直接改 main spec，但那是 agent 驱动的智能 merge，随后 archive 会按当前基线做幂等检查。理解这个区分，后面的失真和修法才不会把两条路径混为一谈。
 
-路径也有两层语义：agent 在生成 MODIFIED delta 或直编 Purpose 时，必须从 `openspec instructions ... --json` 读取 `planningHome.root`，再访问 `<planningHome.root>/openspec/specs/...`；CLI archive 的 deterministic merge 则由 root selection 把 source/target 解析成真实文件路径。前者是 instruction contract，后者是 CLI 实现路径；v1.10.0 修复的是前者硬编码 cwd 的问题，不新增自动 retrieval，也不能把 `<planningHome.root>` 当 shell 里的字面目录。
+路径也有两层语义：agent 在生成 MODIFIED delta 或直编 Purpose 时，必须从 `openspec instructions ... --json` 读取 `planningHome.root`，再访问 `<planningHome.root>/openspec/specs/...`；CLI archive 的 deterministic merge 则由 root selection 把 source/target 解析成真实文件路径。前者是 instruction contract，后者是 CLI 实现路径；这里修复的是前者硬编码 cwd 的问题，不新增自动 retrieval，也不能把 `<planningHome.root>` 当 shell 里的字面目录。
 
 ## 先定位：日常工作流圈里，archive 是哪一步
 
@@ -45,7 +45,7 @@ openspec/changes/<id>/specs/<capability-path>/spec.md   ← delta（提案要改
 
 这是整个模型最关键、也最容易被忽略的一点：OpenSpec 用**名字**当身份，分两层，**都没有稳定 ID**。它既是 `archive` 能可靠合并的根基，也是漂移的根源（见 `02`）。
 
-> 驱动这套契约的是 **spec-driven schema**（OpenSpec 默认、最常见的 schema，背后的 driver）——`schemas/spec-driven/schema.yaml` 把 proposal↔specs 的 capability path 定为 "critical contract"。结构字段级详解见 `../schema/02-内置-spec-driven-详解.md`；需要采用 nested layout 时，建议同时读 v1.7.0 的 `src/utils/spec-discovery.ts`。
+> 驱动这套契约的是 **spec-driven schema**（OpenSpec 默认、最常见的 schema，背后的 driver）——`schemas/spec-driven/schema.yaml` 把 proposal↔specs 的 capability path 定为 "critical contract"。结构字段级详解见 `../schema/02-内置-spec-driven-详解.md`；需要采用 nested layout 时，建议同时读 `src/utils/spec-discovery.ts`。
 
 ### 第一层：capability 身份 = `specs/` 下的相对路径
 
@@ -69,7 +69,7 @@ export function normalizeRequirementName(name: string): string {
 
 - **没有 ID** ⇒ 一个 requirement 的一生，全靠这行标题文本维系。
 - **只 trim** ⇒ 改一个字母的大小写、换个标点，规范化都"消化不掉"，会被当成**另一个** requirement。
-- delta 的 `MODIFIED`/`REMOVED`/`RENAMED` 要命中主 spec 里的 requirement，靠的就是用这行标题文本去 `Map` 里精确查找。v1.7.0 只对已同步完成的 REMOVED/RENAMED 放宽为 no-op；其余找不到仍需诊断（见 `04`）。
+- delta 的 `MODIFIED`/`REMOVED`/`RENAMED` 要命中主 spec 里的 requirement，靠的就是用这行标题文本去 `Map` 里精确查找。只对已同步完成的 REMOVED/RENAMED 放宽为 no-op；其余找不到仍需诊断（见 `04`）。
 
 一个容易踩的细节：**delta 的段落标题大小写不敏感，但 requirement 名字的大小写敏感**。
 
@@ -97,7 +97,7 @@ delta 文件用 `##` 级段头声明操作，每个操作里用 `### Requirement
 
 ## 原子性与 fail-fast
 
-`buildUpdatedSpec` 对**真实冲突**是 fail-fast 的：MODIFIED 找不到目标、内容不同的 ADDED 重名、RENAMED 两端都不存在，或 requirement 只有大小写/空白近似但不精确，都会抛错；`archive` 会在写入前中止并输出 `Aborted. No files were changed.`，change 不移动、spec 不改动。v1.7.0 例外是已 early-sync 的完全一致操作：它们按 no-op 处理，不应被误诊为 archive 冲突。
+`buildUpdatedSpec` 对**真实冲突**是 fail-fast 的：MODIFIED 找不到目标、内容不同的 ADDED 重名、RENAMED 两端都不存在，或 requirement 只有大小写/空白近似但不精确，都会抛错；`archive` 会在写入前中止并输出 `Aborted. No files were changed.`，change 不移动、spec 不改动。例外是已 early-sync 的完全一致操作：它们按 no-op 处理，不应被误诊为 archive 冲突。
 
 这是真实抓到的一次（本 repo 的 `simplify-skill-installation`）：
 

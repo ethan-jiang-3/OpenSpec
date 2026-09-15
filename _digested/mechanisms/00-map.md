@@ -20,7 +20,7 @@
 
 如果你已经读过 `../system/`：
 
-1. 想理解 v1.5.0 的多仓库 store 模型，读 `01-store-模型与仓库协同.md`。
+1. 想理解多仓库 store 模型，读 `01-store-模型与仓库协同.md`。
 2. 想理解 OpenSpec 和不同 AI Coding 工具的关系，读 `02-tool-delivery.md`。
 3. 想理解 specs/changes 为什么不是“随便写的 Markdown”，读 `03-spec-model.md`。
 4. 想理解 expanded workflows 和 agent 行为边界，读 `04-workflow-templates.md`。

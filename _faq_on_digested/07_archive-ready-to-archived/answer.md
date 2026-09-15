@@ -17,7 +17,7 @@
 
 主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。
 
-> **当前边界（v1.13.0）。** v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；v1.13.0 修复了 fence 内空行被整理、`*`/`+` 标记读不出来、重复 section 只应用一份、scenario 换行挡住退役；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
+> **当前边界。** capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。修复了 capability retirement 的 blocked-content 诊断；修复了 fence 内空行被整理、`*`/`+` 标记读不出来、重复 section 只应用一份、scenario 换行挡住退役；非 TTY 与 `validate --archived` 的行为保持不变。
 
 ![Archive-ready 到 archived 的流程](figures/archive-ready-to-archived.svg)
 
@@ -127,7 +127,7 @@ CLI 会调用 `Validator.validateChangeDeltaSpecs()`。这里如果有 ERROR，�
 Validation failed. Please fix the errors before archiving.
 ```
 
-这很重要：archive 是把 delta spec 写进正式 baseline 的入口，所以 delta spec 的结构错误不能被静默吸收。v1.8.0 额外把 archive 会拒绝的两种问题前置到 `validate`：① MODIFIED requirement 省略了主 spec 仍有的 scenario（在 authoring 阶段就失败，信息指名要抄回的 scenarios）；② main spec 中存在重复 canonical requirement 名时 archive 直接拒绝，避免 reconciliation 压掉重复块之一。v1.9.0 起 ① 的计数认 requirement 下任何 `#### ` 子标题（不只是字面 `#### Scenario:`）。
+这很重要：archive 是把 delta spec 写进正式 baseline 的入口，所以 delta spec 的结构错误不能被静默吸收。额外把 archive 会拒绝的两种问题前置到 `validate`：① MODIFIED requirement 省略了主 spec 仍有的 scenario（在 authoring 阶段就失败，信息指名要抄回的 scenarios）；② main spec 中存在重复 canonical requirement 名时 archive 直接拒绝，避免 reconciliation 压掉重复块之一。① 的计数认 requirement 下任何 `#### ` 子标题（不只是字面 `#### Scenario:`）。
 
 ## Step 4：检查 tasks 完成度
 
@@ -185,7 +185,7 @@ target  main baseline spec
 exists  target 是否已存在
 ```
 
-如果没有 change specs，archive 仍然可以完成，只是不会更新主 specs。v1.7.0 还允许 metadata 明确声明 `skip_specs: true` 来表达“没有 spec-level 行为变化”；它不得与非隐藏 delta spec 文件共存，不能拿来跳过真实行为变更。
+如果没有 change specs，archive 仍然可以完成，只是不会更新主 specs。还允许 metadata 明确声明 `skip_specs: true` 来表达“没有 spec-level 行为变化”；它不得与非隐藏 delta spec 文件共存，不能拿来跳过真实行为变更。
 
 ## Step 6：确认是否更新主 specs
 
@@ -304,7 +304,7 @@ Applying changes to openspec/specs/user-auth/spec.md:
 
 这一步之后，`openspec/specs/` 代表新的 formal baseline。对新 capability，delta 中可读的 `## Purpose` 会随 archive 写入新 main spec；只有缺失或不可读时才回退 TBD placeholder，既有 main spec 的 Purpose 不会被 delta 覆盖。
 
-**v1.11.0 起**：`openspec validate` 会检测这个 archive 写入的 placeholder（`TBD - created by archiving change ...`），默认给出 WARNING。`--strict` 下报 error。检测使用与 writer 相同的定义常量（`PURPOSE_PLACEHOLDER_PREFIX` + `PURPOSE_PLACEHOLDER_SUFFIX`），所以 spelling 不会漂移。fence 内的引用不计，`TBD`/`TODO` 在 Purpose 开头也匹配，在句子中间则视为有效 Purpose。后续 explore/propose 都应该以这里为当前 capability 基线。
+`openspec validate` 会检测这个 archive 写入的 placeholder（`TBD - created by archiving change ...`），默认给出 WARNING。`--strict` 下报 error。检测使用与 writer 相同的定义常量（`PURPOSE_PLACEHOLDER_PREFIX` + `PURPOSE_PLACEHOLDER_SUFFIX`），所以 spelling 不会漂移。fence 内的引用不计，`TBD`/`TODO` 在 Purpose 开头也匹配，在句子中间则视为有效 Purpose。后续 explore/propose 都应该以这里为当前 capability 基线。
 
 ## Step 11：生成 archive 目标并检查冲突
 
@@ -334,13 +334,13 @@ Archive 'YYYY-MM-DD-<changeName>' already exists.
 
 这时不会覆盖已有 archive。
 
-> **v1.8.0 归档/同步边界。** 完全一致的 early-synced ADDED、MODIFIED、REMOVED、RENAMED 会作为幂等 no-op 被接受；近似命中（大小写、空白或不同内容）仍是错误。archive JSON 也可返回 warnings。已有日期前缀的 change 不会被再次叠加日期。
+> **归档/同步边界。** 完全一致的 early-synced ADDED、MODIFIED、REMOVED、RENAMED 会作为幂等 no-op 被接受；近似命中（大小写、空白或不同内容）仍是错误。archive JSON 也可返回 warnings。已有日期前缀的 change 不会被再次叠加日期。
 >
-> **v1.8.0 追加。** ① 若 change 的 REMOVED 拿掉某 capability 最后一个 requirement，原本的 "Spec must have at least one requirement" 中止可在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后变成**删除该 capability 的 main spec**；没有 marker 时行为不变，错误信息会指明这个出路。`--no-validate` 永不触发退役。② archive 在无法交互提问（agent 的 stdin closed）时，会给出需要哪个 flag 与携带原 flags 的可重跑命令（如 `openspec archive <name> --skip-specs --yes`）；不带 change 名时从旧版 exit 0 吞错改为 exit 1 请求 change 名。
+> **追加。** ① 若 change 的 REMOVED 拿掉某 capability 最后一个 requirement，原本的 "Spec must have at least one requirement" 中止可在 `.openspec.yaml` 声明 `retire_capabilities: true`（与 `schema:` 并存）后变成**删除该 capability 的 main spec**；没有 marker 时行为不变，错误信息会指明这个出路。`--no-validate` 永不触发退役。② archive 在无法交互提问（agent 的 stdin closed）时，会给出需要哪个 flag 与携带原 flags 的可重跑命令（如 `openspec archive <name> --skip-specs --yes`）；不带 change 名时从旧版 exit 0 吞错改为 exit 1 请求 change 名。
 >
-> **v1.9.0 追加。** 非 TTY（stdout 或 stdin 不是终端）时 confirm 走纯文本、不写 ANSI；无 change 名时要求先传入名字，不画交互菜单。重建 spec 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF。
+> **追加。** 非 TTY（stdout 或 stdin 不是终端）时 confirm 走纯文本、不写 ANSI；无 change 名时要求先传入名字，不画交互菜单。重建 spec 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF。
 >
-> **v1.10.0 退役三分支。** REMOVED 清空最后一个 requirement 时，不要把 “加 marker” 当万能修复：
+> **退役三分支。** REMOVED 清空最后一个 requirement 时，不要把 “加 marker” 当万能修复：
 >
 > 1. **仅缺授权 marker**：main spec 除可理解的 Purpose/Requirements 外没有残留内容，错误才建议在 `.openspec.yaml` 加 `retire_capabilities: true`。
 > 2. **存在 unaccounted content**：例如 `## Notes`、orphan text 或残余 `###` heading。archive 会列出 blocking lines；必须先迁移、删除或归位这些内容。此时 marker 也无效，提示不会误导你去加 marker。
@@ -394,7 +394,7 @@ openspec instructions archive --change "<name>" --json
 
 它还可能调用 `openspec-sync-specs` 做 agent-driven sync。这个 sync 路径和 CLI 的 programmatic `buildUpdatedSpec()` 不同：agent 会读 delta spec 和 main spec，然后智能合并。
 
-> **v1.6.0 变更**：OPSX archive template 有重要加固——① sync 必须 **inline** 执行（不等完成绝不 mv，防止 changeRoot 被移走后 sync 读不到文件）；② sync prompt 新增 **Cancel** 选项；③ sync 完成后必须对**全部 capability** 重新验证（ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名），任何 mismatch 都停止 archive。main spec 路径也改用 store-aware `planningHome.root`。
+> **变更**：OPSX archive template 有重要加固——① sync 必须 **inline** 执行（不等完成绝不 mv，防止 changeRoot 被移走后 sync 读不到文件）；② sync prompt 新增 **Cancel** 选项；③ sync 完成后必须对**全部 capability** 重新验证（ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名），任何 mismatch 都停止 archive。main spec 路径也改用 store-aware `planningHome.root`。
 
 所以读源码时要分层：
 
@@ -442,14 +442,14 @@ openspec instructions archive --change "<name>" --json
 
 ## 参考来源
 
-源码引用以 v1.13.0（release tag `v1.13.0` = `9d4e5974`）为当前基线：
+源码引用：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/archive.ts` | `ArchiveCommand.execute()` 主流程、validation、task warning、spec updates、move directory |
-| `src/core/specs-apply.ts` | `findSpecUpdates()`、`buildUpdatedSpec()`、`writeUpdatedSpec()` 和 delta merge 顺序；v1.13.0 起 fence 外空行压缩（`collapseBlankRunsOutsideFences`） |
-| `src/core/validation/validator.ts` | proposal/delta/main spec validation 语义；v1.12.0 起 advisory merge preflight 报 informational findings |
-| `src/core/parsers/requirement-blocks.ts` | delta spec parsing、requirement block parsing、name normalization；v1.13.0 sections 改 list、`[-*+]` 标记、wrapped bullet |
+| `src/core/specs-apply.ts` | `findSpecUpdates()`、`buildUpdatedSpec()`、`writeUpdatedSpec()` 和 delta merge 顺序；fence 外空行压缩（`collapseBlankRunsOutsideFences`） |
+| `src/core/validation/validator.ts` | proposal/delta/main spec validation 语义；advisory merge preflight 报 informational findings |
+| `src/core/parsers/requirement-blocks.ts` | delta spec parsing、requirement block parsing、name normalization；sections 改 list、`[-*+]` 标记、wrapped bullet |
 | `src/core/parsers/spec-structure.ts` | main spec 结构错误检查 |
 | `src/utils/task-progress.ts` | archive 阶段 task checkbox 统计 |
 | `src/utils/change-metadata.ts` | retirement marker 是否可 honor 及安全 reason |
@@ -457,7 +457,7 @@ openspec instructions archive --change "<name>" --json
 | `src/cli/index.ts` | `archive [change-name]` command 和 flags |
 | `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板层行为 |
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven sync 模板 |
-| [`../../_digested/internal-spec-driven/04-archive-归档合并.md`](../../_digested/internal-spec-driven/04-archive-归档合并.md) | archive validate/merge/move 机制消化（含 v1.13.0 保真修复） |
+| [`../../_digested/internal-spec-driven/04-archive-归档合并.md`](../../_digested/internal-spec-driven/04-archive-归档合并.md) | archive validate/merge/move 机制消化（含保真修复） |
 | [`../06_apply-ready-to-archive-ready/answer.md`](../06_apply-ready-to-archive-ready/answer.md) | archive-ready 的前置状态 |
 
-**v1.13.0 对 Archive 的影响**：① 代码 fence 内的连续空行不再被压缩（YAML block scalar、Python、expected-output 样例保真）；② `*`/`+` 列表标记写的 REMOVED/RENAMED delta 会被正确应用（之前静默不生效但报成功）；③ 重复 section header 的每一份 body 都被应用；④ scenario bullet 换行的 spec 不再挡住 `retire_capabilities`，`+` marker 也能被识别。这些修复的共同教训：archive 报「成功」不代表 delta 一定被应用了——v1.12.0 起 validate 的 advisory merge preflight 会在归档前就把合并冲突亮出来。
+**对 Archive 的影响**：① 代码 fence 内的连续空行不再被压缩（YAML block scalar、Python、expected-output 样例保真）；② `*`/`+` 列表标记写的 REMOVED/RENAMED delta 会被正确应用（之前静默不生效但报成功）；③ 重复 section header 的每一份 body 都被应用；④ scenario bullet 换行的 spec 不再挡住 `retire_capabilities`，`+` marker 也能被识别。这些修复的共同教训：archive 报「成功」不代表 delta 一定被应用了——validate 的 advisory merge preflight 会在归档前就把合并冲突亮出来。

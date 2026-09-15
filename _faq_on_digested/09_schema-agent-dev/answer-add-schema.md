@@ -14,6 +14,8 @@ OpenSpec 的 schema 系统允许你定义自己的 artifact 种类、依赖关�
 
 **fork 优先**——`agent-dev-driven` 就是 spec-driven 的 instruction 级 fork：artifact 名和 DAG 完全一样，改的只是 design 和 tasks 的 instruction 与 template（proposal 和 specs 几乎不动）。
 
+> **fork 的对象是内置 `spec-driven`。** `agent-dev-driven` / `requirement-driven` 不再是 OpenSpec 内置 schema，所以对它们没有 "fork 内置" 一说——直接用本目录的 `schema-package/` 安装即可。
+
 ## 装在哪里——两个位置
 
 | 位置 | 可见范围 | 什么时候用 |

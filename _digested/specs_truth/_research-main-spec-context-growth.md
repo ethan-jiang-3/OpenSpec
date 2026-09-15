@@ -4,6 +4,8 @@
 
 > **当前基线（2026-07-29）**：本 checkout 与 PATH CLI 均为 v1.7.0；下文所有源码链接均固定到该 release。关于 local main-spec catalog / 自动选择 / token-budget retrieval 的结论未变；nested path 是 v1.7.0 的正式能力，见 [`_research-nested-capability-paths.md`](_research-nested-capability-paths.md)。
 
+> **后续复核（至 v1.13.0）**：自动 retrieval / catalog 结论仍未变；v1.11.0–v1.13.0 的 `show --diff`、`status --all`、`validate --report findings` 是审阅手段，不提供自动检索。
+
 > **v1.8.0 同步（2026-08-08）**：v1.8.0 未改变本底稿的结论——main-spec retrieval / catalog 仍未解决，nested path 语义不变。链接保留指向 v1.7.0 以保持原始核验的固定锚点；当前行为以 v1.8.0 源码为准。
 
 ## 先分开两个问题

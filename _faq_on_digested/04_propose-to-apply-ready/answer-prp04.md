@@ -147,7 +147,7 @@ repo-local:
   allowedEditRoots = [projectRoot]
 ```
 
-v1.5.0 中 `actionContext.mode` 始终为 `repo-local`。跨仓库上下文通过 store reference 获取，但不进入 change 生命周期。
+`actionContext.mode` 始终为 `repo-local`。跨仓库上下文通过 store reference 获取，但不进入 change 生命周期。
 
 ## PRP-04 的输出对 agent 的意义
 

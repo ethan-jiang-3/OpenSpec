@@ -164,7 +164,7 @@ fallback 失败会清理不完整目标并恢复 active source；若 destination
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
+源码引用：
 
 | 来源 | 用到的结论 |
 |---|---|

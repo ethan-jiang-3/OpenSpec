@@ -16,7 +16,7 @@
 | [`src/utils/change-metadata.ts`](../../src/utils/change-metadata.ts) | schema 解析优先级：显式参数 → `.openspec.yaml` → project config → default。 |
 | [`src/utils/change-utils.ts`](../../src/utils/change-utils.ts) | new change 对 `config.schema` 的读取，以及 schema 名称写入 metadata 的行为。 |
 | [`src/core/root-selection.ts`](../../src/core/root-selection.ts) | `store:` 仅对 config-only 目录充当 pointer；本地 planning shape 优先，pointer 配置字段不会成为有效项目配置。 |
-| [`src/commands/schema.ts`](../../src/commands/schema.ts) | `schema init --default` 当前写入 `defaultSchema`，而它不是有效 project config 字段。 |
+| [`src/commands/schema.ts`](../../src/commands/schema.ts) | `schema init --default` 写入 loader 实际读取的 `schema` 键并删除遗留 `defaultSchema`，写入前校验 YAML/可写性、失败时回滚（不再写入无效的 `defaultSchema`）。 |
 | [`src/core/references.ts`](../../src/core/references.ts) | references 组装为 store/spec 索引，按需 fetch，且有独立 50 KiB rendered index budget。 |
 | [`test/core/project-config.test.ts`](../../test/core/project-config.test.ts) | parser 的 references、50 KiB、warning 和 unknown rule key 行为的回归证据。 |
 

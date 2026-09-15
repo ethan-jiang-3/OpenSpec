@@ -41,7 +41,11 @@ openspec completion __complete <type>
 
 生成器消费同一个 `COMMAND_REGISTRY`，但脚本语法分成 bash、zsh、fish、PowerShell。installers 负责写 completion script、更新 shell profile、创建 backup、返回 warnings/instructions。这一层最容易碰到用户环境差异。
 
-### v1.10.0：安装期脚本改为首次运行 tip
+### Fish 不再回退到文件路径
+
+Fish 的 command/subcommand/flag/positional completion 之前在某些位置会回退到 shell 默认的文件名建议，用户按 Tab 会看到一堆无关文件名。改用带 type 信息的 `__openspec_seen_args` 记录已解析的位置参数，只在 OpenSpec 自己的候选集里建议，不再 fallback 到路径补全。
+
+### 安装期脚本改为首次运行 tip
 
 发布包不再包含 npm `postinstall`；registry install 因而没有 install lifecycle script，也不再触发相关 allow-scripts 警告。源码/git/directory install 仍可能因 package 的 `prepare` 构建，不能把“无 postinstall”误写成“所有安装方式绝不运行脚本”。
 
@@ -55,11 +59,11 @@ completion 提示移到 root commander 的 `postAction`：命令自身输出之�
 
 seen flag 写 global config 时使用 raw read/merge + 临时文件 rename，不调用会合入默认值的 `getGlobalConfig()`，避免顺带 stamp `profile`/`delivery` 并破坏一次性 profile migration。
 
-### v1.12.0：PowerShell completion 文档化
+### PowerShell completion 文档化
 
 `openspec completion install` 对 PowerShell 的 managed 配置方式（脚本位置、profile 写入、backup）在 `docs/cli.md` 有正式文档（#1070）。Fish 之外的 shell 面此前只有生成器实现，现在 PowerShell 的 setup 路径有可查文档。
 
-### v1.12.0：npm git 安装免 pnpm + Node 20 chalk 兼容
+### npm git 安装免 pnpm + Node 20 chalk 兼容
 
 - **git 安装免 pnpm**（#792）：`npm install github:...` 这类 git 安装时，package `prepare` 脚本改为 `node build.js`（不再假设 pnpm 在场）。此前 pnpm 是构建前置依赖，git 安装会因缺 pnpm 失败；现在 install scripts 测试（`test/package-install-scripts.test.ts`）覆盖了这条路径。
 - **Node 20 chalk 兼容**（#1747）：依赖解析保持 Node 20 LTS 可用的 chalk 版本，避免新依赖树把 chalk 解析到 Node 22+ 才能用的版本。安装面（npm/pnpm/bun/yarn/volta）对 Node 20 用户都保持可用。
@@ -71,13 +75,13 @@ telemetry 在 `src/telemetry/`。它的边界：
 - 只记录 command name、version、surface。
 - 不记录 arguments、paths、content。
 - `OPENSPEC_TELEMETRY=0`、`DO_NOT_TRACK=1`、`CI=true` 会禁用。
-- v1.8.0 起，global config 的 `telemetry.enabled: false` 也禁用匿名遥测与 `openspec update` 版本检查；unset 保持开启（opt-out 模型），env/CI opt-out 优先。
+- global config 的 `telemetry.enabled: false` 也禁用匿名遥测与 `openspec update` 版本检查；unset 保持开启（opt-out 模型），env/CI opt-out 优先。
 - PostHog 请求 1s timeout、无 retry、失败静默。
 - anonymous id 是随机 UUID，保存在 telemetry config。
 
 CLI 在 `preAction` 里显示首次 notice 并 track command，在 `postAction` shutdown。
 
-v1.10.0 的首次 telemetry notice 改写 stderr；`--json` 仍 defer 且不设置 `noticeSeen`，让 stdout 保持单一 JSON 文档，并把 disclosure 留给下一次非 JSON 运行。
+首次 telemetry notice 改写 stderr；`--json` 仍 defer 且不设置 `noticeSeen`，让 stdout 保持单一 JSON 文档，并把 disclosure 留给下一次非 JSON 运行。
 
 工程含义是：telemetry 只提供粗粒度使用信号，不能成为命令成功与否的依赖，也不能接触项目内容。
 

@@ -1,6 +1,6 @@
 # 研究笔记：OpenSpec v1.7.0 的长期 capability 治理边界
 
-> 基线：上游 [`v1.7.0`](https://github.com/Fission-AI/OpenSpec/releases/tag/v1.7.0)。本文只区分已发布的运行时能力、已发布但由 agent 执行的 workflow，以及仍需项目自行治理的部分；不改变任何 runtime 行为。
+> 基线：上游 [`v1.7.0`](https://github.com/Fission-AI/OpenSpec/releases/tag/v1.7.0)。本文只区分已发布的运行时能力、已发布但由 agent 执行的 workflow，以及仍需项目自行治理的部分；不改变任何 runtime 行为。后续复核至 v1.13.0：capability 身份/治理结论未变。
 
 ## 结论先行：两种不同强度的“contract”
 

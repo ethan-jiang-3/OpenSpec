@@ -18,7 +18,7 @@ change name / description
 
 OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责创建 change 容器、解释 schema 和文件状态、给出路径和 instructions；agent 负责读取上下文、生成 artifact 内容并写文件。
 
-> **v1.10.0 当前边界。** `/opsx:apply` 是 Claude 写法；Codex 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；若 resolved schema 根本不生成 specs artifact，`new change` 会自动写入该 marker。真实行为变化仍不能借 marker 绕过 specs。
+> **当前边界。** `/opsx:apply` 是 Claude 写法；Codex 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；若 resolved schema 根本不生成 specs artifact，`new change` 会自动写入该 marker。真实行为变化仍不能借 marker 绕过 specs。`openspec instructions apply` 在无 delta specs 且未声明 `skip_specs` 时会警告，被前置 artifact 挡住时给出完整 `missingPrerequisites` 缺失链。
 
 ![Propose 到 apply-ready 的流程](figures/propose-to-apply-ready.svg)
 
@@ -242,7 +242,7 @@ agent 不应该把 `context`、`rules` 或 `<project_context>` 标签复制进 a
 specs/**/*.md
 ```
 
-因此一个 change 可以创建多个 capability delta specs。v1.8.0（v1.7.0 起）的 capability 是 `specs/` 下的相对 path，允许 `identity/session/spec.md` 这样的嵌套路径；delta 必须使用同一相对 path，根级 `changes/<change>/specs/spec.md` 无效。
+因此一个 change 可以创建多个 capability delta specs。capability 是 `specs/` 下的相对 path，允许 `identity/session/spec.md` 这样的嵌套路径；delta 必须使用同一相对 path，根级 `changes/<change>/specs/spec.md` 无效。
 
 创建 **MODIFIED** delta 前，主 spec 的当前版本必须从 instructions/status JSON 的 `planningHome.root` 解析：
 
@@ -250,7 +250,7 @@ specs/**/*.md
 <planningHome.root>/openspec/specs/<capability-path>/spec.md
 ```
 
-不要硬编码当前 repo 的 `openspec/specs/`。这是 v1.10.0 的 store-aware instruction 修复，不代表 OpenSpec 新增了自动检索相关 main spec 的能力。
+不要硬编码当前 repo 的 `openspec/specs/`。这是 store-aware instruction 修复，不代表 OpenSpec 新增了自动检索相关 main spec 的能力。
 
 ### design
 
@@ -284,7 +284,7 @@ schema instruction 说 design 不是流水账；它应该用于跨模块、新�
 - [ ] 1.2 Add integration tests — verify: run the new integration test file
 ```
 
-v1.10.0 的 schema instruction 要求**每条 checkbox task 自带 verification**，形式可以是 test、command、observable behavior 或 artifact inspection；只有跨多个实现 task 的验证才适合另列 `Integration Verification`。这是生成契约，不是 `openspec validate` 新增的硬校验。
+schema instruction 要求**每条 checkbox task 自带 verification**，形式可以是 test、command、observable behavior 或 artifact inspection；只有跨多个实现 task 的验证才适合另列 `Integration Verification`。这是生成契约，不是 `openspec validate` 新增的硬校验。
 
 `tasks.md` 完成后，默认 `apply.requires: [tasks]` 被满足。
 
@@ -410,7 +410,7 @@ planning artifacts 已经足够让 apply skill 读取上下文和任务清单
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
+源码引用：
 
 | 来源 | 用到的结论 |
 |---|---|

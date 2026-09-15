@@ -30,7 +30,7 @@ proposal → specs → tasks → apply
 | `proposal` | **内容更厚**。spec-driven 的 proposal 是 Why + What Changes + Capabilities + Impact；requirement-driven 的 proposal 在这基础上加了 Stakeholders、User Personas、Raw User Stories、Edge Cases、Clarifying Questions。因为需求工程的前期获取比代码工程重得多 |
 | `specs` | **格式不同**。spec-driven 的 specs 是 delta ops（ADDED/MODIFIED/REMOVED）+ Scenario 块；requirement-driven 的 specs 是 PRD 格式——FR-N、NFR、User Stories 表格、Approval 章节。但 `generates: "specs/**/*.md"` 和 `id: specs` 不变 |
 | `design` | **去掉**。需求工程不需要实现方案 |
-| `tasks` | checklist 内容不同。spec-driven 的 tasks 是代码实现清单；requirement-driven 的 tasks 是需求工程清单（Proposal → Specs → Review → Approval → Handoff）。本示例追随 v1.10.0 的生成契约，每条 checkbox 都声明可观察的 verification，而不是只在末尾笼统“review”。 |
+| `tasks` | checklist 内容不同。spec-driven 的 tasks 是代码实现清单；requirement-driven 的 tasks 是需求工程清单（Proposal → Specs → Review → Approval → Handoff）。本示例遵循当前生成契约，每条 checkbox 都声明可观察的 verification，而不是只在末尾笼统“review”。 |
 | `apply` | **完全不同**。spec-driven 的 apply 是"读 design，写代码，勾 tasks"；requirement-driven 的 apply 是"读 specs，跟人沟通，迭代修改，推动签收，准备交接" |
 
 ## 关键设计决策
@@ -90,6 +90,7 @@ agent 走完 proposal → specs → tasks 的 artifact 生成后，在 apply 阶
 
 ## 已知限制
 
+- **上游已删除同名内置 schema**：`openspec/schemas/requirement-driven/` 不再是 OpenSpec 内置 schema；本目录的 [`schema-package/`](schema-package/) 是唯一维护源，安装后作为项目级自定义 schema 与上游解耦。
 - **archive 的 tasks.md 硬编码**：和所有社区 schema 一样的限制。需求场景下 tasks.md 命名自然，不需要改
 - **利益相关者不在线时流程阻塞**：apply 依赖利益相关者反馈。如果利益相关者不回复，agent 只能记录问题、标记 blocked、等下次会话。这是需求工程本身的属性
 - **不替代专业 RE 工具**：适合小团队或早期项目的需求定义，不适合审批流、基线管理、需求矩阵追踪等重型 RE 流程

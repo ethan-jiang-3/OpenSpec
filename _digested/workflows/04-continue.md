@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/continue-change.ts` → `getContinueChangeSkillTemplate()` + `getOpsxContinueCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:continue [change-name]`；Codex v1.8.0 用 `$openspec-continue-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:continue [change-name]`；Codex 用 `$openspec-continue-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-continue-change`（skill）/ `OPSX: Continue`（command）
 > **独立 CLI 命令**：无——continue 没有对应的 `openspec continue` CLI 命令。
 > **profile**：custom（需显式启用，不在默认 core 里）
@@ -105,7 +105,7 @@ STOP after creating ONE artifact
 | Guardrail | 含义 |
 |---|---|
 | Create ONE artifact per invocation | 核心约束 |
-| Always read dependency artifacts — re-read from disk, not memory | 用户可能已编辑过（v1.6.0） |
+| Always read dependency artifacts — re-read from disk, not memory | 用户可能已编辑过 |
 | Never skip artifacts or create out of order | 遵守 DAG；`skip_specs: true` 的 specs 是显式 skipped，不应创建 spec 文件 |
 | context unclear → ask before creating | 不猜 |
 | Verify artifact file exists after writing | 确认写入 |

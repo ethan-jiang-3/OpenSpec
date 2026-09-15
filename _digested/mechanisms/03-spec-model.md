@@ -46,11 +46,11 @@ Markdown files
 
 这使得一个 change 不是“一个目录里有几个 Markdown 文件”这么简单，而是 CLI 和 agent 可作为结构化 change 来审阅、验证、输出 JSON。
 
-### v1.8.0：capability ID 是相对路径（v1.7.0 引入）
+### capability ID 是相对路径
 
 delta 与 main spec 都通过 `discoverSpecFiles()` 递归发现：`specs/auth/spec.md` 的 ID 是 `auth`，`specs/identity/session/spec.md` 的 ID 是 `identity/session`。list、show、validate、change parser、archive/apply 都使用同一条发现路径，因此 nested layout 是完整生命周期支持，不是只允许把文件放进子目录。
 
-这只是 path namespace：`identity` 和 `identity/session` 没有继承、聚合或自动加载语义。`changes/<change>/specs/spec.md` 则没有 capability 目录，v1.7.0 会被 validate/archive 拒绝，避免它被发现器忽略后静默丢失。
+这只是 path namespace：`identity` 和 `identity/session` 没有继承、聚合或自动加载语义。`changes/<change>/specs/spec.md` 则没有 capability 目录，会被 validate/archive 拒绝，避免它被发现器忽略后静默丢失。
 
 ## requirement-blocks 是 archive 的关键
 
@@ -67,18 +67,18 @@ delta 与 main spec 都通过 `discoverSpecFiles()` 递归发现：`specs/auth/s
 - RENAMED 用 FROM/TO pair。
 - UTF-8 BOM 会被剥离，fenced code block 中的 header 不参与 section/requirement 识别。
 
-### v1.13.0：delta section 是 list 不是 record
+### delta section 是 list 不是 record
 
-v1.13.0 之前，`parseDeltaSpec()` 把 `## ` section 收集成 title-keyed record——重复写同一 header（例如 `## ADDED Requirements` 写了两次，或 fence 示例自带重复 header）时，后写的 body 覆盖先写的，大小写不敏感 lookup 只返回第一个折叠匹配，于是「写了但没应用」的部分在 validate/archive 之前就丢了。
+此前，`parseDeltaSpec()` 把 `## ` section 收集成 title-keyed record——重复写同一 header（例如 `## ADDED Requirements` 写了两次，或 fence 示例自带重复 header）时，后写的 body 覆盖先写的，大小写不敏感 lookup 只返回第一个折叠匹配，于是「写了但没应用」的部分在 validate/archive 之前就丢了。
 
-v1.13.0 改为**按书写顺序的 list**：
+改为**按书写顺序的 list**：
 
 - 每个 `## ` section 保留自己的出现次序和行号，重复 header 的每一份 body 都被读取。
 - 大小写折叠后的 lookup 返回**所有**匹配 section，而不是第一个。
 - rename 的 `FROM:`/`TO:` 按 section 配对——一份里的 `FROM:` 永远不会和另一份的 `TO:` 配对。
 - 诊断仍指向正确的行号（每个 section 有自己的行号）。
 
-### v1.13.0：CommonMark 列表标记全接受
+### CommonMark 列表标记全接受
 
 `## REMOVED Requirements` 的 bullet 形式和 `## RENAMED Requirements` 的 `FROM:`/`TO:` 行之前硬编码 `-`。CommonMark 用 `-`/`*`/`+` 都能开 bullet list，于是 `*`/`+` 写的删除/改名 delta 匹配不到任何东西——`validate` 报 valid、`archive` 报成功，但需求根本没动。现在接受 `[-*+]`，`FROM:`/`TO:` bullet 保持可选，`### Requirement:` header 形式不变。
 
@@ -111,9 +111,22 @@ Zod 负责基础结构；规则校验负责 OpenSpec 语义，比如 Purpose 长
 
 `validateChangeDeltaSpecs()` 会递归扫描 change 的 `specs/` 目录，检查 ADDED/MODIFIED/REMOVED/RENAMED 的结构、重复、冲突和 scenario 要求。这套校验是 archive 前的重要守门器。`skip_specs: true` 是一个受限例外：无 spec-level 行为改动的 change 可显式跳过 specs artifact；但 marker 与 specs 下任意非隐藏文件共存会报错，不能用来掩盖真实 delta。
 
-v1.12.0 起，validate 还带一个 advisory merge preflight：delta 与 main spec 的合并冲突报为 **informational findings**（成功文本报告里也出现，不改退出码）；文件系统读取错误保留为 error，不再被误判成「spec 缺失」；预检无法解析输入时 validation 报告保持完整。validate 与 archive 对 delta 的解读从此一致——archive 会拒绝的东西，validate 阶段就亮出来。
+validate 还带一个 advisory merge preflight：delta 与 main spec 的合并冲突报为 **informational findings**（成功文本报告里也出现，不改退出码）；文件系统读取错误保留为 error，不再被误判成「spec 缺失」；预检无法解析输入时 validation 报告保持完整。validate 与 archive 对 delta 的解读从此一致——archive 会拒绝的东西，validate 阶段就亮出来。
 
 新 capability 的 delta 可以写 `## Purpose`。archive 创建 main spec 时会带入该 Purpose；缺失或无法构成可读 Purpose 时才留下 TBD placeholder。已有 main spec 的 Purpose 不会被 delta 覆盖。
+
+### validate 检测遗留的 Purpose 占位符
+
+archive 写入的占位符是 `TBD - created by archiving change <name>. Update Purpose after archive.`——它长于 `MIN_PURPOSE_LENGTH`，于是那条专门用来抓「没人写过 Purpose」的 brevity 规则反而被它满足。此前没有任何命令会再读它：capability 里一直躺着一个待办，而所有命令都报成功。
+
+新增 `src/core/validation/purpose-placeholder.ts` 的 `findPurposePlaceholderIssue()`，只认两件事：
+
+- writer 生成的整句——通过 `PURPOSE_PLACEHOLDER_PREFIX` / `PURPOSE_PLACEHOLDER_SUFFIX` 两个共享常量匹配，和 archive writer 使用同一份定义；
+- **开头**是 `TBD` 或 `TODO` 的 Purpose（`^(?:TBD|TODO)(?![\p{L}\p{N}\p{M}_])`，所以 `TBDs` / `TODOs` 不算，`TODO:` / `TBD -` 算）。
+
+句子中间的 `TBD`（如 `The retry budget is TBD`）是有效 Purpose，不报——否则会训练用户忽略警告。fence 内的引用先被读出（复用 `buildCodeFenceMask`），空 Purpose 交给已有的 `SPEC_PURPOSE_EMPTY` 规则，不重复报。
+
+级别是 **WARNING**：normal 模式通过，`--strict` 才失败。诊断尽量定位到占位符所在行（leading marker 取 section 首行，生成句取包含它的行），定位不到就只报 finding、不报行号，避免给出错误行号。
 
 ## warnings 与 errors
 

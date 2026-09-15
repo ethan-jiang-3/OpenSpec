@@ -18,7 +18,7 @@ interface PlanningHome {
 
 `resolveCurrentPlanningHomeSync()` 从当前目录向上找 `openspec/` 目录。找不到时，如果 `allowImplicitRepoRoot !== false`，把当前目录当 implicit root。
 
-v1.9.0 起，**会误报空项目通过的命令关掉了这条 fallback**：`list` 只在 cwd 仍有遗留 `openspec/project.md` 时允许 implicit；`validate --all/--changes/--specs` 设 `allowImplicitRoot: false`。项目外跑它们会非零退出，不再 exit 0 报空列表。单条 `validate <name>` 和其他有意使用 implicit root 的工作流不变。`openspec schemas` 走同一套 canonical root selection，并接受 `--store <id>`。
+**会误报空项目通过的命令关掉了这条 fallback**：`list` 只在 cwd 仍有遗留 `openspec/project.md` 时允许 implicit；`validate --all/--changes/--specs` 设 `allowImplicitRoot: false`。项目外跑它们会非零退出，不再 exit 0 报空列表。单条 `validate <name>` 和其他有意使用 implicit root 的工作流不变。`openspec schemas` 走同一套 canonical root selection，并接受 `--store <id>`。
 
 ## Store 模型
 
@@ -31,7 +31,7 @@ v1.9.0 起，**会误报空项目通过的命令关掉了这条 fallback**：`li
 
 ### `defaultStore` 不是项目 root 覆盖
 
-v1.7.0 可通过全局配置设置 `defaultStore`。它是机器上的低优先级 fallback；有显式 `--store`、项目配置或当前目录可解析 root 时，后者优先。root JSON 可把这一来源标为 `global_default`。因此不能把 default store 解释成“所有 change 都改到这个仓库”。
+可通过全局配置设置 `defaultStore`。它是机器上的低优先级 fallback；有显式 `--store`、项目配置或当前目录可解析 root 时，后者优先。root JSON 可把这一来源标为 `global_default`。因此不能把 default store 解释成“所有 change 都改到这个仓库”。
 
 ### Store：注册一个仓库
 

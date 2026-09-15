@@ -2,7 +2,7 @@
 
 > 多人用 OpenSpec + Git 时，**绝大多数冲突都来自一件事：有人忘了"一个 change = 一个分支、PR 合并后立即 archive"这条纪律。** 这一篇把这条纪律拆成 4 个场景（独立功能 / 有依赖 / 改同一个 spec / 紧急 bugfix），告诉你每一步敲哪条命令、archive 顺序错会怎样、怎么用 PR 串行化避免基线不一致。
 
-> **v1.11.0 协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。同 path 仍需串行化/重基线；退役还必须同时处理在途 MODIFIED 与 main spec 中的 orphan content。
+> **协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。同 path 仍需串行化/重基线；退役还必须同时处理在途 MODIFIED 与 main spec 中的 orphan content。`openspec status --all` 可一次看清全部 active change，单个加载失败不会中止全扫。
 
 ---
 
@@ -112,7 +112,7 @@ Alice archive identity/session
   → Bob archive
 ```
 
-已由独立 sync 写入的**完全一致** delta 在 v1.8.0（v1.7.0 起）可成为 archive no-op；这只是降低了“已正确同步”的重复写入风险。它不等于两个不同改动自动合并，更不能代替上面的重读、review 和 rebaseline。
+已由独立 sync 写入的**完全一致** delta 可成为 archive no-op；这只是降低了“已正确同步”的重复写入风险。它不等于两个不同改动自动合并，更不能代替上面的重读、review 和 rebaseline。
 
 团队可以在 PR 描述中固定一张小表，让这种协调显式可见：
 
@@ -356,7 +356,7 @@ git commit -m "Sync with add-request-filter changes"
 - 如果必须并行，后 archive 的人要用 `/opsx:sync` 同步，并手动审查 delta spec 是否仍然准确
 - `/opsx:sync` 在当前 core profile 中默认可用
 - **退役 vs 在途修改**：若某人退役整个 capability，而另一个 in-flight change 仍在 MODIFIED 它——后者可能到 archive 才因 target 不存在而失败。退役 PR 必须盘点同 path 的 active changes，先完成/取消/重基线，而不是把 marker 当作抢占所有权。
-- **退役 vs orphan content（v1.10.0）**：即使 `retire_capabilities: true` 已声明，main spec 里的 `## Notes`、orphan paragraph/section 等未归属内容也会阻止删除。CLI 会列 blocking lines；团队要先决定迁入 `## Purpose`/canonical requirement 还是经 review 删除，不能让退役者单方面抹掉其他人的治理信息。
+- **退役 vs orphan content**：即使 `retire_capabilities: true` 已声明，main spec 里的 `## Notes`、orphan paragraph/section 等未归属内容也会阻止删除。CLI 会列 blocking lines；团队要先决定迁入 `## Purpose`/canonical requirement 还是经 review 删除，不能让退役者单方面抹掉其他人的治理信息。
 
 ---
 
@@ -650,7 +650,7 @@ Blocking rule:
 
 ### 用 review 检查冲突
 
-`openspec validate` 能检查结构、格式和最低内容门槛（场景存在等；SHALL/MUST 自 v1.8.0 起是 guidance，normal 模式缺失仅 WARNING），但它不会替你判断两个并行 change 是否语义冲突。review 时要明确检查两件事：这次 delta spec 改了哪些 requirement，以及这些 requirement 是否正被另一个 active change 修改。
+`openspec validate` 能检查结构、格式和最低内容门槛（场景存在等；SHALL/MUST 是 guidance，normal 模式缺失仅 WARNING），但它不会替你判断两个并行 change 是否语义冲突。review 时要明确检查两件事：这次 delta spec 改了哪些 requirement，以及这些 requirement 是否正被另一个 active change 修改。
 
 ---
 
@@ -678,7 +678,7 @@ Bob:   add-qc-report    → 也改 specs/quality/spec.md（修改 Requirement: R
 - **智能合并，不是文件覆盖**——MODIFIED 只改提到的 requirement，不改的保留原样。ADDED 如果 main spec 已经有了同名 requirement 就当 MODIFIED 处理
 - **幂等**——同样的 delta 跑两次 sync，结果一样
 - **不归档**——change 仍然 active，代码实现和 tasks 不受影响
-- **sync 后再 archive**——v1.8.0（v1.7.0 起）中，sync 后的 delta 和 main spec 完全一致时，archive 是 no-op（只移动目录，不重写文件）
+- **sync 后再 archive**——sync 后的 delta 和 main spec 完全一致时，archive 是 no-op（只移动目录，不重写文件）
 
 ### 什么时候用它
 

@@ -14,8 +14,8 @@
 
 - **artifact DAG**（`requires`）：`proposal → {specs, design} → tasks` 的依赖是工具判断"下一个该生成什么 / 是否完成"的依据；同级推荐顺序按 schema 声明为 specs 再 design，自己加/漏 artifact 会破坏 `apply`/`status` 的判断。
 - **delta 操作段头**（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）：archive 靠它解析；写错段头 → delta 不被识别。
-- **格式**：`### Requirement: <name>`、scenario **必须 4 个 `#`**（写成 3 个或 bullet 会**静默失败**）。约定写法是 `#### Scenario:`；v1.9.0 起 loss guard / 计数认 requirement 下任何 `#### ` 子标题（如 `#### Edge case`），但作者仍应写 `#### Scenario:`。requirement 正文建议含 `SHALL`/`MUST`——v1.8.0 起这是 guidance 而非硬错误：正文整体缺失才 ERROR，正文在但缺关键字仅 WARNING（strict 模式才强制）。
-- **能力契约**：proposal 列的 capability 必须与 `specs/<capability-path>/spec.md` 的相对路径一致。内置 guidance 默认举 flat kebab-case 名；v1.7.0 runtime 也支持 `identity/session` 这类 nested path，团队采用它时应在 config/AGENTS 明确约定。
+- **格式**：`### Requirement: <name>`、scenario **必须 4 个 `#`**（写成 3 个或 bullet 会**静默失败**）。约定写法是 `#### Scenario:`；loss guard / 计数认 requirement 下任何 `#### ` 子标题（如 `#### Edge case`），但作者仍应写 `#### Scenario:`。requirement 正文建议含 `SHALL`/`MUST`——这是 guidance 而非硬错误：正文整体缺失才 ERROR，正文在但缺关键字仅 WARNING（strict 模式才强制）。
+- **能力契约**：proposal 列的 capability 必须与 `specs/<capability-path>/spec.md` 的相对路径一致。内置 guidance 默认举 flat kebab-case 名；runtime 也支持 `identity/session` 这类 nested path，团队采用它时应在 config/AGENTS 明确约定。
 - **无行为 delta 的边界**：纯重构、工具或文档 change 可在 `.openspec.yaml` 设 `skip_specs: true`；它使 specs artifact 显式 skipped，且不能和任何 delta spec 文件共存。
 
 所以**想真正用好 OpenSpec，高手会直接读一遍 `schemas/spec-driven/schema.yaml` 原文**（不是只读别人转述）。下面逐字段拆解是帮你读它的导航。
@@ -111,7 +111,7 @@ apply:
 - MODIFIED 要求复制完整 requirement（防止 archive 时信息丢失）
 - 新 capability 的 delta 可写 `## Purpose`；archive 会将它带入新 main spec。既有 main spec 的 Purpose 不由 delta 改写。
 - `skip_specs: true` 时不要创建 delta spec；instructions/status 会将 specs 标为 skipped。
-- v1.10.0 的 instruction 明确要求先从 `openspec instructions ... --json` 读取 `planningHome.root`：MODIFIED step 1 必须读 `<planningHome.root>/openspec/specs/<capability-path>/spec.md`；直接修改既有 main spec 的 Purpose 也使用同一 resolved root。这里修的是 agent instruction 的 store-aware 路径，不是 archive/sync 新增了 store 能力，也不代表 CLI 会自动检索 referenced store 的 spec 正文。
+- instruction 明确要求先从 `openspec instructions ... --json` 读取 `planningHome.root`：MODIFIED step 1 必须读 `<planningHome.root>/openspec/specs/<capability-path>/spec.md`；直接修改既有 main spec 的 Purpose 也使用同一 resolved root。这里修的是 agent instruction 的 store-aware 路径，不是 archive/sync 新增了 store 能力，也不代表 CLI 会自动检索 referenced store 的 spec 正文。
 - prose 可以按 `config.context` 中的语言要求本地化；结构标题（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、`### Requirement:`、`#### Scenario:`）保持英文。规范性文字仍推荐 `SHALL`/`MUST`：normal 模式缺关键字是 warning，strict 模式会把 warning 计为失败。
 
 ### design（技术设计）

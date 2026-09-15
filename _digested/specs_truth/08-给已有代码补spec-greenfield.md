@@ -14,7 +14,7 @@ openspec new change add-<capability>          # = propose，脚手架
 openspec archive add-<capability> -y          # archive 发现目标 spec 不存在 → buildSpecSkeleton 建第一个 spec
 ```
 
-`archive` 在 `findSpecUpdates` 时发现 `openspec/specs/<capability-path>/` 不存在，就用 `buildSpecSkeleton` 生成一个带 `## Purpose` + 你 ADDED requirements 的全新 spec（机理见 `01`）。v1.7.0 会优先复制 delta 的 `## Purpose`；只有 delta 没有可用 Purpose 时才写 TBD placeholder。**所以"建 spec"就是"写一个全 ADDED、带 Purpose 的 change 再 archive"。**
+`archive` 在 `findSpecUpdates` 时发现 `openspec/specs/<capability-path>/` 不存在，就用 `buildSpecSkeleton` 生成一个带 `## Purpose` + 你 ADDED requirements 的全新 spec（机理见 `01`）。会优先复制 delta 的 `## Purpose`；只有 delta 没有可用 Purpose 时才写 TBD placeholder。**所以"建 spec"就是"写一个全 ADDED、带 Purpose 的 change 再 archive"。**
 
 ## greenfield 采用：给已有代码库补 spec
 

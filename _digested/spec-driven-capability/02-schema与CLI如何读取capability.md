@@ -33,7 +33,7 @@ openspec/specs/identity/session/spec.md
 
 所以 proposal 的 capability 列表不只是说明文字。它是 agent 在规划阶段对“本次会触及哪一份事实合同”的声明；delta 的相对路径必须兑现同一个声明。
 
-当前内置 schema 的教学文案仍以单段 kebab-case 示例为主，但 v1.7.0 runtime 已完整支持 nested path。采用 nested layout 的团队应在自己的 AGENTS 或 config 里明确 path convention；不能期待默认提示自动从 flat 示例推断出团队的 domain 结构。
+当前内置 schema 的教学文案仍以单段 kebab-case 示例为主，但 runtime 已完整支持 nested path。采用 nested layout 的团队应在自己的 AGENTS 或 config 里明确 path convention；不能期待默认提示自动从 flat 示例推断出团队的 domain 结构。
 
 ## discovery 的精确语义
 

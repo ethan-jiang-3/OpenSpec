@@ -1,6 +1,6 @@
 # 09 · 高级：Capability 规划、身份与 specs 漂移维护
 
-> **适用 OpenSpec v1.11.0** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
+> 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
 
 ## 先回答：为什么这事值得你操心
 
@@ -15,7 +15,7 @@
 | 标题或目录名被改、没走 RENAMED | 历史 delta 和当前 spec 全对不上 → 下一次正常的 archive 直接 `not found`、**整次 archive 在 mutation 前中止**，工作卡在半路（本 repo 的 `simplify-skill-installation` 就是 16 条目标全 `not found`，连本该成功的部分也一并没落地）|
 | 废弃的 change 还挂在 active | agent 以为有一堆"进行中方向"，被假信号带偏，优先级和判断全乱 |
 
-更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，archive 回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**——`validate` 只做结构检查、不做跨文件对账，`archive` 只在那一刻匹配一次。（v1.8.0 起有一个收窄的例外：`validate <change>` 能拿到主 spec 时，会对 MODIFIED 块做 **scenario-loss 前置检测**——省略主 spec 仍有的 scenario 会直接报错；v1.9.0 起任何 `####` 子标题都算。`--archived` 只查 archive 里 tasks 勾选。specs↔代码漂移仍要人巡检。）
+更要命的是**漂移会复利**：脏的 specs 让 agent 产出更不准的 change，archive 回去又把更不准的"事实"焊进真相——一轮比一轮偏。等 `source of truth` 不再 true，spec-driven 那套"spec 先行、增量演化"的前提就塌了：agent 越干活、specs 越脏，你却**没有任何工具会告诉你偏了**——`validate` 只做结构检查、不做跨文件对账，`archive` 只在那一刻匹配一次。（有一个收窄的例外：`validate <change>` 能拿到主 spec 时，会对 MODIFIED 块做 **scenario-loss 前置检测**——省略主 spec 仍有的 scenario 会直接报错；任何 `####` 子标题都算。`--archived` 只查 archive 里 tasks 勾选。specs↔代码漂移仍要人巡检。）
 
 所以维护 specs 不是文档洁癖，而是**保住这套机制本身能成立的地基**。带着这个认知往下读，"specs 按什么组织、为什么会漂"就不再是冷知识——它直接告诉你地基为什么这么脆、你又该怎么守。
 
@@ -27,14 +27,14 @@
 
 - artifact 依赖图：`proposal → {specs, design} → tasks → apply`；在 `skip_specs: true` 的纯重构、工具或文档 change 中，specs artifact 会显式跳过；
 - delta 操作：`## ADDED / MODIFIED / REMOVED / RENAMED Requirements`；
-- 格式规则：每个 requirement 用 `### Requirement: <name>`、每个 scenario **必须 4 个 `#`**（少了静默失败）。约定写法是 `#### Scenario:`；v1.9.0 起 loss guard 把 requirement 下任何 `#### ` 子标题都算 scenario。requirement 正文建议含 `SHALL`/`MUST`（v1.8.0 起是 guidance 而非硬错误：normal 模式缺失仅 WARNING，strict 模式才强制）；
+- 格式规则：每个 requirement 用 `### Requirement: <name>`、每个 scenario **必须 4 个 `#`**（少了静默失败）。约定写法是 `#### Scenario:`；loss guard 把 requirement 下任何 `#### ` 子标题都算 scenario。requirement 正文建议含 `SHALL`/`MUST`（是 guidance 而非硬错误：normal 模式缺失仅 WARNING，strict 模式才强制）；
 - **capability 契约**：有 spec-level 行为改动时，proposal 列出的每个 capability 都应有对应的 `specs/<path>/spec.md`；`skip_specs: true` 只适用于没有此类改动的 change，且不能与 delta specs 共存。
 
 关键一句（schema 原文）：
 
 > The Capabilities section is critical. It creates the **contract between proposal and specs phases**. … Each capability listed here will need a corresponding spec file.
 
-**为什么这点重要**：你写进 `openspec/` 的任何东西，都得符合这个 schema 的契约——CLI 和 agent 是照着它解析的。**偏离契约（4 个 `#` 写成 3 个、capability 名拼错），工具要么静默忽略、要么 parse 失败，agent 就在残缺/错误的前提上推理，产生幻觉、行为混乱；缺 SHALL/MUST 自 v1.8.0 起只是 WARNING（strict 模式才当失败），不是硬性解析错误。**
+**为什么这点重要**：你写进 `openspec/` 的任何东西，都得符合这个 schema 的契约——CLI 和 agent 是照着它解析的。**偏离契约（4 个 `#` 写成 3 个、capability 名拼错），工具要么静默忽略、要么 parse 失败，agent 就在残缺/错误的前提上推理，产生幻觉、行为混乱；缺 SHALL/MUST 只是 WARNING（strict 模式才当失败），不是硬性解析错误。**
 
 下面要讲的"capability 身份"，就是这个契约里最核心、又最容易被忽略的一条。
 
@@ -51,7 +51,7 @@ artifacts:
 
 ## capability 的身份 = 它的相对路径
 
-很多人把 `openspec/specs/` 笼统当成"spec 基线"。但它不是一堆平铺的文档：v1.8.0（v1.7.0 起）会递归发现任意深度的 `spec.md`，并按 capability 切分目录：
+很多人把 `openspec/specs/` 笼统当成"spec 基线"。但它不是一堆平铺的文档：会递归发现任意深度的 `spec.md`，并按 capability 切分目录：
 
 ```text
 openspec/specs/
@@ -95,7 +95,7 @@ data-export
 
 只有第三层本身也长期稳定、并能帮助未来读者导航时才继续加深，例如 `platform/observability/audit-events`。segment 用语义明确的 kebab-case；避免 `common`、`misc`、`utils`、`core` 这类“边界没想清楚”的垃圾桶名。domain 只承担命名和 discovery，不是父合同。
 
-在建新 path 前，先搜索既有 path、Purpose 和 requirement 标题。能修改已有行为合同，就不要创建近义 capability；只有确有独立合同与独立演进节奏时才新建。新 capability 的 delta 请写可读的 `## Purpose`，v1.8.0（v1.7.0 起）在 archive 创建 main spec 时会把它带入，而不是一律写成 `TBD`。
+在建新 path 前，先搜索既有 path、Purpose 和 requirement 标题。能修改已有行为合同，就不要创建近义 capability；只有确有独立合同与独立演进节奏时才新建。新 capability 的 delta 请写可读的 `## Purpose`，在 archive 创建 main spec 时会把它带入，而不是一律写成 `TBD`。
 
 ## specs 很多以后：catalog 帮你找，main spec 才能定
 
@@ -118,7 +118,7 @@ catalog 只能导航，不能成为第二份行为规范；任何冲突都以 ma
 4. 用 `openspec show <path> --type spec --json --requirements` 先看 requirement 标题；只有要 MODIFIED/REMOVED/RENAMED 时才读完整 block 与 scenarios。
 5. delta 使用 proposal 中声明的**同一完整相对 path**；不确定边界就回 Explore，不要临时发明近义名称。
 
-这是一条项目治理协议，而非 v1.8.0（v1.7.0 起）已自动保证的 retrieval 功能。把 path convention、catalog 位置和这几个步骤写进项目 `AGENTS.md` 或 `rules.proposal`；只把跨所有 change 都成立的短原则留在 config。详细模板见 [`_digested/spec-driven-capability/capability-governance-template.md`](../_digested/spec-driven-capability/capability-governance-template.md)。
+这是一条项目治理协议，而非已自动保证的 retrieval 功能。把 path convention、catalog 位置和这几个步骤写进项目 `AGENTS.md` 或 `rules.proposal`；只把跨所有 change 都成立的短原则留在 config。详细模板见 [`_digested/spec-driven-capability/capability-governance-template.md`](../_digested/spec-driven-capability/capability-governance-template.md)。
 
 ## 两层「以名字为身份」模型（无稳定 ID）
 
@@ -153,7 +153,7 @@ graph TD
 
 ## 这就是 specs 漂移的根源
 
-`openspec/specs/` 号称 source of truth，但用着用着就和代码对不上了。根因就是上面这套身份模型 + 一个事实：**没有任何工具持续对账**（`validate` 只做结构检查、不做跨文件对账——v1.8.0 起仅在 `validate <change>` 对 MODIFIED 块做 scenario-loss 前置检测时读主 spec，v1.9.0 起任何 `####` 子标题都算；`archive` 只在那一刻匹配一次）。
+`openspec/specs/` 号称 source of truth，但用着用着就和代码对不上了。根因就是上面这套身份模型 + 一个事实：**没有任何工具持续对账**（`validate` 只做结构检查、不做跨文件对账——仅在 `validate <change>` 对 MODIFIED 块做 scenario-loss 前置检测时读主 spec，任何 `####` 子标题都算；`archive` 只在那一刻匹配一次）。
 
 漂移，就是**两层"名字身份"失配**：
 
@@ -170,7 +170,8 @@ graph TD
 - **requirement 改名走 `RENAMED`**，别"删旧 + 加新"（那会掐断历史，让老 delta 失配）。
 - **capability path 尽量别改。** 没有正规 rename 操作，改路径=裸搬目录，要同步所有引用它的 delta——当稳定性契约对待。
 - **apply 改代码时，顺手想一句"这段 spec 还准吗"。** 这是最廉价的对齐动作。
-- **偶尔巡检**：`openspec list` / `openspec validate --all` 能抓结构坏死（僵尸 change）；但**别把"validate 干净"当成"specs 对齐"**——它查不出 capability/requirement 的名字失配和 specs↔代码漂移。
+- **偶尔巡检**：`openspec list` / `openspec validate --all` 能抓结构坏死（僵尸 change）；但**别把"validate 干净"当成"specs 对齐"**——它查不出 capability/requirement 的名字失配和 specs↔代码漂移。`openspec status --all` 可一次看清全部 active change（单 change 加载失败不中止全扫），`openspec validate --report findings --all` 只列有问题的条目。
+- **archive 前用 `openspec show <change> --diff` 看清真实差异。** MODIFIED requirement 必须完整重述它保留的每个 scenario，导致 delta 文本和 main spec 几乎一样；`--diff` 把真正变化的行隔离出来，是识别"spec 失真"的程序化手段。`RENAMED` 现在保持 requirement 原位置（不再移到 spec 尾部），diff 更可读。
 - **别手改主 spec 文件**。要改就写 change（delta）再 archive；手改没有任何工具追踪，下次 delta 一撞就 `not found`。
 
 ### 退役前先证明“可干净合并”
@@ -182,7 +183,7 @@ graph TD
 3. 其他 active change 没有继续 MODIFIED 这个 capability。
 4. 清理后才在合法 `.openspec.yaml` 声明 `retire_capabilities: true`。
 
-若有未归属内容，v1.10.0 会列出 blocking lines 并拒绝删除；marker 此时不是出路。把仍有价值的治理信息迁入 `## Purpose` 或 canonical requirement，或者经 review 手工删除，再重跑 archive。详细反例与修复步骤见 [12](12-实战-如何正确修改-artifacts.md)。
+若有未归属内容，会列出 blocking lines 并拒绝删除；marker 此时不是出路。把仍有价值的治理信息迁入 `## Purpose` 或 canonical requirement，或者经 review 手工删除，再重跑 archive。详细反例与修复步骤见 [12](12-实战-如何正确修改-artifacts.md)。
 
 ## 真要拆分、合并或改 path：把它当成 rebaseline，不是普通 archive
 
@@ -202,7 +203,7 @@ openspec validate --specs --strict
 openspec validate <affected-change> --type change --strict
 ```
 
-同样地，两个 active changes 同时改同一 capability path 时，后 archive 的 change 必须基于前一个 archive 后的 main spec 重新核对 requirement block。可完全一致的 early sync 在 v1.8.0（v1.7.0 起）可以成为 no-op，但它不是用来绕过并发协调、review 或结构迁移的捷径。
+同样地，两个 active changes 同时改同一 capability path 时，后 archive 的 change 必须基于前一个 archive 后的 main spec 重新核对 requirement block。可完全一致的 early sync 可以成为 no-op，但它不是用来绕过并发协调、review 或结构迁移的捷径。
 
 ### 一个够用的维护节奏
 
@@ -211,7 +212,7 @@ openspec validate <affected-change> --type change --strict
 | 每个 proposal | 查过 catalog/既有 path；New 或 Modified 有理由；近义 capability 已排除 |
 | 每个 archive | delta path 与 main path 一致；新 capability 有可读 Purpose；没有遗留 active change 指向旧 path |
 | 跨 domain change | 用 impact matrix 说明哪些 path 修改、仅验证或明确排除 |
-| 定期巡检 | 是否有过粗 spec、同义 path、`TBD` Purpose（v1.11.0 `openspec validate` 会自动检测 archive 遗留的 placeholder，warning 级）、失效 catalog 条目或长期 active delta |
+| 定期巡检 | 是否有过粗 spec、同义 path、`TBD` Purpose（`openspec validate` 会自动检测 archive 遗留的 placeholder，warning 级）、失效 catalog 条目或长期 active delta |
 | taxonomy 重构前 | rebaseline 计划、active-change inventory、迁移验证与明确 owner |
 
 ## 压缩结论

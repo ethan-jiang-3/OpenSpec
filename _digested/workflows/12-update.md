@@ -4,11 +4,10 @@
 
 `src/core/templates/workflows/update-change.ts` → `getUpdateChangeSkillTemplate()` + `getOpsxUpdateCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:update [change-name]`；Codex v1.8.0 用 `$openspec-update-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:update [change-name]`；Codex 用 `$openspec-update-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-update-change`（skill）/ `OPSX: Update`（command）
 > **独立 CLI 命令**：无——update 是纯 agent 模板，修订已有 planning artifacts，不改代码。
 > **profile**：custom（需显式启用，不在默认 core 里）
-> **引入版本**：v1.6.0
 
 ## 一句话
 
@@ -126,19 +125,19 @@ Do NOT invent new files under a glob artifact
 Explore 审视 artifacts → 发现 gap → 修 gap → 再审
 ```
 
-v1.6.0 引入、在 v1.7.0 仍可用的 update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。它提供了：
+update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。它提供了：
 
 - artifact 修订的正式操作协议（读→改→一致性检查→确认→写）
 - "update vs start fresh" 判断（修改意图 vs 精炼细节）
 - 和 continue/apply/archive 的衔接路径
 
-## v1.12.0→v1.13.0：update 的工具侧行为补强
+## update 的工具侧行为补强
 
 注意区分**两层 update**：`update-change.ts`（本文：agent 修订 planning artifact 的 workflow）与 `src/core/update.ts`（`openspec update`：把 CLI 的 skills/commands 同步到工具侧文件系统）。下面两条属于后者，但影响同一份文档的读者：
 
-- **共享 IDE restart 提示（v1.12.0）**：`openspec init` 和 `openspec update` 共用 `src/core/shared/ide-restart.ts` 的同一句提示（`Restart your IDE to refresh commands.` / `...skills.`），message 也覆盖「移除 workflow」场景，不再声称生成了新文件。
-- **损坏 command 文件检测（v1.13.0）**：`openspec update` 之前只比对 skill 文件的 `generatedBy` 版本戳——skill 是新版本就报「All up to date」，但旁边手改/截断的 command 文件完全没被检查。现在也比对 command 文件内容（只针对 skills+commands 都配置的工具；commands-only 路径不变），`--force` 之外多了一条自动修复路径。
-- **遗漏 workflow 提示（v1.13.0）**：init/update 输出用 `formatOptionalWorkflowsNote` 列出 profile 没装的 workflow（`new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard`）和 `openspec config profile` 命令。
+- **共享 IDE restart 提示**：`openspec init` 和 `openspec update` 共用 `src/core/shared/ide-restart.ts` 的同一句提示（`Restart your IDE to refresh commands.` / `...skills.`），message 也覆盖「移除 workflow」场景，不再声称生成了新文件。
+- **损坏 command 文件检测**：`openspec update` 之前只比对 skill 文件的 `generatedBy` 版本戳——skill 是新版本就报「All up to date」，但旁边手改/截断的 command 文件完全没被检查。现在也比对 command 文件内容（只针对 skills+commands 都配置的工具；commands-only 路径不变），`--force` 之外多了一条自动修复路径。
+- **遗漏 workflow 提示**：init/update 输出用 `formatOptionalWorkflowsNote` 列出 profile 没装的 workflow（`new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard`）和 `openspec config profile` 命令。
 
 ## Guardrails
 

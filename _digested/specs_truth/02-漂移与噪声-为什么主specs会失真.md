@@ -21,11 +21,11 @@
 先把 `validate` 的身份钉死（很多人这里就误会了）：
 
 - **它是 `openspec` CLI 命令**（和 `archive` 同列），**不是 `/opsx:` slash 技能**（没有 `/opsx:validate`）。
-- 它是**结构 linter**：`Validator.validateChangeDeltaSpecs()` 只读 `changeDir/specs/` 下的 delta 文件，检查它们**自身**的结构（段头齐不齐、有没有 SHALL/MUST、有没有 scenario、段内重不重名）。默认（normal）模式下，缺失 SHALL/MUST 只是 guidance（WARNING），`--strict` 才强制（v1.8.0）。它**从不打开 `openspec/specs/<cap>/spec.md`**。
+- 它是**结构 linter**：`Validator.validateChangeDeltaSpecs()` 只读 `changeDir/specs/` 下的 delta 文件，检查它们**自身**的结构（段头齐不齐、有没有 SHALL/MUST、有没有 scenario、段内重不重名）。默认（normal）模式下，缺失 SHALL/MUST 只是 guidance（WARNING），`--strict` 才强制。它**从不打开 `openspec/specs/<cap>/spec.md`**。
 
 后果：一个 `MODIFIED` 指向一个根本不存在于主 spec 的 requirement、一个 `REMOVED` 删一个早已不在的东西、一个 `RENAMED` 改一个不存在的标题——**依旧能通过 `validate`**。这些只有等到 `archive` 时撞上，用一句 `not found` 暴露（见 `04`）。
 
-v1.8.0 补了其中一个缺口：当 `validate <change>` 能拿到 main specs 时，会前置检测 **MODIFIED 省略了主 spec 仍有的 scenario**——这正是 archive 拒绝的那种 loss，现在在 authoring 阶段就失败，错误信息会指名要抄回的 scenarios。其余匹配类缺口（指向不存在的 requirement、改名不存在标题等）仍是 archive 时发现。（`validate` 的完整选项/CI 用途/与 archive 的冗余关系，见 `06` 的 validate 命令参考。）
+补了其中一个缺口：当 `validate <change>` 能拿到 main specs 时，会前置检测 **MODIFIED 省略了主 spec 仍有的 scenario**——这正是 archive 拒绝的那种 loss，现在在 authoring 阶段就失败，错误信息会指名要抄回的 scenarios。其余匹配类缺口（指向不存在的 requirement、改名不存在标题等）仍是 archive 时发现。（`validate` 的完整选项/CI 用途/与 archive 的冗余关系，见 `06` 的 validate 命令参考。）
 
 ### 缺口二：匹配只在 archive 那一刻、且只看这一次
 
@@ -76,7 +76,7 @@ delta 和主 spec 的匹配发生在 `buildUpdatedSpec` 里，**只在 `archive`
 
 ### ④ 废弃但仍 active 的 change：噪音文件夹
 
-change 已废弃/被 supersede/纯 proposal 没动，却还待在 active `changes/`。未声明 marker 的共同特征是 `openspec validate` 报 `No deltas found`（只有 `proposal.md`，没 `specs/` delta）。v1.7.0 的例外是有意没有 spec-level 行为变化的工作：`.openspec.yaml` 写 `skip_specs: true` 后，validate 接受它、status 显示 specs skipped；它不能与任何 delta spec 文件共存。
+change 已废弃/被 supersede/纯 proposal 没动，却还待在 active `changes/`。未声明 marker 的共同特征是 `openspec validate` 报 `No deltas found`（只有 `proposal.md`，没 `specs/` delta）。例外是有意没有 spec-level 行为变化的工作：`.openspec.yaml` 写 `skip_specs: true` 后，validate 接受它、status 显示 specs skipped；它不能与任何 delta spec 文件共存。
 
 本 repo 实例：`add-artifact-regeneration-support`、`schema-alias-support`（纯 proposal、代码无实现）；`workspace-agent-guidance` / `workspace-apply-repo-slice` / `workspace-verify-and-archive` / `workspace-reimplementation-roadmap`（proposal 自带 "deferred" 说明，实质已搁置）。
 

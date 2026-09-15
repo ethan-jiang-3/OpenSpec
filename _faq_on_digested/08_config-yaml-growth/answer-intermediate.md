@@ -6,7 +6,7 @@
 
 为什么这是当下可行的路径：OpenSpec 没有 config 编辑工具（见 [`answer.md`](answer.md)），但 agent 能读项目、能看到 stub 注释和 `customization.md` 的格式、还能在 `openspec instructions` 的输出里看到当前 context/rules。OpenSpec 没引导它做这事，所以**引导它的任务落到你的话术上**。
 
-v1.8.0 还应让 agent 单独识别 `operations.apply.guidance` / `operations.archive.guidance`：前者放跨 change 的实施步骤，后者放归档前稳定检查；不要把它们误写成 artifact `rules`。
+还应让 agent 单独识别 `operations.apply.guidance` / `operations.archive.guidance`：前者放跨 change 的实施步骤，后者放归档前稳定检查；不要把它们误写成 artifact `rules`。
 
 ## 为什么 agent 是当下可行的路径
 
@@ -60,7 +60,7 @@ Explore 谈清楚"该改什么"之后，落地写进 config 就是这几步（�
 
 `context` 是注入**所有** artifact 的不变背景。补它的分工：
 
-如果项目尚未有 `openspec/config.yaml`，且当前只需要固定 artifact prose 的语言，v1.10.0 可先运行：
+如果项目尚未有 `openspec/config.yaml`，且当前只需要固定 artifact prose 的语言，可先运行：
 
 ```bash
 openspec init --language "Japanese (ja-JP)"

@@ -57,6 +57,8 @@ openspec schema init my-flow --description "Custom" --artifacts "proposal,specs,
 2. 要包含哪些 artifact（多选：proposal / specs / design / tasks）
 3. 是否设为项目默认
 
+`--default` 的写入语义：命令会把项目 `config.yaml` 的 `schema` 键设为你新建的 schema 名，并删除历史遗留的 `defaultSchema` 键。写入前会校验 config 是合法 YAML 对象、路径非符号链接且可写；schema 目录与 config 任一步失败都会回滚，不留下半成功状态。此前它写的是 `defaultSchema`——那个键不被 project config 消费者读取，等于「设了但没生效」。
+
 ### 方式 3：纯手写
 
 直接在 `openspec/schemas/<name>/` 下创建目录和文件：
@@ -133,7 +135,7 @@ apply:
 
 依赖图：`proposal → tasks → apply`
 
-因为这个 schema 归一化后没有任何 `specs/` 输出（`./specs/...`、`specs/...` 和 Windows separator 会统一判断），v1.10.0 的 `openspec new change --schema rapid` 会自动写：
+因为这个 schema 归一化后没有任何 `specs/` 输出（`./specs/...`、`specs/...` 和 Windows separator 会统一判断），`openspec new change --schema rapid` 会自动写：
 
 ```yaml
 schema: rapid

@@ -4,7 +4,7 @@
 
 **别把 specs 当一次性产物。日常就活在 explore → propose → apply → archive 这个圈里，而 specs 只在 archive 那一步更新。所以 apply 完记得 archive；apply 改代码时顺手想一句"这段 spec 还准吗"；感觉不对就用 propose 写个 change 去 archive。平时几乎不用手碰 spec 文件。**
 
-> **v1.8.0 边界。** “只在 archive 更新”说的是 main spec 的程序化归档路径；agent sync 可以在 archive 前做 early-sync，archive 对完全一致的结果会幂等 no-op。capability ID 是 `specs/` 下的相对 path（可为 `identity/session`），不是仅仅末级目录名；这些路径层次不提供自动检索或消除上下文预算。（v1.7.0 引入，v1.8.0 不变。）
+> **边界。** “只在 archive 更新”说的是 main spec 的程序化归档路径；agent sync 可以在 archive 前做 early-sync，archive 对完全一致的结果会幂等 no-op。capability ID 是 `specs/` 下的相对 path（可为 `identity/session`），不是仅仅末级目录名；这些路径层次不提供自动检索或消除上下文预算。（早期引入，至今不变。）
 
 ## 先分清两件事
 
@@ -80,7 +80,7 @@ openspec new change fix-<something>      # 这一步就是 propose，脚手架�
 openspec archive fix-<something> -y      # archive 会先校验，再把 delta 合进 spec
 ```
 
-注意：`MODIFIED` 是**整块替换**，名字要和当前 spec 里的标题**逐字一致**，否则 archive 报 not found。v1.10.0 的 agent instruction 使用 resolved `planningHome.root`，store 场景不要硬编码 cwd 的 `openspec/specs/`；这仍不等于自动 retrieval。
+注意：`MODIFIED` 是**整块替换**，名字要和当前 spec 里的标题**逐字一致**，否则 archive 报 not found。agent instruction 使用 resolved `planningHome.root`，store 场景不要硬编码 cwd 的 `openspec/specs/`；这仍不等于自动 retrieval。
 
 ### 招二：漏了能力（代码有、spec 没）→ propose 用 ADDED 补
 
@@ -118,7 +118,7 @@ openspec archive <change> -y
 
 ### 误区 1：以为 `validate` 能查出 specs 和代码对不上
 
-`validate` 是**真实的 `openspec` CLI 命令**（和 `archive` 同列，**不是** `/opsx:` slash 技能）——别误以为它不存在或是什么隐藏功能。但它只是**结构 linter**：只查文件结构（段头/`SHALL`/`MUST`/scenario/僵尸 change），**不跨文件对账、抓不出 specs↔代码漂移**（v1.8.0 起唯一例外：`validate <change>` 能拿到主 spec 时会对 MODIFIED 块做 scenario-loss 前置检测；v1.9.0 起任何 `#### ` 子标题都算 scenario。`--archived` 另查 archive 里未勾完的 tasks，仍然不是代码对账）；而且 `archive` 自己默认就先校验，平时不用单独跑它。所以"specs 对不对得上代码"靠走完四步圈的习惯，不是 `validate`。（完整边界见 [`02` 缺口一](../../_digested/specs_truth/02-漂移与噪声-为什么主specs会失真.md) 和 [`06` validate 参考](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
+`validate` 是**真实的 `openspec` CLI 命令**（和 `archive` 同列，**不是** `/opsx:` slash 技能）——别误以为它不存在或是什么隐藏功能。但它只是**结构 linter**：只查文件结构（段头/`SHALL`/`MUST`/scenario/僵尸 change），**不跨文件对账、抓不出 specs↔代码漂移**（唯一例外：`validate <change>` 能拿到主 spec 时会对 MODIFIED 块做 scenario-loss 前置检测；任何 `#### ` 子标题都算 scenario。`--archived` 另查 archive 里未勾完的 tasks，仍然不是代码对账）；而且 `archive` 自己默认就先校验，平时不用单独跑它。所以"specs 对不对得上代码"靠走完四步圈的习惯，不是 `validate`。（完整边界见 [`02` 缺口一](../../_digested/specs_truth/02-漂移与噪声-为什么主specs会失真.md) 和 [`06` validate 参考](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
 
 ### 误区 2：手改主 spec 最快
 
@@ -144,7 +144,7 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
+源码引用：
 
 | 来源 | 用到的结论 |
 |---|---|

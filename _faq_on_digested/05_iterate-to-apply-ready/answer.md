@@ -4,7 +4,7 @@
 
 Propose 的 mechanical apply gate（tasks.md 存在）只是一个文件系统事实。真正能开始实施的 artifacts 需要经过一轮或多轮 Explore 审视——把 artifacts 当成 Explore 的调查对象，拿真实代码去校验，发现 gap 就修，修完再审，直到 artifacts 足够具体、一致、可实现。
 
-> **v1.8.0 补充。** `skip_specs: true` 是“本 change 没有 spec-level 行为变化”的正式 metadata，不是漏写 specs 的容错；此时 status 的 specs 是 `skipped`，迭代审视应确认这一判断本身成立。下面 `/opsx:*` 仍是 Claude 示例；Codex 以对应 `$openspec-*` skill 运行（v1.8.0 下装在 `.agents/skills/`）。
+> **补充。** `skip_specs: true` 是“本 change 没有 spec-level 行为变化”的正式 metadata，不是漏写 specs 的容错；此时 status 的 specs 是 `skipped`，迭代审视应确认这一判断本身成立。下面 `/opsx:*` 仍是 Claude 示例；Codex 以对应 `$openspec-*` skill 运行（装在 `.agents/skills/`）。
 
 ```text
 Propose 产出 artifacts（mechanical apply-ready）
@@ -191,14 +191,14 @@ ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
+源码引用：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/explore.ts` | Explore stance：可读代码、可审视架构、不可实施 |
 | `src/core/templates/workflows/propose.ts` | Propose 的 artifact 生成和 mechanical gate |
 | `src/core/templates/workflows/continue-change.ts` | `/opsx:continue` 的 artifact 补充机制 |
-| `src/core/templates/workflows/update-change.ts` | `/opsx:update` — v1.6.0 新增的 planning artifact 修订 workflow，不改代码 |
+| `src/core/templates/workflows/update-change.ts` | `/opsx:update` — 新增的 planning artifact 修订 workflow，不改代码 |
 | `src/core/artifact-graph/outputs.ts` | mechanical apply-ready 的判定（文件存在性） |
 | `src/commands/workflow/instructions.ts` | apply instructions 的 state 判定和 contextFiles |
 | `schemas/spec-driven/schema.yaml` | proposal/specs/design/tasks 的 template 和 instruction 定义 |

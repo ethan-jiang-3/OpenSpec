@@ -37,7 +37,7 @@ sequenceDiagram
     rect rgb(255, 250, 240)
         Note over User,FS: ══════ Phase 1 · 创建 change 容器 ══════
         MD->>TS: openspec new change "add-oauth-login"
-        TS->>TS: validateChangeName()<br/>（kebab-case；v1.8.0 允许数字前缀）
+        TS->>TS: validateChangeName()<br/>（kebab-case；允许数字前缀）
         TS->>TS: resolveCurrentPlanningHomeSync()<br/>解析 .openspec.yaml → planning home
         TS->>TS: 选定 schema：<br/>显式 --schema → project config →<br/>planning home default
         TS->>FS: 创建 change 目录<br/>写 .openspec.yaml<br/>（schema, created date）

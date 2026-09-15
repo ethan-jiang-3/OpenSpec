@@ -28,7 +28,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 - 在不知道 change 名称时做候选发现。
 - 为选择“当前最相关 change”提供第一层线索。
-- v1.9.0 起：没有 OpenSpec root 时失败，不再返回空数组冒充“项目里什么都没有”。这避免 CI / agent 把“跑在错误目录”当成通过。
+- 没有 OpenSpec root 时失败，不再返回空数组冒充“项目里什么都没有”。这避免 CI / agent 把“跑在错误目录”当成通过。
 
 限制：
 
@@ -90,8 +90,8 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - `tasks`: 从 tracking file 解析出来的任务项
 - `context` 与 `guidance`：项目 `context` 以及 `operations.apply.guidance`（如有）。它们是 operation input，不是 artifact rules。
 - `missingArtifacts`: 缺少哪些 prerequisite artifacts
-- v1.13.0 起 `missingPrerequisites`: 完整 build order 缺失链（不再只报第一跳），同时出现在文本输出（`Not created yet, in build order: ...`）
-- v1.13.0 起 warning 字段: change 无 delta specs 且未声明 `skip_specs: true` 时，apply 报 warning，给出两条出路（先写 specs / 声明 `skip_specs`）
+- `missingPrerequisites`: 完整 build order 缺失链（不再只报第一跳），同时出现在文本输出（`Not created yet, in build order: ...`）
+- warning 字段: change 无 delta specs 且未声明 `skip_specs: true` 时，apply 报 warning，给出两条出路（先写 specs / 声明 `skip_specs`）
 - `instruction`: 当前阶段应执行什么
 
 对机器的意义：
@@ -193,7 +193,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 正因如此，`--json` 输出和内部 graph / instruction loader 层才如此重要。
 
-### v1.12.0：`validate --report findings --json` 是独立报告类型
+### `validate --report findings --json` 是独立报告类型
 
 `openspec validate --report findings --all|--changes|--specs|--archived --json` 产出**独立**的 report 对象，不是 full 报告的过滤子集：
 
@@ -208,7 +208,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - delta 与 main spec 的合并冲突作为 informational findings 出现在报告里（不改退出码）；文件系统读取错误保留为 error。
 - 默认 `--report full` 形状完全不变——机器接口的向后兼容由「findings 是独立 kind」保证。
 
-**v1.3.1 重要修复**：此前 `--json` 模式下，spinner 的进度文本仍会泄漏到 stderr，导致 agent 在合并 stdout+stderr 时 JSON 解析失败。v1.3.1 修复了这个问题 —— `--json` flag 传入后，完全抑制 spinner 输出，agent 可以安全合并 stdout/stderr。
+**重要修复**：此前 `--json` 模式下，spinner 的进度文本仍会泄漏到 stderr，导致 agent 在合并 stdout+stderr 时 JSON 解析失败。修复了这个问题 —— `--json` flag 传入后，完全抑制 spinner 输出，agent 可以安全合并 stdout/stderr。
 
 ## 为什么说 workflow 命令像本地 API
 
@@ -240,4 +240,4 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 ### 历史 guardrail（非当前主结论）
 
-v1.4.0 的 workspace guardrail（`actionContext.mode = "workspace-planning"` 阻止 sync/archive）在 v1.5.0 中不再需要——因为 `actionContext.mode` 始终为 `repo-local`，不存在 workspace 级 change。跨仓库操作自然被 store reference 的只读语义保护。
+workspace guardrail（`actionContext.mode = "workspace-planning"` 阻止 sync/archive）不再需要——因为 `actionContext.mode` 始终为 `repo-local`，不存在 workspace 级 change。跨仓库操作自然被 store reference 的只读语义保护。

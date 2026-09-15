@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/apply-change.ts` → `getApplyChangeSkillTemplate()` + `getOpsxApplyCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:apply [change-name]`；Codex v1.8.0 用 `$openspec-apply-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:apply [change-name]`；Codex 用 `$openspec-apply-change`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-apply-change`（skill）/ `OPSX: Apply`（command）
 > **独立 CLI 命令**：无——apply 没有对应的 `openspec apply` CLI 命令，它是纯 agent 模板，消费 `openspec instructions apply --json` 的运行时输出。
 > **profile**：core（大多数用户默认可见）
@@ -94,7 +94,7 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 | `ready` | 一切就绪，有 pending tasks | 读 contextFiles → 开始 task loop |
 | `all_done` | 全部 checkbox 已勾 | 祝贺，建议 archive |
 
-## v1.8.0：operation inputs 不等于 artifact rules
+## operation inputs 不等于 artifact rules
 
 `openspec instructions apply --change X --json` 除了 `contextFiles`、progress、tasks 和 state，还可返回：
 
@@ -103,9 +103,9 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 
 它们不替代任何 CLI state、task、完成判定或 schema instruction。`rules.tasks` 只在生成 `tasks.md` 时使用；`rules.apply` 没有消费者。若要给 Apply 写长期提醒，正确位置是 `operations.apply.guidance`，强制约束仍应落在 tests、lint 或 CI。
 
-## v1.13.0：apply 不再假装「ready to implement」是完整的
+## apply 不再假装「ready to implement」是完整的
 
-apply 的门控只按 schema 的 `apply.requires` 判定——`tasks.md` 先于 specs 写好的 change，之前读作 ready to implement，但 `openspec validate` 本就拒绝这种状态。v1.13.0 起 `instructions apply` 会：
+apply 的门控只按 schema 的 `apply.requires` 判定——`tasks.md` 先于 specs 写好的 change，之前读作 ready to implement，但 `openspec validate` 本就拒绝这种状态。`instructions apply` 会：
 
 1. **无 spec delta 时警告**（text + `--json` 的 warning 字段），点名两条出路：先写 specs，或声明 `skip_specs: true`（该 change 真的不改任何 spec 化行为时）。
 2. **报完整缺失链**：被阻塞的 apply 之前只报第一跳（`Missing artifacts: tasks`），而 tasks 依赖的 specs 也缺时读起来像「直接写 tracking 文件」。现在按 build order 报 `missingPrerequisites`（文本 `Not created yet, in build order: ...`，`--json` 数组），补救命令是 `openspec instructions <artifact> --change <name>`——不再引用 `openspec-continue-change` skill（core profile 不装它）。
@@ -135,7 +135,7 @@ template 硬编码了三种输出格式：
 | 完成 | `## Implementation Complete` + progress + completed list |
 | 暂停 | `## Implementation Paused` + progress + issue + options |
 
-v1.8.0 起，进度计数与 `instructions apply` 的 task 列表共享同一个 parser（`src/utils/task-progress.ts`），并按**缩进子任务**计数：`list`、`view`、`instructions apply`、`archive` 对同一 tasks 文件的判断一致；checkbox 即使出现在 code fence / HTML comment / 缩进块里也会被计数（把示例清单当展示的 tasks 文件，可能被算成待办）。
+进度计数与 `instructions apply` 的 task 列表共享同一个 parser（`src/utils/task-progress.ts`），并按**缩进子任务**计数：`list`、`view`、`instructions apply`、`archive` 对同一 tasks 文件的判断一致；checkbox 即使出现在 code fence / HTML comment / 缩进块里也会被计数（把示例清单当展示的 tasks 文件，可能被算成待办）。
 
 ## Guardrails
 
@@ -145,7 +145,7 @@ v1.8.0 起，进度计数与 `instructions apply` 的 task 列表共享同一个
 | Always read context files before starting | 不凭记忆 |
 | Task ambiguous → pause and ask | 不猜 |
 | Implementation reveals issues → suggest artifact updates | 不硬写 |
-| Task needs work beyond the spec → surface added scope and pause | 不默默缩小/推迟指定行为（v1.9.0） |
+| Task needs work beyond the spec → surface added scope and pause | 不默默缩小/推迟指定行为 |
 | Keep changes minimal and scoped | 不夹带 |
 | Update checkbox immediately after each task | 不拖延 |
 | Use contextFiles from CLI, don't assume file names | 不硬编码 |

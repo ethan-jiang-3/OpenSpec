@@ -4,7 +4,7 @@
 > 来源：GitHub Issue #821、#684、upstream docs（commands.md, reviewing-changes.md）、`/opsx:verify` 实现细节、
 > 以及我们已有的 `_faq_on_digested/11_keep-specs-aligned/` + `_digested/specs_truth/` + `_digested/workflows/08-verify.md` + `_digested/workflows/12-update.md`。
 
-> **历史边界（v1.7.0 已纠偏）。** 本文讨论的是 issue 语境中的 Claude `/opsx:*` 与当时机制；Codex 当前为 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`）。文中关于 Apply/Archive “不能接收 config”的旧说法应读作“不接收 artifact rules”；project `context` 与 `operations.apply/archive.guidance` 已分别成为当前 operation input。v1.8.0 未推翻这些边界。
+> **历史边界。** 本文讨论的是 issue 语境中的 Claude `/opsx:*` 与当时机制；Codex 当前为 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`）。文中关于 Apply/Archive “不能接收 config”的旧说法应读作“不接收 artifact rules”；project `context` 与 `operations.apply/archive.guidance` 已分别成为当前 operation input。v1.8.0 未推翻这些边界。
 
 ---
 

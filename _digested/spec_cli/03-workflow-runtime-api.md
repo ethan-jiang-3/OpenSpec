@@ -89,7 +89,7 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 - 每个 artifact 的状态
 - 哪些 artifact 被哪些依赖阻塞
 
-JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 起，`ChangeStatus` 同时携带 **`isPlanningComplete`**（所有非 skipped planning artifact 都存在；skipped artifact 视为已满足而不必写出）与兼容别名 **`isComplete`**；状态文案也不再在 change 实现前就暗示"已完成"。语义见 `src/core/artifact-graph/instruction-loader.ts` 的 `ChangeStatus` 类型。
+JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。`ChangeStatus` 同时携带 **`isPlanningComplete`**（所有非 skipped planning artifact 都存在；skipped artifact 视为已满足而不必写出）与兼容别名 **`isComplete`**；状态文案也不再在 change 实现前就暗示"已完成"。语义见 `src/core/artifact-graph/instruction-loader.ts` 的 `ChangeStatus` 类型。
 
 ### 状态语义
 
@@ -100,7 +100,7 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 �
 - `blocked`: 依赖未满足，暂时不应创建。
 - `skipped`: schema 的 specs artifact 被 change metadata 中的 `skip_specs: true` 显式跳过。该标记只适用于没有 spec-level 行为变化的 change，且不得与任何非隐藏 delta spec 文件共存。
 
-`skip_specs` 有两种来源：作者为纯重构/工具/文档 change 手工声明；或 v1.10.0 在 `new change` 解析到一个不产生 specs artifact 的 schema 时自动写入。后者会归一化 `./specs/`、`specs/` 和 Windows separator；两种来源进入 status 后的 `skipped` 语义相同。
+`skip_specs` 有两种来源：作者为纯重构/工具/文档 change 手工声明；或 `new change` 解析到一个不产生 specs artifact 的 schema 时自动写入。后者会归一化 `./specs/`、`specs/` 和 Windows separator；两种来源进入 status 后的 `skipped` 语义相同。
 
 ### 它影响谁
 
@@ -282,7 +282,7 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 �
 
 ## 5. `openspec instructions archive`
 
-v1.7.0 新增的 archive instruction endpoint 也遵循“编译而非执行”的边界：它读取当前 change、解析项目 `context` 和 `operations.archive.guidance`，把 archive workflow 应读的 operation input 交给宿主。它不调用 `archive()`、不写 main specs、也不移动 change。执行动作仍是 `openspec archive <name>` 或宿主 archive skill 在确认后的调用。
+新增的 archive instruction endpoint 也遵循“编译而非执行”的边界：它读取当前 change、解析项目 `context` 和 `operations.archive.guidance`，把 archive workflow 应读的 operation input 交给宿主。它不调用 `archive()`、不写 main specs、也不移动 change。执行动作仍是 `openspec archive <name>` 或宿主 archive skill 在确认后的调用。
 
 ## 6. `openspec templates`
 

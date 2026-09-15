@@ -1,6 +1,6 @@
 # 02 — propose：Proposal 生成
 
-propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用名由宿主决定：Claude 可显示 `/opsx:propose`，Codex v1.8.0 使用 `$openspec-propose-change`。
+propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用名由宿主决定：Claude 可显示 `/opsx:propose`，Codex 使用 `$openspec-propose-change`。
 
 ---
 
@@ -92,7 +92,7 @@ while (不是所有 applyRequires 中的 artifact 都 done):
 
 **循环终止条件**：`applyRequires` 数组中的每个 artifact ID 在最新 status 中都有 `status: "done"`。
 
-对于 spec-driven schema，`applyRequires: ["tasks"]`。正常路径是 proposal 后 specs 与 design 都 ready、二者完成后 tasks ready；v1.7.0 的同级推荐顺序按 schema 声明（specs 在 design 前），但这不是新增 DAG 依赖。
+对于 spec-driven schema，`applyRequires: ["tasks"]`。正常路径是 proposal 后 specs 与 design 都 ready、二者完成后 tasks ready；同级推荐顺序按 schema 声明（specs 在 design 前），但这不是新增 DAG 依赖。
 
 ### Step 5：最终状态展示
 
@@ -129,7 +129,7 @@ openspec status --change "<name>"     # 纯文本模式，给人看
 
 **instruction** (`schema.yaml:10-26`) 强调的关键点：
 - Capabilities 部分是**关键契约** —— 它建立了 proposal 和 specs 阶段之间的连接
-- 每个列出的 capability 需要一个对应的 spec 文件（`specs/<capability-path>/spec.md`）；v1.7.0 可以用嵌套 path，如 `identity/session`。
+- 每个列出的 capability 需要一个对应的 spec 文件（`specs/<capability-path>/spec.md`）；可以用嵌套 path，如 `identity/session`。
 - "Keep it concise (1-2 pages). Focus on the 'why' not the 'how' — implementation details belong in design.md."
 
 **proposal 在 DAG 中的位置**：`requires: []`，是 DAG 的根节点，立即可做。完成后解锁 specs 和 design。
@@ -172,10 +172,10 @@ TO: ### Requirement: <new-name>
 
 **instruction 中的关键约束**：
 
-1. **Scenario 必须用 4 个 hashtag**（`#### `）。用 3 个或 bullet 会**静默失败** —— 解析器不识别。约定写法是 `#### Scenario:`；v1.9.0 起 validate/archive 的 scenario-loss 把 requirement 下任何非 fence 的 `#### ` 子标题都算作 scenario（`#### Edge case` 也会被计数，省略它会在 authoring 阶段失败）。
+1. **Scenario 必须用 4 个 hashtag**（`#### `）。用 3 个或 bullet 会**静默失败** —— 解析器不识别。约定写法是 `#### Scenario:`；validate/archive 的 scenario-loss 把 requirement 下任何非 fence 的 `#### ` 子标题都算作 scenario（`#### Edge case` 也会被计数，省略它会在 authoring 阶段失败）。
 2. **每个 requirement 至少要有一个 scenario**。
 3. **MODIFIED 必须复制完整的 requirement block**（包括所有 scenario）—— "Common pitfall: Using MODIFIED with partial content loses detail at archive time."
-4. **用 SHALL/MUST** 写规范性需求，避免 should/may。v1.8.0 起 normal 模式下这条只是 guidance（缺失给 WARNING，非英语 spec 也能过），只有 `validate --strict` 才强制；写作建议不变。
+4. **用 SHALL/MUST** 写规范性需求，避免 should/may。normal 模式下这条只是 guidance（缺失给 WARNING，非英语 spec 也能过），只有 `validate --strict` 才强制；写作建议不变。
 5. MODIFIED 的 workflow：
    > 1. 从 instructions JSON 读取 `planningHome.root`，在 `<planningHome.root>/openspec/specs/<capability-path>/spec.md` 中找到已有 requirement
    > 2. 复制完整的 requirement block（从 `### Requirement:` 到所有 scenario）
@@ -239,14 +239,14 @@ TO: ### Requirement: <new-name>
 1. **"Follow the template below exactly."**
    > "The apply phase parses checkbox format to track progress. Tasks not using `- [ ]` won't be tracked."
 
-2. checkbox 解析（v1.8.0 起统一走共享 parser `parseTaskLines()` in `src/utils/task-progress.ts`）：
+2. checkbox 解析（统一走共享 parser `parseTaskLines()` in `src/utils/task-progress.ts`）：
    ```typescript
    const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
    // done = checkboxMatch[1].toLowerCase() === 'x'
    ```
    - `- [ ]` → 未完成
    - `- [x]` 或 `- [X]` → 完成
-   - 允许前导缩进——`  - [ ] 1.1.1` 子任务照常计数（v1.8.0；旧版只认列 0 的 checkbox）
+   - 允许前导缩进——`  - [ ] 1.1.1` 子任务照常计数（旧版只认列 0 的 checkbox）
    - 不需要 `X.Y` 编号格式（只是建议，解析器不强求）
 
 3. 分组用 `## N. Group Name` 二级标题
@@ -255,7 +255,7 @@ TO: ### Requirement: <new-name>
 
 5. 按依赖排序（先做什么后做什么）
 
-6. v1.10.0 起，每个 checkbox 必须在本项内声明如何验证完成，可用 test、command、observable behavior 或 delivered artifact；只有跨多个实现项的验证才单列 Integration Verification。例如：
+6. 每个 checkbox 必须在本项内声明如何验证完成，可用 test、command、observable behavior 或 delivered artifact；只有跨多个实现项的验证才单列 Integration Verification。例如：
    ```markdown
    - [ ] 1.1 Add the parser branch — verify: run `pnpm vitest parser`.
    - [ ] 1.2 Expose the result — verify: invoke the CLI and observe the expected JSON field.
@@ -302,9 +302,9 @@ specs done + design done → tasks 入度 0
 4. **遵循 `instruction`**：来自 schema 的指导，比如"specs 的 scenario 必须用 4 个 hashtag"
 5. **写到 `resolvedOutputPath`**：绝对路径，agent 直接写
 
-新 capability 的 delta 可以在 requirements 前写 `## Purpose`；v1.7.0 archive 会把可读 Purpose 带入新 main spec。既有 main spec 的 Purpose 不会被 delta 覆盖；没有可读 Purpose 时才回退占位文字。
+新 capability 的 delta 可以在 requirements 前写 `## Purpose`；archive 会把可读 Purpose 带入新 main spec。既有 main spec 的 Purpose 不会被 delta 覆盖；没有可读 Purpose 时才回退占位文字。
 
-v1.10.0 的 specs instruction 还把 main-spec 读写根固定为 instructions JSON 中的 `planningHome.root`。它可能指向当前 repo，也可能指向被选择的 store；不能从 cwd 拼 `openspec/specs/...`，也不能把 referenced-store 索引误解成自动加载 spec 正文。
+specs instruction 还把 main-spec 读写根固定为 instructions JSON 中的 `planningHome.root`。它可能指向当前 repo，也可能指向被选择的 store；不能从 cwd 拼 `openspec/specs/...`，也不能把 referenced-store 索引误解成自动加载 spec 正文。
 
 **agent 绝对不应该做的事**：
 - 把 `context`、`rules`、`<project_context>` 标签复制到 artifact 文件中

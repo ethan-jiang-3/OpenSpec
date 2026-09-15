@@ -9,7 +9,7 @@ Store 模型不创建协调视图，不管理 linked repos。它就是两件事�
 
 agent 通过 `openspec context` 拿到一个 working set（root + referenced stores 的 spec 索引），但它不自动 clone、不自动 sync、不内联 specs 内容、不替 referenced repo 做任何写操作。
 
-v1.7.0 还支持机器级 `defaultStore`：它是用户全局配置中的**低优先级 fallback**，只在没有更具体项目 root/选择时参与解析；它不是把某个 store 变成所有项目的 planning home，也不会让 references 自动写入或同步。
+还支持机器级 `defaultStore`：它是用户全局配置中的**低优先级 fallback**，只在没有更具体项目 root/选择时参与解析；它不是把某个 store 变成所有项目的 planning home，也不会让 references 自动写入或同步。
 
 ## 五个新核心对象
 

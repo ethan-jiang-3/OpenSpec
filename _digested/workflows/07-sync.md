@@ -4,11 +4,11 @@
 
 `src/core/templates/workflows/sync-specs.ts` → `getSyncSpecsSkillTemplate()` + `getOpsxSyncCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:sync [change-name]`；Codex v1.8.0 用 `$openspec-sync-specs`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:sync [change-name]`；Codex 用 `$openspec-sync-specs`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-sync-specs`（skill）/ `OPSX: Sync`（command）
 > **独立 CLI 命令**：无——sync 是纯 agent-driven merge，和 `openspec archive` CLI 的 programmatic merge 是两条独立路径。sync 也会被 host archive workflow inline 调用（sync assessment 阶段）。
 > **profile**：core（大多数用户默认可见）
-> **v1.8.0 要点（v1.7.0 起）**：main spec 路径使用 store-aware `planningHome.root`（`<planningHome.root>/openspec/specs/`）；status 提供的 delta path 可为 nested capability path；sync 在写前读取一次 `openspec instructions specs`，把返回的 artifact rules 只用于被写入 main specs 的内容/形式。
+> **要点**：main spec 路径使用 store-aware `planningHome.root`（`<planningHome.root>/openspec/specs/`）；status 提供的 delta path 可为 nested capability path；sync 在写前读取一次 `openspec instructions specs`，把返回的 artifact rules 只用于被写入 main specs 的内容/形式。
 
 ## 一句话
 

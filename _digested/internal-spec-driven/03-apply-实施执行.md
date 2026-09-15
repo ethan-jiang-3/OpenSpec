@@ -68,13 +68,13 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 - **`tasks`**：解析后的 checkbox 列表，每个带 label 和 done 状态
 - **`missingArtifacts`**（仅缺少 required artifact 时）：哪些 artifact 还没创建。注意：tracks 文件缺失或 tasks.md 没有 checkbox 也会 `blocked`，但不一定有 `missingArtifacts`
 
-### 2.4 v1.13.0：无 spec 警告 + 完整缺失链
+### 2.4 无 spec 警告 + 完整缺失链
 
-v1.13.0 修了 apply 门控的两个盲区（`src/commands/workflow/instructions.ts`，`generateApplyInstructions` / `applyInstructionsCommand`）：
+这里修了 apply 门控的两个盲区（`src/commands/workflow/instructions.ts`，`generateApplyInstructions` / `applyInstructionsCommand`）：
 
-1. **无 delta spec 的 change 不再假装 ready**。apply 只按 `apply.requires` 门控，所以 `tasks.md` 先于 specs 写好的 change 读作 ready to implement——但这是 `openspec validate` 会拒绝的状态。v1.13.0 起 `instructions apply` 对该 change 报 warning（text + `--json` 的 warning 字段），点名两条出路：写 specs，或声明 `skip_specs: true`。有 specs、声明 `skip_specs`、或仍被自己必需 artifact 挡住的 change 不受影响。
+1. **无 delta spec 的 change 不再假装 ready**。apply 只按 `apply.requires` 门控，所以 `tasks.md` 先于 specs 写好的 change 读作 ready to implement——但这是 `openspec validate` 会拒绝的状态。`instructions apply` 对该 change 报 warning（text + `--json` 的 warning 字段），点名两条出路：写 specs，或声明 `skip_specs: true`。有 specs、声明 `skip_specs`、或仍被自己必需 artifact 挡住的 change 不受影响。
 
-2. **blocked 报完整 build order 缺失链**。之前只报第一跳——change 只有 proposal 时报告 `Missing artifacts: tasks`，而 tasks 依赖的 specs 也缺失，读起来像「直接从 proposal 写 tracking 文件」。v1.13.0 用 `collectMissingPrerequisites` 收集完整链：文本输出 `Not created yet, in build order: <chain>`，`--json` 输出 `missingPrerequisites` 数组。补救命令是 `openspec instructions <artifact> --change <name>`（CLI 命令），不再引用 `openspec-continue-change` skill——core profile 不装它。
+2. **blocked 报完整 build order 缺失链**。之前只报第一跳——change 只有 proposal 时报告 `Missing artifacts: tasks`，而 tasks 依赖的 specs 也缺失，读起来像「直接从 proposal 写 tracking 文件」。用 `collectMissingPrerequisites` 收集完整链：文本输出 `Not created yet, in build order: <chain>`，`--json` 输出 `missingPrerequisites` 数组。补救命令是 `openspec instructions <artifact> --change <name>`（CLI 命令），不再引用 `openspec-continue-change` skill——core profile 不装它。
 
 ---
 
@@ -82,13 +82,13 @@ v1.13.0 修了 apply 门控的两个盲区（`src/commands/workflow/instructions
 
 ### 3.1 正则
 
-v1.8.0 起统一走共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`），`list` / `view` / `instructions apply` / `archive` 对同一 tasks 文件的判断完全一致：
+统一走共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`），`list` / `view` / `instructions apply` / `archive` 对同一 tasks 文件的判断完全一致：
 
 ```typescript
 const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
 ```
 
-三个关键点（v1.8.0 放宽/修正）：
+三个关键点（放宽/修正）：
 
 - **`^\s*[-*]`** — 允许前导缩进，**缩进的子任务照常计数**（旧版锚定列 0，`  - [ ] 1.1.1` 对 progress 不可见，导致有未完成子任务也报 "✓ Complete" 甚至被 archive 收掉）。
 - **`\[([\sxX])\]`** — 方括号内认 `\s`（空格/制表符/不间断空格，都是"未完成"）、`x`/`X`（完成，大小写不敏感）。
@@ -101,7 +101,7 @@ const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
 - `- [X] Task` → 完成（大小写不敏感）
 - `* [ ] Task` → 也支持 `*` 前缀
 - 空格数量灵活（`-  [ ]` 和 `- [ ]` 都可以）
-- `  - [ ] 1.1.1 子任务` → **算**（v1.8.0 起前导缩进不再隐藏它）
+- `  - [ ] 1.1.1 子任务` → **算**（前导缩进不再隐藏它）
 
 ### 3.3 什么不算 checkbox
 
@@ -216,7 +216,7 @@ apply:
 
 `apply.tracks` 指定用哪个文件追踪进度。它总是指向一个有 checkbox 的文件。
 
-`apply.instruction` 是 agent 在实施时收到的动态指导文字。v1.9.0 起共享 apply 模板还加了一条 **pause-on-scope** 护栏（`src/core/templates/workflows/apply-change.ts`）：任务需要的工作超出 spec/tasks 描述，或想靠 drop / narrow / defer / accept exceptions 塞进范围时，必须把新增范围摊开并暂停，不能默默缩小指定行为；只有指定行为全部落地才能勾 `- [x]`。这是 prompt 合同，不是 CLI 硬校验。
+`apply.instruction` 是 agent 在实施时收到的动态指导文字。共享 apply 模板还加了一条 **pause-on-scope** 护栏（`src/core/templates/workflows/apply-change.ts`）：任务需要的工作超出 spec/tasks 描述，或想靠 drop / narrow / defer / accept exceptions 塞进范围时，必须把新增范围摊开并暂停，不能默默缩小指定行为；只有指定行为全部落地才能勾 `- [x]`。这是 prompt 合同，不是 CLI 硬校验。
 
 ---
 

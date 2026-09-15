@@ -37,4 +37,4 @@ openspec/specs/
 4. **迁移有没有风险？** capability 有没有 rename 操作？改 path 会不会把 archive 搞炸？
 5. **迁移完成后，agent 日常怎么发现和选择正确的 capability？** catalog 怎么建、放在哪？
 
-本文以 **OpenSpec v1.10.0** 为行为基线（release tag `v1.10.0` = `1ebddd1`）。v1.7.0（`4e16790`）起 nested path 已正式支持，v1.8.0–v1.10.0 未改变该结论。
+本文描述当前行为，基线见 [`README.md`](../README.md)。此后 nested path 已正式支持，其后版本未改变该结论。

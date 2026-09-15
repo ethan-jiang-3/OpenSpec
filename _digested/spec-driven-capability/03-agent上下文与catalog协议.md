@@ -2,7 +2,7 @@
 
 ## 先接受 runtime 的边界
 
-OpenSpec v1.7.0 能把 main specs 按 capability path 递归发现、list、show、validate 和 archive，但它不会为当前项目自动完成下面这条链：
+OpenSpec 能把 main specs 按 capability path 递归发现、list、show、validate 和 archive，但它不会为当前项目自动完成下面这条链：
 
 ~~~text
 列出轻量 catalog → 判断哪些 capability 相关 → 按 token 预算读取所需 requirement → 记录选择依据

@@ -31,7 +31,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | `archive-change.ts` | `archive` | 收尾 | agent 层收尾：sync assessment + 移动 change 到 archive |
 | `bulk-archive-change.ts` | `bulk-archive` | 收尾 | 批量归档多个 completed changes |
 | `onboard.ts` | `onboard` | 引导 | 引导式端到端体验 |
-| `update-change.ts` | `update` | 修订 | 修订已有 planning artifacts，保持 artifact 间一致。**不改代码。**（v1.6.0 新增） |
+| `update-change.ts` | `update` | 修订 | 修订已有 planning artifacts，保持 artifact 间一致。**不改代码。** |
 
 `feedback.ts` 和 `store-selection.ts` 也在 workflows 目录下，但不在 profile selection 里，属于辅助模块。
 
@@ -52,9 +52,9 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | archive | `/opsx:archive [name]` | `openspec-archive-change` | **有**：`openspec archive`（路径不同） | **core** |
 | bulk-archive | `/opsx:bulk-archive` | `openspec-bulk-archive-change` | 无 | custom |
 | onboard | `/opsx:onboard` | `openspec-onboard` | 无 | custom |
-| **update** | `/opsx:update [name]` | `openspec-update-change` | 无 | **core**（v1.6.0 新增；现已进入默认集） |
+| **update** | `/opsx:update [name]` | `openspec-update-change` | 无 | **core**（新增；现已进入默认集） |
 
-> 表中 `/opsx:*` 是 command adapter（例如 Claude Code）的示例，不是通用调用语法。Codex 使用 `$openspec-*`；Zed Agent 使用 `/openspec-*` 或 `@openspec-*`。v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 三方共享 `.agents/skills/`（见 `../mechanisms/02-tool-delivery.md`）；其他 host 应以实际安装的 command/skill 名为准。
+> 表中 `/opsx:*` 是 command adapter（例如 Claude Code）的示例，不是通用调用语法。Codex 使用 `$openspec-*`；Zed Agent 使用 `/openspec-*` 或 `@openspec-*`。Codex、Zed Agent 与 vendor-neutral `agents` 三方共享 `.agents/skills/`（见 `../mechanisms/02-tool-delivery.md`）；其他 host 应以实际安装的 command/skill 名为准。
 
 > **core profile**（默认）：propose, explore, apply, update, sync, archive —— 6 个。大多数用户只看到这些。
 > **custom profile**：需在 `customWorkflows` 中显式启用，才能解锁全部 12 个。
@@ -79,7 +79,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 
 这就是 OPSX "动作而非阶段" 的体验基础：用户可以从不同粒度切入同一条 artifact DAG。
 
-### 修订类（1 个，v1.6.0 新增）
+### 修订类（1 个，新增）
 
 **update** — 修订已有 planning artifacts，保持 artifact 间一致。**绝不改代码。** 和 continue 的区别：continue 按 DAG 推进 build frontier（创建新 artifact），update 在已有 frontier 内修订（编辑已有 artifact）。
 
@@ -119,13 +119,13 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | `openspec schemas --json` | new（可选） |
 | `openspec validate` | verify |
 
-## v1.8.0 运行时要点
+## 运行时要点
 
-- `skip_specs: true` 让没有 spec-level 行为变化的 change 将 specs artifact 标为 `skipped`；规划/apply/归档 workflow 应把它当已满足，而不能创建任何 delta file。（v1.7.0 引入）
-- `specs` 与 `design` 在 proposal 后并行 ready；同级推荐顺序按 schema 声明，内置 schema 先推荐 specs 再 design。（v1.7.0）
-- 除 bulk archive 外，workflow 选择 change 的默认顺序是：显式名称 → 对话推断 → 唯一 active change 自动选择 → 仅在歧义时列出并询问。（v1.7.0）
-- Apply/Archive 通过各自的 instructions API 获得当前 config `context` 和 operation guidance；artifact `rules.*` 仍只约束对应 artifact 的生成。（v1.7.0）
-- status 的 JSON 含 `isPlanningComplete`（与兼容别名 `isComplete`）；planning artifact 的完成与实现进度分开表达。（v1.8.0）
+- `skip_specs: true` 让没有 spec-level 行为变化的 change 将 specs artifact 标为 `skipped`；规划/apply/归档 workflow 应把它当已满足，而不能创建任何 delta file。
+- `specs` 与 `design` 在 proposal 后并行 ready；同级推荐顺序按 schema 声明，内置 schema 先推荐 specs 再 design。
+- 除 bulk archive 外，workflow 选择 change 的默认顺序是：显式名称 → 对话推断 → 唯一 active change 自动选择 → 仅在歧义时列出并询问。
+- Apply/Archive 通过各自的 instructions API 获得当前 config `context` 和 operation guidance；artifact `rules.*` 仍只约束对应 artifact 的生成。
+- status 的 JSON 含 `isPlanningComplete`（与兼容别名 `isComplete`）；planning artifact 的完成与实现进度分开表达。
 
 template 不直接操作文件系统——它通过 CLI 命令获取路径，再由 agent 用自己的文件工具去读写。
 

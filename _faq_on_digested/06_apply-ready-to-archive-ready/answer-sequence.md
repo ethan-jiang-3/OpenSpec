@@ -45,7 +45,7 @@ sequenceDiagram
     rect rgb(255, 240, 255)
         Note over User,FS: ══════ Phase 2 · apply instructions gate ══════
         MD->>TS: openspec instructions apply --change "X" --json
-        TS->>TS: 检查 apply.requires 是否满足<br/>收集所有 artifact → contextFiles<br/>读 tasks.md → 解析 checkbox<br/>（正则：^\s*[-*]\s*\[([\sxX])\]\s*(.*)，v1.8.0 允许缩进子任务）<br/>计算 progress
+        TS->>TS: 检查 apply.requires 是否满足<br/>收集所有 artifact → contextFiles<br/>读 tasks.md → 解析 checkbox<br/>（正则：^\s*[-*]\s*\[([\sxX])\]\s*(.*)，允许缩进子任务）<br/>计算 progress
         TS-->>MD: state, contextFiles,<br/>progress{total, complete, remaining},<br/>tasks[{description, done}],<br/>instruction, [missingArtifacts]
     end
 
@@ -183,7 +183,7 @@ MD: （可选）openspec instructions apply --json
 TS: 重新解析 tasks.md → complete: 3/7 → remaining: 4
 ```
 
-进度不在 agent 的口头总结里，也不在隐藏数据库里。它在 `tasks.md` checkbox 里，由 TS 的共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`）实时解释——v1.8.0 起缩进的子任务也计入。MD 勾了才算，TS 扫了才认。
+进度不在 agent 的口头总结里，也不在隐藏数据库里。它在 `tasks.md` checkbox 里，由 TS 的共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`）实时解释——缩进的子任务也计入。MD 勾了才算，TS 扫了才认。
 
 ### 模式 4：MD 遇 guard → 暂停，不硬写
 

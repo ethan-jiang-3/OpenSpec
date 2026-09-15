@@ -6,10 +6,12 @@ OpenSpec 的 schema 系统能不能用来做**需求工程**——产出物不�
 
 # 背景
 
-已有的三个 schema 覆盖了三种产出物：
-- `spec-driven`：代码实现（delta specs → 源码文件）
-- `agent-dev-driven`：agent 组件（skills、commands、tools）——和 spec-driven 同框架，只改 instruction/template 内容
-- `article-driven`：发布文章（brief → outline → research → draft → edit → publish）
+FAQ 里已有三个 schema 示例覆盖三种产出物（只有 `spec-driven` 是 OpenSpec 内置，其余两个是本 FAQ 的项目级副本）：
+- `spec-driven`：代码实现（delta specs → 源码文件）——**上游内置**
+- `agent-dev-driven`：agent 组件（skills、commands、tools）——和 spec-driven 同框架，只改 instruction/template 内容（见 [`../09_schema-agent-dev/`](../09_schema-agent-dev/)）
+- `article-driven`：发布文章（brief → outline → research → draft → edit → publish）（见 [`../02_schema-article-driven/`](../02_schema-article-driven/)）
+
+> **边界**：上游删除了内置的 `agent-dev-driven` 与 `requirement-driven` 两个 schema（长期未维护）。上面的 `agent-dev-driven` 和本目录的 `requirement-driven` 都是项目级自定义 schema，靠 `cp -r schema-package/` 安装，与上游是否内置无关。
 
 这三种本质上都是"一个人+AI 可以独立完成的产出"。但需求工程不一样——**需求不是一个人闭门造出来的，是跟利益相关者反复聊出来的**。
 

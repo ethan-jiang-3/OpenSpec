@@ -119,10 +119,10 @@ $ file $(which openspec)
 - **不是二进制可执行文件** — 没有 Go/Rust 编译，没有 nexe/pkg 打包
 - **不是 shell 脚本** — 是 Node.js 脚本，靠 shebang 执行
 - **不是 Python** — 虽然 `#!/usr/bin/env` 模式在 Python 脚本里也很常见，但这里是 node
-- **没有现行 postinstall 链路** — v1.10.0 的 registry 安装包没有 install lifecycle script，因此不会再出现 completion postinstall 文案或 allow-scripts 警告；git/directory 安装仍可能因 `prepare` 构建。
+- **没有现行 postinstall 链路** — registry 安装包没有 install lifecycle script，因此不会再出现 completion postinstall 文案或 allow-scripts 警告；git/directory 安装仍可能因 `prepare` 构建。
 
 ## 为什么全局安装后不再立即提示 completion
 
-v1.10.0 删除了 npm `postinstall`。completion 提示改为 CLI 的 `postAction`：首次符合条件的运行、且 stderr 是 TTY 时才出现；即使命令用 `process.exitCode` 报失败，收尾 hook 仍可执行。反过来，action 若直接调用 `process.exit(1)`，会跳过 hook，这次失败不会显示或消费提示。若命令属于 JSON/机器输出，提示会 defer；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制当前环境中的提示。提示写入全局 config 的 `completionTipSeen` 后只展示一次；读写使用 raw config，不能顺带把默认 profile 等字段写回。
+OpenSpec 删除了 npm `postinstall`。completion 提示改为 CLI 的 `postAction`：首次符合条件的运行、且 stderr 是 TTY 时才出现；即使命令用 `process.exitCode` 报失败，收尾 hook 仍可执行。反过来，action 若直接调用 `process.exit(1)`，会跳过 hook，这次失败不会显示或消费提示。若命令属于 JSON/机器输出，提示会 defer；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制当前环境中的提示。提示写入全局 config 的 `completionTipSeen` 后只展示一次；读写使用 raw config，不能顺带把默认 profile 等字段写回。
 
 telemetry 的首次 notice 也只写 **stderr**。因此脚本可以继续把 stdout 当机器接口；JSON 运行会延后 notice，不会把提示混进 JSON。

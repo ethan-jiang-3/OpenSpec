@@ -2,7 +2,21 @@
 
 这个目录是对 OpenSpec 源码的**消化分析**：从 TypeScript 源码出发，理解机制、架构和设计意图。它不是用户指南——想学怎么用 OpenSpec 去 `_openspec_handbook/`。
 
-> **当前源码基线**：本文档集以 OpenSpec `v1.10.0`（upstream/release tag `v1.10.0` = `1ebddd1`）为准。版本演进和旧行为只记录在 [`_change_log/`](./_change_log/README.md)；正文中的机制结论描述当前 release。
+> **当前源码基线**：本文档集以 OpenSpec `v1.13.0`（upstream/release tag `v1.13.0` = `9d4e5974`）为准。版本演进和旧行为只记录在 [`_change_log/`](./_change_log/README.md)；正文中的机制结论描述当前 release。
+
+### 版本约定
+
+- **基线只写在这里**：各文件正文不再声明"本文适用/核验于某版本"。要升级基线，只改本 README 的「当前源码基线」一行。
+- **正文与版本解耦**：正文用现在时描述当前行为。机制结论以本 README 的基线为准，不随文件内的版本号变化。
+- **历史溯源保留但不可变**：`v1.11.0 起支持 X` 这类是历史事实，不随发版变化，可留在正文；它们**不需要**在升级时改动。
+- **版本敏感文件**：若某文件整体只对特定版本范围有效，登记在下表，而不是写在文件里。
+
+| 文件 | 适用版本 |
+|------|----------|
+| `internal-spec-driven/07-config-yaml-上下文路由源码深挖.md` | config 注入边界自 v1.8.0 起未变 |
+| `spec-driven-capability/` | capability 身份/discovery 模型自 v1.7.0 起未变 |
+| `specs_truth/_research-*.md` | 日期化研究快照，固定在其标注的 release |
+| `spec-driven-capability/_research-long-term-capability-governance.md` | 固定 v1.7.0 |
 
 更准确地说，`_digested/` 面向已熟悉 SDD、AI Coding、CLI/agent 工程，但尚未建立 OpenSpec 概念体系的读者。这里先带你抓住 OpenSpec 的思想主轴，再进入源码机制——而不是把源码目录平铺成分类货架。
 

@@ -170,7 +170,7 @@ explore 明确禁止写应用代码（"Never write code or implement features"�
 | 发现新的工作项 | `tasks.md` |
 | 之前的假设不成立了 | 相关内容所在的 artifact |
 
-**v1.8.0 捕获规则（scaffold-first）**：若用户要求把探索**捕捉成新 change**，agent 必须先 `openspec new change "<name>"`（要 `--store` 时带上）再写任何 artifact——CLI 的 scaffold 会生成 `.openspec.yaml` 等必需 metadata，绝不能手搓 `openspec/changes/<name>/` 目录。之后按 `status` → `instructions` 顺序建 artifact，且**不需要再让用户跑别的 workflow 命令**；若用户只要开 change，scaffold 后停下并展示状态即可。（改已有 change 的 artifact 不在此列，仍是直接编辑。）
+**捕获规则（scaffold-first）**：若用户要求把探索**捕捉成新 change**，agent 必须先 `openspec new change "<name>"`（要 `--store` 时带上）再写任何 artifact——CLI 的 scaffold 会生成 `.openspec.yaml` 等必需 metadata，绝不能手搓 `openspec/changes/<name>/` 目录。之后按 `status` → `instructions` 顺序建 artifact，且**不需要再让用户跑别的 workflow 命令**；若用户只要开 change，scaffold 后停下并展示状态即可。（改已有 change 的 artifact 不在此列，仍是直接编辑。）
 
 ---
 

@@ -40,6 +40,6 @@ Archive 的稳定项目步骤            -> operations.archive.guidance
 运行时状态                         -> state / receipt / run 文件
 ```
 
-最容易漏掉的事实：v1.8.0 的 Apply/Archive 会接收 project `context` 与各自 `operations.*.guidance`（v1.7.0 引入），但不会接收 artifact `rules`；Explore 读取 context/rules，却没有 `operations.explore`。要实现阶段精确指导，先用现有 consumer，再让 change artifacts 传递 change-local context；若仍不够，再升级 schema 或 workflow，而不是发明未支持字段。
+最容易漏掉的事实：Apply/Archive 会接收 project `context` 与各自 `operations.*.guidance`，但不会接收 artifact `rules`；Explore 读取 context/rules，却没有 `operations.explore`。要实现阶段精确指导，先用现有 consumer，再让 change artifacts 传递 change-local context；若仍不够，再升级 schema 或 workflow，而不是发明未支持字段。
 
 完整答案见 [`answer.md`](answer.md)。从下游项目类型选择初稿见 [`00-initial-config-baselines.md`](00-initial-config-baselines.md)；信息归位见 [`01-design-config-yaml.md`](01-design-config-yaml.md)；配置诊断与维护见 [`02-diagnose-maintain-config-yaml.md`](02-diagnose-maintain-config-yaml.md)；三个项目特定审计见 [`project-cases/README.md`](project-cases/README.md)。内置 `spec-driven` 的源码边界见 [`../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md`](../../_digested/internal-spec-driven/07-config-yaml-上下文路由源码深挖.md)，其余机制证据见 [`sources.md`](sources.md)。

@@ -114,7 +114,7 @@ Store 的核心设计规则：**上下文引用用 store，实现在 owning repo
 - `loadChangeContext()` 把 change、schema、graph、completed 状态组装成运行时上下文。
 - `generateInstructions()` 把模板、规则、依赖、输出位置编译成 AI 可执行说明。
 
-这一层决定了 workflow 命令的真正价值。以 v1.10.0 为当前基线：内置 change 默认使用 `spec-driven` schema，但项目也可以选择或提供自定义 schema；不要把历史版本中的默认值写成所有 change 的永久限制。
+这一层决定了 workflow 命令的真正价值。当前基线见 [`../README.md`](../README.md)：内置 change 默认使用 `spec-driven` schema，但项目也可以选择或提供自定义 schema；不要把历史版本中的默认值写成所有 change 的永久限制。
 
 ### 4. 工具投递层
 

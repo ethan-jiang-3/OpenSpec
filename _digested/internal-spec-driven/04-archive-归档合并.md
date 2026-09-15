@@ -5,7 +5,7 @@ archive 是整个 change 生命周期的终点。它做三件事：验证 change
 这里需要先区分两条相关但不同的路径：
 
 - **`openspec archive` CLI**：由 `ArchiveCommand.execute()` 执行，程序化完成验证、delta spec 合并和目录移动。
-- **host 的 archive workflow skill/command 模板**：由 host agent 按 `archive-change.ts` 的指令执行，会先做 delta spec sync 状态评估，再按模板移动目录。Claude 等 command adapter 可显示为 `/opsx:archive`；Codex v1.8.0 使用 `$openspec-archive-change` skill。它不是 `ArchiveCommand.execute()` 的逐字封装。
+- **host 的 archive workflow skill/command 模板**：由 host agent 按 `archive-change.ts` 的指令执行，会先做 delta spec sync 状态评估，再按模板移动目录。Claude 等 command adapter 可显示为 `/opsx:archive`；Codex 使用 `$openspec-archive-change` skill。它不是 `ArchiveCommand.execute()` 的逐字封装。
 
 本篇主体讲 `openspec archive` CLI 的内部机制；第 5 节单独说明 host archive workflow 的 sync 检查与 operation inputs。
 
@@ -67,7 +67,7 @@ Phase 3: Move
 
 ### 2.3 任务完成检查
 
-`archive.ts:174-194`：读取 tasks.md，统计未完成 checkbox。如果有未完成任务，警告并要求确认。v1.8.0 起与 `list` / `view` / `instructions apply` 共用 `src/utils/task-progress.ts` 的同一 parser——**缩进的子任务也计入**（旧版只认列 0 的 checkbox，未完成的 `  - [ ] 1.1.1` 会被漏掉，archive 于是"✓ Complete"却带着半截活收档）。
+`archive.ts:174-194`：读取 tasks.md，统计未完成 checkbox。如果有未完成任务，警告并要求确认。与 `list` / `view` / `instructions apply` 共用 `src/utils/task-progress.ts` 的同一 parser——**缩进的子任务也计入**（旧版只认列 0 的 checkbox，未完成的 `  - [ ] 1.1.1` 会被漏掉，archive 于是"✓ Complete"却带着半截活收档）。
 
 ---
 
@@ -87,7 +87,7 @@ change/specs/identity/session/spec.md → openspec/specs/identity/session/spec.m
 
 返回 `SpecUpdate[]`，每个包含 `{source, target, exists}`（target 是主 spec 路径，exists 表示主 spec 是否已存在）。
 
-`changes/<change>/specs/spec.md` 没有 capability folder，递归发现器不会把它当 update；v1.7.0 的 validator/archive 会把这种根级 delta 作为 ERROR 拒绝，而不是静默跳过。
+`changes/<change>/specs/spec.md` 没有 capability folder，递归发现器不会把它当 update；validator/archive 会把这种根级 delta 作为 ERROR 拒绝，而不是静默跳过。
 
 ### 3.2 解析 delta plan
 
@@ -111,21 +111,21 @@ interface DeltaPlan {
 解析过程：
 1. 用 `splitTopLevelSections` 按 `##` headers 切分内容
 2. 大小写不敏感匹配四个 section 类型
-3. `parseRequirementBlocksFromSection()`：提取 `### Requirement:` header 和 body 内容（包括所有 `#### ` 级 scenario；v1.9.0 起不限于字面 `#### Scenario:`）
+3. `parseRequirementBlocksFromSection()`：提取 `### Requirement:` header 和 body 内容（包括所有 `#### ` 级 scenario；不限于字面 `#### Scenario:`）
 4. `parseRemovedNames()`：提取 requirement 名（可以是 `### Requirement:` header 或 bullet 中的引用）
 5. `parseRenamedPairs()`：解析 `FROM:` / `TO:` 对
 
-### 3.2.1 v1.13.0：delta section 是 list，列表标记全接受
+### 3.2.1 delta section 是 list，列表标记全接受
 
-`DeltaPlan` 的 section 解析在 v1.13.0 有两处保真修复（`src/core/parsers/requirement-blocks.ts`）：
+`DeltaPlan` 的 section 解析有两处保真修复（`src/core/parsers/requirement-blocks.ts`）：
 
 1. **sections 从 title-keyed record 改为按书写顺序的 list**。之前重复写同一 header（如两个 `## ADDED Requirements`，或 fence 示例自带重复 header）时，后写的覆盖先写的，大小写折叠 lookup 只返回第一个匹配——被丢弃副本里的 requirement 在 validate/merge 之前就没了，但 `validate` 报零问题、`archive` 报成功，主 spec 悄悄和已审阅的 delta 不一致。现在每个 section 保留自己的出现次序和行号；lookup 返回所有匹配 section；`FROM:`/`TO:` 按 section 配对，一份里的 `FROM:` 不会和另一份的 `TO:` 配对。
 
 2. **REMOVED 的 bullet 形式与 RENAMED 的 `FROM:`/`TO:` 行接受 `[-*+]` 全部 CommonMark 列表标记**。之前硬编码 `-`，用 `*`/`+` 写的删除/改名 delta 匹配不到任何东西——`validate` 报 valid、`archive` 退出 0，但需求根本没动。`FROM:`/`TO:` bullet 保持可选；`### Requirement:` header 形式不变。
 
-### 3.2.2 v1.13.0：scenario bullet 换行不再挡退役
+### 3.2.2 scenario bullet 换行不再挡退役
 
-`retire_capabilities` 之前拒绝任何 scenario bullet 换行到第二行的 spec——续行被当成 merge 无法归属的内容，退役被整个阻塞，且提示 marker 的 hint 也被吞掉。v1.13.0 把续行读成同一条 bullet；`+` 列表标记也被正确识别（之前只认 `-`/`*`，`+` 写的 scenario 全部报 unaccounted，capability 完全无法退役）。
+`retire_capabilities` 之前拒绝任何 scenario bullet 换行到第二行的 spec——续行被当成 merge 无法归属的内容，退役被整个阻塞，且提示 marker 的 hint 也被吞掉。把续行读成同一条 bullet；`+` 列表标记也被正确识别（之前只认 `-`/`*`，`+` 写的 scenario 全部报 unaccounted，capability 完全无法退役）。
 
 ### 3.3 预验证（合并前）
 
@@ -173,7 +173,7 @@ after:    ""（Requirements section 之后的文字）
 
 为什么 RENAMED 必须最先做？因为如果 RENAMED 在后，MODIFIED 只能引用旧名字，导致改名后 MODIFIED 的内容丢失。
 
-**v1.11.0 修复**：rename 操作现在使用 `orderedKeys` 列表追踪位置标识。rename 更新 key 而不把块移到 spec 尾部（之前的 Map delete+set 会将条目移到插入顺序末尾），因此 RENAMED + MODIFIED 同一条时 rename 保持在原位置，archive diff 更易读。
+**修复**：rename 操作现在使用 `orderedKeys` 列表追踪位置标识。rename 更新 key 而不把块移到 spec 尾部（之前的 Map delete+set 会将条目移到插入顺序末尾），因此 RENAMED + MODIFIED 同一条时 rename 保持在原位置，archive diff 更易读。
 
 #### 第二：REMOVED（`specs-apply.ts:269-281`）
 
@@ -205,9 +205,9 @@ after:    ""（Requirements section 之后的文字）
 
 为什么 ADDED 最后？因为如果在 RENAMED 之前做 ADDED，RENAMED 的 TO 可能和 ADDED 冲突检测为假阴性。ADDED 应该检测合并后的最终状态。
 
-### 3.6 重建 spec（v1.11.0 修复 rename 保序）
+### 3.6 重建 spec（修复 rename 保序）
 
-v1.11.0 前 rename 操作通过 Map delete+set 将块移到 insertion-order 尾部。v1.11.0 使用 `orderedKeys` 列表独立追踪位置标识：
+此前 rename 操作通过 Map delete+set 将块移到 insertion-order 尾部。它使用 `orderedKeys` 列表独立追踪位置标识：
 
 ```typescript
 // orderedKeys 保持源块的顺序标识，rename 更新 key 不移动尾部
@@ -219,9 +219,8 @@ for (let index = 0; index < parts.bodyBlocks.length; index++) {
   const replacement = nameToBlock.get(key);
   ...
 }
-```
 
-新内容（ADDED）仍追加到末尾。保留的块中有 `## Scenario:` 等被 MODIFIED 吸收的 tail 内容时，会检测 `firstForeignTail` 并标记 loss 信息。ocks) {
+for (const block of parts.bodyBlocks) {
   const key = normalizeRequirementName(block.name);
   const replacement = nameToBlock.get(key);
   if (replacement) keptOrder.push(replacement);  // 原有或替换
@@ -236,9 +235,11 @@ const rebuilt = [parts.before, parts.headerLine, reqBody, parts.after]
   .replace(/\n{3,}/g, '\n\n');  // 压缩多余空行
 ```
 
+新内容（ADDED）仍追加到末尾。保留的块中有 `## Scenario:` 等被 MODIFIED 吸收的 tail 内容时，会检测 `firstForeignTail` 并标记 loss 信息。
+
 **对顺序的尊重**：已有的 requirement 保持它们原来的相对位置。新的 requirement 追加到 Requirements section 末尾。这避免了每次archive 打乱整个 spec，让 git diff 可读。
 
-**v1.13.0：空行压缩不碰代码 fence**。`buildUpdatedSpec()` 末尾的空行压缩（`.replace(/\n{3,}/g, '\n\n')`）之前是无差别作用于整个重建文档——需求里 YAML block scalar、Python、expected-output 样例只要含两个以上连续空行，archive 每次跑都会「整理」一次，而空白在那些上下文里携带语义。v1.13.0 改用 `collapseBlankRunsOutsideFences`（复用模块内已有的 `buildCodeFenceMask`），只在 fence 外折叠空行；fence 内原样保留。fence 外行为不变：只有真正空行算 blank，纯空格行永不作为折叠边界。
+**空行压缩不碰代码 fence**。`buildUpdatedSpec()` 末尾的空行压缩（`.replace(/\n{3,}/g, '\n\n')`）之前是无差别作用于整个重建文档——需求里 YAML block scalar、Python、expected-output 样例只要含两个以上连续空行，archive 每次跑都会「整理」一次，而空白在那些上下文里携带语义。现在改用 `collapseBlankRunsOutsideFences`（复用模块内已有的 `buildCodeFenceMask`），只在 fence 外折叠空行；fence 内原样保留。fence 外行为不变：只有真正空行算 blank，纯空格行永不作为折叠边界。
 
 ### 3.7 写前验证
 
@@ -250,7 +251,7 @@ CLI 会先对所有 `SpecUpdate` 调用 `buildUpdatedSpec()`，把 rebuilt 内�
 
 ### 3.8 已 early-sync 的 delta 不再一律失败
 
-v1.7.0 识别“agent sync 已把同一内容写入 main spec”的正常模式：内容相同的 ADDED/MODIFIED、已消失的 REMOVED、以及 source 已消失但 target 已存在的 RENAMED 都是 no-op，archive 不会为它们重写 main spec。REMOVED 的 no-op 会携带 warning，JSON archive 结果也可返回 `warnings`。
+识别“agent sync 已把同一内容写入 main spec”的正常模式：内容相同的 ADDED/MODIFIED、已消失的 REMOVED、以及 source 已消失但 target 已存在的 RENAMED 都是 no-op，archive 不会为它们重写 main spec。REMOVED 的 no-op 会携带 warning，JSON archive 结果也可返回 `warnings`。
 
 这个宽容只针对**确实已应用的同一操作**。主 spec 里仍存在仅大小写或空白不同的近似 requirement 时，工具会明确报错要求精确匹配；内容不同的 ADDED 仍是 collision。fenced code 中的 scenario/header 也不会参与 drift 比较，UTF-8 BOM 不会让首个 delta section 失效。
 
@@ -317,7 +318,7 @@ if delta specs exist:
      - 其他输入                  → 重新询问
 ```
 
-**当前 v1.8.0 的加固行为**：
+**当前加固行为**：
 - sync 必须 **inline** 执行（不等完成绝不 mv——防止 changeRoot 被移走后 sync 读不到 delta spec）
 - sync 完成后对 `artifactPaths.specs.existingOutputPaths` 中**每个 capability** 重新验证：ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名
 - 任何 mismatch 都停止 archive，changeRoot 保持完整
@@ -344,30 +345,42 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 
 ---
 
-## 8. 当前行为摘要（v1.10.0）
+## 8. 当前行为摘要
 
 | 变更 | 影响位置 | 说明 |
 |---|---|---|
-| date prefix 防堆叠 | `archive.ts`：move 前检测 change name 是否已有 `YYYY-MM-DD-` 前缀 | 已有前缀则不再叠加，避免 `2026-07-21-2026-06-14-xxx`（v1.7.0 引入） |
-| recursive capability path | `spec-discovery.ts` / `findSpecUpdates()` | 支持 `specs/identity/session/spec.md`；delta/main 同路径；根级 delta 会报错（v1.7.0） |
-| Purpose carry-through | `specs-apply.ts` | 新 capability 的 delta Purpose 进入新 main spec；existing Purpose 保持权威（v1.7.0） |
-| early-sync no-op | `specs-apply.ts` | 完全一致的 ADDED/MODIFIED、已移除 REMOVED、已改名 RENAMED 不造成无意义失败或重写（v1.7.0） |
-| parser / drift robustness | `requirement-blocks.ts` / `code-fence.ts` | BOM、fenced code 不再造成假 delta 或 scenario drift（v1.7.0） |
-| inline verified sync | `archive-change.ts` | agent sync 后逐 capability 验证才允许移动 change；Cancel 保留 changeRoot（v1.7.0） |
-| **retire_capabilities** | `.openspec.yaml` marker（`archive.ts` / `specs-apply.ts`） | change 的 REMOVED 拿掉某 capability 最后一个 requirement 时，声明 `retire_capabilities: true` 可让 archive 删除整个 main spec，而不是以 "at least one requirement" 中止；无 marker 时行为不变。退役只发生在 spec 确实无法保留时，输出会列出被删 section 并给可粘贴的 `git checkout` 恢复命令；`--no-validate` 永不触发退役。与退役 capability 的 in-flight MODIFIED change 会 validate 通过、archive 拒绝（v1.8.0；v1.10.0 的 blocked-content 细分见下） |
-| 重复 canonical 名拒绝 | `archive.ts` | main spec 存在重复 canonical requirement 名时拒绝归档，避免 delta reconciliation 压掉重复块之一（v1.8.0） |
-| note-loss 提示 | `archive.ts` | 重建 spec 会丢失 requirement 旁的 note（缩进 note、未识别 heading）时，先指名会删的内容与迁移位置；merge 本身不自动搬移（v1.8.0） |
-| 交互失败可重跑 | `archive.ts` 的 `confirmOrBlock()` | agent 以 stdin closed 跑 archive 时，每个被阻塞的确认会给出需要哪个 flag 和携带原 flags 的可粘贴重跑（如 `openspec archive <name> --skip-specs --yes`）；无 change 名时从 exit 0 吞错改为 exit 1 请求 change 名（v1.8.0） |
-| 非 TTY 无 ANSI | `src/utils/interactive.ts` | stdout/stdin 不是终端时 confirm 走纯文本；无 change 名时要求先传入名字，不画菜单。避免捕获日志里塞满 cursor-move 转义（v1.9.0） |
-| spec 重建保空白 | `specs-apply.ts` | 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF，避免 Markdown whitespace 检查失败（v1.9.0） |
-| scenario-loss 认所有 `####` | `requirement-text.ts` `SCENARIO_HEADER` | requirement 下任何非 fence 的 `#### ` 子标题都算 scenario；比较时剥可选 `Scenario:` 前缀（v1.9.0） |
+| date prefix 防堆叠 | `archive.ts`：move 前检测 change name 是否已有 `YYYY-MM-DD-` 前缀 | 已有前缀则不再叠加，避免 `2026-07-21-2026-06-14-xxx` |
+| recursive capability path | `spec-discovery.ts` / `findSpecUpdates()` | 支持 `specs/identity/session/spec.md`；delta/main 同路径；根级 delta 会报错 |
+| Purpose carry-through | `specs-apply.ts` | 新 capability 的 delta Purpose 进入新 main spec；existing Purpose 保持权威 |
+| early-sync no-op | `specs-apply.ts` | 完全一致的 ADDED/MODIFIED、已移除 REMOVED、已改名 RENAMED 不造成无意义失败或重写 |
+| parser / drift robustness | `requirement-blocks.ts` / `code-fence.ts` | BOM、fenced code 不再造成假 delta 或 scenario drift |
+| inline verified sync | `archive-change.ts` | agent sync 后逐 capability 验证才允许移动 change；Cancel 保留 changeRoot |
+| **retire_capabilities** | `.openspec.yaml` marker（`archive.ts` / `specs-apply.ts`） | change 的 REMOVED 拿掉某 capability 最后一个 requirement 时，声明 `retire_capabilities: true` 可让 archive 删除整个 main spec，而不是以 "at least one requirement" 中止；无 marker 时行为不变。退役只发生在 spec 确实无法保留时，输出会列出被删 section 并给可粘贴的 `git checkout` 恢复命令；`--no-validate` 永不触发退役。与退役 capability 的 in-flight MODIFIED change 会 validate 通过、archive 拒绝（blocked-content 细分见下） |
+| 重复 canonical 名拒绝 | `archive.ts` | main spec 存在重复 canonical requirement 名时拒绝归档，避免 delta reconciliation 压掉重复块之一 |
+| note-loss 提示 | `archive.ts` | 重建 spec 会丢失 requirement 旁的 note（缩进 note、未识别 heading）时，先指名会删的内容与迁移位置；merge 本身不自动搬移 |
+| 交互失败可重跑 | `archive.ts` 的 `confirmOrBlock()` | agent 以 stdin closed 跑 archive 时，每个被阻塞的确认会给出需要哪个 flag 和携带原 flags 的可粘贴重跑（如 `openspec archive <name> --skip-specs --yes`）；无 change 名时从 exit 0 吞错改为 exit 1 请求 change 名 |
+| 非 TTY 无 ANSI | `src/utils/interactive.ts` | stdout/stdin 不是终端时 confirm 走纯文本；无 change 名时要求先传入名字，不画菜单。避免捕获日志里塞满 cursor-move 转义 |
+| spec 重建保空白 | `specs-apply.ts` | 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF，避免 Markdown whitespace 检查失败 |
+| scenario-loss 认所有 `####` | `requirement-text.ts` `SCENARIO_HEADER` | requirement 下任何非 fence 的 `#### ` 子标题都算 scenario；比较时剥可选 `Scenario:` 前缀 |
 
-### v1.10.0：retirement 的三分支
+### retirement 的三分支
 
 | 重建后状态 | archive 的诊断 | 正确处理 |
 |---|---|---|
 | 空 capability，除 title/Purpose/requirements 外无内容，且只缺 marker | 提示添加 `retire_capabilities: true` | 在有效 `.openspec.yaml` 中与 `schema:` 并列添加后重跑 |
 | 空 capability，但有 `## Notes`、orphan section、requirement 外注释等 unaccounted content | 列出 blocking lines；不会建议 marker | 把内容移入 `## Purpose` 或 canonical requirement，或人工删除 spec，再重跑 |
 | marker 已存在但不能 honor，或 marker 有效但仍有 blocking content | 报具体 invalid reason，或明确“declares retire_capabilities, but ...” | 先修 YAML/schema/boolean marker，或清理 blocking content；marker 不能绕过内容丢失保护 |
+
+### archive / parser 加固
+
+| 变更 | 影响位置 | 说明 |
+|---|---|---|
+| rename 保序 | `specs-apply.ts` `buildUpdatedSpec()` | `orderedKeys` 独立追踪位置标识，RENAMED 更新 key 但不移到 spec 尾部 |
+| Purpose 占位符检测 | `src/core/validation/purpose-placeholder.ts` | validate 检测 archive 遗留的 `TBD - created by archiving change ...`，WARNING 级、`--strict` 失败 |
+| advisory merge preflight | `src/core/validation/` | delta 与 main spec 的合并冲突在 validate 阶段报为 informational findings，不改退出码；FS 读取错误保留为 error |
+| delta section 改 list | `requirement-blocks.ts` | 重复 `## ADDED/...` header 全部应用，不再互相覆盖；FROM/TO 按 section 配对 |
+| 全 CommonMark 标记 | `requirement-blocks.ts` | REMOVED/RENAMED 接受 `[-*+]`；此前 `*`/`+` 写的 delta 静默不生效 |
+| 换行 scenario bullet | `specs-apply.ts` / retirement | 包裹换行的 bullet 读成一条，`+` 标记也识别 |
+| fence 内空行保真 | `specs-apply.ts` `collapseBlankRunsOutsideFences` | 只折叠 fence 外空行；YAML block scalar / Python / expected-output 样例不再被整理 |
 
 安全输出也有硬边界：blocking content 最多展示 3 行，每行按 Unicode code point 截到 200，超出加省略号并汇总剩余行数；NUL–US、DEL 等控制字符替换为 `?`。marker 无法 honor 的 reason 同样清理控制字符，避免伪造终端行或重绘屏幕。

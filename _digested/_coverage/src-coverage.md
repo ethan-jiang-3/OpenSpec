@@ -33,6 +33,10 @@
 | `src/core/onboarding-commands.ts` | `../mechanisms/02-tool-delivery.md`（v1.13.0 `formatOptionalWorkflowsNote`） |
 | `src/core/migration.ts`、`src/core/legacy-cleanup.ts`、`src/core/profile-sync-drift.ts` | `../mechanisms/02-tool-delivery.md` |
 | `src/core/parsers/`、`src/core/validation/`、`src/core/schemas/` | `../mechanisms/03-spec-model.md`（v1.13.0 delta sections 改 list、`[-*+]` 标记、advisory merge preflight） |
+| `src/core/validation/purpose-placeholder.ts`、`src/core/validation/constants.ts` | `../mechanisms/03-spec-model.md`（v1.11.0 Purpose 占位符检测；与 archive writer 共享 `PURPOSE_PLACEHOLDER_PREFIX/SUFFIX`） |
+| `src/utils/requirement-diff.ts` | `../spec_cli/04-command-deep-dive.md`、`../spec_cli/01-human-facing-cli.md`（v1.11.0 `show --diff` 的统一 diff） |
+| `src/core/shared-skill-target.ts` | `../mechanisms/02-tool-delivery.md`（v1.11.0 `resolveSharedSkillWriters()` 通用共享根仲裁） |
+| `src/commands/workflow/status.ts` | `../spec_cli/03-workflow-runtime-api.md`、`../spec_cli/02-machine-facing-cli.md`（v1.11.0 `status --all` envelope 与故障隔离） |
 | `src/core/list.ts`、`src/core/view.ts`、`src/core/converters/json-converter.ts` | `../mechanisms/03-spec-model.md` |
 | `src/core/templates/workflows/` | `../mechanisms/04-workflow-templates.md`（v1.12.0 propose/ff 先读代码、explore 依赖感知；v1.13.0 spec-inventory guidance） |
 | `src/core/templates/skill-templates.ts`、`src/core/templates/types.ts`、`src/core/templates/index.ts` | `../mechanisms/04-workflow-templates.md`、`../mechanisms/02-tool-delivery.md` |
@@ -51,7 +55,7 @@
 |------|----------|----------|
 | `src/commands/schema.ts` | `../schema/06-自定义-schema-实战.md`、`../spec_cli/04-command-deep-dive.md` | 后续可补 schema CLI 子命令逐实现 |
 | `src/commands/config.ts` | `../spec_cli/05-config-profile-delivery.md`、`../mechanisms/02-tool-delivery.md` | 后续可补 config key-path 操作细节 |
-| `src/commands/show.ts`、`src/commands/validate.ts`、`src/commands/change.ts`、`src/commands/spec.ts` | `../mechanisms/03-spec-model.md`、`../spec_cli/04-command-deep-dive.md` | 后续可补人类浏览 UX 细节 |
+| `src/commands/show.ts`、`src/commands/validate.ts`、`src/commands/change.ts`、`src/commands/spec.ts` | `../mechanisms/03-spec-model.md`、`../spec_cli/04-command-deep-dive.md`（v1.11.0 `show --diff`、v1.12.0 `validate --report findings` 已进 04/01/02 命令面） | 后续可补人类浏览 UX 细节 |
 | `src/core/config-prompts.ts`、`src/core/styles/palette.ts` | `../mechanisms/05-cli-infra.md` | CLI 展示/配置模板支撑层，不单独开专题 |
 | `src/utils/` | `../mechanisms/05-cli-infra.md` | 仅归档级覆盖，不逐函数消化 |
 | `src/prompts/`、`src/ui/` | `../mechanisms/05-cli-infra.md` | 仅归档级覆盖 |

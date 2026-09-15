@@ -6,6 +6,17 @@
 
 > **当前研究基线**：涉及运行时行为的结论以 OpenSpec `v1.13.0`（upstream/release tag `9d4e5974`）为准；旧版本仅用于变更史解释，不能替代当前源码验证。
 
+### 版本约定
+
+- **基线只写在这里**：各 `question.md`/`answer.md` 不再声明"本文以某版本为基线"或"核验于某版本"。升级基线只改本 README 一行。
+- **正文与版本解耦**：正文描述当前行为，不标"本文适用版本"。
+- **历史溯源保留但不可变**：`v1.11.0 起` / `v1.12.0 新增` 这类是历史事实，不随发版变化，可留在正文且升级时无需改动。
+- 若某问题整体只对特定版本有效，登记在下表。
+
+| 文件 | 适用版本 |
+|------|----------|
+| （暂无） | — |
+
 ## 和 `_digested/` 内置 FAQ 的区别
 
 | | `_digested/` 内 FAQ | `_faq_on_digested/` |
@@ -54,6 +65,7 @@ _faq_on_digested/
 - [`14_main_specs_context_scaling/`](14_main_specs_context_scaling/question.md) — archive 后主 specs 不断增长时，OpenSpec 现有的 capability 分片、按需读取与 external reference index 到底覆盖了什么；本仓库没有的 local spec discovery / retrieval 如何用 catalog、全局 context 内核与显式选择协议补上。
 - [`15_nested_capability_migration/`](15_nested_capability_migration/question.md) — 项目 capability 太多（几十个 flat capability），如何从 flat 迁移到嵌套二级目录结构？完整操作指南：taxonomy 设计、受控 rebaseline 流程、active delta 处理、config.yaml 更新、catalog 建设、验证清单、迁移后纪律。
 - [`16_upgrade-openspec-cli-and-projects/`](16_upgrade-openspec-cli-and-projects/question.md) — OpenSpec 整体怎么升级？升级完全局 CLI 之后，每个项目里还要做什么（`openspec update` 重投递 skills/commands、迁移 `.codex`→`.agents`、清理 legacy）？各安装方式的升级命令分别是什么？
+- [`17_review-and-validation-surface/`](17_review-and-validation-surface/question.md) — v1.11.0–v1.13.0 的审阅/校验工具面（`show --diff`、`status --all`、`validate --report findings`、advisory merge preflight、Purpose 占位符检测、parser 三修复）各自解决什么？合起来能在 archive 前发现哪些 specs 失真，又没补上哪些？
 
 ## 引用规范
 

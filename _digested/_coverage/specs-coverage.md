@@ -38,10 +38,12 @@
 | `openspec-conventions` | 横跨所有专题，当前分散覆盖 |
 | `docs-agent-instructions` | 和 workflow templates / docs 维护有关 |
 
-## v1.12.0→v1.13.0 新增/变更的 specs
+## v1.11.0→v1.13.0 新增/变更的 specs
 
 | spec | 变化 | 说明 |
 |------|------|------|
-| `cli-validate` | v1.12.0 扩展 | `--report findings`、advisory merge preflight findings（上游 `openspec/changes/add-validation-findings-report/` 的 design/tasks 是权威来源） |
-| `ai-tool-paths` | v1.12.0 微调 | docs 对齐当前行为（#1707） |
-| `cli-artifact-workflow` | v1.13.0 微调 | 覆盖 apply no-spec 警告路径（以 `openspec/specs/cli-artifact-workflow/spec.md` 为准） |
+| `cli-show` | v1.11.0 扩展 | `--diff`（MODIFIED unified diff、ADDED 全文、REMOVED Reason/Migration、RENAMED FROM/TO；`--json --diff` 加 `diff`/`warning`；`--store`）。本仓库 `openspec/specs/cli-show/spec.md` 尚未同步 diff 段，以 `../spec_cli/04-command-deep-dive.md` 与源码为准 |
+| `cli-artifact-workflow` | v1.11.0 / v1.13.0 | v1.11.0 `status --all`（batch envelope、故障隔离）；v1.13.0 apply no-spec 警告 + `missingPrerequisites` 缺失链 |
+| `cli-validate` | v1.11.0 / v1.12.0 | v1.11.0 Purpose 占位符 warning；v1.12.0 `--report findings`、advisory merge preflight findings（上游 `openspec/changes/add-validation-findings-report/` 的 design/tasks 是权威来源） |
+| `ai-tool-paths` | v1.11.0 / v1.12.0 | v1.11.0 Antigravity `.agent`→`.agents`；v1.12.0 docs 对齐当前行为（#1707） |
+| `command-generation` | v1.12.0 扩展 | 新增 SourceCraft Code Assistant adapter（`.codeassistant/commands/`） |

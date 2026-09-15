@@ -1,6 +1,6 @@
 # 07 - 内置 spec-driven 的 config.yaml 上下文路由（源码深挖）
 
-> 范围：本文只讨论仓库随包发布的 [`schemas/spec-driven/`](../../schemas/spec-driven/)；不展开自定义 schema、`store:` 根指针或无关 workflow。Explore 与 Archive 只用于划定 config 注入边界。源码基线为 OpenSpec `v1.8.0`（`e50bd09`；v1.7.0 时代为 `4e16790`）。这里的“内置 `spec-driven`”特指最终解析到 package source 的那一份 schema，而不只是名字恰好叫 `spec-driven`。
+> 范围：本文只讨论仓库随包发布的 [`schemas/spec-driven/`](../../schemas/spec-driven/)；不展开自定义 schema、`store:` 根指针或无关 workflow。Explore 与 Archive 只用于划定 config 注入边界。本文的 config 注入边界此后未变（此前为 `4e16790`）；当前基线见 [`../README.md`](../README.md)。这里的“内置 `spec-driven`”特指最终解析到 package source 的那一份 schema，而不只是名字恰好叫 `spec-driven`。
 
 四个 artifact 的结构契约、完成判定和 Apply gate 由 [`05-schema-driven-控制面.md`](05-schema-driven-控制面.md) 集中解释；本文在该基础上只追踪 `config.yaml` 的消费者与阶段边界。
 
@@ -15,7 +15,7 @@
 
 `apply` 不是第五个 artifact，而是 schema 中独立的执行阶段配置。因而 `config.yaml` 的合法 `rules` key 只有 `proposal`、`specs`、`design`、`tasks`；`rules.apply`、`rules.explore`、`rules.archive` 都没有消费者。四个 artifact 与 `apply` block 的权威定义都在 [`schemas/spec-driven/schema.yaml`](../../schemas/spec-driven/schema.yaml)；schema 类型也把 `artifacts` 与可选的 `apply` 定义为两个不同字段（[`SchemaYamlSchema`](../../src/core/artifact-graph/types.ts)）。
 
-`config.yaml` 也不是覆盖所有阶段的同一种提示词路由器。v1.7.0 把 artifact 规则和 operation guidance 明确分开：
+`config.yaml` 也不是覆盖所有阶段的同一种提示词路由器。把 artifact 规则和 operation guidance 明确分开：
 
 - `context` 与 `rules.<artifact-id>` 进入 `openspec instructions <artifact>`；`rules.apply`、`rules.explore`、`rules.archive` 仍没有消费者。
 - `references` 进入 artifact instructions 和 `openspec instructions apply`，但只是实时生成的上游 spec 索引，不内联 spec 正文。
@@ -54,7 +54,7 @@ proposal ────────┤                        ├────> tas
                                                    both          tasks
 ```
 
-也就是说，`proposal` 完成后，`specs` 和 `design` **同时 ready**；`design` 并不依赖 `specs`。`ArtifactGraph.getNextArtifacts()` 只检查直接 `requires`，`getBuildOrder()` 用 Kahn 队列产生确定顺序（[`graph.ts`](../../src/core/artifact-graph/graph.ts)）。v1.7.0 将同级 tie-break 改为**schema 声明顺序**，所以内置 schema 的顺序为 `proposal, specs, design, tasks`；这只是推荐/展示顺序，不把 `specs -> design` 变成依赖。proposal 完成后的 ready 集合仍同时包含 `specs` 与 `design`。
+也就是说，`proposal` 完成后，`specs` 和 `design` **同时 ready**；`design` 并不依赖 `specs`。`ArtifactGraph.getNextArtifacts()` 只检查直接 `requires`，`getBuildOrder()` 用 Kahn 队列产生确定顺序（[`graph.ts`](../../src/core/artifact-graph/graph.ts)）。将同级 tie-break 改为**schema 声明顺序**，所以内置 schema 的顺序为 `proposal, specs, design, tasks`；这只是推荐/展示顺序，不把 `specs -> design` 变成依赖。proposal 完成后的 ready 集合仍同时包含 `specs` 与 `design`。
 
 ### 每个 artifact 的直接依赖与产物
 
@@ -177,7 +177,7 @@ apply:
 
 1. **Gate 只直接检查 `tasks`。** `generateApplyInstructions()` 不递归复查 `tasks` 的 `specs`/`design` 依赖；它只按 `apply.requires` 查对应 output 是否存在。
 2. **`contextFiles` 扫描全部四个 artifact。** 对当前存在的 `proposal.md`、所有匹配 `specs/**/*.md` 的文件、`design.md`、`tasks.md` 分别建立数组；缺失类别直接省略。
-3. **`tracks: tasks.md` 决定进度。** checkbox parser（`parseTaskLines()` in `src/utils/task-progress.ts`）识别 `-`/`*` 开头的 `[ ]`/`[x]`/`[X]`，**允许前导缩进（v1.8.0 起缩进子任务也计入）**；tasks 文件缺失、没有 checkbox，或缺少 required artifact 时都会得到 `blocked`。
+3. **`tracks: tasks.md` 决定进度。** checkbox parser（`parseTaskLines()` in `src/utils/task-progress.ts`）识别 `-`/`*` 开头的 `[ ]`/`[x]`/`[X]`，**允许前导缩进（缩进子任务也计入）**；tasks 文件缺失、没有 checkbox，或缺少 required artifact 时都会得到 `blocked`。
 4. **schema instruction 只在 `ready` 分支使用。** `blocked` 与 `all_done` 会改用运行时生成的提示；全部 checkbox 完成时返回 `all_done` 和 archive 建议。无论 state 如何，返回对象还可含 `context` 与 `operationGuidance`，它们是 prompt-level input，不改变 gate 或完成条件。
 
 实现均在 [`parseTaskLines()`（`src/utils/task-progress.ts`）与 `generateApplyInstructions()`](../../src/commands/workflow/instructions.ts)，行为测试见 [`artifact-workflow.test.ts`](../../test/commands/artifact-workflow.test.ts)。Apply skill 随后要求 agent 读取 `contextFiles` 中的**每一条**路径再实施（[`apply-change.ts`](../../src/core/templates/workflows/apply-change.ts)）。
@@ -204,7 +204,7 @@ Explore 是 stance，不是 schema phase。生成的 workflow 先调用 `openspe
 
 ### 7.1 线性文案与真实 DAG 的边界
 
-schema description 仍以 `proposal → specs → design → tasks` 作为可读的推荐序列，但 `design.requires` 只有 `proposal`。v1.7.0 已将 status/continue 等同级选择固定为 schema 声明顺序，因此内置 schema 会先推荐 `specs` 再推荐 `design`；这消除了旧版按字母序先推 design 的矛盾，却不改变 `design` 可与 specs 并行生成的 DAG。文档应统一画成 `proposal -> {specs, design} -> tasks`，再说明推荐展示顺序来自 schema 声明。
+schema description 仍以 `proposal → specs → design → tasks` 作为可读的推荐序列，但 `design.requires` 只有 `proposal`。现将 status/continue 等同级选择固定为 schema 声明顺序，因此内置 schema 会先推荐 `specs` 再推荐 `design`；这消除了旧版按字母序先推 design 的矛盾，却不改变 `design` 可与 specs 并行生成的 DAG。文档应统一画成 `proposal -> {specs, design} -> tasks`，再说明推荐展示顺序来自 schema 声明。
 
 ### 7.2 `design` 的“可选”文案与 DAG 冲突
 
@@ -232,7 +232,7 @@ schema instruction 要求 `Migration Plan`、`Open Questions` 等 section，但�
 
 ### 7.7 operation input 的边界仍应有回归覆盖
 
-v1.7.0 已为 Apply/Archive 引入 `context` 与 operation guidance，且 Explore 会读取 context/rules。后续测试重点不再是“这些 surface 完全没有 config”，而是防止边界倒退：artifact `rules.*` 不应泄漏成 Apply/Archive operation guidance；`operations.apply/archive` 不能伪造 CLI state、root 或完成条件；Archive CLI 本身不能因 prompt guidance 改变确定性 merge。相关测试应覆盖 [`project-config.test.ts`](../../test/core/project-config.test.ts)、[`instruction-loader.test.ts`](../../test/core/artifact-graph/instruction-loader.test.ts) 与 workflow template tests。
+现为 Apply/Archive 引入 `context` 与 operation guidance，且 Explore 会读取 context/rules。后续测试重点不再是“这些 surface 完全没有 config”，而是防止边界倒退：artifact `rules.*` 不应泄漏成 Apply/Archive operation guidance；`operations.apply/archive` 不能伪造 CLI state、root 或完成条件；Archive CLI 本身不能因 prompt guidance 改变确定性 merge。相关测试应覆盖 [`project-config.test.ts`](../../test/core/project-config.test.ts)、[`instruction-loader.test.ts`](../../test/core/artifact-graph/instruction-loader.test.ts) 与 workflow template tests。
 
 ## 8. 只面向内置 spec-driven 的 config 写法
 

@@ -16,7 +16,7 @@
 
 ### 1. 用 `openspec/config.yaml` 写清项目语境
 
-`config.yaml` 可以给 artifact 生成阶段注入 context/rules，也可在 v1.8.0 用 `operations.apply.guidance` / `operations.archive.guidance` 分别给 Apply/Archive 传入项目级短稳定步骤。它们不能直接重写 schema gate，但能让 proposal/design/tasks 从一开始就写对，并让非代码 apply 的操作边界更清楚。
+`config.yaml` 可以给 artifact 生成阶段注入 context/rules，也可用 `operations.apply.guidance` / `operations.archive.guidance` 分别给 Apply/Archive 传入项目级短稳定步骤。它们不能直接重写 schema gate，但能让 proposal/design/tasks 从一开始就写对，并让非代码 apply 的操作边界更清楚。
 
 示例：
 

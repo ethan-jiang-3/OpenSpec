@@ -43,4 +43,4 @@
 - [handbook 第 09 章](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md) 是面向使用者的压缩实践版；这里是它的规划和源码级上游。
 - [FAQ 14](../../_faq_on_digested/14_main_specs_context_scaling/answer.md) 深入研究 main-spec context scaling 与上游缺口；这里将其转为可操作的 catalog 协议。
 
-本专题以 OpenSpec v1.7.0 为基线。它不改变 OpenSpec runtime、默认 schema 或本仓库现有 main specs 的布局。
+capability 身份与 discovery 模型自 v1.7.0 起未变（v1.11.0–v1.13.0 的 `show --diff`、`status --all`、`validate --report findings` 只是审阅手段，不改变 capability 规划语义）；当前基线见 [`../README.md`](../README.md)。本专题不改变 OpenSpec runtime、默认 schema 或本仓库现有 main specs 的布局。

@@ -23,6 +23,10 @@
 | `test/core/command-generation/`、`test/core/shared/` | `../mechanisms/02-tool-delivery.md` |
 | `test/core/completions/`、`test/core/completion-tip.test.ts`、`test/cli-e2e/completion-tip.test.ts`、`test/commands/completion.test.ts` | `../mechanisms/05-cli-infra.md` |
 | `test/core/parsers/`、`test/core/validation*.test.ts`、`test/core/converters/` | `../mechanisms/03-spec-model.md`（v1.13.0 新增 `test/core/specs-apply.fence-preservation.test.ts`、`test/core/validation.archive-preflight.test.ts`） |
+| `test/core/purpose-placeholder.test.ts`、`test/core/validation.purpose-placeholder.test.ts` | `../mechanisms/03-spec-model.md`（v1.11.0 Purpose 占位符检测） |
+| `test/commands/show-diff.test.ts` | `../spec_cli/04-command-deep-dive.md`（v1.11.0 `show --diff`） |
+| `test/commands/status-all.test.ts` | `../spec_cli/03-workflow-runtime-api.md`（v1.11.0 `status --all`） |
+| `test/core/completions/generators/`、`test/core/completions/validation-report.test.ts` | `../mechanisms/05-cli-infra.md`（v1.11.0 Fish 不再回退文件路径） |
 | `test/core/templates/` | `../mechanisms/04-workflow-templates.md`（v1.13.0 新增 `test/core/templates/spec-inventory.test.ts`） |
 | `test/core/templates/main-spec-paths.test.ts` | `../schema/02-内置-spec-driven-详解.md`、`../internal-spec-driven/02-propose-提案生成.md` |
 | `test/package-install-scripts.test.ts` | `../mechanisms/05-cli-infra.md`（v1.12.0 git 安装免 pnpm） |

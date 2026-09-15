@@ -8,13 +8,13 @@
 
 OpenSpec 有两种 profile（配置模式）：
 
-这里列出的 `/opsx:*` 是 Claude 的 OpenSpec workflow command，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`；Codex v1.8.0 使用 `$openspec-*` skills。下文命令表要按宿主 adapter 理解，不能把 slash 语法推广到所有工具。
+这里列出的 `/opsx:*` 是 Claude 的 OpenSpec workflow command，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`；Codex 使用 `$openspec-*` skills。下文命令表要按宿主 adapter 理解，不能把 slash 语法推广到所有工具。
 
-> **v1.11.0 artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的 metadata。每条 task 自带 verification；capability 退役若仍有未归属内容会被阻止。配置方面，artifact `rules` 只影响 artifact 生成，Apply/Archive 读 project `context` 与对应 operation guidance。
+> **artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的 metadata。每条 task 自带 verification；capability 退役若仍有未归属内容会被阻止。delta 解析接受全部 CommonMark 列表标记、重复 section header 全部生效、code fence 内空行保真、rename 保序。配置方面，artifact `rules` 只影响 artifact 生成，Apply/Archive 读 project `context` 与对应 operation guidance。
 
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
-| **core** | 6 个命令（v1.6.0 起） | 快速开发，简单场景 | 是（默认） |
+| **core** | 6 个命令 | 快速开发，简单场景 | 是（默认） |
 | **custom** | 12 个命令 | 复杂项目，需要更多控制 | 否 |
 
 ### 检查你当前的 Profile
@@ -33,8 +33,8 @@ openspec config profile
 /opsx:propose <name>   # 创建 change + 生成所有 artifacts
 /opsx:explore          # 探索/调研模式
 /opsx:apply [name]     # 实现 tasks
-/opsx:update           # 更新现有 artifact（v1.6.0 纳入 core）
-/opsx:sync             # 同步 delta specs（v1.4.0 从 custom 移入 core）
+/opsx:update           # 更新现有 artifact（core）
+/opsx:sync             # 同步 delta specs（core）
 /opsx:archive [name]   # 归档 change
 ```
 
@@ -974,7 +974,7 @@ rm -rf openspec/changes/add-task-csv-export/
 |------|--------------|----------|
 | `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把 delta spec 写成全量重写；REMOVED 最后一个 requirement 时，先清理未归属内容，再用合法 `retire_capabilities: true` 明确授权删除 |
 | `design.md` | 实现发现方案变化时及时回头修改，说明原因和风险 | 只改代码不改设计，后人看不到真实取舍 |
-| `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节；**v1.8.0 起缩进的子任务也计入进度**（`  - [ ] 1.1.1` 会阻止 "✓ Complete"），别只盯顶层 checkbox |
+| `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节；**缩进的子任务也计入进度**（`  - [ ] 1.1.1` 会阻止 "✓ Complete"），别只盯顶层 checkbox |
 | `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析（`retire_capabilities` 与 `schema:` 并存，见上） |
 
 一条实用判断准则：
@@ -986,7 +986,7 @@ rm -rf openspec/changes/add-task-csv-export/
 
 #### tasks：可追踪不等于可验证
 
-v1.10.0 的内置 tasks instruction 要求每个 checkbox 自己回答“如何证明完成”。下面这种写法能被进度 parser 追踪，却不符合生成契约：
+内置 tasks instruction 要求每个 checkbox 自己回答“如何证明完成”。下面这种写法能被进度 parser 追踪，却不符合生成契约：
 
 ```markdown
 ## 1. Export
@@ -1050,5 +1050,45 @@ openspec status --change <change-name> --json
 ```
 
 前者检查 change/spec 结构，后者检查当前 artifact 状态和下一步运行时上下文。
+
+---
+
+## 改完怎么审：delta 保真与审阅工具
+
+手改 delta 最怕的不是报错，而是**静默不生效**——命令报成功，需求没动。现在的解析器把几类"写了但没应用"的漏洞补上了，也给了几个在 archive 前就能看穿失真的工具。
+
+### 先认识四类"静默失效"
+
+| 你写的 | 旧行为 | 现在 |
+|---|---|---|
+| `*`/`+` 开头的 REMOVED/RENAMED bullet | 只认 `-`，delta 匹配不到任何东西：validate 报 valid、archive 报成功 | `[-*+]` 全部接受 |
+| 重复的 `## ADDED Requirements`（含 fence 示例自带的重复 header） | title-keyed record 互相覆盖，后写的 body 吃掉先写的 | 每个 section 按书写顺序保留、全部应用，报错指向正确行号 |
+| scenario bullet 换行到第二行 | 续行被当成"无法归属内容"，capability 无法退役 | 换行 bullet 读成一条 |
+| code fence 里的 YAML/Python/expected-output 空行 | archive 每次跑都"整理"一遍 | `collapseBlankRunsOutsideFences` 只折叠 fence 外空行 |
+
+外加一条顺序保真：`RENAMED` + `MODIFIED` 同一条 requirement 时，rename 更新 key 但**不移到 spec 尾部**，archive diff 保持可读。
+
+### 三个在 archive 前看穿失真的工具
+
+```bash
+# 1. 隔离 delta 真正变化的行，而不是重贴整个 requirement 块
+openspec show <change> --diff            # MODIFIED 输出彩色 unified diff
+openspec show <change> --diff --json     # 在 MODIFIED delta 上加 diff / warning 字段
+openspec show <change> --diff --store <id>
+
+# 2. 一次扫全部 active change，单个失败不中止全扫
+openspec status --all                    # JSON: { "changes": [...], "root" }，部分失败 exit 1
+
+# 3. 批量校验只列有问题的条目
+openspec validate --report findings --all      # 须配 --all/--changes/--specs/--archived
+```
+
+`validate` 还带一个 advisory merge preflight：delta 与 main spec 的合并冲突会作为 **informational findings** 出现（不改退出码）——archive 会拒绝的东西，validate 阶段就亮出来。新 capability archive 后若 Purpose 还是 `TBD - created by archiving change ...`，`validate` 以 warning 报出（`--strict` 失败）。
+
+### 判断锚点
+
+- **"validate 过了" ≠ "delta 生效了"。** 此前，`*`/`+` 标记和重复 header 是 validate 查不出的静默失效；解析器修了之后，结构性改完仍应 `show --diff` 看一眼真实差异。
+- **MODIFIED 只改一行，就用 `--diff` 确认**，不要靠通读整块猜。
+- **archive 前的动作顺序**：`validate <change>`（结构 + merge 预检）→ `show <change> --diff`（差异是否符合预期）→ 再 archive。
 
 ---

@@ -72,15 +72,15 @@ repo-local init/update 根据 global config 的 `delivery` 分流：
 | `commands` | 只生成 commands，并删除 managed skills |
 | `both` | 两者都生成 |
 
-这张表描述的是投递策略，不是每个工具都必然支持三种形态。v1.8.0 的 Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.agents/skills/openspec-*/SKILL.md`（v1.7.0 时代是 `.codex/skills/`），不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
+这张表描述的是投递策略，不是每个工具都必然支持三种形态。Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.agents/skills/openspec-*/SKILL.md`（此前是 `.codex/skills/`），不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
 
-### v1.10.0→v1.11.0：共享 `.agents` 根与通用写入权仲裁
+### 共享 `.agents` 根与通用写入权仲裁
 
-v1.8.0 起 `.agents/skills/` 由 `agents`、`codex`、`zed` 三方共享。v1.11.0 将共享根仲裁从硬编码三元组升级为通用 `resolveSharedSkillWriters()` 机制：
+`.agents/skills/` 由 `agents`、`codex`、`zed` 三方共享。将共享根仲裁从硬编码三元组升级为通用 `resolveSharedSkillWriters()` 机制：
 
-1. **Antigravity 迁入 `.agents/` 共享根**（v1.11.0）：`antigravity` 的 `skillsDir` 从 `.agent` 改为 `.agents`（`.agent` 变成 `legacySkillsDirs`），旧 `.agent/workflows/openspec-*.md` 在 update 时被迁移或保留用户定制。检测键现在是 `.agent` 或 `.agents/workflows`（而非裸 `.agents/` 根）。
+1. **Antigravity 迁入 `.agents/` 共享根**：`antigravity` 的 `skillsDir` 从 `.agent` 改为 `.agents`（`.agent` 变成 `legacySkillsDirs`），旧 `.agent/workflows/openspec-*.md` 在 update 时被迁移或保留用户定制。检测键现在是 `.agent` 或 `.agents/workflows`（而非裸 `.agents/` 根）。
 
-2. **通用写入权仲裁**（v1.11.0 新增 `src/core/shared-skill-target.ts` 的 `resolveSharedSkillWriters`）：不再硬编码 Codex/Zed/agents 三方的排序规则。该函数遍历所有选中工具的 `skillsDir`，对每个共享物理根（如 `.agents/skills/`）选出一个 active writer：
+2. **通用写入权仲裁**（新增 `src/core/shared-skill-target.ts` 的 `resolveSharedSkillWriters`）：不再硬编码 Codex/Zed/agents 三方的排序规则。该函数遍历所有选中工具的 `skillsDir`，对每个共享物理根（如 `.agents/skills/`）选出一个 active writer：
    - **已有 compatible owner**（通过 `.openspec-target` marker 或推断）胜出。
    - **skills-native 渲染器优先于 adapter-backed**，因为其引用可被共享树的所有消费者使用。
    - **新根默认指向 Codex**，因为其渲染器同时包含 Codex 和通用 skill 调用形式。
@@ -125,12 +125,12 @@ workspace update 是例外：当前只生成 skills，即使 global delivery 是
 
 所以 update 可能删除 OpenSpec 管理的工具侧文件，但不应删除用户业务文件。
 
-### v1.12.0→v1.13.0：init/update 的行为补强
+### init/update 的行为补强
 
-- **`.gitkeep`（v1.12.0）**：`init` 为空目录写 `.gitkeep` 占位——空目录不进 Git，初始化骨架一旦 commit 就丢空目录结构。重跑 init 恢复缺失的目录 marker，不覆盖已有文件、不跟随 marker symlink。
-- **共享 IDE restart 提示（v1.12.0）**：`src/core/shared/ide-restart.ts` 提供 `"Restart your IDE to refresh commands."` / `"Restart your IDE to refresh skills."`，`init.ts` 与 `update.ts` 共用同一来源；message 覆盖「移除 workflow」场景，不再声称生成了新文件。措辞和条件单一来源，不再漂移。
-- **命名 profile 遗漏的工作流（v1.13.0）**：`src/core/onboarding-commands.ts` 新增 `formatOptionalWorkflowsNote(installedWorkflows)`——返回 profile 没装的 workflow 名单（`new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard`），全装齐返回 null。`init`/`update` 输出里显式列出这些可加项和 `openspec config profile` 命令，没装的命令不再读起来像「setup 坏了」。
-- **update 检测损坏的 command 文件（v1.13.0）**：之前只比对 skill 文件的 `generatedBy` 版本戳——skill 是新版本就报「All up to date」，但旁边手改/截断的 command 文件完全没被检查。现在 update 也比对 command 文件内容（只针对 skills+commands 都配置的工具；commands-only 路径不变），`--force` 之外多了一条修复路径。
+- **`.gitkeep`**：`init` 为空目录写 `.gitkeep` 占位——空目录不进 Git，初始化骨架一旦 commit 就丢空目录结构。重跑 init 恢复缺失的目录 marker，不覆盖已有文件、不跟随 marker symlink。
+- **共享 IDE restart 提示**：`src/core/shared/ide-restart.ts` 提供 `"Restart your IDE to refresh commands."` / `"Restart your IDE to refresh skills."`，`init.ts` 与 `update.ts` 共用同一来源；message 覆盖「移除 workflow」场景，不再声称生成了新文件。措辞和条件单一来源，不再漂移。
+- **命名 profile 遗漏的工作流**：`src/core/onboarding-commands.ts` 新增 `formatOptionalWorkflowsNote(installedWorkflows)`——返回 profile 没装的 workflow 名单（`new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard`），全装齐返回 null。`init`/`update` 输出里显式列出这些可加项和 `openspec config profile` 命令，没装的命令不再读起来像「setup 坏了」。
+- **update 检测损坏的 command 文件**：之前只比对 skill 文件的 `generatedBy` 版本戳——skill 是新版本就报「All up to date」，但旁边手改/截断的 command 文件完全没被检查。现在 update 也比对 command 文件内容（只针对 skills+commands 都配置的工具；commands-only 路径不变），`--force` 之外多了一条修复路径。
 
 ## drift 为什么重要
 
@@ -159,24 +159,24 @@ formatFile(content: CommandContent): string
 | 工具 | command 位置 | 说明 |
 |------|--------------|------|
 | Claude | `.claude/commands/opsx/<id>.md` | 项目内 command 文件，带 frontmatter |
-| Codex | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 skills-only；以 `$openspec-*` 调用，`.codex` 是 legacy 迁移源 |
+| Codex | `.agents/skills/openspec-*/SKILL.md` | skills-only；以 `$openspec-*` 调用，`.codex` 是 legacy 迁移源 |
 | agents（通用） | `.agents/skills/openspec-*/SKILL.md` | vendor-neutral 目标，与 Codex、Zed、Antigravity 共享 `.agents` 根 |
-| GitHub Copilot | `.github/skills/` 等 | v1.8.0 本地 skill + opt-in cloud coding-agent 文件（见下） |
-| Antigravity | `.agents/skills/` + `.agents/workflows/opsx-<id>.md` | v1.11.0 从 `.agent` 迁入 `.agents`；共享技能根通过 `resolveSharedSkillWriters` 仲裁。`.agent` 是 legacy 迁移源 |
-| Command Code | `.commandcode/skills/` + `.commandcode/commands/opsx-<id>.md` | v1.9.0 adapter-backed：skills 调用 `/openspec-*`，slash command 为 `/opsx-<id>` |
-| Code Assistant | `.codeassistant/commands/opsx-<id>.md` | v1.12.0 adapter-backed：SourceCraft Code Assistant（VS Code 扩展）的 slash command 面，YAML frontmatter（description），`/opsx-*` 形式 |
-| Zed Agent | `.agents/skills/openspec-*/SKILL.md` | v1.10.0 skills-only；Zed v1.4.2+ 用 `/openspec-*` 或 `@openspec-*`，不生成 `/opsx` command |
+| GitHub Copilot | `.github/skills/` 等 | 本地 skill + opt-in cloud coding-agent 文件（见下） |
+| Antigravity | `.agents/skills/` + `.agents/workflows/opsx-<id>.md` | 从 `.agent` 迁入 `.agents`；共享技能根通过 `resolveSharedSkillWriters` 仲裁。`.agent` 是 legacy 迁移源 |
+| Command Code | `.commandcode/skills/` + `.commandcode/commands/opsx-<id>.md` | adapter-backed：skills 调用 `/openspec-*`，slash command 为 `/opsx-<id>` |
+| Code Assistant | `.codeassistant/commands/opsx-<id>.md` | adapter-backed：SourceCraft Code Assistant（VS Code 扩展）的 slash command 面，YAML frontmatter（description），`/opsx-*` 形式 |
+| Zed Agent | `.agents/skills/openspec-*/SKILL.md` | skills-only；Zed 1.4.2+ 用 `/openspec-*` 或 `@openspec-*`，不生成 `/opsx` command |
 | OpenCode | `.opencode/commands/opsx-<id>.md` | 接受输入的 command 在完整 `**Input**` block 后注入一次 `**Provided arguments**: $ARGUMENTS` |
 
 这个差异很重要：不是所有 command artifacts 都在 repo root 下。delivery 层要尊重每个工具的发现机制。
 
 OpenCode 只有在正文没有 `$ARGUMENTS`/位置参数占位符、且 Input 不是 `None required` 时才注入；已有占位符绝不重复。这是 adapter 的参数传递修复，不应套到 Zed 的 skill invocation 上。
 
-v1.9.0/.11.0 起，遗留迁移路径遵守同一条 one-writer 规则：若 `.agents` 已被某个工具占用（marker 或已有树），`openspec update` **不会**凭全局信号把 skills 改写成另一工具语法、也不会翻 ownership。`resolveSharedSkillWriters` 决定哪个工具是 active writer，其他共享同一物理根的工具跳过 skill 生成但保留 command surface。跳过时该工具的 repo-local legacy 文件（如 `.agent/workflows/` 或 `.codex/prompts/openspec-*.md`）一并保留。真正的首次安装（还没有 `.agents` 树）不受影响。
+遗留迁移路径遵守同一条 one-writer 规则：若 `.agents` 已被某个工具占用（marker 或已有树），`openspec update` **不会**凭全局信号把 skills 改写成另一工具语法、也不会翻 ownership。`resolveSharedSkillWriters` 决定哪个工具是 active writer，其他共享同一物理根的工具跳过 skill 生成但保留 command surface。跳过时该工具的 repo-local legacy 文件（如 `.agent/workflows/` 或 `.codex/prompts/openspec-*.md`）一并保留。真正的首次安装（还没有 `.agents` 树）不受影响。
 
 ## GitHub Copilot：本地 skill 与 opt-in cloud coding-agent
 
-GitHub Copilot 是 v1.8.0 的一等工具目标，但被拆成两层，其中 cloud 层默认不生成：
+GitHub Copilot 是一等工具目标，但被拆成两层，其中 cloud 层默认不生成：
 
 | 层 | 产物 | 默认 |
 |----|------|------|

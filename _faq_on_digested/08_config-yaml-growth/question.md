@@ -6,7 +6,7 @@
 
 更具体地说：
 
-- `openspec init` 会不会交互式地引导我把 `context` 和 `rules` 填进去？v1.10.0 的 `--language` 能替代到什么程度？
+- `openspec init` 会不会交互式地引导我把 `context` 和 `rules` 填进去？`--language` 能替代到什么程度？
 - 有没有 `openspec config` 之类的命令能加规则、改背景？
 - 如果都没有，我让 AI agent（比如 Claude Code）帮我写行不行——openspec 有没有引导 agent 去做这件事？
 - 一句话：对不懂细节的普通用户，config.yaml 到底怎么"自然地"长出来？

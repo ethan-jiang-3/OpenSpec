@@ -10,19 +10,21 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.11** |
+| **手册版本** | **v1.12** |
 | **对齐 OpenSpec** | 1.13.0 |
 | **本版日期** | 2026-09 |
 
 **两个版本维度（别混）**：
 
-- **手册版本**（v1.11）：本手册自身的版次。理解加深、内容大修时升版。
+- **手册版本**（v1.12）：本手册自身的版次。理解加深、内容大修时升版。
 - **对齐 OpenSpec**（1.13.0）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
 
-- **版本敏感页**（如 store 篇等与特定版本特性深度绑定的页面）在内容中注明适用版本，不要求在文件名标版本号。
+- **基线只写在本页**（`对齐 OpenSpec` 一行）：各章正文不再声明"适用/核验于某版本"。升级对齐版本只改本页一处。
 - **概念页**（01-06、08、09 等）通用、不标版本；随对齐 OpenSpec 升级时复审。
+- **历史溯源保留但不可变**：正文里 `v1.11.0 起` 这类是历史事实，不随发版变化，升级时**不需要**改动。
+- **版本敏感页**：若某章只对特定版本范围有效，登记在下表，而不是写在章首。目前 07（store）与 90（机器协议）随基线走，无需单独登记。
 - 每次大修 / 对齐新版本，在下面 changelog 记一行。
 
 **变更记录**：
@@ -41,6 +43,7 @@
 | v1.9 | 2026-08 | 1.11.0 | 对齐 v1.11：`show --diff`（彩色 unified diff per requirement）；`status --all`（单进程全部 active change，故障不阻塞）；Explore 写入前确认（命名 artifacts、ask yes/no、单独等待）；Antigravity `.agent → .agents` 迁移，`resolveSharedSkillWriters()` 通用共享根仲裁；`validate` Purpose 占位符 warning（archive 遗留 TBD）；archive rename 保序（不移到 spec 尾部）；`schema init --default` 写入正确键、失败回滚；Fish completion 不再回退文件名；Explore 图例纯 ASCII。 |
 | v1.10 | 2026-09 | 1.12.0 | 对齐 v1.12：`validate --report findings`（批量只输出有问题的条目，须配显式 scope）；validate 把 archive 会拒绝的 delta 合并冲突报为 informational findings；新增 SourceCraft Code Assistant 工具（`.codeassistant/commands/`）；`init` 空目录写 `.gitkeep`；init/update 共享 IDE restart 提示；propose/ff 起草前先读项目代码；explore 依赖感知提问；npm git 安装免 pnpm、Node20 chalk 兼容、PowerShell completion 文档化。 |
 | v1.11 | 2026-09 | 1.13.0 | 对齐 v1.13：apply 无 spec 警告 + 完整 `missingPrerequisites` 缺失链（不再只报第一跳）；delta parser 三修复（重复 section 全应用、`*`/`+` 列表标记、scenario 换行 bullet）；archive 代码 fence 内空行保真；`update` 检测损坏 command 文件；init/update 列出 profile 遗漏的工作流；propose 规划前加载项目上下文；guidance 用 spec-inventory verb 读 specs；新增 CONTRIBUTING.md。 |
+| v1.12 | 2026-09 | 1.13.0 | 正文对齐：12 新增「delta 保真与审阅工具」整节（四类静默失效、`show --diff`/`status --all`/`validate --report findings`、advisory preflight、Purpose 占位符）；09/11/90/99 补审阅命令、apply `missingPrerequisites`、工具投递（Antigravity/SourceCraft/`resolveSharedSkillWriters`）；各章定位句版本戳升到 v1.13.0；`00-index` 工具速查标题去版本误标。 |
 
 ---
 
@@ -276,7 +279,7 @@ graph LR
 | `openspec completion` | 生成/安装/卸载 shell 自动补全 |
 | `openspec feedback` | 提交 GitHub issue 反馈 |
 
-### v1.10.0 工具与环境速查
+### 工具与环境速查（v1.10.0 起，含 v1.12.0/v1.13.0）
 
 | 项 | 当前行为 |
 |---|---|
@@ -357,7 +360,7 @@ graph LR
 - **代码块语言分工固定**：`text`=目录树/命令示意/ASCII 图、`yaml`=真实配置、`bash`=CLI、`mermaid`=关系/状态/时序图、`markdown`=artifact 样例。
 - **图种**：主力 `graph`/`sequenceDiagram`，按场景灵活选择 `gantt`（时间线/阶段对比）、`mindmap`（概念全景/脑图）、`gitGraph`（Git 分支流程）；同篇同种 ≤3 张、勿与文字流程列表重复；**选图种的第一原则是"这个场景用它最直观"，不是"别的篇没用过所以不能用"**。
 - **emoji 克制**：**禁用风险灯**（🟢🟡🔴 这类孤例符号）；`✅`/`❌` 仅用于判断表/对错示例，**同篇 ≤10 处、不得与风险灯同框**。
-- **版本耦合写进开篇定位句**（`(v1.4.0)` / `适用 openspec ≥ 1.4`），不散落正文；不把版本编码进文件名。
+- **版本与正文解耦**：正文不声明"本文适用/核验于某版本"，也不在开篇写版本戳；当前基线只由 [00-index 的「对齐 OpenSpec」](#版本与维护) 一处声明。历史溯源可用"自 vX 起"，但它是历史事实、不作为本文件版本声明，升级时无需改动。不把版本编码进文件名。
 - **收尾速查统一命名**："压缩结论"或"最该带走的 N 句话"，**不另造**"黄金法则 / 速查卡"等同义词。
 - **术语铁律：OpenSpec 核心概念在中文行文中必须保持英文原词**——`spec`/`specs`（非"规格"）、`change`（非"变更"，当指 OpenSpec 的 change 对象时）、`artifact`（非"工件"）、`capability`（非"能力"，当指 `specs/<capability>/` 组织单位时）、`requirement`（非"要求"，当指 `### Requirement:` 标题时）、`scenario`（非"场景"，当指 `#### Scenario:` 时）、`delta spec`（非"增量规格"）。**判断标准**：问自己"这个中文词在这里是不是某个 OpenSpec 术语的替身"——是，则用英文；只是中文叙述中的一般描述，可保留中文。**架构概念标签**（如"项目事实层""入口层"）和**方法论概念**（如"弱约束""行为合同"）在首次定义时标注英文对应，形成 `中文（English）` 双语模式，确保读者跨语言查阅时能准确对应。
 - **三层递进梯度**：装修这类生活比喻是帮没概念的读者建立直觉的"拐杖"，随读者爬升平滑淡出，不一直赖着——**初级浓**（生活类比建立直觉、概念最少、图多）、**中级淡**（仅在核心概念处短锚点呼应、不大段铺陈；概念精选讲透、不面面俱到吓走读者；图多）、**高级不铺垫装修**（读者已建立软件开发心智模型，用纯概念/设计动机论述；但允许装修作**精炼对照锚点**，如 03 用"勘测/方案/施工/验收"对照串四动词 `explore→propose→apply→archive`），按需用 graph/gantt/架构图。各篇装修浓度据此定位，不各写各的。
@@ -367,7 +370,7 @@ graph LR
 
 - **单一事实源 = `00-index.md`**：版本、目录、术语、命令与详细文件地图以它为准；`README.md` 是默认外部入口，维护高层阅读路线并链接回本页。其他明确承担入口职责的 Markdown 也可维护其专题范围内的路线，但不复制可执行命令、详细文件地图或整套全局跳转规则。
 - **不硬编码会过时的数字**（如"36 问"）。
-- **freshness 二分必须可判定**：版本敏感页在开篇定位句标明适用版本，概念页不标；概念页 = 01–06、08、09。概念页只在不写会误导操作的边界处作一次简短版本说明。
+- **freshness 以入口为准**：不在各章声明适用版本；升级对齐版本只改本页「对齐 OpenSpec」一处。若某章只对特定版本范围有效，登记在本页的版本相关表，而不是写在章首。
 - **新增篇章落入既有编号区间**（01–02 / 03–09 / 10–15 / 90 / 99），不新增混合层级；文件名含难度层级词。
 
 ---

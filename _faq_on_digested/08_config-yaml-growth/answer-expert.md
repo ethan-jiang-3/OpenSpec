@@ -4,7 +4,7 @@
 
 专家自己写 `config.yaml`——完全掌控 spec-driven schema **之内**的提示层（context / rules）。agent 在这条路上**不当作者，只当 spot 助手**：review 弱规则、按需起草一条、校验 key、扫覆盖度。要改工作流结构本身（artifact / 依赖 / 模板）见 [`answer-guru.md`](answer-guru.md)。
 
-v1.8.0 的例外是现成的 operation input：Apply/Archive 的项目级短稳定步骤可写 `operations.apply/archive.guidance`，无需把它们伪装成 `rules.apply/archive` 或为了这一件事 fork schema。
+例外是现成的 operation input：Apply/Archive 的项目级短稳定步骤可写 `operations.apply/archive.guidance`，无需把它们伪装成 `rules.apply/archive` 或为了这一件事 fork schema。
 
 ```text
 config 提示层（context/rules）最深；不动 schema 结构层

@@ -122,9 +122,17 @@ openspec update
 
 刷新 Claude Code 入口层。
 
-v1.10.0 的结束提示按**本次实际生成的 surface**判断：只有某个需要 IDE reload 的工具确实收到新 commands/skills，CLI 才打印 `Restart your IDE ...`。Claude Code 这类 CLI 宿主通常直接读取刷新后的文件，不会因为和某个 IDE 工具同时配置就被笼统要求重启；如果 update 没打印重启提示，就不要把重启当固定步骤。
+结束提示按**本次实际生成的 surface**判断：只有某个需要 IDE reload 的工具确实收到新 commands/skills，CLI 才打印 `Restart your IDE ...`。Claude Code 这类 CLI 宿主通常直接读取刷新后的文件，不会因为和某个 IDE 工具同时配置就被笼统要求重启；如果 update 没打印重启提示，就不要把重启当固定步骤。
 
 > **模型切换是 Claude Code 层的事，不影响 OpenSpec。** OpenSpec 的 `status`、`instructions`、schema、artifacts 都不因换模型而变。需要切模型时，在 Claude Code 的 settings 或启动环境里配置 endpoint/key/model，结束后恢复原配置即可——不要把 API key 写进项目文件。
+
+### init / update 的投递行为
+
+- **空目录写 `.gitkeep`**：`openspec init` 给空目录（如空 capability 目录）写 `.gitkeep`，初始化出来的骨架 commit 后空目录结构不丢。重跑 init 会补回缺失的 marker，不覆盖已有文件、不跟随 symlink。
+- **列出 profile 遗漏的工作流**：init/update 的输出会点名 `new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard` 可以用 `openspec config profile` 加上——没装的命令不再读起来像"setup 坏了"。
+- **检测损坏的 command 文件**：`openspec update` 以前只比对 skill 文件的 `generatedBy` 版本戳，skill 是新的就报"All up to date"，旁边手改/截断的 command 文件完全没被检查。现在也比对 command 文件内容并自动修复；只影响 skills+commands 都配置的工具。
+- **共享 restart 提示**：init 与 update 共用 `src/core/shared/ide-restart.ts` 的提示，单一来源；message 覆盖"移除 workflow"场景，不再声称生成了新文件。
+- **共享 skill 根**：Codex、Zed、Antigravity 与 vendor-neutral `agents` 写同一 `.agents/skills/` 树，由 `resolveSharedSkillWriters()` 仲裁单一写入者；Antigravity 旧 `.agent/` 树在 update 时迁移。SourceCraft Code Assistant 走 adapter 路线，写 `.codeassistant/commands/opsx-<id>.md`。
 
 ---
 

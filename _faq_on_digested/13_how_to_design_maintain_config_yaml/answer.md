@@ -2,7 +2,7 @@
 
 ## 一句话
 
-把 `config.yaml` 当成**项目 profile + artifact-specific / operation-specific guidance**，不要当成项目百科或运行时控制器。真正的阶段化上下文主要由 schema 的 artifact DAG 和 change artifacts 承担：proposal 记录分类和决定，specs/design 直接读取 proposal 并分别细化行为与技术后果，tasks 再读取 specs/design，Apply 最后读取当前已有的实际 artifacts；v1.8.0（v1.7.0 引入）再把 project context 与 Apply/Archive guidance 明确路由到两个 operation。
+把 `config.yaml` 当成**项目 profile + artifact-specific / operation-specific guidance**，不要当成项目百科或运行时控制器。真正的阶段化上下文主要由 schema 的 artifact DAG 和 change artifacts 承担：proposal 记录分类和决定，specs/design 直接读取 proposal 并分别细化行为与技术后果，tasks 再读取 specs/design，Apply 最后读取当前已有的实际 artifacts；再把 project context 与 Apply/Archive guidance 明确路由到两个 operation。
 
 ## 先拆掉一个错误前提
 
@@ -51,7 +51,7 @@ Archive 的稳定项目步骤              -> config.operations.archive.guidance
 
 ### language context 的落点
 
-v1.10.0 的 `openspec init --language "<language>"` 只是把一条语言偏好写入**新项目**的 `config.context`。因此它会被 artifact instructions 消费，也会随 project context 到达 Apply/Archive；它不是 schema 字段、翻译引擎或结构本地化开关。已有 config 时 init 拒绝覆盖，应手工合并到现有 context。artifact prose 可本地化，但结构 heading 与 `SHALL`/`MUST` 保持英文，确保 parser/validator 契约不变。
+`openspec init --language "<language>"` 只是把一条语言偏好写入**新项目**的 `config.context`。因此它会被 artifact instructions 消费，也会随 project context 到达 Apply/Archive；它不是 schema 字段、翻译引擎或结构本地化开关。已有 config 时 init 拒绝覆盖，应手工合并到现有 context。artifact prose 可本地化，但结构 heading 与 `SHALL`/`MUST` 保持英文，确保 parser/validator 契约不变。
 
 在写第一版前，再问“下游运行时谁拥有 Flow”：传统程序、MD/Agent 控制 Flow，或程序/Graph 控制 Flow。这个分类决定 project profile 应描述哪张 authority map；它不是新的 config 字段。两种混合模型的边界和初稿分别见 [`00-initial-config-baselines.md`](00-initial-config-baselines.md)。
 

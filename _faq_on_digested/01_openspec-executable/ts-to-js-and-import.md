@@ -214,6 +214,6 @@ Python 里通常有个 guard `if __name__ == '__main__': main()` 防止被 impor
 | TS → JS 谁编译的？ | `pnpm build` → `build.js` → 调 tsc |
 | 什么时候编译的？ | `npm publish` 之前（prepublishOnly hook），安装者不需要编译 |
 | npm 包里有源码吗？ | 没有。`files` 字段只包含 `dist/`、`bin/`、`schemas/` |
-| 安装时会跑 completion 脚本吗？ | 不会。v1.10.0 的 registry 包已删除 `postinstall`；completion tip 改到首次 CLI 运行后的 stderr。 |
+| 安装时会跑 completion 脚本吗？ | 不会。registry 包已删除 `postinstall`；completion tip 改到首次 CLI 运行后的 stderr。 |
 | 为什么 import 就跑起来了？ | ESM 的 `import` 会执行模块顶层代码，`program.parse()` 就在顶层 |
 | 这个模式叫什么？ | side-effect import / 自执行入口模块 |

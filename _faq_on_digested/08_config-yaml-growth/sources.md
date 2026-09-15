@@ -2,7 +2,7 @@
 
 本 FAQ 的 answer（hub [`answer.md`](answer.md) + 四条路 [`answer-beginner.md`](answer-beginner.md) / [`answer-intermediate.md`](answer-intermediate.md) / [`answer-expert.md`](answer-expert.md) / [`answer-guru.md`](answer-guru.md)）用到的所有源码与文档引用，集中在这里，避免分散在正文干扰阅读。
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线。`src/core/project-config.ts` 还解析 `operations`；Apply/Archive instructions 会接收 project `context` 和对应 `operations.*.guidance`。下方任何只列 context/rules、或说 Apply 不接收 config 的旧来源说明，均以这个当前边界为准。
+源码引用。`src/core/project-config.ts` 还解析 `operations`；Apply/Archive instructions 会接收 project `context` 和对应 `operations.*.guidance`。下方任何只列 context/rules、或说 Apply 不接收 config 的旧来源说明，均以本节所述边界为准。
 
 ## 源码（OpenSpec CLI）
 
@@ -14,7 +14,7 @@
 | `src/cli/index.ts` | `init --language <language>` CLI surface |
 | `openspec/specs/cli-init/spec.md`、`test/core/init.test.ts` | flag 行为、已有 config 不覆盖与输入边界 |
 | `src/commands/config.ts:268-279` | `openspec config` 只管全局 JSON；preAction 钩子拒绝 project scope（*"Project-local config is not yet implemented"*） |
-| `src/commands/schema.ts:870-887` | `schema init --default` 写 `defaultSchema`——init 外唯一写 config.yaml 的地方（不碰 context/rules） |
+| `src/commands/schema.ts` | `schema init --default` 写入 loader 实际读取的 `schema` 键并删除遗留 `defaultSchema`（修复；此前写入的 `defaultSchema` 不被 project config 消费者读取）——init 外唯一写 config.yaml 的地方（不碰 context/rules） |
 | `src/core/templates/workflows/propose.ts:64-65,103-105` | agent 把 context/rules 当只读约束（"do NOT include in output"） |
 | `src/core/templates/workflows/onboard.ts` | onboard skill 全文不提 config.yaml/context/rules（grep 零匹配） |
 | `src/core/artifact-graph/instruction-loader.ts:319-321,335-336` | context/rules 缺失时静默 `undefined`；`openspec instructions` 返回带这两个字段（agent 能看到当前状态）；每次重读、即时生效 |

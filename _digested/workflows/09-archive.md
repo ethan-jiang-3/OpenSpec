@@ -4,13 +4,13 @@
 
 `src/core/templates/workflows/archive-change.ts` → `getArchiveChangeSkillTemplate()` + `getOpsxArchiveCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:archive [change-name]`，Codex v1.8.0 用 `$openspec-archive-change`；另有确定性 CLI `openspec archive <name>`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：command adapter 可为 `/opsx:archive [change-name]`，Codex 用 `$openspec-archive-change`；另有确定性 CLI `openspec archive <name>`。下文的 `/opsx:` 仅表示前者。
 > **agent 看到的名字**：`openspec-archive-change`（skill）/ `OPSX: Archive`（command）
 > **独立 CLI 命令**：**有**——`openspec archive <name>` 做 programmatic validate → merge → move。host archive workflow 做 pre-flight checks + agent-driven sync + 手动 mv。**两条路径不同**：CLI 做完整替换式合并，agent workflow 做智能合并。
 > **profile**：core（大多数用户默认可见）
-> **v1.8.0 要点（v1.7.0 起）**：① 选择 change 后先读取 `openspec instructions archive --json` 的 context/operation guidance；② status 的 `skipped` specs artifact 视为满足；③ sync 仍必须 inline 并逐 capability 验证；④ CLI merge 对 fully early-synced operations 采用 no-op / warnings，而非无意义重写；⑤ 归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`（v1.8.0）。
-> **v1.9.0 追加**：非 TTY 时 confirm 无 ANSI、无 change 名则要求先传入名字；重建 spec 保留 `## Requirements` 周围空行且以单个 LF 结尾；scenario-loss 认所有 `####` 子标题。
-> **v1.10.0 追加**：CLI retirement 失败分为“只缺 marker”“有 blocking content”“marker 已读但不可 honor/仍被内容阻塞”三路；只有第一路建议添加 marker。
+> **要点**：① 选择 change 后先读取 `openspec instructions archive --json` 的 context/operation guidance；② status 的 `skipped` specs artifact 视为满足；③ sync 仍必须 inline 并逐 capability 验证；④ CLI merge 对 fully early-synced operations 采用 no-op / warnings，而非无意义重写；⑤ 归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`。
+> **追加**：非 TTY 时 confirm 无 ANSI、无 change 名则要求先传入名字；重建 spec 保留 `## Requirements` 周围空行且以单个 LF 结尾；scenario-loss 认所有 `####` 子标题。
+> **追加**：CLI retirement 失败分为“只缺 marker”“有 blocking content”“marker 已读但不可 honor/仍被内容阻塞”三路；只有第一路建议添加 marker。
 
 ## 一句话
 
@@ -138,9 +138,9 @@ template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然�
 | Don't block archive on warnings | warning 只是确认 |
 | Preserve .openspec.yaml when moving | 随目录移动 |
 | If sync requested, run openspec-sync-specs **inline** | 不等同步完成绝不 mv |
-| Never archive while spec sync is still in flight | inline sync + verify before mv（v1.6.0 新增 guardrail） |
+| Never archive while spec sync is still in flight | inline sync + verify before mv（新增 guardrail） |
 | If delta specs exist, always run sync assessment | 不跳过对比 |
-| Route Cancel as stop | 不 archive，changeRoot 完整（v1.6.0 新增） |
+| Route Cancel as stop | 不 archive，changeRoot 完整 |
 
 ## retirement 失败的操作步骤
 

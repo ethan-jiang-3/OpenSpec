@@ -75,7 +75,7 @@ repo-local 的长期事实是：
 openspec/specs/
 ```
 
-v1.5.0 的 store/reference 模型提供跨 repo 上下文引用，但它也不是”agent 私有记忆”。它是本机可管理的、可读的、可检查的：
+store/reference 模型提供跨 repo 上下文引用，但它也不是”agent 私有记忆”。它是本机可管理的、可读的、可检查的：
 
 ```text
 ~/.openspec/stores/registry.yaml     ← 注册的 store

@@ -70,7 +70,7 @@ tasks 是 apply 阶段的 checklist。审视重点是"agent 看到每一条就�
 | 覆盖 | tasks 是否覆盖了 specs 的所有 requirement？ | specs 有 3 个 requirement，tasks 只覆盖了 2 个 |
 | 验证 | 每条 checkbox 是否声明自己的 test、command、observable behavior 或 artifact inspection？ | 只有实现动作，或只在末尾放一个笼统 “run tests” |
 
-tasks 最常见的 gap：**太粗或无 verification**。Propose 阶段 agent 容易写出 "Implement X" 这种一行 task——文件存在、gate 通过、apply instructions 返回 `ready`，但一实施就卡住。v1.10.0 的 schema instruction 要求每条 task 自带 verification；这仍是生成/审视契约，不是 `openspec validate` 的硬门。
+tasks 最常见的 gap：**太粗或无 verification**。Propose 阶段 agent 容易写出 "Implement X" 这种一行 task——文件存在、gate 通过、apply instructions 返回 `ready`，但一实施就卡住。schema instruction 要求每条 task 自带 verification；这仍是生成/审视契约，不是 `openspec validate` 的硬门。
 
 ## artifacts 间的一致性
 
@@ -102,7 +102,7 @@ tasks: ⚠ 2.1 太粗（"Implement OAuth login"），建议拆成 3-4 步
 
 ## 参考来源
 
-源码引用以 v1.10.0（`1ebddd1`）为当前基线：
+源码引用：
 
 | 来源 | 用到的结论 |
 |---|---|

@@ -95,7 +95,7 @@ operations:
       - Review migration/rollback evidence before archive.
 ```
 
-**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类），不支持纯文本格式。v1.8.0（v1.7.0 起）的 Apply/Archive 不是 artifact rule consumers：它们读取 project `context` 以及 `operations.apply/archive.guidance`；`rules.apply` / `rules.archive` 不会成为 operation 指令。
+**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类），不支持纯文本格式。Apply/Archive 不是 artifact rule consumers：它们读取 project `context` 以及 `operations.apply/archive.guidance`；`rules.apply` / `rules.archive` 不会成为 operation 指令。
 
 ### config.yaml vs schema：对比表
 
@@ -136,7 +136,7 @@ operations:
 
 ### 写一条配置前，先说出“谁会消费它”
 
-`config.yaml` 不是所有阶段共享的万能 prompt。把正确内容放进错误 consumer，效果仍等于没有配置。内置 `spec-driven` 在 v1.8.0（v1.7.0 起）的路由是：
+`config.yaml` 不是所有阶段共享的万能 prompt。把正确内容放进错误 consumer，效果仍等于没有配置。内置 `spec-driven` 的路由是：
 
 | 阶段 | 自动拿到什么 | 这意味着什么 |
 |---|---|---|
@@ -298,7 +298,7 @@ schema 决定：
 
 所以 change 的实际解析顺序，通常会优先看 change 自己，再回退到项目默认。
 
-v1.10.0 还会在**当前 schema 根本不产生 specs artifact**时，由 `openspec new change` 自动写入：
+还会在**当前 schema 根本不产生 specs artifact**时，由 `openspec new change` 自动写入：
 
 ```yaml
 schema: docs-only
@@ -343,7 +343,7 @@ schema 管的是：
    - custom：自选命令（可以额外启用 new/continue/ff/verify/bulk-archive/onboard 等）
    - 这是"入口层"的选择
 
-   v1.10.0 会展开 custom profile 的依赖：若选择 `archive` 或 `bulk-archive` 却漏了 `sync`，CLI 会在第一个依赖它的 workflow 前自动插入 `sync`；已有 `sync` 时不重复、不重排。例如 `[verify, archive]` 解析为 `[verify, sync, archive]`。这不会把 custom 降级成 core，也不会自动加入其他 core workflows。
+   会展开 custom profile 的依赖：若选择 `archive` 或 `bulk-archive` 却漏了 `sync`，CLI 会在第一个依赖它的 workflow 前自动插入 `sync`；已有 `sync` 时不重复、不重排。例如 `[verify, archive]` 解析为 `[verify, sync, archive]`。这不会把 custom 降级成 core，也不会自动加入其他 core workflows。
 
 **⚠️ 警告**：
 - 切换 profile 可能会删除或添加 workflow 文件

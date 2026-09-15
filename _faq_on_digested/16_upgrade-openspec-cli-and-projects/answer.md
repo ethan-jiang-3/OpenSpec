@@ -18,7 +18,7 @@
 - `DO_NOT_TRACK=1` / `OPENSPEC_TELEMETRY=0`
 - CI 环境
 - `NODE_ENV=test`
-- 全局 config `telemetry.enabled === false`（v1.8.0 起 telemetry 关闭会连版本检查一起关）
+- 全局 config `telemetry.enabled === false`（telemetry 关闭会连版本检查一起关）
 
 所以如果为了关遥测而设了 `telemetry.enabled: false`，`openspec update` 就不会再提示新版本，需要你自己留意。
 
@@ -77,23 +77,24 @@ openspec update                          # 每个项目跑一次（或带 --forc
 
 `openspec update` 是从「当前这个 CLI」的模板生成文件的。**先跑 update、后升 CLI** = 用旧 CLI 生成旧文件，等于白做，升完还得再跑一遍。所以正确姿势是：先升全局 CLI（或让 `openspec update` 的交互提示替你升），**升完再对每个项目跑一次 `openspec update`**。
 
-## v1.12.0 → v1.13.0 的具体提醒（来自同步记录 0009/0010）
+## 具体提醒（来自同步记录 0009/0010）
 
-- **`openspec validate --report findings`（v1.12.0）**：批量校验时可只输出有 error/warning/information 的条目，保留全量总数和退出码。必须配显式 scope（`--all`/`--changes`/`--specs`/`--archived`），不能带 item name，`archived` 与 active scope 不能混用；默认 `full` 报告不变。同版本起，delta 与 main spec 的合并冲突在 validate 阶段就以 informational findings 亮出来——archive 会拒绝的东西 validate 就能看到。
-- **`openspec update` 检测损坏的 command 文件（v1.13.0）**：以前只比对 skill 文件的 `generatedBy` 版本戳，skill 是新的就报「All up to date」，旁边手改/截断的 command 文件完全没被检查（`--force` 是唯一修复路径）。现在 update 也比对 command 文件内容，自动修复。只影响 skills+commands 都配置的工具。
-- **`openspec init`/`update` 会列出 profile 遗漏的工作流（v1.13.0）**：输出里会点名 `new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard` 可以用 `openspec config profile` 加上。没装的命令不再读起来像「setup 坏了」。
-- **`openspec instructions apply` 无 spec 警告（v1.13.0）**：change 没有 delta specs 且没声明 `skip_specs: true` 时，apply 报 warning 并给两条出路（写 specs / 声明 `skip_specs`）；被阻塞的 apply 报完整 `missingPrerequisites` 链而不是只报第一跳。
-- **新工具（v1.12.0）**：SourceCraft Code Assistant 写 `.codeassistant/commands/opsx-<id>.md`（VS Code 扩展 slash command）。
-- **`.gitkeep`（v1.12.0）**：`openspec init` 给空目录写 `.gitkeep`，空目录结构在 Git 里保得住。
+- **`openspec validate --report findings`**：批量校验时可只输出有 error/warning/information 的条目，保留全量总数和退出码。必须配显式 scope（`--all`/`--changes`/`--specs`/`--archived`），不能带 item name，`archived` 与 active scope 不能混用；默认 `full` 报告不变。此后，delta 与 main spec 的合并冲突在 validate 阶段就以 informational findings 亮出来——archive 会拒绝的东西 validate 就能看到。
+- **`openspec update` 检测损坏的 command 文件**：以前只比对 skill 文件的 `generatedBy` 版本戳，skill 是新的就报「All up to date」，旁边手改/截断的 command 文件完全没被检查（`--force` 是唯一修复路径）。现在 update 也比对 command 文件内容，自动修复。只影响 skills+commands 都配置的工具。
+- **`openspec init`/`update` 会列出 profile 遗漏的工作流**：输出里会点名 `new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard` 可以用 `openspec config profile` 加上。没装的命令不再读起来像「setup 坏了」。
+- **`openspec instructions apply` 无 spec 警告**：change 没有 delta specs 且没声明 `skip_specs: true` 时，apply 报 warning 并给两条出路（写 specs / 声明 `skip_specs`）；被阻塞的 apply 报完整 `missingPrerequisites` 链而不是只报第一跳。
+- **新工具**：SourceCraft Code Assistant 写 `.codeassistant/commands/opsx-<id>.md`（VS Code 扩展 slash command）。
+- **`.gitkeep`**：`openspec init` 给空目录写 `.gitkeep`，空目录结构在 Git 里保得住。
+- **安装面更宽容**：`npm install github:...` 这类 git 安装的 `prepare` 改为 `node build.js`，不再假设 pnpm 在场；依赖解析保持 Node 20 LTS 可用的 chalk 版本。registry 包已无 `postinstall`，但源码/git/directory 安装仍会跑 `prepare` 构建。
 - **升级后可见能力**：parser 三修复（重复 section 全应用、`*`/`+` 列表标记、scenario 换行）、archive fence 内空行保真、propose 先读项目代码、explore 依赖感知提问——这些说明 CLI 升级与逐项目 update 是两个步骤：前者升级命令/核心行为，后者刷新项目里的投递面。
 
-## v1.9.0 的具体提醒（来自变更日志 0006）
+## 具体提醒（来自变更日志 0006）
 
 `git merge` 拉进 v1.9.0 源码只会改 `git describe` 和 `package.json` 版本，**不会**改变 PATH 上的 CLI。要让 `--tools command-code`、`validate --archived` 真正可用，每台机器的全局 CLI 都要独立升级到 v1.9.0，然后各项目 `openspec update`（见 [`0006-v1.8.0-to-v1.9.0.md`](../../_digested/_change_log/0006-v1.8.0-to-v1.9.0.md) 的「验收基线」）。v1.8.0 引入的 `--tools agents` / Copilot / `retire_capabilities` 仍然需要 ≥1.8.0 的 CLI。
 
 v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题：若该目录已被 `agents` 目标占用，不会改写成 Codex 语法，也不会清掉被跳过工具的 repo-local legacy 文件。
 
-## v1.11.0 的具体提醒（来自同步记录 0008）
+## 具体提醒（来自同步记录 0008）
 
 - `openspec show <change> --diff`：对 MODIFIED requirement 输出彩色 unified diff，`--json --diff` 增补 `diff` 和 `warning` 字段；`--store <id>` 可对 store 做 diff。
 - `openspec status --all`：一个进程扫全部 active change；JSON 含 `{ "changes": [...], "root" }` 稳定排序 envelope；单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。
@@ -106,13 +107,15 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 - Fish completion 不再回退到文件路径建议。
 - Explore 图例改纯 ASCII。
 
-## v1.10.0 的具体提醒（来自完整同步记录 0007）
+## 具体提醒（来自完整同步记录 0007）
 
 - registry 包已删除 `postinstall`，全局安装不再打印 completion 文案，也不再触发 allow-scripts 警告；git/directory install 仍可能通过 `prepare` 构建。
 - completion 提示改到首次符合条件、且 action 真正到达 root `postAction` 的 CLI 运行收尾阶段，只写 **stderr** 且只显示一次；设置 `process.exitCode` 的失败仍到达 hook，直接 `process.exit(1)` 的失败则跳过且不消费提示。JSON、CI、非 TTY、completion 子命令、已安装/不支持 shell 会 defer/suppress，`OPENSPEC_NO_COMPLETIONS=1` 可显式抑制。
 - `openspec update` 只在本轮实际更新了需要 reload 的 IDE-resident commands/skills 时打印 `Restart your IDE for changes to take effect.`。只更新 CLI-only 工具时不提示，不能再把“每次 update 后都重启”当通则。
 - 新工具 `zed` 写 `.agents/skills/openspec-*/SKILL.md`，与 Codex、vendor-neutral `agents` 共用受控根；Zed Agent 至少需 v1.4.2，且 untrusted worktree 不开放 project-local skills。
-- 其他升级后可见能力还包括 `init --language`、OpenCode `$ARGUMENTS`、no-spec schema 自动 marker、custom archive profile 自动加入 sync，以及更安全的 capability retirement 诊断。它们进一步说明 CLI 升级与逐项目 update 是两个步骤：前者升级命令/核心行为，后者刷新项目里的投递面。
+- custom profile 的 workflow 依赖展开：选了 `archive`/`bulk-archive` 却没有 `sync` 时，投递层会在第一个 archive workflow 之前自动插入 `sync`（已有则不重复、不重排，输入数组不被原地修改；legacy Codex migration 同样经过该展开）。只改 delivery 选项、展开后集合碰巧等于 core 时，不再误降级为 core。
+- feedback 保真：issue title 归一化空白并按 grapheme 截到 72 字符，完整 message 保留在 body 的 `## Summary`，可选 `--body` 放在 `## Details`；没有 `gh` 的 manual fallback 使用同一结构，截断不会丢正文。
+- 其他升级后可见能力还包括 `init --language`、OpenCode `$ARGUMENTS`、no-spec schema 自动 marker，以及更安全的 capability retirement 诊断。它们进一步说明 CLI 升级与逐项目 update 是两个步骤：前者升级命令/核心行为，后者刷新项目里的投递面。
 
 ## 相关材料
 

@@ -20,7 +20,7 @@
 - 改变项目业务内容：通常不会。
 - 改变工具工作流外壳：会。
 - 主要风险：用户以为不会删除内容，但它会清理被取消选中的 workflow 产物。
-- v1.10.0 的 restart 提示是条件性的：只有本次实际影响了 registry 中标记 `requiresIdeRestart` 的 IDE surface 才显示；仅更新 CLI/即时加载 skills 的工具不提示。
+- restart 提示是条件性的：只有本次实际影响了 registry 中标记 `requiresIdeRestart` 的 IDE surface 才显示；仅更新 CLI/即时加载 skills 的工具不提示。
 
 ## 二、发现与浏览类
 
@@ -30,12 +30,12 @@
 - 核心对象：change/spec 列表。
 - 输出语义：概览。
 - 是否适合做 workflow 决策：有限。
-- v1.9.0：项目外不再 silent pass；仅遗留 `openspec/project.md` 项目保留 cwd fallback。
+- 项目外不再 silent pass；仅遗留 `openspec/project.md` 项目保留 cwd fallback。
 - 主要边界：知道“有什么”，但不知道“下一步怎么走”。
 
 ### `view`
 
-- 角色：交互式仪表盘；v1.7.0 按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
+- 角色：交互式仪表盘；按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
 - 核心对象：聚合浏览。
 - 更偏人类，不偏自动化。
 
@@ -45,7 +45,7 @@
 - 核心对象：单个 change 或 spec。
 - 输出语义：对象内容与解析结果。
 - 主要边界：展示已有内容，不做工作流编排。
-- v1.11.0 新增 `--diff`：对 MODIFIED requirement 输出彩色 unified diff（增量行绿色、删除行红色），ADDED 输出全文，REMOVED 输出 Reason/Migration，RENAMED 输出 FROM/TO。`--json --diff` 保留既有 payload 形状，MODIFIED delta 增补 `diff` 和 `warning` 字段。`--store <id>` 解析 main spec 指向该 store。
+- 新增 `--diff`：对 MODIFIED requirement 输出彩色 unified diff（增量行绿色、删除行红色），ADDED 输出全文，REMOVED 输出 Reason/Migration，RENAMED 输出 FROM/TO。`--json --diff` 保留既有 payload 形状，MODIFIED delta 增补 `diff` 和 `warning` 字段。`--store <id>` 解析 main spec 指向该 store。
 
 ## 三、校验与治理类
 
@@ -75,7 +75,7 @@
 
 - 角色：状态投影器。
 - 边界：告诉你“到哪一步”，不告诉你具体该写什么内容。
-- v1.11.0 新增 `--all`：一个进程返回全部 active change 状态。JSON envelope 含 `{ "changes": [<status>, ...], "root" }`，按 change name 排序。单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。与 `--change <name>` 互斥。
+- 新增 `--all`：一个进程返回全部 active change 状态。JSON envelope 含 `{ "changes": [<status>, ...], "root" }`，按 change name 排序。单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。与 `--change <name>` 互斥。
 
 ### `instructions <artifact>`
 
@@ -101,7 +101,7 @@
 ### `schemas`
 
 - 角色：schema 发现接口。
-- 边界：暴露流程定义空间，不负责具体 change 生命周期。v1.9.0 起走 canonical root selection，接受 `--store <id>`，拒绝 `--store-path`。
+- 边界：暴露流程定义空间，不负责具体 change 生命周期。走 canonical root selection，接受 `--store <id>`，拒绝 `--store-path`。
 
 ## 五、配置与定制类
 

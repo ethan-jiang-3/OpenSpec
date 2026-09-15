@@ -83,7 +83,7 @@ Phase 2 的代码扫描是自动化的——agent 搜索五种信号：
 
 agent 被要求选一个**小且明确**的任务（~15-20 分钟可完成），而不是大重构。
 
-v1.10.0 的 onboard 模板让生成的每条 task 自带 `— verify: <test/command/observable/artifact>`。Apply 时先执行该 verification，有证据后才勾选；跨多个实现 task 的端到端检查才单列 Integration Verification。这是教学模板与 schema instruction 的生成契约，不代表 `openspec validate` 新增逐项验证硬校验。
+onboard 模板让生成的每条 task 自带 `— verify: <test/command/observable/artifact>`。Apply 时先执行该 verification，有证据后才勾选；跨多个实现 task 的端到端检查才单列 Integration Verification。这是教学模板与 schema instruction 的生成契约，不代表 `openspec validate` 新增逐项验证硬校验。
 
 ## Guardrails
 
