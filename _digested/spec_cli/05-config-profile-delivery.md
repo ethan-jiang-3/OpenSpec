@@ -75,6 +75,10 @@ custom 选择 `archive` 或 `bulk-archive` 时，`getProfileWorkflows()` 会确�
 
 “这些 workflow 产物最终要以什么外壳落到工具目录里？”
 
+### v1.13.x：handoff 按生成时解析（optional-workflow）
+
+explore 等工作流对 `/opsx:propose`、`/opsx:apply` 的引用现在在**生成时**按 profile 解析（`src/core/templates/optional-workflow.ts`）：custom profile 没装 propose 时，explore 的 handoff 自动回退到自身 capture 路径或 CLI，不再指向一个不存在的命令。配套生成的 skills 只描述 profile 实际安装的 workflow（`626269ed`），且 skill description 含自然语短语（"openspec propose"、"do an openspec apply"，`5f5914e7`）；`openspec update` 这个 CLI 命令本身被刻意不归任何 workflow skill 认领。
+
 ## 4. `init` 在做什么
 
 `init` 的行为可以概括为：
@@ -153,6 +157,8 @@ skill / command 只是投递载体。
 而不是：
 
 `config` -> 某个 proposal/spec/design 立即变化
+
+**v1.13.1 起的全局 config 防重写保护（#1876）**：全局 config 文件存在但无法解析（或根不是 JSON 对象）时，任何命令——包括只读命令——都**不会隐式重写它**：不再把 fallback 默认值当遥测同意、不再铸造新匿名 ID 写回。telemetry 与 update check 将其视为已 opt-out；`config set`/`unset`/`profile` 直接报错并指向 `openspec config edit`；只有 `config reset --all` 仍会整体替换。此前一个尾逗号的手编 typo 就可能让 `openspec list` 悄悄覆盖掉整个 profile 与遥测选择。
 
 ## 9. 为什么需要把这一层单独写出来
 

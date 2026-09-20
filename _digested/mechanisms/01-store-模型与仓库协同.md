@@ -76,3 +76,12 @@ openspec store unregister platform-api # 注销
 | workset CLI | `src/commands/workset.ts`、`workset-input.ts`、`workset-prompts.ts` |
 | doctor CLI | `src/commands/doctor.ts` |
 | 共享辅助 | `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` |
+
+
+## v1.13.x store 行为修正
+
+| 修复 | 行为 |
+|------|------|
+| `store remove` 拒绝删除包含其他注册 store 的目录（`9f8dec5d`） | 此前会连同嵌套 store（如 submodule 形式的 vendored store）一起递归删除、registry 条目悬空；现在报错并逐个点名要先跑的 `openspec store unregister` |
+| 名为 `specs`/`changes` 的 store 不再被误当 root（`208b5b55`） | — |
+| `store setup --no-init-git` 可在已有 git 仓库内运行（`5d221456`） | dotfiles 仓库用户可以把 store 放在推荐的 `~/openspec/<id>` 路径；显式/默认 init-git 仍拒绝嵌套仓库 |

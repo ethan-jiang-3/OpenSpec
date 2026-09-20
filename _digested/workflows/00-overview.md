@@ -20,7 +20,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 
 | 文件 | workflow id | 类型 | 一句话 |
 |---|---|---|---|
-| `explore.ts` | `explore` | 发现 | stance，非 workflow；探索想法、调查问题、澄清需求 |
+| `explore.ts` | `explore` | 发现 | stance，非 workflow；探索想法、调查问题、澄清需求。v1.13.x：聚焦式 discovery、spec inventory、capture 即确认、handoff 按生成时解析 |
 | `propose.ts` | `propose` | 规划 | 快速路径：创建 change + 生成全部 artifact 直到 apply-ready |
 | `new-change.ts` | `new` | 规划 | 只创建 change scaffold，不生成 artifact 内容 |
 | `continue-change.ts` | `continue` | 规划 | 增量路径：每次只推进一个 ready artifact |
@@ -103,6 +103,13 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | **Guardrails** | 绝对不能做的事 |
 | **Artifact Creation Guidelines** | （仅规划类）怎么写 artifact |
 | **Fluid Workflow Integration** | （仅 apply）和其他 workflow 怎么交织 |
+
+## v1.12.x–v1.13.x template 层新机制
+
+- **optional-workflow**（`src/core/templates/optional-workflow.ts`）：workflow 之间的相互引用（如 explore → propose）在**生成时**按 profile 解析，没装的 workflow 自动回退到 explore 自身 capture 或 CLI——custom profile 不再产出指向不存在命令的 handoff。
+- **project-root guard**（`src/core/templates/workflows/project-root.ts`）：所有 workflow 写文件前先确认项目已 `openspec init`（`openspec/config.yaml` 存在），绝不把创建 `openspec/` 目录当成副作用。
+- **顶层标题**（v1.13.1 `3312af47`）：proposal/spec/design/tasks 模板以 `# <Artifact>` 开头。
+- **`Next:` 行**（v1.13.1）：`status` text 输出结尾给出推进命令。
 
 ## 和 CLI runtime API 的关系
 

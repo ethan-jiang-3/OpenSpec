@@ -74,6 +74,11 @@ repo-local init/update 根据 global config 的 `delivery` 分流：
 
 这张表描述的是投递策略，不是每个工具都必然支持三种形态。v1.8.0 的 Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.agents/skills/openspec-*/SKILL.md`（v1.7.0 时代是 `.codex/skills/`），不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
 
+### v1.13.x 投递面补充
+
+- **universal 目标的 picker 呈现**（`7de2404`）：vendor-neutral 目标在 `init` 工具选择器中显示为 **"Other / Universal (shared .agents skills)"**；搜索框可用 `universal`/`other`/`generic`/`custom`/`proprietary`/`unlisted`/`unsupported`/`vendor-neutral`/`agents.md` 命中；`--tools <未知>` 的报错也会指向它。
+- **skill description 含自然语短语**（`5f5914e7`）：每个 workflow skill 的 description 写明用户实际会打的短语（"openspec propose"、"opsx apply" 等）；`openspec update` 这个 CLI 命令被刻意不归任何 workflow skill 认领（它不是 update-change workflow）。commands-only 安装不受影响。
+
 ### v1.10.0→v1.11.0：共享 `.agents` 根与通用写入权仲裁
 
 v1.8.0 起 `.agents/skills/` 由 `agents`、`codex`、`zed` 三方共享。v1.11.0 将共享根仲裁从硬编码三元组升级为通用 `resolveSharedSkillWriters()` 机制：

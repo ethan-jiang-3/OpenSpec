@@ -85,7 +85,7 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 
 ## v1.12.0–v1.13.1 的具体提醒（来自同步记录 0009）
 
-- `openspec validate --report findings`：bulk 场景的精简 findings 报告；validate 还会预报 archive 会拒收的 delta。
+- `openspec validate --report findings`：bulk 场景的精简 findings 报告；delta 内 merge-conflict 标记报告为 informational findings（不改退出码）。
 - `openspec status` 结尾有 `Next:` 行，直接给出下一步命令。
 - **v1.13.0 是 archive/delta parser 正确性大修**：`*`/`+` 列表标记的 REMOVED/RENAMED 之前被静默忽略、重复 delta section 只应用一份、fence 内空行被重写——如果你有「validate 过了但 archive 后没生效」的历史疑惑，大概率是这些 bug，升级后行为修复。
 - propose/ff 变成 code-grounded 且 context-first；无 OpenSpec root 时 propose 停止并提示 init。

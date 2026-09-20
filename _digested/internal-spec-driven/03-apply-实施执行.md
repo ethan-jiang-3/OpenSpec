@@ -74,7 +74,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 
 ### 3.1 正则
 
-v1.8.0 起统一走共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`），`list` / `view` / `instructions apply` / `archive` 对同一 tasks 文件的判断完全一致：
+计数器在 v1.13.1 起由 `src/core/validation/task-checkboxes.ts` 提供（`list` / **`status`** / `view` / `instructions apply` / `validate --archived` / archive 六处共享），对同一 tasks 文件的判断完全一致：
 
 ```typescript
 const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
@@ -82,24 +82,25 @@ const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
 
 三个关键点（v1.8.0 放宽/修正）：
 
-- **`^\s*[-*]`** — 允许前导缩进，**缩进的子任务照常计数**（旧版锚定列 0，`  - [ ] 1.1.1` 对 progress 不可见，导致有未完成子任务也报 "✓ Complete" 甚至被 archive 收掉）。
+- **列表标记** — v1.13.1 起 `-`/`*`/`+` 与有序标记（`1.`、`1)`，最多九位数字）都算（`8fc65b7f`）；此前有序/`+` 前缀下的 checkbox 对全部六处消费者不可见——含未完成有序任务的 change 曾报 "✓ Complete" 并被 archive 静默收掉。允许前导缩进，**缩进的子任务照常计数**。
 - **`\[([\sxX])\]`** — 方括号内认 `\s`（空格/制表符/不间断空格，都是"未完成"）、`x`/`X`（完成，大小写不敏感）。
 - **`\s*(.*)`** — 尾部不锚定 `$`，描述可为空；`\r` 不会被 `.` 吞掉，CRLF 的 tasks.md 也能解析。
 
 ### 3.2 什么算 checkbox
 
 - `- [ ] Task` → 未完成
-- `- [x] Task` → 完成
-- `- [X] Task` → 完成（大小写不敏感）
-- `* [ ] Task` → 也支持 `*` 前缀
+- `- [x] Task` / `- [X] Task` → 完成（大小写不敏感，`- [ x]` 这种带空格的也算完成）
+- `* [ ]`、`+ [ ]`、`1. [ ]`、`1) [ ]` → 均支持（v1.13.1 起全 CommonMark 标记）
 - 空格数量灵活（`-  [ ]` 和 `- [ ]` 都可以）
 - `  - [ ] 1.1.1 子任务` → **算**（v1.8.0 起前导缩进不再隐藏它）
+- `- [~]`、`- [-]`、空 `- []` → **未完成**（方括号内只有空白或 x/X 才有意义）
 
 ### 3.3 什么不算 checkbox
 
 - 没有方括号的 `- Task` → 不算
 - `- [?] Task` → 不算（方括号内只认空白与 x/X）
-- 非列表项中的 `[ ]` → 不算（必须以 `-` 或 `*` 开头，开头前允许缩进）
+- 非列表项中的 `[ ]` → 不算（必须以列表标记开头，开头前允许缩进）
+- **整份 tasks 文件只有列表项、一个 checkbox 都没有** → v1.13.1 起 `validate` 会警告并指出第一处 offending line（`09984b8`）；此前 `list`/`status` 报 "No tasks"、archive 无从警告未完成工作
 
 ### 3.4 编号约定
 

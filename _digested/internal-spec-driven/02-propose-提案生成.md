@@ -106,7 +106,7 @@ openspec status --change "<name>"     # 纯文本模式，给人看
 
 ### 2.1 proposal（立即可做，`requires: []`）
 
-**模板** (`schemas/spec-driven/templates/proposal.md`)：
+**模板** (`schemas/spec-driven/templates/proposal.md`；v1.13.1 起以顶层标题 `# Proposal` 开头，markdownlint MD041 不再报——下例省略该行)：
 ```markdown
 ## Why
 <!-- Explain the motivation for this change. What problem does this solve? Why now? -->
@@ -127,7 +127,7 @@ openspec status --change "<name>"     # 纯文本模式，给人看
 <!-- Affected code, APIs, dependencies, systems -->
 ```
 
-**instruction** (`schema.yaml:10-26`) 强调的关键点：
+**instruction** (`schema.yaml:10-26`) 强调的关键点（v1.13.x 起新增 inventory-first 要求——填 Capabilities 前先跑 `openspec list --specs` 查 capability inventory，再对相关者 `openspec show "<spec-id>" --type spec --json --no-scenarios` 看概要；裸 `openspec list` 列的是 in-flight changes 不是 specs；决定覆盖范围前还要全文读相关 spec；复用已有 capability 的确切 path，不造近义名）：
 - Capabilities 部分是**关键契约** —— 它建立了 proposal 和 specs 阶段之间的连接
 - 每个列出的 capability 需要一个对应的 spec 文件（`specs/<capability-path>/spec.md`）；v1.7.0 可以用嵌套 path，如 `identity/session`。
 - "Keep it concise (1-2 pages). Focus on the 'why' not the 'how' — implementation details belong in design.md."
@@ -342,3 +342,9 @@ openspec/changes/<name>/
 ```
 
 若这次变更确实没有 spec-level 行为变化，可在 change metadata 中显式写 `skip_specs: true`：specs artifact 会是 `skipped`，tasks/apply 可继续；它不能与任何非隐藏 delta spec 文件共存。否则此时 agent 提示用户开始 apply（Claude 例子为 `/opsx:apply`，Codex 为 `$openspec-apply-change`）。
+
+## v1.13.x 流程前提变化
+
+- **context-first（`6d2dbe62`）**：propose 在任何规划决策前先从选定项目/store root 加载 project context；无 OpenSpec root 的目录里 propose 直接停止并提示 init，不静默创建 `openspec/`。
+- **code-grounded（`98bf53e5`，propose 与 ff 共享）**：起草 artifact 前先检查相关代码、测试与文档，让计划落在既有实现上，而不是把基本 discovery 推迟到 implementation tasks。
+- **顶层标题（`3312af47`）**：四个模板（proposal/spec/design/tasks）均以 `# <Artifact>` 顶层标题开头；`show --json`/`change list --json` 对以裸 `# Proposal` 开头的 proposal 仍按 change id 命名。

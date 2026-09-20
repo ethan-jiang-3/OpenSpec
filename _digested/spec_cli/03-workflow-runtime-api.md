@@ -89,6 +89,8 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 - 每个 artifact 的状态
 - 哪些 artifact 被哪些依赖阻塞
 
+文本模式结尾（v1.13.1 起）还有一行 **`Next: <command>`**——把「下一步该跑哪条命令」直接写出来，恢复搁置的 change 不再需要背工作流。该行仅存在于 text 输出，`--json` 的 envelope 不变。
+
 JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 起，`ChangeStatus` 同时携带 **`isPlanningComplete`**（所有非 skipped planning artifact 都存在；skipped artifact 视为已满足而不必写出）与兼容别名 **`isComplete`**；状态文案也不再在 change 实现前就暗示"已完成"。语义见 `src/core/artifact-graph/instruction-loader.ts` 的 `ChangeStatus` 类型。
 
 ### 状态语义
@@ -217,8 +219,9 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 �
 2. 确认 apply 前置要求需要哪些 artifacts。
 3. 检查这些 prerequisite artifacts 是否已经产生输出。
 4. 收集所有现存 artifact 输出文件作为 context files。
-5. 如果配置了 tracking file，则解析 tasks 内容和完成状态。
-6. 归纳当前 apply state，并给出 instruction。
+5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器由 `src/core/validation/task-checkboxes.ts` 提供，`list`/`status`/`view`/`instructions apply`/`validate --archived`/archive 六处共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。
+6. v1.13.0 起，change 无任何 spec delta 时在结果中附带警告（写 specs 或 `skip_specs: true`），text 与 `--json` 均有。
+7. 归纳当前 apply state，并给出 instruction。
 
 ### 输出包含什么
 

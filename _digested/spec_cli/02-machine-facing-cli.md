@@ -52,6 +52,8 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - AI 不擅长可靠地自己做文件系统状态判断。
 - `status` 把这件事收敛成一个稳定端点。
 
+**v1.13.1**：text 输出结尾新增 `Next:` 行（仅 text，`--json` 不变），直接给出推进 change 的下一条命令。
+
 ### `openspec instructions <artifact> --change <name> --json`
 
 作用：
@@ -97,6 +99,8 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - 这是代码实现阶段最关键的桥接接口。
 - 它把文档阶段产物转换成实施阶段输入。
 - 它还负责在不满足前置条件时明确阻止进入 apply。
+
+**v1.13.0 新增警告字段**：change 无任何 spec delta 时（tasks 存在但 specs 缺失），text 与 `--json` 都会警告，并指明两条出路——写 specs 或声明 `skip_specs: true`。机器消费者应把该 warning 视为「ready 不可信」信号。
 
 ### `openspec instructions archive --change <name> --json`
 
@@ -224,3 +228,9 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 ### 历史 guardrail（非当前主结论）
 
 v1.4.0 的 workspace guardrail（`actionContext.mode = "workspace-planning"` 阻止 sync/archive）在 v1.5.0 中不再需要——因为 `actionContext.mode` 始终为 `repo-local`，不存在 workspace 级 change。跨仓库操作自然被 store reference 的只读语义保护。
+
+## v1.12.x–v1.13.x 机器面增量
+
+- `validate --report findings`（bulk scope 专用）：JSON 标识 report 与 scope，仅含 error/warning/information 条目；完整统计与退出码不变。默认全量报告不受影响。
+- `show --json --diff`：MODIFIED delta 增补 `diff` 与 `warning` 字段（v1.11.0，见 `04`）。
+- artifact 模板以顶层标题开头（v1.13.1）：`show --json` 与 `change list --json` 对以模板裸标题 `# Proposal` 开头的 proposal 仍按 change id 命名，不受影响。

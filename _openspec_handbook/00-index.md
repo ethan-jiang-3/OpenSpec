@@ -224,7 +224,7 @@ graph LR
 | 命令 | 作用 | 典型场景 |
 |------|------|---------|
 | `/opsx:propose <name>` | 发起一个 change，生成 artifacts | 开始一个新功能或修复 |
-| `/opsx:explore` | 探索/调研模式，不生成 artifacts | 了解现有代码、调研技术方案；change 出来后反复打磨 proposal |
+| `/opsx:explore` | 探索/调研模式；默认不写文件，明确要求 capture 时经确认创建 change（v1.13.1） | 了解现有代码、调研技术方案；change 出来后反复打磨 proposal |
 | `/opsx:apply [name]` | 按 tasks 执行实现；也可用于 Markdown/skill/command 等非代码产物 | 开始实施 change |
 | `/opsx:update` | 更新现有 artifact（v1.6.0 纳入 core） | 修改 proposal/specs/design/tasks 中的任意一个 |
 | `/opsx:sync` | 同步 delta spec 到主 spec（v1.4.0 新增纳入 core） | 多人协作时合并 spec 变更 |

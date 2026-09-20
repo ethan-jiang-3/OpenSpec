@@ -236,6 +236,8 @@ specs/
 - **v1.7.0 新增**：CodeArts Agent、Hermes Agent、ZCode
 - **v1.8.0 新增**：MiniMax Code（全局 skills-only）、Atlassian Rovo Dev CLI、GitHub Copilot 一等支持（本地 skill + opt-in cloud agent）、vendor-neutral `agents` 目标（`.agents/skills/`，与 Codex 共享根）
 - **v1.9.0 新增**：Command Code（`.commandcode/skills/` + `/opsx-*` slash commands）
+- **v1.10.0 新增**：Zed Agent（`zed`）
+- **v1.12.0 新增**：SourceCraft（`codeassistant`，VS Code 扩展）；vendor-neutral 目标在选择器中显示为 "Other / Universal (shared .agents skills)"
 - 也可以直接用 CLI（不用任何 AI 工具）
 
 ### Q27: 怎么安装 OpenSpec 到我的 AI 工具？

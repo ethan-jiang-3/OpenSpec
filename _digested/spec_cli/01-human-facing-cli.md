@@ -163,7 +163,7 @@
 
 ### `openspec validate`
 
-v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）；同版起 validate 预报 archive 会拒收的 delta。详见 `04-command-deep-dive.md`。
+v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）；同版起（#1710）validate 将 delta 内 merge-conflict 标记报告为 informational findings（不改退出码），并区分文件系统读取错误与 spec 缺失。详见 `04-command-deep-dive.md`。
 
 本质目标：
 

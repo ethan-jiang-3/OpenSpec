@@ -31,6 +31,7 @@
 - 输出语义：概览。
 - 是否适合做 workflow 决策：有限。
 - v1.9.0：项目外不再 silent pass；仅遗留 `openspec/project.md` 项目保留 cwd fallback。
+- v1.13.0：嵌套在 namespace 子目录里的 change 会被报告而非静默忽略（`09a999bb`，`src/utils/nested-change.ts`）。
 - 主要边界：知道“有什么”，但不知道“下一步怎么走”。
 
 ### `view`
@@ -55,7 +56,7 @@
 - 核心对象：change delta specs 与正式 specs；`--archived` 则是 archive 目录的 tasks 完成度。
 - 输出语义：是否合法、有哪些 issues、下一步修复建议。
 - 典型边界：它不管代码是否编译，不管测试是否通过，它主要管 OpenSpec 文档结构。`--archived` 不重验已应用的 delta。bulk 标志（`--all/--changes/--specs`）在项目外非零退出。
-- v1.12.0 新增 `--report findings`：配合 bulk scope 只输出 findings 列表（错误/警告/信息），保留完整统计与退出码。同版起 validate 会预报 archive 会拒收的 delta（authoring 阶段提前暴露）。
+- v1.12.0 新增 `--report findings`：配合 bulk scope 只输出 findings 列表（错误/警告/信息），保留完整统计与退出码。同版起（#1710）validate 将 delta 内 merge-conflict 标记报告为 informational findings（不改退出码），并区分文件系统读取错误与 spec 缺失。
 
 ### `archive`
 
