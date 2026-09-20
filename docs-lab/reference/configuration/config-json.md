@@ -16,7 +16,7 @@ The CLI keeps its machine-level settings at `~/.config/openspec/config.json` on 
 | `featureFlags` | map: flag → boolean | No | Boolean feature toggles |
 | `defaultStore` | string | No | Machine-level fallback store for root resolution |
 | `openers` | list | No | The tools worksets open in, and how each is launched |
-| `telemetry` | map | No | State the CLI keeps: anonymous id and notice-seen |
+| `telemetry` | map | No | Telemetry opt-out, anonymous id, and notice-seen state |
 
 ### profile
 
@@ -36,7 +36,7 @@ Boolean toggles keyed by flag name, set with `openspec config set featureFlags.<
 
 ### defaultStore
 
-The machine-level fallback store id for root resolution, consulted only when no `--store` flag, local `openspec/`, or project `store:` pointer resolves. The full ladder is [Root resolution](stores.md#root-resolution).
+The machine-level fallback store id for root resolution, consulted only when no `--store` flag, local `openspec/`, or project `store:` pointer resolves. The full ladder is [Root resolution](../../multi-repo/stores.md#where-artifacts-get-created-when-using-stores).
 
 ### openers
 
@@ -44,7 +44,7 @@ The tools a workset can open in, and how each is launched. Entries are hand-edit
 
 ### telemetry
 
-State the CLI writes for telemetry: your anonymous id and whether the first-run notice was shown. It is not the opt-out. Disabling telemetry is an environment variable, on [Environment variables](environment-variables.md).
+The CLI stores your anonymous id and whether the first-run notice was shown. Set `telemetry.enabled` to `false` to disable telemetry. You can also opt out with `OPENSPEC_TELEMETRY=0` or `DO_NOT_TRACK=1` in your environment.
 
 ## Example
 
