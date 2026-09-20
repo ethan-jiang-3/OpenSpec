@@ -74,7 +74,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 
 ### 3.1 正则
 
-计数器在 v1.13.1 起由 `src/core/validation/task-checkboxes.ts` 提供（`list` / **`status`** / `view` / `instructions apply` / `validate --archived` / archive 六处共享），对同一 tasks 文件的判断完全一致：
+计数器仍在 `src/utils/task-progress.ts`（`parseTaskLines` / `getTaskProgressDetailForChange`），`list` / `view` / `instructions apply` / `validate --archived` / archive 共享同一判断；v1.13.1 起认全 CommonMark 标记（`-`/`*`/`+`/有序 `1.`/`1)`，最多九位数字）。另注意：新模块 `src/core/validation/task-checkboxes.ts` 职责不同——它只做「tasks 文件有列表项但一个 checkbox 都没有」的检测，供 validate 警告（`09984b8`）：
 
 ```typescript
 const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
@@ -82,7 +82,7 @@ const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
 
 三个关键点（v1.8.0 放宽/修正）：
 
-- **列表标记** — v1.13.1 起 `-`/`*`/`+` 与有序标记（`1.`、`1)`，最多九位数字）都算（`8fc65b7f`）；此前有序/`+` 前缀下的 checkbox 对全部六处消费者不可见——含未完成有序任务的 change 曾报 "✓ Complete" 并被 archive 静默收掉。允许前导缩进，**缩进的子任务照常计数**。
+- **列表标记** — v1.13.1 起 `-`/`*`/`+` 与有序标记（`1.`、`1)`，最多九位数字）都算（`8fc65b7f`）；此前有序/`+` 前缀下的 checkbox 对全部共享消费者不可见——含未完成有序任务的 change 曾报 "✓ Complete" 并被 archive 静默收掉。允许前导缩进，**缩进的子任务照常计数**。
 - **`\[([\sxX])\]`** — 方括号内认 `\s`（空格/制表符/不间断空格，都是"未完成"）、`x`/`X`（完成，大小写不敏感）。
 - **`\s*(.*)`** — 尾部不锚定 `$`，描述可为空；`\r` 不会被 `.` 吞掉，CRLF 的 tasks.md 也能解析。
 

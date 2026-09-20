@@ -49,7 +49,7 @@
 | `test/commands/validate.findings.test.ts`、`test/cli-e2e/validate-findings.test.ts` | `validate --report findings` | `../spec_cli/02/04` |
 | `test/cli-e2e/validate-task-checkboxes.test.ts` | 全标记 task 计数 | `../internal-spec-driven/03-apply-实施执行.md` |
 | `test/commands/apply-instructions-warnings.test.ts`、`apply-instructions-blocked.test.ts` | apply 无 spec 警告 / blocked | `../spec_cli/03-workflow-runtime-api.md` |
-| `test/core/validation.task-checkboxes`（在 validation 测试内） | 共享 checkbox 计数器 | `../internal-spec-driven/03` |
+| `test/commands/validate-task-checkboxes` 相关（core+e2e） | 「无 checkbox」检测与全标记计数 | `../internal-spec-driven/03` |
 | `test/commands/store-remove-nested.test.ts`、`store-setup-no-init-git.test.ts`、`store-phantom-root.test.ts` | store 三修复 | `../mechanisms/01-store-模型与仓库协同.md` |
 | `test/core/artifact-graph/schema-apply-references.test.ts`、`test/commands/schema-apply-references.test.ts` | apply block 引用校验 | `../schema/00-map.md` |
 | `test/commands/workflow-instructions-injection.test.ts`、`validate.name-guard.security.test.ts`、`completion-tip.atomic-write.security.test.ts` | #1835 安全加固 | `../mechanisms/05-cli-infra.md` |

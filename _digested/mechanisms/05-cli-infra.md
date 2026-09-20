@@ -154,7 +154,7 @@ CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在�
 
 **新模块**：
 - `src/core/shared/ide-restart.ts` — init/update 共享 IDE restart 提示逻辑
-- `src/core/validation/task-checkboxes.ts` — task checkbox 解析（全列表标记、未识别标记算未完成、无 checkbox 警告）
+- `src/utils/task-progress.ts` 计数器扩展（全列表标记、未识别算未完成）；新模块 `src/core/validation/task-checkboxes.ts` 负责「有列表项但无 checkbox」的 validate 警告
 - `src/core/completions/installers/shell-quote.ts` — completion 安装的 shell 引用处理（bash 卸载逐字节还原 `.bashrc`，`72bf7600`）
 - `src/telemetry/opt-out.ts` — 遥测 opt-out 独立模块
 

@@ -57,7 +57,7 @@ delta 与 main spec 都通过 `discoverSpecFiles()` 递归发现：`specs/auth/s
 `requirement-blocks.ts` 是 archive 和 validation 的关键 parser。它提供两套能力：
 
 1. `extractRequirementsSection()`：从主 spec 中抽出 `## Requirements` section，并按 `### Requirement:` 切 block。
-2. `parseDeltaSpec()`：从 delta spec 中解析 `ADDED/MODIFIED/REMOVED/RENAMED` 四类变更。
+2. `parseDeltaSpec()`：从 delta spec 中解析 `ADDED/MODIFIED/REMOVED/RENAMED` 四类变更。v1.13.0 起与 archive 共用同一 reader（`46ff91f2`）：requirement 条目接受全部 CommonMark 列表标记（`-`/`*`/`+`），重复 delta section 全部应用——此前 `*`/`+` 条目与第二个同名 section 会被静默忽略。
 
 重要细节：
 

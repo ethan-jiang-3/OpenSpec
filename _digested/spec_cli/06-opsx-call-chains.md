@@ -169,7 +169,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 ### 对 CLI 的依赖程度
 
 - 相比 continue/apply，explore 对 workflow runtime API 的依赖可能更弱。
-- 当前内置 explore 模板的明确起点是 `openspec list --json`，先判断项目里有没有 active change。
+- 当前内置 explore 模板的明确起点是 `openspec list --json`，先判断项目里有没有 active change；v1.13.0 起还会列 spec inventory（`openspec list --specs --json` + store-aware `openspec show "<spec-id>" --type spec`），不再把 in-flight changes 当 specs。
 - 它更像“带 OpenSpec 上下文感知的探索姿态”，而不是强依赖 `status`/`instructions` 的固定流程。
 
 ## 九、真正重要的系统分工

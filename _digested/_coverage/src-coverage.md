@@ -66,7 +66,7 @@
 |--------|------|----------|
 | `src/core/command-generation/adapters/codeassistant.ts` | SourceCraft（VS Code 扩展）adapter | `../mechanisms/02-tool-delivery.md`（已列 adapter 表） |
 | `src/core/shared/ide-restart.ts` | init/update 共享 IDE restart 提示 | `../mechanisms/05-cli-infra.md`（已记） |
-| `src/core/validation/task-checkboxes.ts` | task checkbox 解析（全标记/未识别算未完成） | `../workflows/`、`../specs_truth/06`（已记） |
+| `src/utils/task-progress.ts`（扩展）+ `src/core/validation/task-checkboxes.ts`（新） | 全标记计数 / 无 checkbox 检测 | `../internal-spec-driven/03`、`../specs_truth/06`（已记） |
 | `src/core/completions/installers/shell-quote.ts` | completion 安装 shell 引用 | `../mechanisms/05-cli-infra.md`（已记） |
 | `src/telemetry/opt-out.ts` | 遥测 opt-out | `../mechanisms/05-cli-infra.md`（待展开） |
 | `src/core/templates/optional-workflow.ts` | profile 未装 workflow 的提示支撑 | 待消化 |
