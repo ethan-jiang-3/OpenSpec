@@ -1,6 +1,7 @@
 # 09 · 高级：Capability 规划、身份与 specs 漂移维护
 
 > **适用 OpenSpec v1.13.1** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
+> **v1.13.0 漂移巡检提示。** delta parser 大修后，`*`/`+` 列表标记的 REMOVED/RENAMED 现在真正生效、重复 delta section 全部应用、仅大小写不同的 requirement 名被 archive 拒绝。历史 change 中若有曾"静默没生效"的操作，升级后重跑 validate 可以暴露出来。
 
 ## 先回答：为什么这事值得你操心
 

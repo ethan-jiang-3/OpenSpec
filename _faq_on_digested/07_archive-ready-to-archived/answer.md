@@ -459,3 +459,8 @@ openspec instructions archive --change "<name>" --json
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven sync 模板 |
 | [`../../_digested/internal-spec-driven/04-archive-归档合并.md`](../../_digested/internal-spec-driven/04-archive-归档合并.md) | archive validate/merge/move 机制消化 |
 | [`../06_apply-ready-to-archive-ready/answer.md`](../06_apply-ready-to-archive-ready/answer.md) | archive-ready 的前置状态 |
+
+
+## v1.13.0–v1.13.1 补充：archive 正确性大修
+
+如果曾遇到「validate 通过、archive 报成功、但 main spec 没变」的情况，大概率是 v1.13.0 修掉的 parser bug：`*`/`+` 列表标记的 REMOVED/RENAMED 被静默忽略、重复 delta section 只应用一份。升级后这些写法全部生效。同时 archive 现在会：拒绝仅大小写不同的 requirement 名（`767d63c9`）、拒绝 merge path 读不到的 delta 文件（`e01ed070`）、fence 内空行不再被重写（`aedf4d0c`）。完整修复表见 `_digested/workflows/09-archive.md`。

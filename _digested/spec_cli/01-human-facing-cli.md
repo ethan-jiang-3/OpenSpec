@@ -39,6 +39,8 @@
 - 它不是只创建一个目录。
 - 它更像“给项目安装一套工作流接入层”。
 - 若已有 config，`--language` 拒绝覆盖并要求手工把语言说明加入 `context`；空值、多行、控制/不可见格式字符以及导致 context 超过 50KB 的值会在写文件前失败。
+- v1.12.0 起 init 给空的 openspec/ 子目录写 `.gitkeep`，空目录会被 Git 跟踪；重跑 init 会安全恢复缺失的 marker 文件。
+- v1.13.0 起 init/update 会点名 profile 没装的 workflow（如 core 之外的 new/continue/ff 等），不再让缺失的 `/opsx:` 命令读起来像安装坏了。
 
 ### `openspec update`
 
@@ -72,6 +74,7 @@
 - v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
 - v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。v1.9.0 起，若 `.agents` 已被 `agents` 目标占用，遗留 Codex 升级不会劫持该树。
 - v1.10.0 起该共享根由 Codex、Zed Agent 与 vendor-neutral `agents` 三方协调；Zed 的 tool id 是 `zed`。`update` 只有实际更新带 `requiresIdeRestart` 的 IDE-resident surface 才提示重启；CLI-only/skills 即时加载工具通常不提示。
+- v1.13.0 起 `update` 会刷新内容已 drift 的生成文件（不只看版本戳，`d9e1a28c`）；v1.13.1 起与 init 共享同一套 IDE restart 提示逻辑，workflow 被移除时也准确提示。
 - v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
 
 首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。完整边界见 `../mechanisms/05-cli-infra.md`。
@@ -159,6 +162,8 @@
 ## 4. 校验内容是否合法
 
 ### `openspec validate`
+
+v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）；同版起 validate 预报 archive 会拒收的 delta。详见 `04-command-deep-dive.md`。
 
 本质目标：
 
@@ -296,6 +301,7 @@
 
 - 告诉你 change 的 artifact 走到哪一步，哪些已完成，哪些被阻塞。
 - 默认看单个 change（`--change <name>`），v1.11.0 新增 `--all` 一次看全部 active change。
+- v1.13.1 起 `status` 结尾输出 `Next:` 行，直接命名推进该 change 的下一条命令——恢复一个搁置的 change 不再需要背工作流。
 
 对人类意义：
 

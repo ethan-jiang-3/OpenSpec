@@ -125,3 +125,15 @@ Aborted. No files were changed.
 - 用本 repo 的真实项一步步走：`05-走查-把手段用在自家repo上.md`
 - `validate` 命令的完整选项 / CI 用途：`06-源码锚点与缺口.md`（validate 命令参考）
 - 机理基础：`01-机理-主specs如何被delta构造.md`
+
+
+## v1.13.0 后的失真源变化
+
+v1.13.0 的 parser 大修消除了几个「写了但没生效、还报成功」级别的静默失真源（详见 `../workflows/09-archive.md` 的修复表）：
+
+- `*`/`+` 列表标记的 REMOVED/RENAMED 被静默忽略 → 已修复（全 CommonMark 标记生效）
+- 重复 delta section 只应用一份 → 已修复（全部应用）
+- fence 内空行被 archive 重写 → 已修复（fence-aware）
+- 折行 scenario bullet 被拆开误读 → 已修复
+
+本文描述的失真机理中，凡引用这些 bug 作为实例的段落应视为历史案例；失真的**人为源头**（标题手改不走 RENAMED、requirement 大小写漂移等）仍然存在——且 v1.13.0 起仅大小写不同的 requirement 名会被 archive 显式拒绝，这类漂移从「静默」变为「显式报错」。

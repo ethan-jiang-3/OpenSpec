@@ -15,3 +15,6 @@
 ## 关键结论
 
 OpenSpec 的 schema 本质是 **artifact DAG 定义文件**：它不描述业务事实（那是 specs 的事），也不只是模板（那是 template 的事），而是定义"一次 change 应该长成什么骨架"。核心价值在于：**你不需要改一行 OpenSpec 源码，纯靠 YAML + Markdown 就能定制出一套完全不同形状的工作流。**
+
+
+> **v1.13.0 新增**：`openspec schema validate` 现在校验 apply block 与声明的 artifacts 一致（`apply.requires` 引用不存在的 artifact id 会被拒绝，`7090e16d`）。自定义 schema 作者多了一道结构守门。

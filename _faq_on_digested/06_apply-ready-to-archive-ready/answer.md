@@ -293,3 +293,8 @@ Completed this session:
 | `schemas/spec-driven/schema.yaml` | 默认 `apply.requires: [tasks]`、`tracks: tasks.md` 和 apply instruction |
 | [`../../_digested/internal-spec-driven/03-apply-实施执行.md`](../../_digested/internal-spec-driven/03-apply-实施执行.md) | apply gate、checkbox、实施循环、暂停条件 |
 | [`../04_propose-to-apply-ready/answer.md`](../04_propose-to-apply-ready/answer.md) | apply-ready 的前置状态 |
+
+
+## v1.13.0 补充：apply 遇到无 delta spec 的 change 会警告
+
+`openspec instructions apply` 之前只要 tasks 存在就报 ready，哪怕完全没有 spec delta——而这正是 `openspec validate` 拒绝的状态（`8ba4ac1b`）。v1.13.0 起 text 与 `--json` 都会警告，并给出两条出路：补写 specs，或在 `.openspec.yaml` 显式声明 `skip_specs: true`。纯重构/文档类 change 如果确实无行为变化，走后者是合法路径。

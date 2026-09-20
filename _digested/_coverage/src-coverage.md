@@ -58,3 +58,19 @@
 |------|----------|
 | `src/cli/index.ts` | `../system/06-源码地图与扩展点.md`、`../spec_cli/04-command-deep-dive.md` |
 | `src/index.ts`、`src/core/index.ts` | `../system/06-源码地图与扩展点.md` |
+
+
+## v1.13.x 新增模块（0009 同步后待深化的覆盖点）
+
+| 新源码 | 内容 | 计划覆盖 |
+|--------|------|----------|
+| `src/core/command-generation/adapters/codeassistant.ts` | SourceCraft（VS Code 扩展）adapter | `../mechanisms/02-tool-delivery.md`（已列 adapter 表） |
+| `src/core/shared/ide-restart.ts` | init/update 共享 IDE restart 提示 | `../mechanisms/05-cli-infra.md`（已记） |
+| `src/core/validation/task-checkboxes.ts` | task checkbox 解析（全标记/未识别算未完成） | `../workflows/`、`../specs_truth/06`（已记） |
+| `src/core/completions/installers/shell-quote.ts` | completion 安装 shell 引用 | `../mechanisms/05-cli-infra.md`（已记） |
+| `src/telemetry/opt-out.ts` | 遥测 opt-out | `../mechanisms/05-cli-infra.md`（待展开） |
+| `src/core/templates/optional-workflow.ts` | profile 未装 workflow 的提示支撑 | 待消化 |
+| `src/core/templates/workflows/project-root.ts` | workflow 写前 init 检查 | `../workflows/`（行为已记） |
+| `src/utils/nested-change.ts` | namespace 目录中 change 的报告 | `../specs_truth/06`（已记锚点） |
+
+安全加固（#1835，v1.13.1）涉及 validator/init/update/archive 多处输入校验，暂记于 `../mechanisms/05-cli-infra.md`，未单列模块。
