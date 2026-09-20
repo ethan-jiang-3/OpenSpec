@@ -84,7 +84,7 @@ OpenSpec = 整套机制
 
 - `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --json`、`openspec archive <name>`。
 - `/opsx:*` 是有 command adapter 的宿主（例如 Claude Code）里的入口，比如 `/opsx:propose`、`/opsx:apply`；它不是所有工具的通用语法。
-- Codex 在 v1.8.0 起使用 skills-only 投递，入口是 `$openspec-*` skill；v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 目标共享 `.agents/skills/`。Zed 是 skills-only，通常用 `/openspec-*` 或 `@openspec-*`；v1.9.0 新增的 Command Code 仍使用 `.commandcode/skills/` 与 `/opsx-*`。
+- Codex 在 v1.8.0 起使用 skills-only 投递，入口是 `$openspec-*` skill；v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 目标共享 `.agents/skills/`。Zed 是 skills-only，用 `/openspec-*`（以 init 生成文件中的拼法为准）；v1.9.0 新增的 Command Code 仍使用 `.commandcode/skills/` 与 `/opsx-*`。
 - `opsx` 这个名字只是部分工具的 command 命名空间或文件前缀，不是另一套独立系统。
 - 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有与之完全对应的单一命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
 
@@ -275,12 +275,14 @@ graph LR
 | `openspec completion` | 生成/安装/卸载 shell 自动补全 |
 | `openspec feedback` | 提交 GitHub issue 反馈 |
 
-### v1.10.0 工具与环境速查
+### 工具与环境速查
 
 | 项 | 当前行为 |
 |---|---|
-| `--tools zed` | 写入 `.agents/skills/openspec-*/SKILL.md`；skills-only，Zed ≥ 1.4.2 且工作树已信任 |
-| `--tools codex,zed,agents` | 三方共享一个 OpenSpec 管理的 `.agents/skills/` 树；不会生成或改写根 `AGENTS.md` |
+| `--tools zed` | 写入 `.agents/skills/openspec-*/SKILL.md`；skills-only（`/openspec-*`），Zed ≥ 1.4.2 且工作树已信任 |
+| `--tools codex,zed,agents` | 共享一个 OpenSpec 管理的 `.agents/skills/` 树（v1.11.0 起 Antigravity 亦写入同一树，`.agents/workflows/` 放它的 commands）；不会生成或改写根 `AGENTS.md` |
+| `--tools codeassistant` | v1.12.0 新增 SourceCraft（VS Code 扩展）skills/commands |
+| `--tools agents` | 选择器中显示为 "Other / Universal (shared .agents skills)"，搜索 `universal`/`other`/`generic`/`vendor-neutral` 等可命中；只认领 `openspec-*` 目录与 `.openspec-target` marker |
 | OpenCode command 参数 | 生成的 command 使用 `$ARGUMENTS` 把用户参数交给 workflow |
 | `OPENSPEC_NO_COMPLETIONS=1` | 抑制首次交互 CLI 的 shell completion 提示 |
 

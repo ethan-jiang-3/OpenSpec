@@ -665,7 +665,7 @@ openspec/changes/<change-name>/proposal.md
 <明确不做什么>
 ```
 
-**注意**：标题（`## Why` 等）必须保留，但内容可以自由修改。
+**注意**：标题（`## Why` 等）必须保留，但内容可以自由修改。v1.13.1 起生成的 artifact 文件以顶层 `# Proposal`/`# Spec Delta`/`# Design`/`# Tasks` 标题开头（markdownlint MD041 友好）——编辑时保留这个顶层标题即可。
 
 #### 真实场景 1：Why 部分太简单，需要补充背景
 

@@ -3,7 +3,7 @@
 > 这一篇不再讲"按钮在哪""命令怎么敲"，而是讲 OpenSpec 对软件开发这件事本身的理解。
 > 它放在高级区最前面，因为先理解这套生命周期思想，后面的 config、schema、store 才不会变成孤立机制。
 
-> **v1.13.1 现实边界。** 主 specs 可以按嵌套 capability path 切分，却不会自动检索“当前相关”的 specs；agent 仍需按 change scope 选择上下文。本文 `/opsx:*` 为 Claude 示例；tasks 的逐项 verification 是本版新增的 schema instruction 合同。
+> **v1.13.1 现实边界。** 主 specs 可以按嵌套 capability path 切分，却不会自动检索“当前相关”的 specs；agent 仍需按 change scope 选择上下文。本文 `/opsx:*` 为 Claude 示例；tasks 的逐项 verification 是 v1.10.0 引入的 schema instruction 合同（v1.13.1 起计数语义更新，见 08 篇）。
 
 ---
 

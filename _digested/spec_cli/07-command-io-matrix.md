@@ -14,7 +14,7 @@
 
 ## 总表
 
-> **v1.13.1**：`status` 的 text 输出结尾新增 `Next: <command>` 行（仅 text，JSON 不变）。
+> **v1.13.1**：`status` 的 text 输出结尾新增 `Next: <command>` 行（仅 text，JSON 不变；`new change` 自 v1.5.0 即有同款收尾）。
 
 | 命令 | 主要受众 | 输入来源 | 直接输出 | 间接影响 | 是否改状态 |
 | --- | --- | --- | --- | --- | --- |

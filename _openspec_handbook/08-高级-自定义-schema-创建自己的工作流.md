@@ -111,11 +111,14 @@ proposal 和 specs 通常不用大动——"为什么要做"和"spec 化要交�
 
 ```yaml
 instruction: |
-  - Each task MUST state how to verify completion in that checkbox:
-    a test, command, observable behavior, or delivered artifact.
-  - Use a separate Integration Verification task only when it spans
+  - Each task MUST state how to verify completion (a test, command,
+    observable behavior, or delivered artifact). Put the verification in
+    that task's checkbox description. Use a separate verification task only
+    when it checks broader integration or system behavior that spans
     multiple implementation tasks.
 ```
+
+（v1.13.1 起计数语义：方括号内只有 `x`/`X`（含 `- [ x]` 这类带空格）算完成，`- [~]`/`- [-]`/空 `- []` 算未完成；无 checkbox 的行不追踪。）
 
 如果 fork 仍生成 `- [ ] Implement X` 这类无 verification 的 task，它不会因为 `schema validate` 通过就自动变好；该命令校验 schema 结构，不审查每条任务是否具体可验证。
 

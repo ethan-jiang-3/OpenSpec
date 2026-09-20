@@ -52,7 +52,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - AI 不擅长可靠地自己做文件系统状态判断。
 - `status` 把这件事收敛成一个稳定端点。
 
-**v1.13.1**：text 输出结尾新增 `Next:` 行（仅 text，`--json` 不变），直接给出推进 change 的下一条命令。
+**v1.13.1**：text 输出结尾新增 `Next:` 行（仅 text，`--json` 不变），直接给出推进 change 的下一条命令。`new change` 自 v1.5.0 起就有同样的收尾行，本次将 status 补齐为一致体验。
 
 ### `openspec instructions <artifact> --change <name> --json`
 

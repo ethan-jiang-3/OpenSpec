@@ -247,6 +247,12 @@ store 不改变核心流程——它只是在 agent 探索时多了一个「可�
 
 不要因为“仓库多”或“spec 多”自动启用它。store 的收益来自已有 checkout 之间的明确引用；它不会减少本地 capability 的建模成本，也不会取代本章开头列出的 catalog、impact matrix 或团队协作纪律。
 
+## v1.13.x 行为修正
+
+- `store remove` 拒绝删除包含其他注册 store 的目录（报错会点名要先 `openspec store unregister` 的嵌套 store）。
+- 名为 `specs`/`changes` 的 store 不再被误当 root。
+- `store setup --no-init-git` 可以在已有 git 仓库（如 dotfiles 仓库）内创建 store；默认/显式 init-git 仍拒绝嵌套仓库。
+
 ## 压缩结论
 
 1. Store 是可选的跨仓库 spec **发现索引**，不是本地 spec scaling、自动 retrieval 或协调层。

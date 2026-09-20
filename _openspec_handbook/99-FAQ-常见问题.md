@@ -245,10 +245,10 @@ specs/
 1. 在项目里运行 `openspec init`（v1.2.0+ 会自动检测已安装的工具并预选）
 2. 也可以手动指定：`openspec init --tools claude,cursor`
 3. 运行 `openspec update` 确保 skills/commands 是最新的
-4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change`，Zed 为 `/openspec-propose` 或 `@openspec-propose`
+4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change`，Zed 为 `/openspec-propose`
 
 ### Q27a: Zed 和 Codex 为什么都写 `.agents/skills/`？
-**A**: v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 共用一个 OpenSpec 管理的 skill 树。Zed 是 skills-only，要求 Zed ≥ 1.4.2 且 worktree 已信任；OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不创建/修改根 `AGENTS.md`。
+**A**: 它们共用一个 OpenSpec 管理的 skill 树：v1.10.0 是 Codex、Zed Agent 与 vendor-neutral `agents` 三方，v1.11.0 起 Antigravity 也迁入（它另写 `.agents/workflows/` commands）。OpenSpec 只管理 `openspec-*` 目录和 `.openspec-target` ownership marker，不创建/修改根 `AGENTS.md`；共享树每次运行只写一份，写入者由 marker 决定。
 
 ### Q27b: 为什么全局安装后没有 completion 提示？
 **A**: npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction` 的交互式 CLI 运行才会在 stderr 一次提示 `openspec completion install`；JSON、非 TTY 和 completion 子命令会 defer，CI、已安装 completions、不可支持 shell 或 `OPENSPEC_NO_COMPLETIONS=1` 会保持安静。只设置 `process.exitCode` 的失败仍会进 hook；直接 `process.exit(1)` 的失败跳过 hook且不消费提示。

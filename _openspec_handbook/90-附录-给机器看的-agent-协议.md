@@ -181,7 +181,7 @@ sequenceDiagram
 - skill/command 是"投递方式"
 - CLI 是"运行时事实来源"
 
-`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，通常使用 `/openspec-propose` 或 `@openspec-propose`。Codex、Zed 与 vendor-neutral `agents` 共用 `.agents/skills/`，OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`。
+`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，使用 `/openspec-propose`。Codex、Zed、Antigravity 与 vendor-neutral `agents` 共用 `.agents/skills/`，OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`。
 
 OpenCode 同时有 skills 和 `.opencode/commands/opsx-*.md` command。v1.10.0 的 adapter 会在生成 command 时加入 `$ARGUMENTS`，把用户在 command 后输入的参数交给 workflow；模板正文已有等价参数占位时不会再重复追加。不要把这个占位符复制到 Claude、Codex 或 Zed 的调用语法里。
 
