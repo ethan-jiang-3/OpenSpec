@@ -128,3 +128,9 @@ FAQ `04_propose-to-apply-ready/` 从工程视角分析了 propose 的 artifact D
 | Step 4: artifact 循环 | L55-L82 |
 | Step 5: final status | L87-L90 |
 | context/rules 警告 | L106-L108 |
+
+## v1.12.0–v1.13.1 行为更新
+
+- **context-first（v1.13.0，`6d2dbe62`）**：propose 在做任何规划决策前先从选定项目/store root 加载 project context；目录无 OpenSpec root 时停止并提示 init，不再静默创建。
+- **code-grounded（v1.12.0，`98bf53e5`）**：起草 artifact 前先检查相关代码、测试和文档，proposal 建立在仓库现实之上。
+- ff（fast-forward）与 propose 共享同一套 code-grounded 指令。

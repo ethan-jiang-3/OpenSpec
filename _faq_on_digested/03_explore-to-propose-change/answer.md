@@ -479,3 +479,8 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 | [`../../_digested/internal-spec-driven/02-propose-提案生成.md`](../../_digested/internal-spec-driven/02-propose-提案生成.md) | Propose 的 change 创建和 artifact DAG 生成过程 |
 | [`../../_digested/system/07-OpenSpec-工程思想.md`](../../_digested/system/07-OpenSpec-工程思想.md) | 文件状态优先、CLI 解释状态、agent 负责推理 |
 | [`../../_digested/system/08-对照常见-SDD-与-AI-Coding.md`](../../_digested/system/08-对照常见-SDD-与-AI-Coding.md) | `specs/` 是capability 基线，`changes/` 是增量协议 |
+
+
+## v1.13.1 补充：capture 即确认
+
+v1.11.0 要求写入前「命名 artifacts + 直接问 + 单独等确认」。v1.13.1（`4c369e02`）演进：**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再要求额外一轮 yes/no；其余写操作（改 schema、编辑 config.yaml 等）仍需完整确认流程。同时 explore 在每个 handoff 点名 `/opsx:propose`、`/opsx:apply`。

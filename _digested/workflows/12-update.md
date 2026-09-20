@@ -155,3 +155,7 @@ v1.6.0 引入、在 v1.7.0 仍可用的 update workflow，就是这个循环中*
 | Step 5: 确认 + 写入 | L60-L66 |
 | Step 6: 建议下一步 | L68-L72 |
 | Guardrails | L82-L87 |
+
+## v1.13.1 行为更新
+
+**draft-then-write（`fede536c`）**：`/opsx:update` 现在把请求的修订先起草（step 4），经用户确认后才写入（step 5）。与 explore 的 capture 确认同属一轮「写前确认」护栏收紧。

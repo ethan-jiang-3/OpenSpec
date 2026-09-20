@@ -55,6 +55,7 @@
 - 核心对象：change delta specs 与正式 specs；`--archived` 则是 archive 目录的 tasks 完成度。
 - 输出语义：是否合法、有哪些 issues、下一步修复建议。
 - 典型边界：它不管代码是否编译，不管测试是否通过，它主要管 OpenSpec 文档结构。`--archived` 不重验已应用的 delta。bulk 标志（`--all/--changes/--specs`）在项目外非零退出。
+- v1.12.0 新增 `--report findings`：配合 bulk scope 只输出 findings 列表（错误/警告/信息），保留完整统计与退出码。同版起 validate 会预报 archive 会拒收的 delta（authoring 阶段提前暴露）。
 
 ### `archive`
 
@@ -76,6 +77,7 @@
 - 角色：状态投影器。
 - 边界：告诉你“到哪一步”，不告诉你具体该写什么内容。
 - v1.11.0 新增 `--all`：一个进程返回全部 active change 状态。JSON envelope 含 `{ "changes": [<status>, ...], "root" }`，按 change name 排序。单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。与 `--change <name>` 互斥。
+- v1.13.1 起 `status` 结尾输出 `Next:` 行，直接命名推进 change 的下一条命令。
 
 ### `instructions <artifact>`
 

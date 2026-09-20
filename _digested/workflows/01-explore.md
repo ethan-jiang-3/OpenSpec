@@ -110,6 +110,16 @@ template 里写了 8 条 guardrail：
 | **Do explore the codebase** — 扎根现实 | 鼓励 |
 | **Do question assumptions** — 包括用户的和你自己的 | 鼓励 |
 
+## v1.12.0–v1.13.1 行为更新
+
+| 变更 | 版本 | 说明 |
+|---|---|---|
+| spec inventory | v1.13.0 | explore 现在显式列出 spec inventory（`openspec list --specs` + store-aware 读取），不再把 in-flight changes 当 specs 读 |
+| capture 即确认 | v1.13.1 | v1.11.0 的「单独 yes/no 写入确认」演进：用户明确要求 capture 一个 change 即视为该次写入的确认；其余写操作仍需命名 + 直接问 + 单独等确认 |
+| handoff 点名 | v1.13.1 | 每次交接都点名 `/opsx:propose`、`/opsx:apply`，不再让用户猜下一步 |
+| 聚焦式 discovery 问题 | v1.12.0 | 问依赖感知的问题、推荐默认值，先查仓库再问用户已有的事实 |
+| 不再声称「绝不写文件」 | v1.13.0 | `b9281652` 修正了 explore 指令中过度承诺的措辞 |
+
 ## 和 FAQ 的衔接
 
 FAQ `03_explore-to-propose-change/` 是从 "Explore 怎么判断是否 propose" 的角度分析的。本文件是从 "template 源码给了 agent 什么指令" 的角度分析的。两者互补——FAQ 讲的是 agent 实际会做什么工程判断，本文件讲的是 template 为这些判断提供了什么框架。

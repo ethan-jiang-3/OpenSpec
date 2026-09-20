@@ -159,6 +159,7 @@ formatFile(content: CommandContent): string
 | Command Code | `.commandcode/skills/` + `.commandcode/commands/opsx-<id>.md` | v1.9.0 adapter-backed：skills 调用 `/openspec-*`，slash command 为 `/opsx-<id>` |
 | Zed Agent | `.agents/skills/openspec-*/SKILL.md` | v1.10.0 skills-only；Zed v1.4.2+ 用 `/openspec-*` 或 `@openspec-*`，不生成 `/opsx` command |
 | OpenCode | `.opencode/commands/opsx-<id>.md` | 接受输入的 command 在完整 `**Input**` block 后注入一次 `**Provided arguments**: $ARGUMENTS` |
+| SourceCraft（codeassistant） | VS Code 扩展 skills/commands | v1.12.0 新增 tool id `codeassistant`（`adapters/codeassistant.ts`） |
 
 这个差异很重要：不是所有 command artifacts 都在 repo root 下。delivery 层要尊重每个工具的发现机制。
 

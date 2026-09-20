@@ -2,7 +2,7 @@
 
 > 多人用 OpenSpec + Git 时，**绝大多数冲突都来自一件事：有人忘了"一个 change = 一个分支、PR 合并后立即 archive"这条纪律。** 这一篇把这条纪律拆成 4 个场景（独立功能 / 有依赖 / 改同一个 spec / 紧急 bugfix），告诉你每一步敲哪条命令、archive 顺序错会怎样、怎么用 PR 串行化避免基线不一致。
 
-> **v1.11.0 协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。同 path 仍需串行化/重基线；退役还必须同时处理在途 MODIFIED 与 main spec 中的 orphan content。
+> **v1.13.1 协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。同 path 仍需串行化/重基线；退役还必须同时处理在途 MODIFIED 与 main spec 中的 orphan content。
 
 ---
 

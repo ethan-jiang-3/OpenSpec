@@ -169,3 +169,20 @@ FAQ `07_archive-ready-to-archived/` 从 CLI 主线视角分析了 programmatic m
 | Step 4: sync assessment + inline verify | L58-L85 |
 | Step 5: 移动目录 | L87-L102 |
 | Guardrails | L120-L131 |
+
+## v1.13.0–v1.13.1 正确性大修
+
+v1.13.0 修掉了一批「写了但没生效、还报成功」的 archive/delta parser bug：
+
+| 修复 | 之前的行为 |
+|---|---|
+| 接受所有 CommonMark 列表标记（`fadac3e1`） | `*`/`+` 写的 REMOVED/RENAMED 被静默忽略 |
+| 应用每一个 delta section header（`8251763e`） | 两个 `## ADDED Requirements` 只应用一份 |
+| 包裹换行的 scenario bullet 读为一个（`c170dc77`） | 折行 bullet 被拆开误读 |
+| requirement 名剥收尾 `#`（`4b5c07a0`） | 带收尾 `#` 的名字匹配不上 |
+| fence 内保留空行（`aedf4d0c`） | 代码样例的连续空行每次 archive 被重写 |
+| 拒绝仅大小写不同的 requirement 名（`767d63c9`） | 静默接受 |
+| archive 拒绝 merge path 读不到的 delta 文件（`e01ed070`） | 静默漏应用 |
+| 拒绝无正文的 scenario header（`db560a63`） | — |
+
+另外 v1.13.1：bulk-archive 移动 changeRoot 前先检查目标（`e67ac47f`）。

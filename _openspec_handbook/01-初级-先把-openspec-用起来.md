@@ -2,7 +2,7 @@
 
 > 目标不是研究源码，而是先把它当工具用顺手。如果第一反应是"改个功能干嘛这么折腾"——很正常，这一篇先帮你把这股别扭解开。
 
-> **v1.11.0 使用提示。** 本章把 `/opsx:*` 保留为 Claude 的示例入口；Codex 使用 `$openspec-*`，Zed Agent 使用 `/openspec-*` 或 `@openspec-*`。Codex、Zed 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，都是宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
+> **v1.13.1 使用提示。** 本章把 `/opsx:*` 保留为 Claude 的示例入口；Codex 使用 `$openspec-*`，Zed Agent 使用 `/openspec-*` 或 `@openspec-*`。Codex、Zed 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，都是宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
 
 ---
 

@@ -3,7 +3,7 @@
 > 前面的几篇已经把概念一层层拆开了。
 > 这一篇不再单独讲概念，而是用一个完整案例，把 `propose → apply → archive` 整条线真正走一遍。
 
-> **v1.11.0 实战校正。** 下文 `/opsx:*` 为 Claude 示例。每条 tasks checkbox 都把 verification 写在同一条内；单列 Integration Verification 只覆盖跨任务行为。这个要求来自 schema instruction，不是 validate 新硬校验。
+> **v1.13.1 实战校正。** 下文 `/opsx:*` 为 Claude 示例。每条 tasks checkbox 都把 verification 写在同一条内；单列 Integration Verification 只覆盖跨任务行为。这个要求来自 schema instruction，不是 validate 新硬校验。
 
 ---
 

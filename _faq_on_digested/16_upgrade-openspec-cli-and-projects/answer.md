@@ -83,6 +83,18 @@ openspec update                          # 每个项目跑一次（或带 --forc
 
 v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题：若该目录已被 `agents` 目标占用，不会改写成 Codex 语法，也不会清掉被跳过工具的 repo-local legacy 文件。
 
+## v1.12.0–v1.13.1 的具体提醒（来自同步记录 0009）
+
+- `openspec validate --report findings`：bulk 场景的精简 findings 报告；validate 还会预报 archive 会拒收的 delta。
+- `openspec status` 结尾有 `Next:` 行，直接给出下一步命令。
+- **v1.13.0 是 archive/delta parser 正确性大修**：`*`/`+` 列表标记的 REMOVED/RENAMED 之前被静默忽略、重复 delta section 只应用一份、fence 内空行被重写——如果你有「validate 过了但 archive 后没生效」的历史疑惑，大概率是这些 bug，升级后行为修复。
+- propose/ff 变成 code-grounded 且 context-first；无 OpenSpec root 时 propose 停止并提示 init。
+- explore 会列出 spec inventory；用户明确要求 capture 即视为写入确认。
+- `/opsx:update` 先起草、确认后才写入。
+- 新工具 SourceCraft（`--tools codeassistant`）。
+- 安全加固：恶意仓库不能再注入 agent 指令或挂起 CLI。
+- 工具链：`packageManager` 升至 pnpm@10.34.5（corepack 用户首次运行会自动下载）。
+
 ## v1.11.0 的具体提醒（来自同步记录 0008）
 
 - `openspec show <change> --diff`：对 MODIFIED requirement 输出彩色 unified diff，`--json --diff` 增补 `diff` 和 `warning` 字段；`--store <id>` 可对 store 做 diff。
