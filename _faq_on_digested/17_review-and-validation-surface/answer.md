@@ -111,7 +111,7 @@
 
 ## 参考来源
 
-- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.12.0.md)、[`0010`](../../_digested/_change_log/0010-v1.12.0-to-v1.13.0.md)
+- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)
 - 机制：[`../../_digested/mechanisms/03-spec-model.md`](../../_digested/mechanisms/03-spec-model.md)（parser/validator 分工、Purpose 占位符、advisory preflight）
 - 命令面：[`../../_digested/spec_cli/01-human-facing-cli.md`](../../_digested/spec_cli/01-human-facing-cli.md)、[`02-machine-facing-cli.md`](../../_digested/spec_cli/02-machine-facing-cli.md)
 - 失真治理：[`../../_digested/specs_truth/00-map.md`](../../_digested/specs_truth/00-map.md)

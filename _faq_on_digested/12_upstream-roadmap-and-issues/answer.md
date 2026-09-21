@@ -1,6 +1,6 @@
 # 答案：OpenSpec 上游 Roadmap、主要问题与社区状况
 
-> **当前基线（2026-09-12）**：本地源码与 CLI 应对齐 OpenSpec **v1.13.0**（release tag `v1.13.0` = `9d4e5974`）。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
+> **当前基线（2026-09-12）**：本地源码与 CLI 应对齐 OpenSpec **v1.13.1**（release tag `v1.13.1` = `634c557b`）。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
 >
 > **v1.10.0 对本 FAQ 的追加**：`init --language`；Zed Agent 与 `.agents/skills/` 三方 ownership；store-aware `planningHome.root` main-spec instruction；每 task verification；no-spec schema 自动 `skip_specs`；retirement blocked-content 三分支；custom archive profile 自动补 sync；OpenCode `$ARGUMENTS`；删除 npm postinstall 并改为首次 CLI stderr completion tip；telemetry notice 写 stderr；update 只在 IDE-resident surface 变化时提示 restart；feedback 长正文保持完整。后七项不都出现在简短 release notes，因此以完整 commit range、源码和测试为准。
 >
@@ -18,7 +18,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，补入当前 v1.13.0）
+### 1.1 已交付（历史至 v1.6，补入当前 v1.13.1）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -32,8 +32,9 @@
 | v1.9.0 | Command Code、`validate --archived`、bulk list/validate 拒绝空 implicit root、scenario 认所有 `####`、apply pause-on-scope、archive 非 TTY / spec 重建保真、`schema fork` YAML 保真、遗留 Codex 不抢 `.agents` | v1.9.0 同步的当前依据（见 [`0006`](../../_digested/_change_log/0006-v1.8.0-to-v1.9.0.md)） |
 | v1.10.0 | 多语言 init、Zed、store-aware specs instruction、task verification、no-spec 自动 marker、retirement blocked-content、profile sync 依赖、OpenCode 参数、completion/telemetry stderr、条件化 restart、feedback 保真 | v1.10.0 完整 commit-range 依据（见 [`0007`](../../_digested/_change_log/0007-v1.9.0-to-v1.10.0.md)） |
 | v1.11.0 | `show --diff`、`status --all`、Explore 写入前确认、Antigravity 迁 `.agents` + `resolveSharedSkillWriters()` 通用仲裁、validate Purpose 占位符 warning、archive rename 保序、`schema init --default` 修键+回滚、Fish completion 修、删除内置 agent-dev-driven/requirement-driven | v1.11.0 完整 commit-range 依据（见 [`0008`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)） |
-| v1.12.0 | `validate --report findings`、validate advisory merge preflight、SourceCraft Code Assistant、`init` 写 `.gitkeep`、共享 ide-restart、propose/ff 先读代码、explore 依赖感知提问、npm git 免 pnpm + Node20 chalk + PowerShell completion 文档 | v1.12.0 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.12.0.md)） |
-| v1.13.0 | apply 无 spec 警告 + `missingPrerequisites`、parser 三修复（重复 section / `*` 与 `+` 列表标记 / 换行 bullet）、archive fence 空行保真、update 检测损坏 command、init 列出遗漏 workflow、propose 加载项目 context、spec-inventory guidance | v1.13.0 依据（见 [`0010`](../../_digested/_change_log/0010-v1.12.0-to-v1.13.0.md)） |
+| v1.12.0 | `validate --report findings`、validate advisory merge preflight、SourceCraft Code Assistant、`init` 写 `.gitkeep`、共享 ide-restart、propose/ff 先读代码、explore 依赖感知提问、npm git 免 pnpm + Node20 chalk + PowerShell completion 文档 | v1.12.0 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
+| v1.13.0 | apply 无 spec 警告 + `missingPrerequisites`、parser 三修复（重复 section / `*` 与 `+` 列表标记 / 换行 bullet）、archive fence 空行保真、update 检测损坏 command、init 列出遗漏 workflow、propose 加载项目 context、spec-inventory guidance | v1.13.0 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
+| v1.13.1 | 安全加固（config 值注入、恶意文件挂起、`.npmrc` 注册表劫持、`DO_NOT_TRACK` 口径、completion 路径引用、git probe 限额）；task checkbox 认所有列表标记且未识别标记算未完成；archive/parser 拒收（仅大小写不同的 requirement 名、畸形 RENAMED、无正文 scenario、section 外 requirement、merge path 读不到的 delta）；`status` 给 `Next:` 行；explore「capture 即确认」并点名 propose/apply；`/opsx:update` 先起草（step 4）确认后写入（step 5）；workflow 不擅自 `init` 项目、skills 只提 profile 内 workflow；artifact 模板带顶层标题；store / `EDITOR` 带参 / bash completion 逐字节还原等修复 | v1.13.1 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
