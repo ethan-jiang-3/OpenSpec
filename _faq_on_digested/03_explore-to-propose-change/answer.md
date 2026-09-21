@@ -17,7 +17,7 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 
 所以关键不是“Explore 调了哪个命令就得到 change name”，而是 agent 在 Explore 中完成了一次 scoped discovery。
 
-> **当前边界。** Explore 也会读取项目 `config.yaml` 的 `context` 与 artifact `rules`，作为探索时的背景和约束；它没有 `operations.explore`，不会获得 Apply/Archive 专属 guidance。调用名由宿主决定：下文的 `/opsx:*` 是 Claude 示例，Codex 使用相应的 `$openspec-*` skill（装在 `.agents/skills/`）。
+> **v1.8.0 当前边界。** Explore 也会读取项目 `config.yaml` 的 `context` 与 artifact `rules`，作为探索时的背景和约束；它没有 `operations.explore`，不会获得 Apply/Archive 专属 guidance。调用名由宿主决定：下文的 `/opsx:*` 是 Claude 示例，Codex 使用相应的 `$openspec-*` skill（v1.8.0 下装在 `.agents/skills/`）。
 
 ## 先分清两件事
 
@@ -465,12 +465,12 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 
 ## 参考来源
 
-源码引用；未改变 Explore 的 stance、分流或只读边界，加了写入前确认护栏，补强了提问与 spec 读取（见下）：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线；v1.10.0 未改变 Explore 的 stance、分流或只读边界：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/explore.ts` | Explore 是 stance；可以读代码但不实施；启动时检查 `openspec list --json`；相关 change 用 `status --json` 读取 artifacts，并读取项目 context/rules |
-| `src/core/templates/workflows/propose.ts` | Propose 从 change name/description 开始，创建 change，并按 `status` / `instructions` 循环生成 artifacts；起草前先检查相关项目代码/测试/文档，规划前加载项目 context（无 root 时不写文件并建议初始化） |
+| `src/core/templates/workflows/propose.ts` | Propose 从 change name/description 开始，创建 change，并按 `status` / `instructions` 循环生成 artifacts |
 | `src/commands/workflow/status.ts` | `status --json` 解析 planning home、change、schema 后输出结构化 status JSON |
 | `src/commands/workflow/instructions.ts` | `instructions <artifact> --json` 输出依赖文件、输出路径、template、rules、instruction 等 agent 操作包 |
 | `src/core/artifact-graph/instruction-loader.ts` | `formatChangeStatus()` 组装 `artifactPaths`、`actionContext`、`nextSteps`；`generateInstructions()` 组装 artifact instructions |
@@ -480,8 +480,7 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 | [`../../_digested/system/07-OpenSpec-工程思想.md`](../../_digested/system/07-OpenSpec-工程思想.md) | 文件状态优先、CLI 解释状态、agent 负责推理 |
 | [`../../_digested/system/08-对照常见-SDD-与-AI-Coding.md`](../../_digested/system/08-对照常见-SDD-与-AI-Coding.md) | `specs/` 是capability 基线，`changes/` 是增量协议 |
 
-**对 Explore 的影响**：
 
-- Explore 增加写入前确认护栏。只读命令和工具不需要确认；在第一次写操作（含 `openspec new change` 或其他写文件的命令）之前，必须先命名拟创建/编辑的 artifacts 或文件，ask a direct yes/no question，并在**单独的 user message** 中等待确认。该确认只覆盖已描述的范围，扩展前要再确认；回答设计/澄清问题不是写入授权。这直接收紧了「Explore 何时可以落盘」的边界，是本研究 Step 1–5 判断之外的一道独立闸门。
-- explore 提问依赖感知——推荐默认值、先查代码库，再问 repo 自己答得了的事实。Step 5「读真实代码」和依赖感知提问是同一条原则的两面。
-- explore skill/command 同时列出 spec inventory（`openspec list --specs`）与 change list（`openspec list --json`）并区分二者；「读取当前 capability 基线」（Step 4）现在有明确命令：`openspec show "<spec-id>" --type spec --json --no-scenarios`（filtered read 只是概览，决策前仍需读完整 spec 含 scenarios）。
+## v1.13.1 补充：capture 即确认
+
+v1.11.0 要求写入前「命名 artifacts + 直接问 + 单独等确认」。v1.13.1（`4c369e02`）演进：**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再要求额外一轮 yes/no；其余写操作（改 schema、编辑 config.yaml 等）仍需完整确认流程。同时 explore 在每个 handoff 点名 `/opsx:propose`、`/opsx:apply`。

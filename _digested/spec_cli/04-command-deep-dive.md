@@ -20,7 +20,7 @@
 - 改变项目业务内容：通常不会。
 - 改变工具工作流外壳：会。
 - 主要风险：用户以为不会删除内容，但它会清理被取消选中的 workflow 产物。
-- restart 提示是条件性的：只有本次实际影响了 registry 中标记 `requiresIdeRestart` 的 IDE surface 才显示；仅更新 CLI/即时加载 skills 的工具不提示。
+- v1.10.0 的 restart 提示是条件性的：只有本次实际影响了 registry 中标记 `requiresIdeRestart` 的 IDE surface 才显示；仅更新 CLI/即时加载 skills 的工具不提示。
 
 ## 二、发现与浏览类
 
@@ -30,12 +30,13 @@
 - 核心对象：change/spec 列表。
 - 输出语义：概览。
 - 是否适合做 workflow 决策：有限。
-- 项目外不再 silent pass；仅遗留 `openspec/project.md` 项目保留 cwd fallback。
+- v1.9.0：项目外不再 silent pass；仅遗留 `openspec/project.md` 项目保留 cwd fallback。
+- v1.13.0：嵌套在 namespace 子目录里的 change 会被报告而非静默忽略（`09a999bb`，`src/utils/nested-change.ts`）。
 - 主要边界：知道“有什么”，但不知道“下一步怎么走”。
 
 ### `view`
 
-- 角色：交互式仪表盘；按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
+- 角色：交互式仪表盘；v1.7.0 按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
 - 核心对象：聚合浏览。
 - 更偏人类，不偏自动化。
 
@@ -45,7 +46,7 @@
 - 核心对象：单个 change 或 spec。
 - 输出语义：对象内容与解析结果。
 - 主要边界：展示已有内容，不做工作流编排。
-- 新增 `--diff`：对 MODIFIED requirement 输出彩色 unified diff（增量行绿色、删除行红色），ADDED 输出全文，REMOVED 输出 Reason/Migration，RENAMED 输出 FROM/TO。`--json --diff` 保留既有 payload 形状，MODIFIED delta 增补 `diff` 和 `warning` 字段。`--store <id>` 解析 main spec 指向该 store。
+- v1.11.0 新增 `--diff`：对 MODIFIED requirement 输出彩色 unified diff（增量行绿色、删除行红色），ADDED 输出全文，REMOVED 输出 Reason/Migration，RENAMED 输出 FROM/TO。`--json --diff` 保留既有 payload 形状，MODIFIED delta 增补 `diff` 和 `warning` 字段。`--store <id>` 解析 main spec 指向该 store。
 
 ## 三、校验与治理类
 
@@ -55,6 +56,7 @@
 - 核心对象：change delta specs 与正式 specs；`--archived` 则是 archive 目录的 tasks 完成度。
 - 输出语义：是否合法、有哪些 issues、下一步修复建议。
 - 典型边界：它不管代码是否编译，不管测试是否通过，它主要管 OpenSpec 文档结构。`--archived` 不重验已应用的 delta。bulk 标志（`--all/--changes/--specs`）在项目外非零退出。
+- v1.12.0 新增 `--report findings`：配合 bulk scope 只输出 findings 列表（错误/警告/信息），保留完整统计与退出码。同版起（#1710）validate 将 delta 内 merge-conflict 标记报告为 informational findings（不改退出码），并区分文件系统读取错误与 spec 缺失。
 
 ### `archive`
 
@@ -75,7 +77,8 @@
 
 - 角色：状态投影器。
 - 边界：告诉你“到哪一步”，不告诉你具体该写什么内容。
-- 新增 `--all`：一个进程返回全部 active change 状态。JSON envelope 含 `{ "changes": [<status>, ...], "root" }`，按 change name 排序。单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。与 `--change <name>` 互斥。
+- v1.11.0 新增 `--all`：一个进程返回全部 active change 状态。JSON envelope 含 `{ "changes": [<status>, ...], "root" }`，按 change name 排序。单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。与 `--change <name>` 互斥。
+- v1.13.1 起 `status` 结尾输出 `Next:` 行，直接命名推进 change 的下一条命令。
 
 ### `instructions <artifact>`
 
@@ -101,7 +104,7 @@
 ### `schemas`
 
 - 角色：schema 发现接口。
-- 边界：暴露流程定义空间，不负责具体 change 生命周期。走 canonical root selection，接受 `--store <id>`，拒绝 `--store-path`。
+- 边界：暴露流程定义空间，不负责具体 change 生命周期。v1.9.0 起走 canonical root selection，接受 `--store <id>`，拒绝 `--store-path`。
 
 ## 五、配置与定制类
 

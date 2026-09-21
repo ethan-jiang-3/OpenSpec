@@ -159,3 +159,16 @@ CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在�
 - `test/prompts/`
 - `test/utils/`
 - `test/core/converters/`
+
+
+## v1.12.x–v1.13.x 更新
+
+**安全加固（v1.13.1，#1835）**：`config.yaml` 值不能再向 agent instructions 注入指令；恶意构造的文件不能再挂起 `openspec update`/`archive`；仓库 `.npmrc` 不能再重定向 update 检查。OpenSpec 现在可以在未审查的 freshly-cloned 仓库中安全运行。
+
+**新模块**：
+- `src/core/shared/ide-restart.ts` — init/update 共享 IDE restart 提示逻辑
+- `src/utils/task-progress.ts` 计数器扩展（全列表标记、未识别算未完成）；新模块 `src/core/validation/task-checkboxes.ts` 负责「有列表项但无 checkbox」的 validate 警告
+- `src/core/completions/installers/shell-quote.ts` — completion 安装的 shell 引用处理（bash 卸载逐字节还原 `.bashrc`，`72bf7600`）
+- `src/telemetry/opt-out.ts` — 遥测 opt-out 独立模块
+
+**其他**：init 给空目录写 `.gitkeep`；npm git 安装不再要求本机有 pnpm（`1bcdf1b0`）；pnpm overrides 移至 `pnpm-workspace.yaml`；`packageManager` 升至 pnpm@10.34.5。

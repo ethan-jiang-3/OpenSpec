@@ -2,7 +2,7 @@
 
 > 这一篇不是给第一次上手的人看的，而是给想研究"OpenSpec 怎么喂给宿主 agent"的人看的。
 >
-> **适用版本**：见 [00-index 的「对齐 OpenSpec」](00-index.md#版本与维护)。涵盖 `--json` 输出、PlanningHome 路由、store-aware specs instruction、Apply/Archive operation inputs、`validate --report findings` 报告、`show --diff` 与 `status --all`。首次遥测披露和 completion tip 在 `--json` 时都会被推迟，避免污染机器输出。
+> **适用版本**：本文以 OpenSpec v1.13.1 为准；涵盖 `--json` 输出、PlanningHome 路由、store-aware specs instruction，以及 Apply/Archive operation inputs。首次遥测披露和 completion tip 在 `--json` 时都会被推迟，避免污染机器输出。
 
 ---
 
@@ -22,7 +22,7 @@
 
 > **OpenSpec 自己不是 LLM，它是 prompt 编排器和状态引擎。**
 
-这里也要避免一个术语误会：`/opsx:*` 只是支持 command adapter 的宿主采用的一种命名空间，不是另一套运行时。Codex 使用 `$openspec-*` skills，不生成 `/opsx:*` command。机器协议里的事实来源仍然是 `openspec` CLI 和 `openspec/` 文件状态。
+这里也要避免一个术语误会：`/opsx:*` 只是支持 command adapter 的宿主采用的一种命名空间，不是另一套运行时。Codex 在 v1.8.0 使用 `$openspec-*` skills，不生成 `/opsx:*` command。机器协议里的事实来源仍然是 `openspec` CLI 和 `openspec/` 文件状态。
 
 ---
 
@@ -123,7 +123,7 @@ sequenceDiagram
 - `planningHome.root`：这次 change 实际所属 OpenSpec root。specs instruction 要求从 `<root>/openspec/specs/<capability-path>/spec.md` 读取 main spec；它可能来自 `--store`、项目 `store:` pointer、global default store 或当前 repo。
 - `planningHome.changesDir`：active/archive change 的确定性父目录；不要从 cwd 猜。
 - `artifacts[].status`：`done`（文件存在）| `ready`（依赖满足、可写）| `blocked`（缺依赖）| `skipped`（change 声明 `skip_specs` 后跳过、视为已满足）
-- `isPlanningComplete`：所有非 skipped planning artifact 都存在才算完成（主字段；`isComplete` 是兼容别名，二者同值）
+- `isPlanningComplete`：所有非 skipped planning artifact 都存在才算完成（v1.8.0 主字段；`isComplete` 是兼容别名，二者同值）
 - `nextSteps`：数组，给 agent 的建议下一步命令
 - `actionContext`：机器可读约束（`mode` 恒为 `repo-local`，`allowedEditRoots` 指向 project root）
 
@@ -163,33 +163,6 @@ sequenceDiagram
 
 机器真正依赖的是这些结构化字段，而不是给人阅读的文档。
 
-### `openspec instructions apply --json`（关键字段）
-
-```json
-{
-  "state": "blocked",
-  "contextFiles": ["proposal.md", "specs/orders/spec.md"],
-  "progress": { "total": 5, "completed": 2, "remaining": 3 },
-  "tasks": [ "..." ],
-  "context": "Stack: ...",
-  "guidance": "...",                             // operations.apply.guidance（如有）
-  "missingArtifacts": ["specs"],
-  "missingPrerequisites": ["specs", "design"],   // 完整 build order 缺失链
-  "warning": "Change has no delta specs ...",    // 无 specs 且未声明 skip_specs 时
-  "instruction": "..."
-}
-```
-
-**字段说明**：
-- `missingPrerequisites`：按 build order 收集的完整缺失链；文本模式对应 `Not created yet, in build order: ...`。此前只报第一跳（`missingArtifacts`）。
-- `warning`：change 无 delta specs 且未声明 `skip_specs: true` 时给出，附两条出路（先写 specs / 声明 `skip_specs`）；有 specs、声明了 marker、或仍被自身必需 artifact 挡住时不受影响。
-
-### `validate --report findings` / `show --diff` / `status --all` 的 JSON
-
-- `validate --report findings --all|--changes|--specs|--archived --json` 产出**独立** report：`{ "report": { "kind": "validation-findings", "scope": ... }, ... }`。只含有 error/warning/information 的条目，保留全量总数和退出码；须配显式 scope、不能带 item name、`archived` 与 active scope 不能混用（违规输出 `invalid_validation_report_request`）。delta 与 main spec 的合并冲突作为 informational findings 出现，不改退出码。
-- `show <change> --diff --json`：既有 payload 形状不变，在 MODIFIED delta 上加 `diff` 和 `warning` 字段；`--store <id>` 可对 store 做 diff。
-- `status --all --json`：`{ "changes": [<status>, ...], "root": ... }` 按 change name 稳定排序；单 change 加载失败贡献 `{ "changeName", "status": [diagnostic] }` 而非中止全扫；部分失败 exit 1。
-
 ---
 
 ## skill、command、workflow 的关系
@@ -208,9 +181,9 @@ sequenceDiagram
 - skill/command 是"投递方式"
 - CLI 是"运行时事实来源"
 
-`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，通常使用 `/openspec-propose` 或 `@openspec-propose`。Codex、Zed、Antigravity（从 `.agent` 迁入）与 vendor-neutral `agents` 共用 `.agents/skills/`，由 `resolveSharedSkillWriters()` 通用仲裁每个物理 root 的单一写入者；OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`。SourceCraft Code Assistant 走 adapter 路线，写 `.codeassistant/commands/opsx-<id>.md`。
+`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，使用 `/openspec-propose`。Codex、Zed、Antigravity 与 vendor-neutral `agents` 共用 `.agents/skills/`，OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`。
 
-OpenCode 同时有 skills 和 `.opencode/commands/opsx-*.md` command。adapter 会在生成 command 时加入 `$ARGUMENTS`，把用户在 command 后输入的参数交给 workflow；模板正文已有等价参数占位时不会再重复追加。不要把这个占位符复制到 Claude、Codex 或 Zed 的调用语法里。
+OpenCode 同时有 skills 和 `.opencode/commands/opsx-*.md` command。v1.10.0 的 adapter 会在生成 command 时加入 `$ARGUMENTS`，把用户在 command 后输入的参数交给 workflow；模板正文已有等价参数占位时不会再重复追加。不要把这个占位符复制到 Claude、Codex 或 Zed 的调用语法里。
 
 ---
 

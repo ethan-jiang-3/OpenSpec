@@ -3,7 +3,7 @@
 > 到了这一步，问题已经不是"全局约束该放哪"，而是更现实的一层：
 > **就算我知道它们该放进 `config.yaml`，那我到底该怎么写，才不会写成一堆正确但无用的话？**
 
-> **配置路由。** `context` 进入 artifact instructions，也进入 Apply/Archive；`rules.<artifact>` 只进入同名 artifact；Apply/Archive 专属的短稳定步骤写到 `operations.apply/archive.guidance`。`init --language` 只是创建新 config 时写入语言 context 的快捷入口；`schema init --default` 写入有效 `schema` 键（不再写无效的 `defaultSchema`）。
+> **v1.13.1 配置路由。** `context` 进入 artifact instructions，也进入 Apply/Archive；`rules.<artifact>` 只进入同名 artifact；Apply/Archive 专属的短稳定步骤写到 `operations.apply/archive.guidance`。`init --language` 只是创建新 config 时写入语言 context 的快捷入口。
 
 本章是手册内唯一维护**可复制 YAML、字段消费者和验证命令**的配置写法页；[05](05-高级-项目级全局约束到底放哪.md) 只负责先判断一条信息该不该进入项目层。
 

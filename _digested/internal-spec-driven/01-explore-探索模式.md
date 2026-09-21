@@ -1,6 +1,8 @@
 # 01 — explore：探索模式
 
-explore 是四条命令中最特殊的一个 —— 它不是工作流，不产生 artifact，不修改任何文件。它是一种**姿态（stance）**。
+explore 是四条命令中最特殊的一个 —— 它不是工作流，默认不产生 artifact；写文件（包括创建 OpenSpec artifact）只在用户明确要求且经确认后发生。它是一种**姿态（stance）**。
+
+> **v1.11.0–v1.13.1 写入语义演进**：v1.11.0 起写入需「命名 artifacts + 直接问 + 单独等确认」；v1.13.0（`b9281652`）上游修正了模板中「explore 绝不写文件」的过度承诺措辞；v1.13.1（`4c369e02`）起**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再额外要一轮 yes/no，且每次 handoff 都点名 `/opsx:propose`、`/opsx:apply`。
 
 ---
 
@@ -21,7 +23,7 @@ explore 的核心约束只有一个：**不许写代码**（可以创建 OpenSpe
 
 ## 2. CLI 调用链
 
-explore 只用到两个 CLI 命令，而且第二个是可选的：
+explore 主要用到两个 CLI 命令，第二个是可选的；v1.13.0 起（`3915db76`）生成指令还会引导列出 **spec inventory**——用 `openspec list --specs --json` 并以 store-aware 命令读 capability（`<planningHome.root>` 定位），不再把 in-flight changes 误当 specs：
 
 ### 启动时：`openspec list --json`
 
@@ -91,6 +93,17 @@ OpenSpec CLI（只读信息源）
 
 ---
 
+## 2.1 聚焦式 discovery（v1.12.0 #1017）
+
+explore 的提问方式在 v1.12.0 系统化：
+
+- **依赖优先**：先解决阻塞性决策（先定 outcome/scope，再谈 API/数据模型），上游答案变化时回访下游假设
+- **一次一问**：每个问题说明它解锁哪个决策；用户要求批量时才批量
+- **有依据的推荐**：证据支持时给出首选方案与理由、备选与代价；不替用户发明意图、优先级或外部约束
+- **对话即记录**：决策记在对话里（区分「已确认/建议默认/未决」），**不写文件**；沉默不是接受，回答问题也不是写入授权
+- **先查仓库再问**：事实能从 artifacts/源码/测试/文档/配置核实的，不问用户
+
+---
 ## 3. 零活跃 change 场景
 
 `openspec list --json` 返回 `[]`（项目中没有活跃 change）时，explore 不需要任何 OpenSpec 上下文就能工作。agent 直接从用户的问题出发，读代码、画图、讨论方案——这和 classic 模式下的通用代码讨论没有本质区别，但 explore 的 guardrails（第 8 节）仍然适用。
@@ -170,7 +183,9 @@ explore 明确禁止写应用代码（"Never write code or implement features"�
 | 发现新的工作项 | `tasks.md` |
 | 之前的假设不成立了 | 相关内容所在的 artifact |
 
-**捕获规则（scaffold-first）**：若用户要求把探索**捕捉成新 change**，agent 必须先 `openspec new change "<name>"`（要 `--store` 时带上）再写任何 artifact——CLI 的 scaffold 会生成 `.openspec.yaml` 等必需 metadata，绝不能手搓 `openspec/changes/<name>/` 目录。之后按 `status` → `instructions` 顺序建 artifact，且**不需要再让用户跑别的 workflow 命令**；若用户只要开 change，scaffold 后停下并展示状态即可。（改已有 change 的 artifact 不在此列，仍是直接编辑。）
+**v1.13.1 确认语义**：用户明确要求捕捉成 change，即视为该次写入的确认——不再要求 agent 额外问一轮 yes/no；扩范围（超出已描述内容）仍需再确认。
+
+**v1.8.0 捕获规则（scaffold-first）**：若用户要求把探索**捕捉成新 change**，agent 必须先 `openspec new change "<name>"`（要 `--store` 时带上）再写任何 artifact——CLI 的 scaffold 会生成 `.openspec.yaml` 等必需 metadata，绝不能手搓 `openspec/changes/<name>/` 目录。之后按 `status` → `instructions` 顺序建 artifact，且**不需要再让用户跑别的 workflow 命令**；若用户只要开 change，scaffold 后停下并展示状态即可。（改已有 change 的 artifact 不在此列，仍是直接编辑。）
 
 ---
 
@@ -190,7 +205,7 @@ explore 结束时没有强制要求。可能的出路：
 | | explore | propose | apply | archive |
 |------|------|------|------|------|
 | **有状态流转** | 否 | 是（artifact 从 blocked→ready→done） | 是（tasks 从未完成→完成） | 是（change 从活跃→archive） |
-| **修改文件系统** | 否（除非用户要求捕捉） | 是（创建 artifact 文件） | 是（改代码+更新 checkbox） | 是（合并 spec+移动目录） |
+| **修改文件系统** | 默认否；确认后可捕捉 artifact（v1.13.1：用户明确要求 capture 即确认） | 是（创建 artifact 文件） | 是（改代码+更新 checkbox） | 是（合并 spec+移动目录） |
 | **有"完成"概念** | 否 | 是（applyRequires 全部 done） | 是（所有 checkbox 标记） | 是（archive完成） |
 | **schema 管控** | 极弱（只读 status） | 极强（控制整个创建流程） | 中（apply phase 定义） | 强（控制合并规则） |
 

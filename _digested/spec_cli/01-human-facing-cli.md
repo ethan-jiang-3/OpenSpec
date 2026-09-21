@@ -16,11 +16,11 @@
 输入：
 
 - 目标项目路径。
-- 可选 `--tools`，用于非交互指定配置哪些 AI 工具（含 `command-code`）。
+- 可选 `--tools`，用于非交互指定配置哪些 AI 工具（v1.9.0 起含 `command-code`）。
 - 可选 `--profile`，覆盖全局配置中的 profile。
 - 可选 `--language <language>`：只在 greenfield 初始化时为新 `openspec/config.yaml` 种下 `context`，要求 artifact prose 使用该语言，同时保留英文结构 headings 与 `SHALL/MUST`。它不是持续的语言开关。
 - 全局配置中的 `profile`、`delivery`、`workflows`。
-- 自动检测项目目录中已存在的 AI 工具目录（如 `.claude/`、`.cursor/`），预选检测到的工具。
+- （v1.2.0+）自动检测项目目录中已存在的 AI 工具目录（如 `.claude/`、`.cursor/`），预选检测到的工具。
 
 输出：
 
@@ -31,7 +31,7 @@
 影响：
 
 - 它决定这个项目是否真正接入 OpenSpec 工作流。
-- 它决定外部工具能不能看到实际安装的工作流入口。入口语法由宿主 adapter 决定：Claude 可以是 `/opsx:*`，Codex 是 `$openspec-*` skills，不能混为一谈。
+- 它决定外部工具能不能看到实际安装的工作流入口。入口语法由宿主 adapter 决定：Claude 可以是 `/opsx:*`，Codex v1.8.0 是 `$openspec-*` skills，不能混为一谈。
 - 它不会直接创建业务 change，但会决定后续 change workflow 以什么外壳呈现。
 
 容易误解：
@@ -39,6 +39,8 @@
 - 它不是只创建一个目录。
 - 它更像“给项目安装一套工作流接入层”。
 - 若已有 config，`--language` 拒绝覆盖并要求手工把语言说明加入 `context`；空值、多行、控制/不可见格式字符以及导致 context 超过 50KB 的值会在写文件前失败。
+- v1.12.0 起 init 给空的 openspec/ 子目录写 `.gitkeep`，空目录会被 Git 跟踪；重跑 init 会安全恢复缺失的 marker 文件。
+- v1.13.0 起 init/update 会点名 profile 没装的 workflow（如 core 之外的 new/continue/ff 等），不再让缺失的 `/opsx:` 命令读起来像安装坏了。
 
 ### `openspec update`
 
@@ -69,10 +71,11 @@
 
 - 它不是业务数据升级工具。
 - 它主要更新的是“工具接入层”。
-- 交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
-- `update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。若 `.agents` 已被 `agents` 目标占用，遗留 Codex 升级不会劫持该树。
-- 该共享根由 Codex、Zed Agent 与 vendor-neutral `agents` 三方协调；Zed 的 tool id 是 `zed`。`update` 只有实际更新带 `requiresIdeRestart` 的 IDE-resident surface 才提示重启；CLI-only/skills 即时加载工具通常不提示。
-- Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
+- v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
+- v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。v1.9.0 起，若 `.agents` 已被 `agents` 目标占用，遗留 Codex 升级不会劫持该树。
+- v1.10.0 起该共享根由 Codex、Zed Agent 与 vendor-neutral `agents` 三方协调；Zed 的 tool id 是 `zed`。`update` 只有实际更新带 `requiresIdeRestart` 的 IDE-resident surface 才提示重启；CLI-only/skills 即时加载工具通常不提示。
+- v1.13.0 起 `update` 会刷新内容已 drift 的生成文件（不只看版本戳，`d9e1a28c`）；v1.13.1 起与 init 共享同一套 IDE restart 提示逻辑，workflow 被移除时也准确提示。
+- v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
 
 首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。完整边界见 `../mechanisms/05-cli-infra.md`。
 
@@ -104,7 +107,7 @@
 
 - change 列表的“完成度”主要来自 tasks 进度，而不是 artifact graph。
 - `list` 是概览，不是 workflow 决策引擎。
-- 项目外跑 `list`（没有 OpenSpec root、也没有遗留 `openspec/project.md`）会失败并非零退出，不再假装空项目通过。`--json` 失败时带共享诊断而不是空数组。
+- v1.9.0 起，项目外跑 `list`（没有 OpenSpec root、也没有遗留 `openspec/project.md`）会失败并非零退出，不再假装空项目通过。`--json` 失败时带共享诊断而不是空数组。
 
 ### `openspec view`
 
@@ -123,7 +126,7 @@
 影响：
 
 - 更适合人工浏览，不适合作为机器协议端点。
-- 它不能假定总是读取当前 cwd 下最近的 `openspec/`；会按 root selection 读取被选中的 root。
+- 它不能假定总是读取当前 cwd 下最近的 `openspec/`；v1.7.0 会按 root selection 读取被选中的 root。
 
 ## 3. 查看某个具体对象
 
@@ -138,7 +141,7 @@
 
 - item 名称。
 - 当前项目中可发现的 change IDs 和 spec IDs。
-- 可能附带的显示 flags，比如 change 的 `--deltas-only`、`--diff`。
+- 可能附带的显示 flags，比如 change 的 `--deltas-only`、`--diff`（v1.11.0 新增）。
 
 输出：
 
@@ -149,7 +152,7 @@
 
 - 是“看对象内容”的通用入口。
 - 适合调试文档结构和解析结果。
-- `--diff` 让审阅者直接看清 delta 相对 main spec 真正改了哪些行（绿色新增、红色删除），不再需要人工文件 diff。
+- v1.11.0 的 `--diff` 让审阅者直接看清 delta 相对 main spec 真正改了哪些行（绿色新增、红色删除），不再需要人工文件 diff。
 
 容易误解：
 
@@ -160,6 +163,8 @@
 
 ### `openspec validate`
 
+v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）；同版起（#1710）validate 将 delta 内 merge-conflict 标记报告为 informational findings（不改退出码），并区分文件系统读取错误与 spec 缺失。详见 `04-command-deep-dive.md`。
+
 本质目标：
 
 - 校验 change delta specs 和正式 specs 是否符合 OpenSpec 结构规则。
@@ -167,9 +172,7 @@
 输入：
 
 - 指定的 change/spec，或通过 `--all`、`--changes`、`--specs` 批量发现的对象。
-- 可选 `--archived`：只检查 `changes/archive/` 里 tasks 是否全部勾完（独立 scope，不改其他 validate 调用）。
-- 可选 `--report full|findings`（**必须**配显式批量 scope `--all`/`--changes`/`--specs`/`--archived` 之一，不能带 item name，`archived` 与 active scope 不能混用）：`findings` 只返回有 error/warning/information 的条目，保留全量运行的总数和退出码；`full` 是默认报告不变。
-- delta 与 main spec 的合并冲突报为 informational findings（成功报告里也出现，不改退出码）；文件系统读取错误保留为 error，不误判成「spec 缺失」。
+- v1.9.0 起可选 `--archived`：只检查 `changes/archive/` 里 tasks 是否全部勾完（独立 scope，不改其他 validate 调用）。
 - strict 模式开关。
 - 并发配置。
 
@@ -189,7 +192,7 @@
 
 - 它不是检查代码编译或测试结果。
 - 它主要检查的是 OpenSpec 文档语义结构。
-- `--all`/`--changes`/`--specs` 在项目外会失败，不要把空结果当成“全部通过”。单条 `validate <name>` 不变。
+- `--all`/`--changes`/`--specs` 在项目外会失败（v1.9.0），不要把空结果当成“全部通过”。单条 `validate <name>` 不变。
 
 ## 5. 完成并 archive change
 
@@ -297,7 +300,8 @@
 本质目标：
 
 - 告诉你 change 的 artifact 走到哪一步，哪些已完成，哪些被阻塞。
-- 默认看单个 change（`--change <name>`），新增 `--all` 一次看全部 active change。
+- 默认看单个 change（`--change <name>`），v1.11.0 新增 `--all` 一次看全部 active change。
+- v1.13.1 起 `status` 结尾输出 `Next:` 行，直接命名推进该 change 的下一条命令——恢复一个搁置的 change 不再需要背工作流。
 
 对人类意义：
 
@@ -319,9 +323,6 @@
 本质目标：
 
 - 输出 apply 阶段的实施说明，包括 artifact context files、项目 `context`、`operations.apply.guidance`、task 进度和阻塞状态。
-- change 无 delta specs 且未声明 `skip_specs: true` 时，输出 warning（这是 `openspec validate` 本会拒绝的状态）并给出两条出路：先写 specs，或声明 `skip_specs`。
-- 被阻塞的 apply 报**完整缺失链**（`missingPrerequisites`，按 build order 收集），不再是只报第一跳；文本输出 `Not created yet, in build order: ...`，`--json` 输出 `missingPrerequisites` 数组。
-- 补救指引给 CLI 命令（`openspec instructions <artifact> --change <name>`），不再引用 `openspec-continue-change` skill（core profile 不装它）。
 
 对人类意义：
 
@@ -331,7 +332,7 @@
 
 本质目标：
 
-- 只读地输出 archive 阶段的输入包；archive workflow 用它取得当前 context、`operations.archive.guidance` 与 change 状态。
+- 只读地输出 archive 阶段的输入包；v1.7.0 的 archive workflow 用它取得当前 context、`operations.archive.guidance` 与 change 状态。
 - 它不移动目录，也不替代 `openspec archive <name>` 的写入动作。
 
 ## 面向人类的使用顺序

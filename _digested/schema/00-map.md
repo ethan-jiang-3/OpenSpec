@@ -16,4 +16,5 @@
 
 OpenSpec 的 schema 本质是 **artifact DAG 定义文件**：它不描述业务事实（那是 specs 的事），也不只是模板（那是 template 的事），而是定义"一次 change 应该长成什么骨架"。核心价值在于：**你不需要改一行 OpenSpec 源码，纯靠 YAML + Markdown 就能定制出一套完全不同形状的工作流。**
 
-> **内置 schema 足迹**：上游删除了长期未维护的内置 `agent-dev-driven` 与 `requirement-driven`，现在随包分发的内置 schema 只有 `spec-driven`。这两个工作流的可运行副本保留在 `_faq_on_digested/09_schema-agent-dev/` 与 `10_schema-requirement/`，以项目级自定义 schema 形式安装，不再是 OpenSpec 内置项。
+
+> **v1.13.0 新增**：`openspec schema validate` 现在校验 apply block 与声明的 artifacts 一致（`apply.requires` 引用不存在的 artifact id 会被拒绝，`7090e16d`）。自定义 schema 作者多了一道结构守门。

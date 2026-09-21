@@ -93,7 +93,7 @@ template 里硬编码了五种典型入口的示例对话：
 | 方案比较 | "Should we use Postgres or SQLite?" | 追问上下文 → 建对比表 → 给推荐 |
 | 空输入 | 只进入 explore mode | 自由对话 |
 
-> 捕捉成**新 change** 时必须先 `openspec new change "<name>"` scaffold（保住 `.openspec.yaml` metadata），再按 `status`/`instructions` 建 artifact；capture 后不需用户再跑额外命令。详见 `../internal-spec-driven/01-explore-探索模式.md` 第五节。
+> **v1.8.0**：捕捉成**新 change** 时必须先 `openspec new change "<name>"` scaffold（保住 `.openspec.yaml` metadata），再按 `status`/`instructions` 建 artifact；capture 后不需用户再跑额外命令。详见 `../internal-spec-driven/01-explore-探索模式.md` 第五节。
 
 ## Guardrails
 
@@ -110,14 +110,15 @@ template 里写了 8 条 guardrail：
 | **Do explore the codebase** — 扎根现实 | 鼓励 |
 | **Do question assumptions** — 包括用户的和你自己的 | 鼓励 |
 
-## 图例改纯 ASCII
+## v1.12.0–v1.13.1 行为更新
 
-explore skill 与 template 里的示例图例从 Unicode box-drawing（`─│┌┐└┘` 等）改为纯 ASCII（`+` `-` `|` `-->` `v` `^`）。Unicode 图形符号在不同终端、字体和 language locale 下渲染宽度不一致，会让 ASCII 图对齐漂移；纯 ASCII 在任何环境都稳定。
-
-## 依赖感知提问与 spec-inventory
-
-- explore 模板的提问改为依赖感知——推荐默认值、先查代码库，再问 repo 自己答得了的事实。它和「Do explore the codebase」guardrail 配合：探索期的问题应聚焦用户判断，而不是让 agent 问一个 `grep` 就能回答的问题。
-- explore skill 与 command 同时列出 **spec inventory**（`openspec list --specs`）与 **change list**（`openspec list --json`）并区分二者——之前 agent 被要求「先读现有 specs」时枚举的是 changes。capability 读取用 `openspec show "<spec-id>" --type spec --json --no-scenarios`。filtered read 只是概览：agent 决策前仍需读完整 spec（含 scenarios）。
+| 变更 | 版本 | 说明 |
+|---|---|---|
+| spec inventory | v1.13.0 | explore 现在显式列出 spec inventory（`openspec list --specs` + store-aware 读取），不再把 in-flight changes 当 specs 读 |
+| capture 即确认 | v1.13.1 | v1.11.0 的「单独 yes/no 写入确认」演进：用户明确要求 capture 一个 change 即视为该次写入的确认；其余写操作仍需命名 + 直接问 + 单独等确认 |
+| handoff 点名 | v1.13.1 | 每次交接都点名 `/opsx:propose`、`/opsx:apply`，不再让用户猜下一步 |
+| 聚焦式 discovery 问题 | v1.12.0 | 问依赖感知的问题、推荐默认值，先查仓库再问用户已有的事实 |
+| 不再声称「绝不写文件」 | v1.13.0 | `b9281652` 修正了 explore 指令中过度承诺的措辞 |
 
 ## 和 FAQ 的衔接
 

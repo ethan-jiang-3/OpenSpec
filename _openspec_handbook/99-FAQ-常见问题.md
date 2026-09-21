@@ -24,7 +24,7 @@
 
 - `openspec`：终端 CLI，例如 `openspec init`、`openspec status --json`、`openspec archive <name>`
 - `/opsx:*`：Claude 等宿主里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
-- `$openspec-*`：Codex skills-only 入口（装在 `.agents/skills/`），例如 `$openspec-propose-change`、`$openspec-apply-change`
+- `$openspec-*`：Codex v1.8.0 的 skills-only 入口（装在 `.agents/skills/`），例如 `$openspec-propose-change`、`$openspec-apply-change`
 - `.claude/commands/opsx/`：Claude Code 里保存这些入口文件的位置
 
 所以不要把 `opsx` 理解成另一个产品。它只是让 agent 工具能触发 OpenSpec workflow 的入口层。
@@ -42,18 +42,11 @@
 - 跳过某些步骤（比如简单 change 可以不写 design）
 - 这就是"Actions, not phases"的意思
 
-apply 模板要求：任务需要的工作超出 spec 描述时，停下来把新增范围摊开，不要默默缩小或推迟指定行为；勾完 checkbox 只表示指定行为已经落地。
-
-### Q7a: 有哪些新的“审阅/校验”命令？
-**A**:
-- `openspec show <change> --diff`：对 MODIFIED requirement 输出彩色 unified diff，隔离真正变化的行（不再是重贴整个 requirement 块）；`--json --diff` 在 MODIFIED delta 上加 `diff`/`warning` 字段，`--store <id>` 可对 store 做 diff。
-- `openspec status --all`：一个进程扫全部 active change；单个 change 加载失败贡献 diagnostic 而不中止全扫，部分失败 exit 1。
-- `openspec validate --report findings --all|--changes|--specs|--archived`：只输出有 error/warning/information 的条目，保留全量总数和退出码；必须配显式 scope。validate 还会把 archive 会拒绝的 delta 合并冲突报为 informational findings，并检测 archive 遗留的 `TBD - created by archiving change ...` Purpose 占位符（warning，`--strict` 失败）。
-- `openspec instructions apply`：change 无 delta specs 且未声明 `skip_specs: true` 时警告并给两条出路；被阻塞时输出完整 `missingPrerequisites` 缺失链。
+v1.9.0 起 apply 模板要求：任务需要的工作超出 spec 描述时，停下来把新增范围摊开，不要默默缩小或推迟指定行为；勾完 checkbox 只表示指定行为已经落地。
 
 ### Q7: 什么时候该用 core profile，什么时候用 custom？
 **A**:
-- **core**（默认，6 个命令）：propose/explore/apply/update/sync/archive，适合大多数场景。sync 移入 core，update 移入 core。
+- **core**（默认，v1.2.0 引入，v1.6.0 起 6 个命令）：propose/explore/apply/update/sync/archive，适合大多数场景。sync 在 v1.4.0 移入 core，update 在 v1.6.0 移入 core。
 - **custom**：自选所有 12 个命令（可以额外启用 new/continue/ff/verify/bulk-archive/onboard 等），适合复杂项目
 - **切换**：`openspec config profile`
 
@@ -72,7 +65,7 @@ apply 模板要求：任务需要的工作超出 spec 描述时，停下来把�
 - 在 change 里写 delta spec
 - archive 时把它 merge 回 specs/（除非明确 `--skip-specs` 或拒绝 spec update）
 
-也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为变化”；它不能与 delta spec 文件共存。
+v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 spec-level 行为变化”；它不能与 delta spec 文件共存。
 
 ### Q10: delta spec 和正式 spec 有什么区别？
 **A**:
@@ -119,7 +112,7 @@ apply 模板要求：任务需要的工作超出 spec 描述时，停下来把�
 - 程序化 merge 到 specs/
 - 把 change 移到 archive/
 
-宿主 archive workflow 还会读取 `instructions archive` 的 context/guidance；已正确 early-sync 的完全一致 delta 会是 no-op，近似内容仍会报错。
+宿主 archive workflow 在 v1.8.0（v1.7.0 起）还会读取 `instructions archive` 的 context/guidance；已正确 early-sync 的完全一致 delta 会是 no-op，近似内容仍会报错。
 
 ### Q16: archive 时有冲突怎么办？
 **A**: OpenSpec 不会在 main spec 写入 Git 式 conflict marker。发生真实冲突时，archive 会中止，main spec 与 change 都保持原样。正确做法是：
@@ -128,7 +121,7 @@ apply 模板要求：任务需要的工作超出 spec 描述时，停下来把�
 2. 把当前 delta 按新基线重写；同 path 并行时，先完成前一个 archive，再做 rebaseline。
 3. 运行 `openspec validate <change> --type change --strict`，再 archive。
 
-完全相同、已 early-sync 的 delta 可以是 no-op；内容近似但不同仍必须人工重基线，不能期待自动合并。`openspec validate` 会在归档前就把这类会合并冲突报为 informational findings——archive 会拒绝的东西，validate 阶段就能看到（不改退出码）。
+完全相同、已 early-sync 的 delta 可以是 no-op；内容近似但不同仍必须人工重基线，不能期待自动合并。
 
 退役失败要按三分支判断：
 1. **只缺授权 marker**：REMOVED 拿掉最后一个 requirement，重建结果没有未归属内容时，CLI 才建议在合法 `.openspec.yaml` 中加 `retire_capabilities: true`。
@@ -137,7 +130,7 @@ apply 模板要求：任务需要的工作超出 spec 描述时，停下来把�
 
 完整反例和三步修复见 [12 实战·如何正确修改 artifacts](12-实战-如何正确修改-artifacts.md#capability-退役marker-不是万能绕过开关)。
 
-此外还有一个非交互边界：agent/CI 里 stdin closed 时，archive 会指出缺哪个 flag 并给**携带原 flags 的可重跑命令**（如 `openspec archive <name> --skip-specs --yes`）——直接粘贴重跑即可，不必凭空猜参数；不带 change 名时它现在会以 exit 1 明确请求 change 名，而不是静默吞错。非 TTY 不再往捕获日志里写 ANSI；无 change 名时要求先传入名字，不画菜单。
+v1.8.0 以来还有一个非交互边界：agent/CI 里 stdin closed 时，archive 会指出缺哪个 flag 并给**携带原 flags 的可重跑命令**（如 `openspec archive <name> --skip-specs --yes`）——直接粘贴重跑即可，不必凭空猜参数；不带 change 名时它现在会以 exit 1 明确请求 change 名，而不是静默吞错。v1.9.0 起非 TTY 不再往捕获日志里写 ANSI；无 change 名时要求先传入名字，不画菜单。
 
 想在 CI 里抓“归档时 tasks 没勾完”的工作，用独立的 `openspec validate --archived`（不改普通 `validate` 行为，也不重验已应用的 delta）。
 
@@ -236,33 +229,32 @@ specs/
 ### Q26: OpenSpec 支持哪些 AI 工具？
 **A**: 支持工具列表会随 release 变化，应以当前 `openspec init` / release note 为准；以下是历史示例：
 - **主要**：Claude Code、Cline、Cursor、Codex、Devin Desktop（原 Windsurf）、GitHub Copilot
-- **新增**：Pi（pi.dev）、Kiro（AWS）
-- **新增**：Junie（JetBrains）、Lingma、ForgeCode、IBM Bob
-- **新增**：Kimi CLI、Mistral Vibe
-- **新增**：Trae、Oh My Pi
-- **新增**：CodeArts Agent、Hermes Agent、ZCode
-- **新增**：MiniMax Code（全局 skills-only）、Atlassian Rovo Dev CLI、GitHub Copilot 一等支持（本地 skill + opt-in cloud agent）、vendor-neutral `agents` 目标（`.agents/skills/`，与 Codex 共享根）
-- **新增**：Command Code（`.commandcode/skills/` + `/opsx-*` slash commands）
-- **新增**：Zed Agent（skills-only，写 `.agents/skills/`，与 Codex/`agents` 共享根）
-- **变更**：Antigravity 从 `.agent/` 迁入 `.agents/` 共享根
-- **新增**：SourceCraft Code Assistant（`.codeassistant/commands/opsx-<id>.md`）
+- **v1.2.0 新增**：Pi（pi.dev）、Kiro（AWS）
+- **v1.3.0 新增**：Junie（JetBrains）、Lingma、ForgeCode、IBM Bob
+- **v1.4.0 新增**：Kimi CLI、Mistral Vibe
+- **v1.6.0 新增**：Trae、Oh My Pi
+- **v1.7.0 新增**：CodeArts Agent、Hermes Agent、ZCode
+- **v1.8.0 新增**：MiniMax Code（全局 skills-only）、Atlassian Rovo Dev CLI、GitHub Copilot 一等支持（本地 skill + opt-in cloud agent）、vendor-neutral `agents` 目标（`.agents/skills/`，与 Codex 共享根）
+- **v1.9.0 新增**：Command Code（`.commandcode/skills/` + `/opsx-*` slash commands）
+- **v1.10.0 新增**：Zed Agent（`zed`）
+- **v1.12.0 新增**：SourceCraft（`codeassistant`，VS Code 扩展）；vendor-neutral 目标在选择器中显示为 "Other / Universal (shared .agents skills)"
 - 也可以直接用 CLI（不用任何 AI 工具）
 
 ### Q27: 怎么安装 OpenSpec 到我的 AI 工具？
 **A**: 
-1. 在项目里运行 `openspec init`（会自动检测已安装的工具并预选）
+1. 在项目里运行 `openspec init`（v1.2.0+ 会自动检测已安装的工具并预选）
 2. 也可以手动指定：`openspec init --tools claude,cursor`
 3. 运行 `openspec update` 确保 skills/commands 是最新的
-4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change`，Zed 为 `/openspec-propose` 或 `@openspec-propose`
+4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change`，Zed 为 `/openspec-propose`
 
 ### Q27a: Zed 和 Codex 为什么都写 `.agents/skills/`？
-**A**: Codex、Zed Agent 与 vendor-neutral `agents` 共用一个 OpenSpec 管理的 skill 树；Antigravity 也从 `.agent/` 迁入。共享根由 `resolveSharedSkillWriters()` 通用仲裁每个物理 root 的单一写入者（skills-native 渲染器优先、已存在 owner 优先、Codex 作新 root 默认写入者），不再是硬编码的三方协议。Zed 是 skills-only，要求 Zed ≥ 1.4.2 且 worktree 已信任；OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不创建/修改根 `AGENTS.md`。
+**A**: 它们共用一个 OpenSpec 管理的 skill 树：v1.10.0 是 Codex、Zed Agent 与 vendor-neutral `agents` 三方，v1.11.0 起 Antigravity 也迁入（它另写 `.agents/workflows/` commands）。OpenSpec 只管理 `openspec-*` 目录和 `.openspec-target` ownership marker，不创建/修改根 `AGENTS.md`；共享树每次运行只写一份，写入者由 marker 决定。
 
 ### Q27b: 为什么全局安装后没有 completion 提示？
 **A**: npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction` 的交互式 CLI 运行才会在 stderr 一次提示 `openspec completion install`；JSON、非 TTY 和 completion 子命令会 defer，CI、已安装 completions、不可支持 shell 或 `OPENSPEC_NO_COMPLETIONS=1` 会保持安静。只设置 `process.exitCode` 的失败仍会进 hook；直接 `process.exit(1)` 的失败跳过 hook且不消费提示。
 
 ### Q27c: custom profile 只选 archive，为什么还出现 sync？
-**A**: archive/bulk-archive 依赖 sync。会在第一个依赖项前自动插入 sync；已有 sync 不重复、不重排，custom 也不会因此变成 core。
+**A**: archive/bulk-archive 依赖 sync。v1.10.0 会在第一个依赖项前自动插入 sync；已有 sync 不重复、不重排，custom 也不会因此变成 core。
 
 ### Q28: 为什么有 `.claude/` 和 `openspec/` 两个目录？
 **A**: 

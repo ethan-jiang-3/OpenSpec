@@ -14,6 +14,8 @@
 
 ## 总表
 
+> **v1.13.1**：`status` 的 text 输出结尾新增 `Next: <command>` 行（仅 text，JSON 不变；`new change` 自 v1.5.0 即有同款收尾）。
+
 | 命令 | 主要受众 | 输入来源 | 直接输出 | 间接影响 | 是否改状态 |
 | --- | --- | --- | --- | --- | --- |
 | `init` | 人类 + 工具集成 | 项目路径、global config、工具目录、可选 `--language` | `openspec/` 基础设施、skills/commands、安装报告；greenfield language context | 决定外部工具能否使用 OpenSpec 工作流；已有 config 不被 language flag 覆盖 | 是 |
@@ -21,7 +23,7 @@
 | `list` | 人类 + 机器 | changes/specs 目录、task progress、mtime | 列表或 JSON 索引 | 帮助选择目标 change/spec | 否 |
 | `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard | 改善浏览体验 | 否 |
 | `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON | 帮助人工审阅和调试解析结果 | 否 |
-| `validate` | 人类 + 机器 | change delta specs、正式 specs；`--archived` 时为 archive 目录的 tasks | 合法性报告、退出码 | 决定是否需要修复、是否适合 archive；`--archived` 给 CI 抓未勾完的归档工作 | 否 |
+| `validate` | 人类 + 机器 | change delta specs、正式 specs；`--archived` 时为 archive 目录的 tasks；bulk scope 可 `--report findings`（v1.12.0） | 合法性报告、退出码；findings 精简报告（JSON 标识 report/scope） | 决定是否需要修复、是否适合 archive；`--archived` 给 CI 抓未勾完的归档工作；merge-conflict 标记作为 informational findings 报告 | 否 |
 | `archive` | 人类 + OPSX | change 内容、主 specs、validate 结果 | 更新后的 specs、archive 目录、报告 | 结束 change 生命周期 | 是 |
 | `config` | 人类 | global config、workflow 选择 | 配置变更与摘要 | 影响后续 `init/update` 投递结果 | 是 |
 | `schema` | 高级用户/作者 | schema 搜索路径、schema.yaml、templates | schema 列表、校验结果、脚手架 | 改变 workflow 定义层 | 可能 |

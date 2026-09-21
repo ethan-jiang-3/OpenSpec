@@ -168,3 +168,7 @@ FAQ `06_apply-ready-to-archive-ready/` 从工程视角分析了 task loop、chec
 | Step 6: task loop | L72-L86 |
 | Guardrails | L146-L154 |
 | Fluid Workflow | L156-L161 |
+
+## v1.13.0 行为更新
+
+**无 delta spec 的 change 会被 apply 警告**（`8ba4ac1b`）：之前只要 tasks 存在，apply 就报 ready，哪怕完全没有 spec delta（这正是 validate 拒绝的状态）。现在 text 和 `--json` 都警告，并给出两条出路：补写 specs，或显式声明 `skip_specs: true`。

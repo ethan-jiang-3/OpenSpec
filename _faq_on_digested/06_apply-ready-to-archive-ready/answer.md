@@ -2,7 +2,7 @@
 
 ## 一句话
 
-宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段。下文 `/opsx:apply` 是 Claude 示例；Codex 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。它的核心循环是：
+宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段。下文 `/opsx:apply` 是 Claude 示例；Codex v1.8.0 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。它的核心循环是：
 
 ```text
 选择 change
@@ -170,7 +170,7 @@ for each task where done = false:
 
 apply 的 task 顺序来自 `tasks.md`，不是 CLI 再算一次 DAG。CLI 只解析 checkbox 和进度。
 
-apply 模板要求：若任务需要的工作**超出 spec/tasks 描述**，或你想靠缩小、推迟、接受例外来塞进范围，必须把新增范围摊开并暂停，不要默默吸收；只有指定行为全部落地才能勾 `- [x]`。这是 skill/command 文本，不是 CLI 硬门。
+v1.9.0 起 apply 模板要求：若任务需要的工作**超出 spec/tasks 描述**，或你想靠缩小、推迟、接受例外来塞进范围，必须把新增范围摊开并暂停，不要默默吸收；只有指定行为全部落地才能勾 `- [x]`。这是 skill/command 文本，不是 CLI 硬门。
 
 ## Step 7：实施代码并更新 checkbox
 
@@ -203,7 +203,7 @@ Working on task 3/7: Add OAuth callback route
 
 这一步很重要：OpenSpec 的 apply progress 来自 `tasks.md` checkbox，不来自 agent 的口头总结。
 
-若 verification 无法执行或失败，保持 `- [ ]` 并暂停说明原因；不能先勾选再把验证留给“最后统一跑”。这项约束来自 tasks 生成契约与 apply 工作方式，不改变既有 pause-on-scope 结论。
+若 verification 无法执行或失败，保持 `- [ ]` 并暂停说明原因；不能先勾选再把验证留给“最后统一跑”。这项约束来自 v1.10.0 的 tasks 生成契约与 apply 工作方式，不改变既有 pause-on-scope 结论。
 
 ## Step 8：暂停条件
 
@@ -281,17 +281,20 @@ Completed this session:
 
 ## 参考来源
 
-源码引用：
+源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/apply-change.ts` | apply skill 的完整步骤、guardrails、输出格式和 fluid workflow 说明 |
-| `src/commands/workflow/instructions.ts` | `generateApplyInstructions()`、task checkbox 解析、state/progress/contextFiles 输出；no-spec 警告 + `missingPrerequisites` 完整缺失链 |
+| `src/commands/workflow/instructions.ts` | `generateApplyInstructions()`、task checkbox 解析、state/progress/contextFiles 输出 |
 | `src/core/artifact-graph/outputs.ts` | required artifact 输出文件判定 |
 | `src/core/artifact-graph/instruction-loader.ts` | change context 和 artifact 文件收集 |
 | `src/core/change-status-policy.ts` | `actionContext`（repo-local）的语义 |
 | `schemas/spec-driven/schema.yaml` | 默认 `apply.requires: [tasks]`、`tracks: tasks.md` 和 apply instruction |
-| [`../../_digested/internal-spec-driven/03-apply-实施执行.md`](../../_digested/internal-spec-driven/03-apply-实施执行.md) | apply gate、checkbox、实施循环、暂停条件；门控盲区修复 |
+| [`../../_digested/internal-spec-driven/03-apply-实施执行.md`](../../_digested/internal-spec-driven/03-apply-实施执行.md) | apply gate、checkbox、实施循环、暂停条件 |
 | [`../04_propose-to-apply-ready/answer.md`](../04_propose-to-apply-ready/answer.md) | apply-ready 的前置状态 |
 
-**对 Apply 的影响**：apply 只按 `apply.requires` 门控，所以「tasks 先于 specs 写好」的 change 曾读作 ready——但这是 `openspec validate` 会拒绝的状态。`instructions apply` 对该 change 报 warning 并给两条出路（写 specs / `skip_specs: true`）；被阻塞的 apply 报完整 build order 缺失链（`missingPrerequisites`），不再只报第一跳。
+
+## v1.13.0 补充：apply 遇到无 delta spec 的 change 会警告
+
+`openspec instructions apply` 之前只要 tasks 存在就报 ready，哪怕完全没有 spec delta——而这正是 `openspec validate` 拒绝的状态（`8ba4ac1b`）。v1.13.0 起 text 与 `--json` 都会警告，并给出两条出路：补写 specs，或在 `.openspec.yaml` 显式声明 `skip_specs: true`。纯重构/文档类 change 如果确实无行为变化，走后者是合法路径。

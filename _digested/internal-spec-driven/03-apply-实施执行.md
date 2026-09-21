@@ -68,46 +68,39 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 - **`tasks`**：解析后的 checkbox 列表，每个带 label 和 done 状态
 - **`missingArtifacts`**（仅缺少 required artifact 时）：哪些 artifact 还没创建。注意：tracks 文件缺失或 tasks.md 没有 checkbox 也会 `blocked`，但不一定有 `missingArtifacts`
 
-### 2.4 无 spec 警告 + 完整缺失链
-
-这里修了 apply 门控的两个盲区（`src/commands/workflow/instructions.ts`，`generateApplyInstructions` / `applyInstructionsCommand`）：
-
-1. **无 delta spec 的 change 不再假装 ready**。apply 只按 `apply.requires` 门控，所以 `tasks.md` 先于 specs 写好的 change 读作 ready to implement——但这是 `openspec validate` 会拒绝的状态。`instructions apply` 对该 change 报 warning（text + `--json` 的 warning 字段），点名两条出路：写 specs，或声明 `skip_specs: true`。有 specs、声明 `skip_specs`、或仍被自己必需 artifact 挡住的 change 不受影响。
-
-2. **blocked 报完整 build order 缺失链**。之前只报第一跳——change 只有 proposal 时报告 `Missing artifacts: tasks`，而 tasks 依赖的 specs 也缺失，读起来像「直接从 proposal 写 tracking 文件」。用 `collectMissingPrerequisites` 收集完整链：文本输出 `Not created yet, in build order: <chain>`，`--json` 输出 `missingPrerequisites` 数组。补救命令是 `openspec instructions <artifact> --change <name>`（CLI 命令），不再引用 `openspec-continue-change` skill——core profile 不装它。
-
 ---
 
 ## 3. Checkbox 解析机制
 
 ### 3.1 正则
 
-统一走共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`），`list` / `view` / `instructions apply` / `archive` 对同一 tasks 文件的判断完全一致：
+计数器仍在 `src/utils/task-progress.ts`（`parseTaskLines` / `getTaskProgressDetailForChange`），`list` / `view` / `instructions apply` / `validate --archived` / archive 共享同一判断；v1.13.1 起认全 CommonMark 标记（`-`/`*`/`+`/有序 `1.`/`1)`，最多九位数字）。另注意：新模块 `src/core/validation/task-checkboxes.ts` 职责不同——它只做「tasks 文件有列表项但一个 checkbox 都没有」的检测，供 validate 警告（`09984b8`）：
 
 ```typescript
 const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
 ```
 
-三个关键点（放宽/修正）：
+三个关键点（v1.8.0 放宽/修正）：
 
-- **`^\s*[-*]`** — 允许前导缩进，**缩进的子任务照常计数**（旧版锚定列 0，`  - [ ] 1.1.1` 对 progress 不可见，导致有未完成子任务也报 "✓ Complete" 甚至被 archive 收掉）。
+- **列表标记** — v1.13.1 起 `-`/`*`/`+` 与有序标记（`1.`、`1)`，最多九位数字）都算（`8fc65b7f`）；此前有序/`+` 前缀下的 checkbox 对全部共享消费者不可见——含未完成有序任务的 change 曾报 "✓ Complete" 并被 archive 静默收掉。允许前导缩进，**缩进的子任务照常计数**。
 - **`\[([\sxX])\]`** — 方括号内认 `\s`（空格/制表符/不间断空格，都是"未完成"）、`x`/`X`（完成，大小写不敏感）。
 - **`\s*(.*)`** — 尾部不锚定 `$`，描述可为空；`\r` 不会被 `.` 吞掉，CRLF 的 tasks.md 也能解析。
 
 ### 3.2 什么算 checkbox
 
 - `- [ ] Task` → 未完成
-- `- [x] Task` → 完成
-- `- [X] Task` → 完成（大小写不敏感）
-- `* [ ] Task` → 也支持 `*` 前缀
+- `- [x] Task` / `- [X] Task` → 完成（大小写不敏感，`- [ x]` 这种带空格的也算完成）
+- `* [ ]`、`+ [ ]`、`1. [ ]`、`1) [ ]` → 均支持（v1.13.1 起全 CommonMark 标记）
 - 空格数量灵活（`-  [ ]` 和 `- [ ]` 都可以）
-- `  - [ ] 1.1.1 子任务` → **算**（前导缩进不再隐藏它）
+- `  - [ ] 1.1.1 子任务` → **算**（v1.8.0 起前导缩进不再隐藏它）
+- `- [~]`、`- [-]`、空 `- []` → **未完成**（方括号内只有空白或 x/X 才有意义）
 
 ### 3.3 什么不算 checkbox
 
 - 没有方括号的 `- Task` → 不算
 - `- [?] Task` → 不算（方括号内只认空白与 x/X）
-- 非列表项中的 `[ ]` → 不算（必须以 `-` 或 `*` 开头，开头前允许缩进）
+- 非列表项中的 `[ ]` → 不算（必须以列表标记开头，开头前允许缩进）
+- **整份 tasks 文件只有列表项、一个 checkbox 都没有** → v1.13.1 起 `validate` 会警告并指出第一处 offending line（`09984b8`）；此前 `list`/`status` 报 "No tasks"、archive 无从警告未完成工作
 
 ### 3.4 编号约定
 
@@ -216,7 +209,7 @@ apply:
 
 `apply.tracks` 指定用哪个文件追踪进度。它总是指向一个有 checkbox 的文件。
 
-`apply.instruction` 是 agent 在实施时收到的动态指导文字。共享 apply 模板还加了一条 **pause-on-scope** 护栏（`src/core/templates/workflows/apply-change.ts`）：任务需要的工作超出 spec/tasks 描述，或想靠 drop / narrow / defer / accept exceptions 塞进范围时，必须把新增范围摊开并暂停，不能默默缩小指定行为；只有指定行为全部落地才能勾 `- [x]`。这是 prompt 合同，不是 CLI 硬校验。
+`apply.instruction` 是 agent 在实施时收到的动态指导文字。v1.9.0 起共享 apply 模板还加了一条 **pause-on-scope** 护栏（`src/core/templates/workflows/apply-change.ts`）：任务需要的工作超出 spec/tasks 描述，或想靠 drop / narrow / defer / accept exceptions 塞进范围时，必须把新增范围摊开并暂停，不能默默缩小指定行为；只有指定行为全部落地才能勾 `- [x]`。这是 prompt 合同，不是 CLI 硬校验。
 
 ---
 

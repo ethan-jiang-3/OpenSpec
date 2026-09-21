@@ -3,7 +3,7 @@
 > 这一篇讲的是：实现已经写出来以后，怎么把部署、验证、回滚也纳入 OpenSpec 的 change 闭环。
 > OpenSpec 不是 CI/CD 系统，但它很适合把部署这件事讲清楚、做有序、验有据。
 
-> **实施/归档提示。** 将持续的部署检查写进 `operations.apply/archive.guidance`，但每个生成的 task 仍要在同一 checkbox 中声明 verification；只有跨多项工作的系统检查才单列 Integration Verification。`openspec validate --report findings --all` 可只列出有问题的条目，适合接入 CI。prompt 不替代 CI。
+> **v1.13.1 实施/归档提示。** 将持续的部署检查写进 `operations.apply/archive.guidance`，但每个生成的 task 仍要在同一 checkbox 中声明 verification；只有跨多项工作的系统检查才单列 Integration Verification。prompt 不替代 CI。
 
 ---
 

@@ -3,7 +3,7 @@
 > 前面的几篇已经把概念一层层拆开了。
 > 这一篇不再单独讲概念，而是用一个完整案例，把 `propose → apply → archive` 整条线真正走一遍。
 
-> **实战校正。** 下文 `/opsx:*` 为 Claude 示例。每条 tasks checkbox 都把 verification 写在同一条内；单列 Integration Verification 只覆盖跨任务行为。这个要求来自 schema instruction，不是 validate 新硬校验。apply 在 change 无 delta specs 时会警告并给 `skip_specs` 出路，被阻塞时列出 `missingPrerequisites` 完整缺失链。
+> **v1.13.1 实战校正。** 下文 `/opsx:*` 为 Claude 示例。每条 tasks checkbox 都把 verification 写在同一条内；单列 Integration Verification 只覆盖跨任务行为。这个要求来自 schema instruction，不是 validate 新硬校验。
 
 ---
 
@@ -136,8 +136,6 @@ OpenSpec 的思路不是这样。
 
 在发起 change 之前，你可以先 `/opsx:explore` 探一下现状——施工任务页现有 spec 写了什么、过滤逻辑在哪、谁有导出权限。这是选做，但能让 proposal 的 Scope 写得更准。
 
-> **explore 边界。** 提问改为**依赖感知**：先查代码库，再问 repo 自己答得了的事实，把问题留给真正需要你判断的地方。同时 explore 生成的 guidance 会同时列出 **spec inventory**（`openspec list --specs`）与 **change list**（`openspec list --json`）并区分二者——过去 agent 被要求"先读现有 specs"时枚举的是 changes。capability 概览用 `openspec show "<spec-id>" --type spec --json --no-scenarios`，但 filtered read 只是概览，决策前仍要读完整 spec（含 scenarios）。另外 explore 在**第一次写操作前**必须先命名拟创建的 artifacts/文件、问一个明确的 yes/no、并在单独消息里等确认；回答设计问题不算写入授权；示例图例也改为纯 ASCII，避免不同终端/字体/locale 下宽度漂移。
-
 ## 第 0.5 步：先证明该改 `orders`，而不是临时造一个 `export` capability
 
 “CSV 导出”听起来像一个新功能，但 capability 的切分不是按按钮、接口或代码目录决定的。这里先做一次很小的 discovery：
@@ -174,8 +172,6 @@ openspec show orders --type spec --json --requirements
 它的本质是：
 
 > **把原本一句模糊需求，展开成一个可实施的 change 工作包。**
-
-> **propose 边界。** 起草前会先检查相关项目代码、测试和文档，规划前还会加载所选项目/store root 的 `context`——计划要反映现有实现，而不是把"读代码"推迟成实施任务。若解析不到 root，propose 不写任何文件就停止并建议初始化，不再隐式创建 root。
 
 执行后，典型目录会变成：
 
@@ -424,7 +420,7 @@ size is small for the current staff workflow.
 
 - `tasks` 就是施工边界
 
-> **任务计数**：上面这种 `- [ ] 1.1` 顶层 checkbox 一定被追踪；若你把子任务写成**缩进的** `  - [ ] 1.1.1`，也计入进度（旧版会漏掉，导致 status 显示 "✓ Complete"、archive 也不警告却带着半截活收档）。`list` / `view` / `instructions apply` / `archive` 用同一个解析器，口径一致。
+> **v1.8.0 任务计数**：上面这种 `- [ ] 1.1` 顶层 checkbox 一定被追踪；若你把子任务写成**缩进的** `  - [ ] 1.1.1`，v1.8.0 起也计入进度（旧版会漏掉，导致 status 显示 "✓ Complete"、archive 也不警告却带着半截活收档）。`list` / `view` / `instructions apply` / `archive` 用同一个解析器，口径一致。
 
 ---
 
@@ -482,8 +478,6 @@ size is small for the current staff workflow.
 ```
 
 这时 `tasks.md` 本身就成了 change 的实施状态记录。
-
-> **apply 门控。** apply 只按 schema 的 `apply.requires` 门控。若 `tasks.md` 先于 specs 写好，change 之前会被读成 ready；`openspec instructions apply` 会警告并给两条出路：先写 specs，或在 `.openspec.yaml` 声明 `skip_specs: true`（`openspec validate` 本就拒绝这种状态）。被前置 artifact 挡住时，输出完整 `missingPrerequisites` 缺失链（按 build order），而不是只报第一跳。
 
 ---
 
@@ -606,7 +600,7 @@ openspec status --change add-task-csv-export --json
 openspec validate add-task-csv-export --type change --strict
 ```
 
-第一条会给 workflow project `context` 与 `operations.archive.guidance`；它们是项目级提醒，不会替代 delta、tasks 或 validator。最后一条通过后，archive 才有一个确定的 `orders` delta 可以同步。若团队已通过独立 sync 把**完全一致**的 delta 写入 `orders` main spec，会把它视作 no-op；只要 requirement 标题、正文或 scenario 有差异，仍必须先重新核对，而不会被静默吞掉。
+第一条会给 workflow project `context` 与 `operations.archive.guidance`；它们是项目级提醒，不会替代 delta、tasks 或 validator。最后一条通过后，archive 才有一个确定的 `orders` delta 可以同步。若团队已通过独立 sync 把**完全一致**的 delta 写入 `orders` main spec，v1.8.0（v1.7.0 起）会把它视作 no-op；只要 requirement 标题、正文或 scenario 有差异，仍必须先重新核对，而不会被静默吞掉。
 
 这一步最核心的事，不是挪目录，而是两件事：
 

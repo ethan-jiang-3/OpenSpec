@@ -2,7 +2,7 @@
 
 > **Store 是可选的跨仓库 OpenSpec 引用机制：声明哪些已 checkout 的 OpenSpec root 与当前项目相关，并给人或 agent 一个按需读取它们的入口。** 它不是多仓库协调层，也不是本地 main specs 变大后的默认解法；单仓库项目通常不需要它。
 
-> **root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。specs artifact instruction 显式返回 `planningHome.root`，agent 必须以它定位 main spec；`openspec show <change> --diff --store <id>` 可对 store 中的 main spec 做 delta 对照。
+> **v1.13.1 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。specs artifact instruction 现在显式返回 `planningHome.root`，agent 必须以它定位 main spec。
 
 ---
 
@@ -31,7 +31,7 @@ flowchart LR
 
 产品需求同时砸在 API、Web、Mobile 三个 repo 上——每个 repo 各自的 spec-driven 流程管好自己的代码没问题，但 agent 在做 API 的 change 时，如果能看一眼 Web 和 Mobile 的 specs，方案会考虑得更周全。
 
-在 store 模型出现之前，OpenSpec 的所有操作都是 repo-local 的：
+在 store 模型（v1.5.0）出现之前，OpenSpec 的所有操作都是 repo-local 的：
 
 ```text
 my-project/
@@ -128,7 +128,7 @@ openspec store doctor platform-api
 
 ### view：先确认你到底在看哪个 root
 
-一个容易误会点是：store 注册、项目 `references:`、机器级 `defaultStore` 都存在，但它们不是同一件事。`defaultStore` 只是本机低优先级 fallback；只要当前项目有可解析的 local planning root，它不会把该项目悄悄切到另一个 store。
+v1.8.0（v1.7.0 起）的一个容易误会点是：store 注册、项目 `references:`、机器级 `defaultStore` 都存在，但它们不是同一件事。`defaultStore` 只是本机低优先级 fallback；只要当前项目有可解析的 local planning root，它不会把该项目悄悄切到另一个 store。
 
 ```bash
 openspec view                     # 按当前解析出的 root 查看
@@ -160,7 +160,7 @@ openspec view --store platform-api # 明确查看指定 store
 
 ### MODIFIED delta：不要把 cwd 当成 main-spec root
 
-这里修复的是 **specs instruction 给 agent 的路径合同**，不是新增自动 spec retrieval。一个 change 在 store 中时，当前 shell 的仓库与 main spec 所在 root 可能不同：
+v1.10.0 修复的是 **specs instruction 给 agent 的路径合同**，不是新增自动 spec retrieval。一个 change 在 store 中时，当前 shell 的仓库与 main spec 所在 root 可能不同：
 
 ```text
 错误：<当前工作目录>/openspec/specs/identity/session/spec.md
@@ -246,6 +246,12 @@ store 不改变核心流程——它只是在 agent 探索时多了一个「可�
 | 3+ 仓库且 specs 互有引用 | store 可作为跨 repo **发现索引**；每个 repo 的 change、review、archive 仍各自进行 |
 
 不要因为“仓库多”或“spec 多”自动启用它。store 的收益来自已有 checkout 之间的明确引用；它不会减少本地 capability 的建模成本，也不会取代本章开头列出的 catalog、impact matrix 或团队协作纪律。
+
+## v1.13.x 行为修正
+
+- `store remove` 拒绝删除包含其他注册 store 的目录（报错会点名要先 `openspec store unregister` 的嵌套 store）。
+- 名为 `specs`/`changes` 的 store 不再被误当 root。
+- `store setup --no-init-git` 可以在已有 git 仓库（如 dotfiles 仓库）内创建 store；默认/显式 init-git 仍拒绝嵌套仓库。
 
 ## 压缩结论
 

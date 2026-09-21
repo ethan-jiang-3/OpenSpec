@@ -28,7 +28,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 - 在不知道 change 名称时做候选发现。
 - 为选择“当前最相关 change”提供第一层线索。
-- 没有 OpenSpec root 时失败，不再返回空数组冒充“项目里什么都没有”。这避免 CI / agent 把“跑在错误目录”当成通过。
+- v1.9.0 起：没有 OpenSpec root 时失败，不再返回空数组冒充“项目里什么都没有”。这避免 CI / agent 把“跑在错误目录”当成通过。
 
 限制：
 
@@ -51,6 +51,8 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 - AI 不擅长可靠地自己做文件系统状态判断。
 - `status` 把这件事收敛成一个稳定端点。
+
+**v1.13.1**：text 输出结尾新增 `Next:` 行（仅 text，`--json` 不变），直接给出推进 change 的下一条命令。`new change` 自 v1.5.0 起就有同样的收尾行，本次将 status 补齐为一致体验。
 
 ### `openspec instructions <artifact> --change <name> --json`
 
@@ -90,8 +92,6 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - `tasks`: 从 tracking file 解析出来的任务项
 - `context` 与 `guidance`：项目 `context` 以及 `operations.apply.guidance`（如有）。它们是 operation input，不是 artifact rules。
 - `missingArtifacts`: 缺少哪些 prerequisite artifacts
-- `missingPrerequisites`: 完整 build order 缺失链（不再只报第一跳），同时出现在文本输出（`Not created yet, in build order: ...`）
-- warning 字段: change 无 delta specs 且未声明 `skip_specs: true` 时，apply 报 warning，给出两条出路（先写 specs / 声明 `skip_specs`）
 - `instruction`: 当前阶段应执行什么
 
 对机器的意义：
@@ -99,6 +99,8 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - 这是代码实现阶段最关键的桥接接口。
 - 它把文档阶段产物转换成实施阶段输入。
 - 它还负责在不满足前置条件时明确阻止进入 apply。
+
+**v1.13.0 新增警告字段**：change 无任何 spec delta 时（tasks 存在但 specs 缺失），text 与 `--json` 都会警告，并指明两条出路——写 specs 或声明 `skip_specs: true`。机器消费者应把该 warning 视为「ready 不可信」信号。
 
 ### `openspec instructions archive --change <name> --json`
 
@@ -193,22 +195,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 正因如此，`--json` 输出和内部 graph / instruction loader 层才如此重要。
 
-### `validate --report findings --json` 是独立报告类型
-
-`openspec validate --report findings --all|--changes|--specs|--archived --json` 产出**独立**的 report 对象，不是 full 报告的过滤子集：
-
-```json
-{ "report": { "kind": "validation-findings", "scope": "<bulk-scope>" }, ... }
-```
-
-要点：
-
-- 只包含有 error/warning/information 的条目，同时保留全量运行的总数和退出码。
-- 必须配显式批量 scope，不能带 item name，`archived` 与 active scope 不能混用；违规时输出 `invalid_validation_report_request`（severity error，附 `fix` 文本）。
-- delta 与 main spec 的合并冲突作为 informational findings 出现在报告里（不改退出码）；文件系统读取错误保留为 error。
-- 默认 `--report full` 形状完全不变——机器接口的向后兼容由「findings 是独立 kind」保证。
-
-**重要修复**：此前 `--json` 模式下，spinner 的进度文本仍会泄漏到 stderr，导致 agent 在合并 stdout+stderr 时 JSON 解析失败。修复了这个问题 —— `--json` flag 传入后，完全抑制 spinner 输出，agent 可以安全合并 stdout/stderr。
+**v1.3.1 重要修复**：此前 `--json` 模式下，spinner 的进度文本仍会泄漏到 stderr，导致 agent 在合并 stdout+stderr 时 JSON 解析失败。v1.3.1 修复了这个问题 —— `--json` flag 传入后，完全抑制 spinner 输出，agent 可以安全合并 stdout/stderr。
 
 ## 为什么说 workflow 命令像本地 API
 
@@ -240,4 +227,10 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 ### 历史 guardrail（非当前主结论）
 
-workspace guardrail（`actionContext.mode = "workspace-planning"` 阻止 sync/archive）不再需要——因为 `actionContext.mode` 始终为 `repo-local`，不存在 workspace 级 change。跨仓库操作自然被 store reference 的只读语义保护。
+v1.4.0 的 workspace guardrail（`actionContext.mode = "workspace-planning"` 阻止 sync/archive）在 v1.5.0 中不再需要——因为 `actionContext.mode` 始终为 `repo-local`，不存在 workspace 级 change。跨仓库操作自然被 store reference 的只读语义保护。
+
+## v1.12.x–v1.13.x 机器面增量
+
+- `validate --report findings`（bulk scope 专用）：JSON 标识 report 与 scope，仅含 error/warning/information 条目；完整统计与退出码不变。默认全量报告不受影响。
+- `show --json --diff`：MODIFIED delta 增补 `diff` 与 `warning` 字段（v1.11.0，见 `04`）。
+- artifact 模板以顶层标题开头（v1.13.1）：`show --json` 与 `change list --json` 对以模板裸标题 `# Proposal` 开头的 proposal 仍按 change id 命名，不受影响。

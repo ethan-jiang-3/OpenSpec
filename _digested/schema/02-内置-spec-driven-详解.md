@@ -135,7 +135,7 @@ apply:
 | `requires` | `[specs, design]` | 依赖 specs 和 design 都完成 |
 
 **instruction 核心内容**：
-- 强制 checkbox 格式：`- [ ] X.Y Task description`
+- 强制 checkbox 格式：`- [ ] X.Y Task description`（v1.13.1 起计数器认全部 CommonMark 标记——`+`/有序 `1. [ ]` 同样被追踪；`- [x]`/`- [ x]` 算完成，`- [~]`/`- [-]`/空 `- []` 算未完成；无 checkbox 的行不追踪）
 - 要求按依赖排序
 - 每个任务要小到可在一个 session 完成
 - 每个 checkbox 自身必须写明 verification，例如测试、命令、可观察行为或交付 artifact；只有验证横跨多个实现任务时，才另列 `Integration Verification`。

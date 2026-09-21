@@ -384,3 +384,15 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 | fence 内空行保真 | `specs-apply.ts` `collapseBlankRunsOutsideFences` | 只折叠 fence 外空行；YAML block scalar / Python / expected-output 样例不再被整理 |
 
 安全输出也有硬边界：blocking content 最多展示 3 行，每行按 Unicode code point 截到 200，超出加省略号并汇总剩余行数；NUL–US、DEL 等控制字符替换为 `?`。marker 无法 honor 的 reason 同样清理控制字符，避免伪造终端行或重绘屏幕。
+
+
+## v1.13.0 delta parser 语义更新
+
+v1.13.0 统一并收紧了 delta 解析规则（`46ff91f2` 起 archive 与 validate 共用同一 reader）：
+
+- **列表标记**：delta section 下的 requirement 接受 `-`/`*`/`+` 全部 CommonMark 标记（此前 `*`/`+` 被静默忽略——validate 通过、archive 报成功但没生效）。
+- **多 section**：同一文件内重复的 `## ADDED/MODIFIED/REMOVED/RENAMED Requirements` 段落全部应用（此前只应用一份）。
+- **scenario bullet**：包裹换行的 bullet 读为单条；无正文的 scenario header 被 validate 拒绝。
+- **requirement 名**：剥收尾 `#`；仅大小写不同的名字被 archive 拒绝；畸形 RENAMED 对被拒绝。
+- **section 外 requirement**：写在 delta section 之外的 requirement 会被 validate 报告（此前无视）。
+- **fence 内空行**：archive 的空白行整理变为 fence-aware，代码样例不再被重写。
