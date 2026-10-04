@@ -67,9 +67,12 @@ The template the agent receives as the output format ([templates/proposal.md](ht
 ## Capabilities
 
 ### New Capabilities
-<!-- Capabilities being introduced. Use kebab-case for path segments you introduce
-     (e.g., user-auth or identity/user-auth) that follow the project's existing
-     spec organization. Each creates specs/<capability-path>/spec.md. -->
+<!-- Capabilities being introduced. Name each capability for a cohesive system
+     behavior that can own related requirements as the system evolves. Do not name
+     implementation tasks or proposal sections. Avoid broad catch-all names. Use
+     kebab-case for path segments you introduce (e.g., user-auth or identity/user-auth)
+     that follow the project's existing spec organization. Each creates
+     specs/<capability-path>/spec.md. -->
 - `<capability-path>`: <brief description of what this capability covers>
 
 ### Modified Capabilities
@@ -98,7 +101,7 @@ Sections:
 - **Why**: 1-2 sentences on the problem or opportunity. What problem does this solve? Why now?
 - **What Changes**: Bullet list of changes. Be specific about new capabilities, modifications, or removals. Mark breaking changes with **BREAKING**.
 - **Capabilities**: Identify which specs will be created or modified:
-  - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<capability-path>/spec.md`. Use kebab-case for path segments you introduce (e.g., `user-auth` or `identity/user-auth`) and follow the project's existing spec organization.
+  - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<capability-path>/spec.md`. Name each capability for a durable system behavior (for example, `user-auth`), not the work in this change (for example, `add-login-endpoint`). Choose a cohesive boundary that can own related requirements as the system evolves; avoid broad catch-all capabilities. Use kebab-case for path segments you introduce (e.g., `user-auth` or `identity/user-auth`) and follow the project's existing spec organization.
   - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Use the exact existing path under `openspec/specs/`. Leave empty if no requirement changes.
 - **Impact**: Affected code, APIs, dependencies, or systems.
 
@@ -205,6 +208,7 @@ Format requirements:
 - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
 - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
 - Every requirement MUST have at least one scenario.
+- Keep each requirement's description (the text between `### Requirement:` and its first scenario) to 500 characters or fewer. `openspec validate` flags longer descriptions once they reach the main spec. This is an informational hint, not an error. When writing a new requirement, state one behavior per requirement: move examples and edge cases into scenarios, and split a requirement that covers several behaviors into separate `### Requirement:` blocks, each with its own scenarios. Under MODIFIED, keep the existing requirement block whole; never split, trim or rewrite existing text just to meet the length.
 
 New capabilities only: the delta spec's first section is `## Purpose` -
 one or two sentences (50+ characters, or `openspec validate --strict`
@@ -214,10 +218,16 @@ left with a `TBD ... Update Purpose after archive` placeholder to fill in
 by hand. Do NOT add `## Purpose` to a delta for an existing capability -
 that spec already has one and the delta's is ignored. To change an
 existing capability's Purpose - including a leftover `TBD` placeholder -
-edit `openspec/specs/<capability-path>/spec.md` directly.
+edit `<planningHome.root>/openspec/specs/<capability-path>/spec.md`
+directly. `planningHome.root` comes from the `openspec instructions ...
+--json` response. Always use it rather than a repo-relative path: it
+resolves to the store whenever the change lives in one - whether that
+came from `--store`, a project `store:` pointer, or a global default
+store - and to the current repository otherwise. Do not try to work out
+which case applies; the field already has.
 
 MODIFIED requirements workflow:
-1. Locate the existing requirement in openspec/specs/<capability-path>/spec.md
+1. Locate the existing requirement in `<planningHome.root>/openspec/specs/<capability-path>/spec.md` (the same store-aware root as above)
 2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios)
 3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
 4. Ensure header text matches exactly (whitespace-insensitive)
@@ -362,6 +372,18 @@ Guidelines:
 - Each task MUST be a checkbox: `- [ ] X.Y Task description`
 - Tasks should be small enough to complete in one session
 - Order tasks by dependency (what must be done first?)
+- Each task MUST state how to verify completion (a test, command,
+  observable behavior, or delivered artifact). Put the verification in
+  that task's checkbox description. Use a separate verification task only
+  when it checks broader integration or system behavior that spans
+  multiple implementation tasks.
+- Each task group MUST land the tests and documentation its own work
+  calls for. Do NOT collect testing or documentation into a final group -
+  when a late group first exercises work from an early one, the failures
+  cascade back through every group in between and force rework. A group
+  whose work calls for neither, such as scaffolding or dependency setup,
+  carries neither. A final group is for integration checks only, not for
+  the tests and docs an earlier group owed.
 
 Example:
 ```
@@ -369,17 +391,17 @@ Example:
 
 ## 1. Setup
 
-- [ ] 1.1 Create new module structure
-- [ ] 1.2 Add dependencies to package.json
+- [ ] 1.1 Create new module structure and verify expected files are present
+- [ ] 1.2 Add dependencies to package.json and verify package installation succeeds
 
 ## 2. Core Implementation
 
-- [ ] 2.1 Implement data export function
-- [ ] 2.2 Add CSV formatting utilities
+- [ ] 2.1 Implement data export function and verify the export test passes
+- [ ] 2.2 Add CSV formatting utilities and verify unit tests cover quoting and delimiters
+- [ ] 2.3 Document the export API in docs/export.md and verify the documented command runs as written
 ```
 
 Reference specs for what needs to be built, design for how to build it.
-Each task should be verifiable - you know when it's done.
 ````
 
 ## Apply

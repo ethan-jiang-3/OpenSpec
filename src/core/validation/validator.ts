@@ -16,7 +16,8 @@ import {
   foldRequirementName,
   normalizeRequirementName,
   extractRequirementsSection,
-  findMissingCurrentScenarios,
+  diffScenarioNames,
+  describeScenarioBalance,
   type RequirementBlock,
 } from '../parsers/requirement-blocks.js';
 import {
@@ -30,7 +31,9 @@ import { FileSystemUtils } from '../../utils/file-system.js';
 import { discoverSpecFiles, findUnreadDeltaFiles, hasAnyFileUnder } from '../../utils/spec-discovery.js';
 import {
   METADATA_FILENAME,
+  formatUnknownChangeMetadataKeysMessage,
   readSkipSpecsMarker,
+  readUnknownChangeMetadataKeys,
   resolveSchemaForChange,
 } from '../../utils/change-metadata.js';
 import { resolveTaskFilesForChange } from '../../utils/task-progress.js';
@@ -490,6 +493,15 @@ export class Validator {
       issues.push({ level: 'ERROR', path: METADATA_FILENAME, message: this.formatInvalidMarkerMessage(marker.invalidReason) });
     }
 
+    const unknownMetadataKeys = readUnknownChangeMetadataKeys(changeDir);
+    if (unknownMetadataKeys.length > 0) {
+      issues.push({
+        level: 'WARNING',
+        path: METADATA_FILENAME,
+        message: formatUnknownChangeMetadataKeysMessage(unknownMetadataKeys),
+      });
+    }
+
     // ANY file under specs/ contradicts the marker - not just parsed deltas.
     // Headerless or stray files would be silently dropped at archive time (and
     // some still satisfy the artifact graph's specs/**  glob) while the change
@@ -739,15 +751,16 @@ export class Validator {
       if (renamedAway.has(key)) continue;
       const current = currentBlockFor(key);
       if (!current) continue;
-      const missing = findMissingCurrentScenarios(current, block);
-      if (missing.length === 0) continue;
+      const diff = diffScenarioNames(current, block);
+      if (diff.missing.length === 0) continue;
       issues.push({
         level: 'ERROR',
         path: entryPath,
         message:
           `MODIFIED "${block.name}" omits scenario(s) the current spec still has: ` +
-          `${missing.map(name => `"${name}"`).join(', ')}. ` +
-          'Copy them into the MODIFIED block (a MODIFIED requirement replaces the whole block, so archive refuses to drop them).',
+          `${diff.missing.map(name => `"${name}"`).join(', ')}. ` +
+          `${describeScenarioBalance(diff)} ` +
+          'Copy the omitted scenarios into the MODIFIED block (a MODIFIED requirement replaces the whole block, so archive refuses to drop them).',
       });
     }
     return issues;
