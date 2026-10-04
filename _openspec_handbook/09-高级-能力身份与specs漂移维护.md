@@ -1,6 +1,6 @@
 # 09 · 高级：Capability 规划、身份与 specs 漂移维护
 
-> **适用 OpenSpec v1.13.1** · 高级篇。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
+> **高级篇**（当前行为基线以 [`_digested/README.md`](../_digested/README.md) 的「当前源码基线」为准，本章用现在时描述当前行为）。这一章按四层递进回答一个问题：**什么行为值得成为独立 capability？** → **specs 靠什么组织和定位？** → **增长后如何让 agent 只读需要的合同？** → **用久了为什么会漂、怎么治理？**
 > **v1.13.0 漂移巡检提示。** delta parser 大修后，`*`/`+` 列表标记的 REMOVED/RENAMED 现在真正生效、重复 delta section 全部应用、仅大小写不同的 requirement 名被 archive 拒绝。历史 change 中若有曾"静默没生效"的操作，升级后重跑 validate 可以暴露出来。
 
 ## 先回答：为什么这事值得你操心
@@ -183,7 +183,21 @@ graph TD
 3. 其他 active change 没有继续 MODIFIED 这个 capability。
 4. 清理后才在合法 `.openspec.yaml` 声明 `retire_capabilities: true`。
 
-若有未归属内容，v1.10.0 会列出 blocking lines 并拒绝删除；marker 此时不是出路。把仍有价值的治理信息迁入 `## Purpose` 或 canonical requirement，或者经 review 手工删除，再重跑 archive。详细反例与修复步骤见 [12](12-实战-如何正确修改-artifacts.md)。
+若有未归属内容，archive 会列出 blocking lines 并拒绝删除；marker 此时不是出路。把仍有价值的治理信息迁入 `## Purpose` 或 canonical requirement，或者经 review 手工删除，再重跑 archive。详细反例与修复步骤见 [12](12-实战-如何正确修改-artifacts.md)。
+
+### sync 失败不归档：archive 现在替你把住半途状态
+
+archive 流程里最坏的一种结局不是失败，而是"半途"：main specs 没更新，change 却已经进了 archive。v1.14.0 起 archive 工作流把这条线焊死了：
+
+- **sync 阶段报任何 stop/blocking 一律视为 sync 失败，立即停止归档**——不做 post-sync 内容比对、不移动 `changeRoot`，change 和 main specs 一切保持原样；你修好 delta 后重跑 archive 即可，不需要手工回滚。
+- **sync 后有结构验证**：主 spec 不得残留 `## ADDED/MODIFIED/REMOVED/RENAMED Requirements` 这类 delta 段；REMOVED 的 requirement 必须确已删掉；最后一个 requirement 被移除、`## Requirements` 变空的 capability，其主 spec 会被**删除而不是留一个空壳**（与上面的 `retire_capabilities` 授权路径衔接）。
+- **inline sync 不能委托后台**：archive 的后续步骤会把 `changeRoot` 移走，若 sync 被丢给后台任务，就会留下"已归档但主 specs 没更新"的状态——只能同步等待 sync 完成再继续。
+
+这层守卫改变的是失败形态，不是审查范围：它保证"归档成功 = main specs 已按 delta 更新"，但 specs↔代码漂移仍要靠人巡检。
+
+### 行尾保持：Windows 仓库的噪声 diff 少了一大类
+
+写回 main spec 时，CLI 会保持文件原有行尾（CRLF 文件写回仍是 CRLF，只有新文件才写 LF）。在此之前，一次只改几行的小 delta 在 Windows 仓库可能表现为"整个文件被重写成 LF"的 diff——噪声淹没真实改动，review 与 blame 都被污染，还容易被误读成"specs 被大面积重写"的失真信号。现在行尾不再漂移，diff 只反映真实的内容变化。
 
 ## 真要拆分、合并或改 path：把它当成 rebaseline，不是普通 archive
 

@@ -1,6 +1,6 @@
 # 答案：两段式升级——先升全局 CLI，再对每个项目跑 `openspec update`
 
-> **源码基线**：以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
+> **源码基线**：以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
 
 ## 一句话结论
 
@@ -82,6 +82,14 @@ openspec update                          # 每个项目跑一次（或带 --forc
 `git merge` 拉进 v1.9.0 源码只会改 `git describe` 和 `package.json` 版本，**不会**改变 PATH 上的 CLI。要让 `--tools command-code`、`validate --archived` 真正可用，每台机器的全局 CLI 都要独立升级到 v1.9.0，然后各项目 `openspec update`（见 [`0006-v1.8.0-to-v1.9.0.md`](../../_digested/_change_log/0006-v1.8.0-to-v1.9.0.md) 的「验收基线」）。v1.8.0 引入的 `--tools agents` / Copilot / `retire_capabilities` 仍然需要 ≥1.8.0 的 CLI。
 
 v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题：若该目录已被 `agents` 目标占用，不会改写成 Codex 语法，也不会清掉被跳过工具的 repo-local legacy 文件。
+
+## v1.13.2–v1.14.0 的具体提醒（来自同步记录 0011）
+
+- **升级目标**：全局 CLI 升到 v1.14.0 后逐项目 `openspec update`，新的工具目标与 workflow 模板（apply 任务源定位、archive sync 阻塞语义、verify 重写）才会投递到项目里。
+- **新增工具目标速览**（`--tools` id / 目录 / 形态）：`dsh` → `.dsh/skills/`（DeepSeek Harness，skills-only：无 adapter、无命令文件，`.dsh/skills/` 是其最高优先级 skill root，`SKILL.md` 进 catalog 后可 `/openspec-*` 直呼）；`codestudio` → `.codestudio`（skills + `.prompt.md` 命令）；`gigacode` → `.gigacode`（`opsx-<id>.md`）；`atomcode` → `.atomcode`（`/opsx-<id>`，按 workflow 是否读输入声明 `args`）；`easycode` → `.easycode`（TOML 命令 `/opsx:<id>`，新共享模块 `command-generation/toml.ts`）；`gsd` 与 `amp` 与 Codex/Zed/Antigravity/`agents` 共享 `.agents` root（detection 分别靠 `.gsd`/`.amp`）；`grok` → `.grok`、`veai` → `.veai`（skills-only）；`warp` → `.warp`（skills，`/openspec-*`，进入 skills-invocable 调用面）。另外 IBM Bob 显示名改为 "IBM Bob"（tool id `bob` 与 `.bob` 路径不变）；Kilo Code 命令目录修正为 `.kilo/command/`，update 的 legacy cleanup 会按已知文件名清走旧位置的文件。
+- **v1.13.2 对升级用户的实际意义**：CRLF 保持——写回文件时 `matchLineEnding(rebuilt, previous)` 保持原行尾，只有新文件才写 LF，Windows/编辑器 CRLF 仓库升级后 update/archive 不再产生全文件行尾 diff；Windows archive 的 EPERM/EXDEV 复制回退（watcher 占住目录时也能归档）；artifact 输出 glob 认 brace expansion 与 extglob（自定义 outputs 配置的生效面变宽）。
+- **升级后可用的新命令面**：`openspec version [--json] [--check]` 自查版本/安装方式/是否有更新；`openspec list --archived` / `--all` 浏览归档 change；`view` 显示 active change 的 workflow status 与末尾归档分区。
+- **`.openspec.yaml` 卫生**：v1.14.0 起未知顶层键在 status/validate/archive 都会告警，`validate --strict` 直接失败——升级前把旧项目 metadata 里的实验性键清掉或改名（已知键：`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）。
 
 ## v1.12.0–v1.13.1 的具体提醒（来自同步记录 0009）
 

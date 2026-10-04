@@ -26,10 +26,10 @@ openspec instructions apply --change "<name>" --json
 返回的 `tasks` 数组中：
 
 ```json
-{ "description": "1.1 Add OAuth callback route", "done": false }
+{ "description": "1.1 Add OAuth callback route", "done": false, "sourcePath": "…/tasks.md", "line": 12 }
 ```
 
-`done: false` 的就是 pending task。
+`done: false` 的就是 pending task。`sourcePath` + 1-based `line`（v1.14.0 起）指向该 checkbox 在 tracking file 中的确切位置，勾选时用它定位，不靠文本匹配。
 
 任务顺序来自 `tasks.md` 文件中的顺序。apply 不再对 tasks 做 DAG 排序；排序责任在 propose 创建 `tasks.md` 时已经完成。
 

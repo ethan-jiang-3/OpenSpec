@@ -249,6 +249,10 @@ CLI 会先对所有 `SpecUpdate` 调用 `buildUpdatedSpec()`，把 rebuilt 内�
 
 写入、退役或最终移动 change 失败时，CLI 会调用 `restoreSpecSnapshots()`，并在 change 已移动时尝试把 archive 目录移回 active 位置。因此当前边界是“尽力事务式回滚”，不是“写过就不恢复”。若并发外部修改使安全恢复不再可能，CLI 会保留现场并显式报告 `Rollback also failed`；这种 rollback failure 才需要人工按报错路径恢复。
 
+**快照与回滚细节**（`archive.ts` 的 `captureSpecSnapshots()` / `restoreSpecSnapshots()`，v1.13.2 起为 Windows 复制回退配套）：写入/退役前对每个 mutation target 捕获快照——已存在的普通文件记录原始内容与 mode；symlink 记录 `readlink` 结果（outcome 为 write 时再尽力读取其指向的当前内容，作为"原本是否存在内容"的依据）；不存在的 target 记录 `pruneBoundary`（从 target 目录向上找到的、`mainSpecsDir` 下最深的已存在祖先目录）。回滚按逆序执行，且恢复前先复核：当前内容仍等于快照内容、或等于 archive 刚写入的 rebuilt 内容、或 symlink 指向未变——检测到并发修改就拒绝覆盖并报错，而不是清掉别人的改动。
+
+**新建 spec 的回滚剪裁**（`f2812f62`）：`existed: false` 的 target 回滚时只删这次写入创建的文件，并只向上清空**本次写入自己创建的 capability 目录**（prune 以 `pruneBoundary` 为边界）；用户本就存在的目录——哪怕为空——不会被移除，mode 也原样保留。
+
 ### 3.8 已 early-sync 的 delta 不再一律失败
 
 识别“agent sync 已把同一内容写入 main spec”的正常模式：内容相同的 ADDED/MODIFIED、已消失的 REMOVED、以及 source 已消失但 target 已存在的 RENAMED 都是 no-op，archive 不会为它们重写 main spec。REMOVED 的 no-op 会携带 warning，JSON archive 结果也可返回 `warnings`。
@@ -319,8 +323,10 @@ if delta specs exist:
 ```
 
 **当前加固行为**：
-- sync 必须 **inline** 执行（不等完成绝不 mv——防止 changeRoot 被移走后 sync 读不到 delta spec）
+- sync 必须 **inline** 执行（不等完成绝不 mv——防止 changeRoot 被移走后 sync 读不到 delta spec）。若 agent 只能通过委托运行 sync，也必须**同步**委托并等待结果，不得丢给后台
+- **sync 报任何 stop/blocking 条件即视为 sync 失败**（v1.14.0 起，`0ff63dba`）：立即停止归档，不做 post-sync 内容比对、不移 `changeRoot`。一切未动，用户可修复阻塞条件或重跑 sync
 - sync 完成后对 `artifactPaths.specs.existingOutputPaths` 中**每个 capability** 重新验证：ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名
+- **sync 后结构验证**（canonical sync contract）：主 spec 不得残留 `## ADDED/MODIFIED/REMOVED/RENAMED Requirements` 等 delta header；sync 写入/改动的 requirement block 用 `### Requirement:` 标题、scenario 用 `#### Scenario:` 标题，置于 `## Requirements` 下；REMOVED 的 requirement 必须已删；retire 掉的 capability（最后一个 requirement 被移除、`## Requirements` 变空）其主 spec 被删除而非留空。新主 spec 以 `# <capability> Specification` 开头、`## Purpose` 从 delta 原样复制；已有主 spec 的标题与 Purpose 完全不动
 - 任何 mismatch 都停止 archive，changeRoot 保持完整
 - main spec 路径改用 store-aware `planningHome.root`，不硬编码当前 repo 路径
 - 新增 **Cancel** 选项
@@ -354,7 +360,8 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 | Purpose carry-through | `specs-apply.ts` | 新 capability 的 delta Purpose 进入新 main spec；existing Purpose 保持权威 |
 | early-sync no-op | `specs-apply.ts` | 完全一致的 ADDED/MODIFIED、已移除 REMOVED、已改名 RENAMED 不造成无意义失败或重写 |
 | parser / drift robustness | `requirement-blocks.ts` / `code-fence.ts` | BOM、fenced code 不再造成假 delta 或 scenario drift |
-| inline verified sync | `archive-change.ts` | agent sync 后逐 capability 验证才允许移动 change；Cancel 保留 changeRoot |
+| inline verified sync | `archive-change.ts` | agent sync 后逐 capability 验证 + 结构验证（无 delta header 残留、REMOVED 已删、retired 主 spec 删除）才允许移动 change；Cancel 保留 changeRoot |
+| sync 阻塞即停止归档 | `archive-change.ts`（agent 模板层） | sync 报任何 stop/blocking 即视为失败，立即停止归档：不做 post-sync 内容比对、不移 `changeRoot`；一切未动，可修复后重跑。inline sync 不得委托后台（step 5 会把 `changeRoot` 移走） |
 | **retire_capabilities** | `.openspec.yaml` marker（`archive.ts` / `specs-apply.ts`） | change 的 REMOVED 拿掉某 capability 最后一个 requirement 时，声明 `retire_capabilities: true` 可让 archive 删除整个 main spec，而不是以 "at least one requirement" 中止；无 marker 时行为不变。退役只发生在 spec 确实无法保留时，输出会列出被删 section 并给可粘贴的 `git checkout` 恢复命令；`--no-validate` 永不触发退役。与退役 capability 的 in-flight MODIFIED change 会 validate 通过、archive 拒绝（blocked-content 细分见下） |
 | 重复 canonical 名拒绝 | `archive.ts` | main spec 存在重复 canonical requirement 名时拒绝归档，避免 delta reconciliation 压掉重复块之一 |
 | note-loss 提示 | `archive.ts` | 重建 spec 会丢失 requirement 旁的 note（缩进 note、未识别 heading）时，先指名会删的内容与迁移位置；merge 本身不自动搬移 |

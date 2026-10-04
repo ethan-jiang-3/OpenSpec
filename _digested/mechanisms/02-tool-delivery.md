@@ -79,6 +79,31 @@ repo-local init/update 根据 global config 的 `delivery` 分流：
 - **universal 目标的 picker 呈现**（`7de2404`）：vendor-neutral 目标在 `init` 工具选择器中显示为 **"Other / Universal (shared .agents skills)"**；搜索框可用 `universal`/`other`/`generic`/`custom`/`proprietary`/`unlisted`/`unsupported`/`vendor-neutral`/`agents.md` 命中；`--tools <未知>` 的报错也会指向它。
 - **skill description 含自然语短语**（`5f5914e7`）：每个 workflow skill 的 description 写明用户实际会打的短语（"openspec propose"、"opsx apply" 等）；`openspec update` 这个 CLI 命令被刻意不归任何 workflow skill 认领（它不是 update-change workflow）。commands-only 安装不受影响。
 
+### v1.14.0：工具目标大扩容
+
+v1.14.0 一次性新增 10 个 `--tools` 目标，全部注册在 `src/core/config.ts` 的 `AI_TOOLS`：
+
+| 工具 | id | skillsDir | 命令形态 |
+|------|-----|-----------|----------|
+| DeepSeek Harness | `dsh` | `.dsh` | skills-only：无 adapter、无 command 文件；dsh 以项目级 `.dsh/skills/` 为最高优先级 skill root，`SKILL.md` 进入其 catalog，`/openspec-*` 直呼 |
+| Code Studio | `codestudio` | `.codestudio` | skills + `.codestudio/prompts/opsx-<id>.prompt.md`；requiresIdeRestart |
+| GigaCode | `gigacode` | `.gigacode` | skills + `.gigacode/commands/opsx-<id>.md`（description frontmatter） |
+| AtomCode | `atomcode` | `.atomcode` | skills + `.atomcode/commands/opsx-<id>.md`；frontmatter 声明 `args: optional`（workflow 带 `**Input**` 契约，注入 `$ARGUMENTS`）或 `args: none` |
+| EasyCode | `easycode` | `.easycode` | skills + `.easycode/commands/opsx/<id>.toml`（TOML 命令，`/opsx:<id>` 调用） |
+| GSD | `gsd` | `.agents`（detection `.gsd`） | skills-only，共享 `.agents` 根 |
+| Amp | `amp` | `.agents`（detection `.amp`/`.agents/skills`） | skills-only，共享 `.agents` 根 |
+| Grok Build | `grok` | `.grok` | skills-only，`/openspec-*` 调用 |
+| Warp | `warp` | `.warp`（detection `.warp`/`WARP.md`） | skills，`/openspec-*`；进入 `resolveCommandSurfaceCapability` 的 skills-invocable |
+| Veai | `veai` | `.veai` | skills-only |
+
+配套事实（源码核实）：
+
+- 共享 `.agents` 根的成员扩大为 **Codex、Zed、Antigravity、Amp、GSD**（+ vendor-neutral `agents` 目标）。`resolveSharedSkillWriters` 的仲裁代码不需要改：任一工具共享 `skillsDir` 都自动参与写入权判定。
+- Warp 是继 Codex 之后第二个 **skills-invocable** 工具（`src/core/command-surface.ts`）：没有 command adapter，但用户可以自然语言或 `/openspec-*` 调用 skill，所以 `delivery: commands` 下它仍保留 skills 生成，不会被当作 commands-only 清掉。
+- EasyCode 的 TOML 字符串转义抽成共享模块 `src/core/command-generation/toml.ts`（`escapeTomlBasicString` / `escapeTomlMultilineBasicString`）：描述与 prompt 正文里的反斜杠、双引号、换行、控制字符都安全转义。gemini adapter 顺带重构。
+- **IBM Bob 改名**：显示名 "Bob Shell" → "IBM Bob"，tool id `bob` 与 `.bob` 路径不变，纯改名不迁移。
+- **Kilo Code 命令目录修正**（v1.13.2）：命令写到 `.kilo/command/opsx-<id>.md`（原误写 `.kilocode/workflows/`）；legacy cleanup 按已知文件名清走旧文件。
+
 ### v1.10.0→v1.11.0：共享 `.agents` 根与通用写入权仲裁
 
 v1.8.0 起 `.agents/skills/` 由 `agents`、`codex`、`zed` 三方共享。v1.11.0 将共享根仲裁从硬编码三元组升级为通用 `resolveSharedSkillWriters()` 机制：
@@ -158,13 +183,18 @@ formatFile(content: CommandContent): string
 |------|--------------|------|
 | Claude | `.claude/commands/opsx/<id>.md` | 项目内 command 文件，带 frontmatter |
 | Codex | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 skills-only；以 `$openspec-*` 调用，`.codex` 是 legacy 迁移源 |
-| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | vendor-neutral 目标，与 Codex、Zed、Antigravity 共享 `.agents` 根 |
+| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | vendor-neutral 目标，与 Codex、Zed、Antigravity、Amp、GSD 共享 `.agents` 根（v1.14.0 起六方） |
 | GitHub Copilot | `.github/skills/` 等 | v1.8.0 本地 skill + opt-in cloud coding-agent 文件（见下） |
 | Antigravity | `.agents/skills/` + `.agents/workflows/opsx-<id>.md` | v1.11.0 从 `.agent` 迁入 `.agents`；共享技能根通过 `resolveSharedSkillWriters` 仲裁。`.agent` 是 legacy 迁移源 |
 | Command Code | `.commandcode/skills/` + `.commandcode/commands/opsx-<id>.md` | v1.9.0 adapter-backed：skills 调用 `/openspec-*`，slash command 为 `/opsx-<id>` |
 | Zed Agent | `.agents/skills/openspec-*/SKILL.md` | v1.10.0 skills-only；Zed v1.4.2+ 用 `/openspec-*` 或 `@openspec-*`，不生成 `/opsx` command |
 | OpenCode | `.opencode/commands/opsx-<id>.md` | 接受输入的 command 在完整 `**Input**` block 后注入一次 `**Provided arguments**: $ARGUMENTS` |
 | SourceCraft（codeassistant） | VS Code 扩展 skills/commands | v1.12.0 新增 tool id `codeassistant`（`adapters/codeassistant.ts`） |
+| Kilo Code | `.kilo/command/opsx-<id>.md` | v1.13.2 修正目录（原误写 `.kilocode/workflows/`）；无 frontmatter |
+| Code Studio | `.codestudio/prompts/opsx-<id>.prompt.md` | v1.14.0 新增；description frontmatter |
+| GigaCode | `.gigacode/commands/opsx-<id>.md` | v1.14.0 新增；description frontmatter |
+| AtomCode | `.atomcode/commands/opsx-<id>.md` | v1.14.0 新增；frontmatter `args: optional/none`（字面解析，值不加引号） |
+| EasyCode | `.easycode/commands/opsx/<id>.toml` | v1.14.0 新增；TOML 序列化走共享模块 `command-generation/toml.ts` |
 
 这个差异很重要：不是所有 command artifacts 都在 repo root 下。delivery 层要尊重每个工具的发现机制。
 
@@ -200,7 +230,8 @@ cloud 文件写入 `.github/` 是有侵入性的动作，所以由 `openspec ini
 | shared skill root ownership | `src/core/shared-skill-target.ts`（`.openspec-target` marker） |
 | GitHub Copilot cloud agent | `src/core/github-copilot/cloud-agent.ts` |
 | workflow templates | `src/core/templates/workflows/` |
-| command adapters | `src/core/command-generation/`（含 `adapters/command-code.ts`、`adapters/opencode.ts`） |
+| command adapters | `src/core/command-generation/`（含 `toml.ts`、`adapters/command-code.ts`、`adapters/opencode.ts`，v1.14.0 新增 `adapters/atomcode.ts`、`adapters/codestudio.ts`、`adapters/easycode.ts`、`adapters/gigacode.ts`） |
+| command surface capability | `src/core/command-surface.ts`（skills-invocable：Codex、Warp） |
 | init/update | `src/core/init.ts`、`src/core/update.ts` |
 | profile drift | `src/core/profile-sync-drift.ts` |
 | migration / cleanup | `src/core/migration.ts`、`src/core/legacy-cleanup.ts` |

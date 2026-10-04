@@ -1,6 +1,6 @@
 # 答案：OpenSpec 上游 Roadmap、主要问题与社区状况
 
-> **当前基线（2026-09-12）**：本地源码与 CLI 应对齐 OpenSpec **v1.13.1**（release tag `v1.13.1` = `634c557b`）。下方 roadmap/issue 大量是历史快照，不能覆盖这一基线的实际行为。
+> **当前基线**：运行时行为以 [`_digested/README.md`](../_digested/README.md) 声明的「当前源码基线」为准。下方 roadmap/issue 大量是历史快照，不能覆盖当前基线的实际行为；版本演进见 [`_change_log/`](../_digested/_change_log/README.md)。
 >
 > **v1.10.0 对本 FAQ 的追加**：`init --language`；Zed Agent 与 `.agents/skills/` 三方 ownership；store-aware `planningHome.root` main-spec instruction；每 task verification；no-spec schema 自动 `skip_specs`；retirement blocked-content 三分支；custom archive profile 自动补 sync；OpenCode `$ARGUMENTS`；删除 npm postinstall 并改为首次 CLI stderr completion tip；telemetry notice 写 stderr；update 只在 IDE-resident surface 变化时提示 restart；feedback 长正文保持完整。后七项不都出现在简短 release notes，因此以完整 commit range、源码和测试为准。
 >
@@ -18,7 +18,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，补入当前 v1.13.1）
+### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v1.14.0）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -35,6 +35,8 @@
 | v1.12.0 | `validate --report findings`、validate advisory merge preflight、SourceCraft Code Assistant、`init` 写 `.gitkeep`、共享 ide-restart、propose/ff 先读代码、explore 依赖感知提问、npm git 免 pnpm + Node20 chalk + PowerShell completion 文档 | v1.12.0 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
 | v1.13.0 | apply 无 spec 警告 + `missingPrerequisites`、parser 三修复（重复 section / `*` 与 `+` 列表标记 / 换行 bullet）、archive fence 空行保真、update 检测损坏 command、init 列出遗漏 workflow、propose 加载项目 context、spec-inventory guidance | v1.13.0 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
 | v1.13.1 | 安全加固（config 值注入、恶意文件挂起、`.npmrc` 注册表劫持、`DO_NOT_TRACK` 口径、completion 路径引用、git probe 限额）；task checkbox 认所有列表标记且未识别标记算未完成；archive/parser 拒收（仅大小写不同的 requirement 名、畸形 RENAMED、无正文 scenario、section 外 requirement、merge path 读不到的 delta）；`status` 给 `Next:` 行；explore「capture 即确认」并点名 propose/apply；`/opsx:update` 先起草（step 4）确认后写入（step 5）；workflow 不擅自 `init` 项目、skills 只提 profile 内 workflow；artifact 模板带顶层标题；store / `EDITOR` 带参 / bash completion 逐字节还原等修复 | v1.13.1 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
+| v1.13.2 | 正确性收尾（patch）：CRLF 保持（写回文件行尾不再被重写成全文件 diff）、Windows archive 的 EPERM/EXDEV 复制回退（fingerprint + snapshots 回滚）、Kilo Code 命令目录修正（`.kilo/command/`）、artifact 输出认 brace expansion/extglob、归档工作流认 schema-aware 任务进度、Continue 命令开头改「直接跟随 workflow」、fast-forward/onboarding 确认口径统一 | v1.13.2 依据（见 [`0011`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)） |
+| v1.14.0 | 工具生态大扩张 + 可观测性（minor）：10 个新 `--tools` 目标（`dsh`/`codestudio`/`gigacode`/`atomcode`/`easycode`/`gsd`/`amp`/`grok`/`warp`/`veai`，`.agents` 共享 root 变六方）、`list --archived/--all`、view 显示 workflow status 与归档分区、`openspec version --check --json`、apply 任务源定位（`sourcePath`/`line`）、archive workflow 的 sync 阻塞语义与 sync 后结构验证、verify 模板按 status 契约重写（Not applicable 语义）、`.openspec.yaml` 未知键告警、IBM Bob 改名 | v1.14.0 依据（见 [`0011`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
@@ -103,6 +105,8 @@
 - `openspec archive` 默认会程序化合并 delta specs；宿主 archive workflow 也会先评估/验证 inline sync。用户可显式 `--skip-specs` 或拒绝确认，因此“archived”仍不必然代表 main specs 已更新。
 
 这不是 bug，而是**刻意的轻量化设计取舍**。代价是：workflow 的"完成"信号不可靠，依赖人工 review。
+
+> **v1.13.2–v1.14.0 的部分补强**：归档工作流改用 schema-aware 任务进度（自定义任务文件不再误报未完成）、verify 模板按 status 契约重写（Not applicable/advisory 语义）、OPSX archive 模板的 sync 失败立即停止归档并做 sync 后结构验证。结构错误与"假完成"类失真被进一步前移，但 spec↔代码漂移仍无对账。
 
 #### C. 工具集成模型有根本性摩擦
 

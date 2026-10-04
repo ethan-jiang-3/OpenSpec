@@ -18,7 +18,7 @@ update 是 **planning artifact 修订器**。它不改代码，只修订已有�
 | | propose | continue | update |
 |---|---|---|---|
 | 创建新 change？ | 会 | 不创建 | 不创建 |
-| 创建新 artifact？ | 会（全部） | 会（一个） | **不会**——只修订已有 |
+| 创建新 artifact？ | 会（全部） | 会（一个） | **不会**——只修订已有（唯一例外见下方 build frontier 一节） |
 | 修订已有 artifact？ | 不会 | 不会 | **会** |
 | 会读 instructions？ | 每轮都读 | 创建前读 | 只有大改时才读 |
 | 需要用户确认？ | 不需要 | 不需要 | **每次修改前必须确认** |
@@ -69,7 +69,7 @@ sequenceDiagram
     rect rgb(255, 240, 255)
         Note over MD,FS: Step 4 · 修订 + 一致性检查
         MD->>MD: 应用请求的修订<br/>然后双向检查每个 artifact：<br/>• 改 proposal → check specs/design/tasks<br/>• 改 tasks → check proposal/specs/design<br/>build order 只是阅读顺序，<br/>修订可以是任意方向
-        MD->>MD: 只编辑已有文件<br/>不创建新 artifact<br/>不在 glob 下新增文件
+        MD->>MD: 只编辑已有文件（existingOutputPaths）<br/>唯一例外：部分填充的 glob artifact<br/>确缺文件时，可经用户确认新增一个具体路径
         alt 已经一致
             MD-->>User: "Change is already coherent. No edits needed."
         end
@@ -106,16 +106,16 @@ sequenceDiagram
 
 ## 关键 guardrail：只编已有文件，不推进 build frontier
 
-update 最核心的约束是：
+update 最核心的约束是（模板原文口径）：
 
 ```text
-Revise only files that already exist (existingOutputPaths)
-Do NOT create artifacts that don't exist yet
-Do NOT invent new files under a glob artifact
-→ point to /opsx:continue for those
+Do not advance the build frontier: if an artifact has empty existingOutputPaths
+and status ready or blocked, that is /opsx:continue's job. Leave skipped
+artifacts untouched. The only new-file scope is a confirmed concrete path under
+a glob artifact whose existingOutputPaths is non-empty.
 ```
 
-这把它和 continue 的职责切得很清：**continue 推进 build frontier（创建新 artifact），update 只在已有 frontier 内修订。**
+即**不推进 build frontier**：`existingOutputPaths` 为空且状态 `ready`/`blocked` 的 artifact 一律交给 continue；`skipped` 的不动。唯一的建新文件口子是：某个 glob artifact 已有部分文件、一致性检查发现确缺一个文件时，可以先起草 → 用户确认 → 在 `changeRoot` 内选一个不存在的具体路径创建（创建前刷新 status/instructions 复核，仍不得用 glob `resolvedOutputPath` 当目标）。**continue 推进 build frontier（创建新 artifact），update 只在已有 frontier 内修订**——外加这个狭窄的、需确认的补口。
 
 ## 和 `05_iterate-to-apply-ready` 的关系
 
@@ -138,6 +138,8 @@ update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。�
 - **共享 IDE restart 提示**：`openspec init` 和 `openspec update` 共用 `src/core/shared/ide-restart.ts` 的同一句提示（`Restart your IDE to refresh commands.` / `...skills.`），message 也覆盖「移除 workflow」场景，不再声称生成了新文件。
 - **损坏 command 文件检测**：`openspec update` 之前只比对 skill 文件的 `generatedBy` 版本戳——skill 是新版本就报「All up to date」，但旁边手改/截断的 command 文件完全没被检查。现在也比对 command 文件内容（只针对 skills+commands 都配置的工具；commands-only 路径不变），`--force` 之外多了一条自动修复路径。
 - **遗漏 workflow 提示**：init/update 输出用 `formatOptionalWorkflowsNote` 列出 profile 没装的 workflow（`new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard`）和 `openspec config profile` 命令。
+- **工具目标大扩容**：`--tools` 新增 10 个目标——`dsh`（DeepSeek Harness，skills-only，项目级 `.dsh/skills/`）、`codestudio`（skills + `.prompt.md` 命令）、`gigacode`（Markdown 命令 `opsx-<id>.md`）、`atomcode`（Markdown 命令 `/opsx-<id>`，按 workflow 是否读输入声明 `args: optional`/`args: none`）、`easycode`（TOML 命令 `/opsx:<id>`，新共享模块 `src/core/command-generation/toml.ts`）、`gsd` 与 `amp`（与 Codex/Zed/Antigravity 共享 `.agents` root，detection 分别靠 `.gsd`/`.amp`）、`grok`、`warp`、`veai`（均 skills-only）。全部注册在 `src/core/config.ts` 的 `AI_TOOLS`；shared `.agents` root 成员扩为六方。IBM Bob 显示名改为 "IBM Bob"（tool id `bob` 与 `.bob` 路径不变）。命令形态与 detection 细节见 [`../mechanisms/02-tool-delivery.md`](../mechanisms/02-tool-delivery.md)。
+- **Kilo Code 目录修正**：`openspec init`/`update` 的命令文件写到 `.kilo/command/opsx-<id>.md`（此前错写在 `.kilocode/workflows/`）；legacy cleanup 按已知文件名清走两代旧文件。
 
 ## Guardrails
 
@@ -146,7 +148,7 @@ update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。�
 | Planning artifacts only — NEVER edit code | 如果修订暗示代码变更，停止并指向 `/opsx:apply` |
 | Use artifact ids from `openspec status`, never hardcode | schema-agnostic |
 | Edit only `existingOutputPaths`, not `resolvedOutputPath` | glob artifact 的 resolvedOutputPath 还是 pattern |
-| Do not advance build frontier | 不创建新 artifact/文件 |
+| Do not advance build frontier | 不创建新 artifact；唯一例外是部分填充 glob 下经用户确认补一个具体路径文件 |
 | Confirm every edit with user before writing | 每次修改都要确认 |
 | If request changes intent → recommend `/opsx:new` | "Update vs. Start Fresh" 判断 |
 
@@ -154,14 +156,15 @@ update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。�
 
 | 内容 | 行号范围（update-change.ts） |
 |---|---|
-| SkillTemplate 定义 | L10-L99 |
-| CommandTemplate 定义 | L101-L200 |
-| Step 2: 获取 artifacts | L33-L44 |
-| Step 3: 理解请求 | L46-L49 |
-| Step 4: 读 + 修订 + 一致性 | L51-L58 |
-| Step 5: 确认 + 写入 | L60-L66 |
-| Step 6: 建议下一步 | L68-L72 |
-| Guardrails | L82-L87 |
+| continue/apply/archive/new 的 optionalWorkflow handoff 常量 | L18-L74 |
+| SkillTemplate 定义 | L76-L172 |
+| CommandTemplate 定义 | L174-L269 |
+| Step 2: 获取 artifacts | L108-L120 |
+| Step 3: 理解请求 | L122-L124 |
+| Step 4: 读 + 修订 + 一致性（含 glob 补文件协议） | L126-L137 |
+| Step 5: 确认 + 写入 | L139-L146 |
+| Step 6: 建议下一步 | L148-L151 |
+| Guardrails | L161-L167 |
 
 ## v1.13.1 行为更新
 

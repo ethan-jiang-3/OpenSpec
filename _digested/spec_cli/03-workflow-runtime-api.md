@@ -93,6 +93,8 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 
 JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 起，`ChangeStatus` 同时携带 **`isPlanningComplete`**（所有非 skipped planning artifact 都存在；skipped artifact 视为已满足而不必写出）与兼容别名 **`isComplete`**；状态文案也不再在 change 实现前就暗示"已完成"。语义见 `src/core/artifact-graph/instruction-loader.ts` 的 `ChangeStatus` 类型。
 
+JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`actionContext.allowedEditRoots` 会把声明该 store 的当前路径项目一并列入（能确定 implementation root 时两者都在列表里）——store-only 场景的 apply 不再被 edit scope 卡住；`constraints` 文案同时要求 agent 编辑其他仓库前先问用户。
+
 ### 状态语义
 
 最关键的不是 done 数量，而是 artifact 状态分类：
@@ -219,7 +221,7 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 �
 2. 确认 apply 前置要求需要哪些 artifacts。
 3. 检查这些 prerequisite artifacts 是否已经产生输出。
 4. 收集所有现存 artifact 输出文件作为 context files。
-5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器为 `src/utils/task-progress.ts` 的 `parseTaskLines`，与 `list`/`view`/`validate --archived`/archive 共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。
+5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器为 `src/utils/task-progress.ts` 的 `parseTaskLines`，与 `list`/`view`/`validate --archived`/archive 共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。v1.14.0 起，解析出的每个任务项还带 `sourcePath` 与 1-based `line`（`LocatedTask`/`parseLocatedTasks`，不改任务解析本身），apply workflow 据此直接定位到 tracking file 的该行勾选。
 6. v1.13.0 起，change 无任何 spec delta 时在结果中附带警告（写 specs 或 `skip_specs: true`），text 与 `--json` 均有。
 7. 归纳当前 apply state，并给出 instruction。
 
@@ -228,7 +230,7 @@ JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 �
 - `state`
 - `contextFiles`
 - `progress`
-- `tasks`
+- `tasks`（v1.14.0 起每项含 `sourcePath` 与 1-based `line`）
 - `missingArtifacts`
 - `instruction`
 

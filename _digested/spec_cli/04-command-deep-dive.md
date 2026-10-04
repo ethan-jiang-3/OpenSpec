@@ -22,6 +22,13 @@
 - 主要风险：用户以为不会删除内容，但它会清理被取消选中的 workflow 产物。
 - v1.10.0 的 restart 提示是条件性的：只有本次实际影响了 registry 中标记 `requiresIdeRestart` 的 IDE surface 才显示；仅更新 CLI/即时加载 skills 的工具不提示。
 
+### `version`
+
+- 角色：安装自述端点（v1.14.0 新增）。
+- 核心对象：当前版本、安装形态（`location`/`packageManager`/`scope`）、可选的 registry 更新检查。
+- 输出语义：`--json` 输出 `{ schemaVersion: 1, version, install, update? }`；`update.status` 为 `available/current/disabled/offline`，`update.command` 与 `canSelfUpgrade` 只在 `available` 且安装归属明确时有意义。
+- 边界：只读；不做升级动作，也不改项目状态。默认不访问网络，`--check` 才查 registry。
+
 ## 二、发现与浏览类
 
 ### `list`
@@ -32,12 +39,14 @@
 - 是否适合做 workflow 决策：有限。
 - v1.9.0：项目外不再 silent pass；仅遗留 `openspec/project.md` 项目保留 cwd fallback。
 - v1.13.0：嵌套在 namespace 子目录里的 change 会被报告而非静默忽略（`09a999bb`，`src/utils/nested-change.ts`）。
+- v1.14.0：`--archived`（只看 archive）与 `--all`（active + archived）读 `changes/archive/`；archived 条目 mtime 用 symlink 自身 `lstat`；`--specs` 模式下两 flag 报错；JSON 条目在归档浏览时带 `archived: true/false`；空输出文案三态（all/archived/active）。
 - 主要边界：知道“有什么”，但不知道“下一步怎么走”。
 
 ### `view`
 
 - 角色：交互式仪表盘；v1.7.0 按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
 - 核心对象：聚合浏览。
+- v1.14.0：active change 行下有 `└─ [schemaName]` workflow status 行，逐 artifact 标 done/ready/blocked/skipped（workflow 加载不出时保留任务进度）；末尾有灰色 "Archived Changes" 分区（upstream main 的 #2031 已移除该分区，下个版本会变）。
 - 更偏人类，不偏自动化。
 
 ### `show`
@@ -47,6 +56,7 @@
 - 输出语义：对象内容与解析结果。
 - 主要边界：展示已有内容，不做工作流编排。
 - v1.11.0 新增 `--diff`：对 MODIFIED requirement 输出彩色 unified diff（增量行绿色、删除行红色），ADDED 输出全文，REMOVED 输出 Reason/Migration，RENAMED 输出 FROM/TO。`--json --diff` 保留既有 payload 形状，MODIFIED delta 增补 `diff` 和 `warning` 字段。`--store <id>` 解析 main spec 指向该 store。
+- v1.14.0：`--json` 的 requirement 与 scenario 带 `name`（`normalizeRequirementName`：去 `Requirement:` 前缀与收尾 `#` run），即 archive 匹配 MODIFIED/REMOVED/RENAMED 用的名字；requirement 契约 `{ name, text, scenarios: [{ name, rawText }] }`。
 
 ## 三、校验与治理类
 
@@ -57,6 +67,7 @@
 - 输出语义：是否合法、有哪些 issues、下一步修复建议。
 - 典型边界：它不管代码是否编译，不管测试是否通过，它主要管 OpenSpec 文档结构。`--archived` 不重验已应用的 delta。bulk 标志（`--all/--changes/--specs`）在项目外非零退出。
 - v1.12.0 新增 `--report findings`：配合 bulk scope 只输出 findings 列表（错误/警告/信息），保留完整统计与退出码。同版起（#1710）validate 将 delta 内 merge-conflict 标记报告为 informational findings（不改退出码），并区分文件系统读取错误与 spec 缺失。
+- v1.14.0：`.openspec.yaml` 未知键（白名单 `schema/created/goal/affected_areas/initiative/skip_specs/retire_capabilities` 之外）以 WARNING 报告（status/archive 同样告警）；`--strict` 下该 WARNING 升级为失败。
 
 ### `archive`
 
@@ -79,6 +90,7 @@
 - 边界：告诉你“到哪一步”，不告诉你具体该写什么内容。
 - v1.11.0 新增 `--all`：一个进程返回全部 active change 状态。JSON envelope 含 `{ "changes": [<status>, ...], "root" }`，按 change name 排序。单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。与 `--change <name>` 互斥。
 - v1.13.1 起 `status` 结尾输出 `Next:` 行，直接命名推进 change 的下一条命令。
+- v1.14.0：`--json` 的 `actionContext.allowedEditRoots` 把声明 store 的当前路径项目列入（有 implementation root 时两者都在），store-only apply 不再被 edit scope 卡住。
 
 ### `instructions <artifact>`
 
@@ -89,6 +101,7 @@
 
 - 角色：apply 工作单编译器。
 - 边界：决定能否实施并给出实施上下文，但不直接执行代码修改。
+- v1.14.0：`--json` 的任务项带 `sourcePath` 与 1-based `line`（`LocatedTask`），apply workflow 在该位置勾选 → 标记完成 → 重查进度。
 
 ### `instructions archive`
 

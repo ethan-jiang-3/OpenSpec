@@ -47,3 +47,12 @@
 | `cli-validate` | v1.11.0 / v1.12.0 | v1.11.0 Purpose 占位符 warning；v1.12.0 `--report findings`、advisory merge preflight findings（上游 `openspec/changes/add-validation-findings-report/` 的 design/tasks 是权威来源） |
 | `ai-tool-paths` | v1.11.0 / v1.12.0 | v1.11.0 Antigravity `.agent`→`.agents`；v1.12.0 docs 对齐当前行为（#1707） |
 | `command-generation` | v1.12.0 扩展 | 新增 SourceCraft Code Assistant adapter（`.codeassistant/commands/`） |
+
+## v1.13.1→v1.14.0 新增/变更的 specs
+
+`git diff bae58cf6 v1.14.0 -- openspec/specs/` 涉及 11 个既有 spec，无新增 capability 目录；requirement header 层面只有一处增删：
+
+| spec | 变化 | 说明 |
+|------|------|------|
+| `cli-artifact-workflow` | 新增 requirement `Active Change Workflow Status`，移除 `Experimental Isolation` | 对应 view 在 active change 下显示 workflow status（逐 artifact 标 done/ready/blocked/skipped）；被移除的实验隔离 requirement 不再描述当前实现 |
+| `ai-tool-paths`、`artifact-graph`、`cli-config`、`cli-init`、`cli-update`、`cli-view`、`legacy-cleanup`、`openspec-conventions`、`opsx-archive-skill`、`opsx-verify-skill` | scenario/正文级修订，无 requirement header 增删 | 其中 `opsx-verify-skill`（+109 行）与 `opsx-archive-skill` 对应 verify 模板按 status 契约重写与 archive sync 阻塞语义；`ai-tool-paths` 对应 10 个新工具目标的路径声明 |

@@ -36,6 +36,7 @@
 - `config`
 - `schema`
 - `view`
+- `version`
 - `store list` / `context`
 
 ### 2. Agent / AI 工作流

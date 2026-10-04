@@ -465,7 +465,7 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线；v1.10.0 未改变 Explore 的 stance、分流或只读边界：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」为准（历史核对记录：v1.10.0 未改变 Explore 的 stance、分流或只读边界）：
 
 | 来源 | 用到的结论 |
 |---|---|
@@ -484,3 +484,9 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 ## v1.13.1 补充：capture 即确认
 
 v1.11.0 要求写入前「命名 artifacts + 直接问 + 单独等确认」。v1.13.1（`4c369e02`）演进：**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再要求额外一轮 yes/no；其余写操作（改 schema、编辑 config.yaml 等）仍需完整确认流程。同时 explore 在每个 handoff 点名 `/opsx:propose`、`/opsx:apply`。
+
+## v1.14.0 补充：propose 引导耐久的行为型 capability 命名
+
+propose 的 proposal artifact instruction 与模板（`e70dcc7`）新增命名引导：每个 capability 以**耐久的系统行为**命名（如 `user-auth`），而不是本次 change 的工作（如 `add-login-endpoint`）；边界要选能随系统演化持续容纳相关 requirements 的内聚范围，避免 broad catch-all。kebab-case 与沿用项目既有 spec 组织的规则不变。
+
+这直接服务本文的「propose 一个 / propose 多个」分流：change name 可以是任务式的（`add-oauth-login`），但 capability path 描述的是行为基线的归属，两者不是一回事。Explore 阶段判断"specs 主要落在哪个 capability"时，应按行为边界想，而不是按本次工作项想。

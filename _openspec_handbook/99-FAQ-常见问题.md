@@ -13,7 +13,7 @@
 **A**: 传统文档是"写完就不改"，OpenSpec 是"边做边改"。而且 OpenSpec 用 delta spec 表达增量变化，不是每次重写整份文档。
 
 ### Q3: 我必须用 AI 工具吗？
-**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、GitHub Copilot、Devin Desktop（原 Windsurf）、Kimi Code、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode、Trae、Oh My Pi、CodeArts Agent、Hermes Agent、ZCode、MiniMax Code、Rovo Dev CLI、Command Code 等；另有 vendor-neutral 的 `agents` 目标（`--tools agents`，写入 `.agents/skills/`）。完整列表以当前 `openspec init` 输出为准。
+**A**: 不是必须的。OpenSpec 可以手动写，但用 AI 工具会更高效。目前已支持：Claude Code、Cline、Cursor、Codex、GitHub Copilot、Devin Desktop（原 Windsurf）、Kimi Code、Mistral Vibe、Junie、Lingma、ForgeCode、Pi、Kiro、IBM Bob、OpenCode、Trae、Oh My Pi、CodeArts Agent、Hermes Agent、ZCode、MiniMax Code、Rovo Dev CLI、Command Code、DeepSeek Harness（dsh）、Warp、Grok Build、Code Studio、GigaCode、AtomCode、EasyCode、GSD、Amp、Veai 等；另有 vendor-neutral 的 `agents` 目标（`--tools agents`，写入 `.agents/skills/`）。完整列表以当前 `openspec init` 输出为准。
 
 ---
 
@@ -238,6 +238,7 @@ specs/
 - **v1.9.0 新增**：Command Code（`.commandcode/skills/` + `/opsx-*` slash commands）
 - **v1.10.0 新增**：Zed Agent（`zed`）
 - **v1.12.0 新增**：SourceCraft（`codeassistant`，VS Code 扩展）；vendor-neutral 目标在选择器中显示为 "Other / Universal (shared .agents skills)"
+- **v1.14.0 新增**：DeepSeek Harness（`dsh`，skills-only `.dsh/skills/`）、Warp（skills-invocable）、Grok Build、Veai（skills-only）、Code Studio（`codestudio`，`.prompt.md` 命令）、GigaCode、AtomCode、EasyCode（TOML 命令）、GSD 与 Amp（与 Codex/Zed/Antigravity 共享 `.agents` 树）；IBM Bob 显示名由 "Bob Shell" 更名（tool id `bob` 不变）
 - 也可以直接用 CLI（不用任何 AI 工具）
 
 ### Q27: 怎么安装 OpenSpec 到我的 AI 工具？
@@ -248,7 +249,7 @@ specs/
 4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change`，Zed 为 `/openspec-propose`
 
 ### Q27a: Zed 和 Codex 为什么都写 `.agents/skills/`？
-**A**: 它们共用一个 OpenSpec 管理的 skill 树：v1.10.0 是 Codex、Zed Agent 与 vendor-neutral `agents` 三方，v1.11.0 起 Antigravity 也迁入（它另写 `.agents/workflows/` commands）。OpenSpec 只管理 `openspec-*` 目录和 `.openspec-target` ownership marker，不创建/修改根 `AGENTS.md`；共享树每次运行只写一份，写入者由 marker 决定。
+**A**: 它们共用一个 OpenSpec 管理的 skill 树：v1.10.0 是 Codex、Zed Agent 与 vendor-neutral `agents` 三方，v1.11.0 起 Antigravity 也迁入（它另写 `.agents/workflows/` commands），v1.14.0 起 Amp（`.amp`/`.agents/skills` 检测）与 GSD（`.gsd` 检测）同样写入这棵树。OpenSpec 只管理 `openspec-*` 目录和 `.openspec-target` ownership marker，不创建/修改根 `AGENTS.md`；共享树每次运行只写一份，写入者由 marker 决定。
 
 ### Q27b: 为什么全局安装后没有 completion 提示？
 **A**: npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction` 的交互式 CLI 运行才会在 stderr 一次提示 `openspec completion install`；JSON、非 TTY 和 completion 子命令会 defer，CI、已安装 completions、不可支持 shell 或 `OPENSPEC_NO_COMPLETIONS=1` 会保持安静。只设置 `process.exitCode` 的失败仍会进 hook；直接 `process.exit(1)` 的失败跳过 hook且不消费提示。

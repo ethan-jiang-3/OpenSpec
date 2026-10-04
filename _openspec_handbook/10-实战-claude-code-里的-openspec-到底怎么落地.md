@@ -132,7 +132,7 @@ openspec update
 - **列出 profile 遗漏的工作流**：init/update 的输出会点名 `new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard` 可以用 `openspec config profile` 加上——没装的命令不再读起来像"setup 坏了"。
 - **检测损坏的 command 文件**：`openspec update` 以前只比对 skill 文件的 `generatedBy` 版本戳，skill 是新的就报"All up to date"，旁边手改/截断的 command 文件完全没被检查。现在也比对 command 文件内容并自动修复；只影响 skills+commands 都配置的工具。
 - **共享 restart 提示**：init 与 update 共用 `src/core/shared/ide-restart.ts` 的提示，单一来源；message 覆盖"移除 workflow"场景，不再声称生成了新文件。
-- **共享 skill 根**：Codex、Zed、Antigravity 与 vendor-neutral `agents` 写同一 `.agents/skills/` 树，由 `resolveSharedSkillWriters()` 仲裁单一写入者；Antigravity 旧 `.agent/` 树在 update 时迁移。SourceCraft Code Assistant 走 adapter 路线，写 `.codeassistant/commands/opsx-<id>.md`。
+- **共享 skill 根**：Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 写同一 `.agents/skills/` 树，由 `resolveSharedSkillWriters()` 仲裁单一写入者；Antigravity 旧 `.agent/` 树在 update 时迁移（Amp 以 `.amp`/`.agents/skills` 检测、GSD 以 `.gsd` 检测，都落在这棵树）。SourceCraft Code Assistant 走 adapter 路线，写 `.codeassistant/commands/opsx-<id>.md`。
 
 ---
 

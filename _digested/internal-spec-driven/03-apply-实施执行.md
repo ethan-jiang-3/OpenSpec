@@ -28,9 +28,9 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 ### 2.2 generateApplyInstructions 的核心逻辑
 
 1. **检查缺失 artifact**：遍历 `apply.requires`，对每个 artifact 检查其输出文件是否存在。如果任何必需 artifact 缺失 → `state: "blocked"`，并列出 `missingArtifacts`
-2. **读取 tracks 文件**（通常是 tasks.md）：如果文件不存在 → `state: "blocked"`
-3. **解析 checkbox**：逐行扫描 tasks.md，用正则匹配 checkbox 格式
-4. **计算进度**：total / complete / remaining
+2. **读取 tracks 文件**（通常是 tasks.md）：apply.tracks 按 artifact outputs 解析，glob 匹配到的每个具体任务文件都会被解析（自定义 artifact 名/输出路径/glob 均可）；如果 tracks 没匹配到任何文件 → `state: "blocked"`；读得到的文件里某个读失败则记入 `unavailableTrackingFiles`
+3. **解析 checkbox**：逐行扫描每个任务文件，用正则匹配 checkbox 格式
+4. **计算进度**：total / complete / remaining（对每个解析出的 checkbox 计数，与 `openspec list`、archive 同一口径）
 5. **判断状态**：
    - `blocked`：缺少必需 artifact、缺少 tracks 文件，或 tracks 文件存在但没有任何 checkbox task
    - `all_done`：所有 checkbox 已标记
@@ -53,9 +53,22 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
     "remaining": 7
   },
   "tasks": [
-    { "label": "1.1 Create theme context", "done": false },
-    { "label": "1.2 Add CSS variable generation", "done": false }
+    {
+      "id": "1",
+      "description": "1.1 Create theme context",
+      "done": false,
+      "sourcePath": "/project/openspec/changes/add-dark-mode/tasks.md",
+      "line": 6
+    },
+    {
+      "id": "2",
+      "description": "1.2 Add CSS variable generation",
+      "done": false,
+      "sourcePath": "/project/openspec/changes/add-dark-mode/tasks.md",
+      "line": 7
+    }
   ],
+  "taskTrackingConfigured": true,
   "instruction": "Read context files, work through pending tasks, mark complete as you go..."
 }
 ```
@@ -65,7 +78,8 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 - **`state`**：三种状态 —— agent 必须根据状态走不同分支
 - **`contextFiles`**：artifact ID → 文件路径数组。**agent 必须在开始实施前读完所有这些文件**。这个列表是 schema 驱动的，不是硬编码的 —— 不同 schema 可能包含不同的 artifact
 - **`progress`**：total/complete/remaining 计数
-- **`tasks`**：解析后的 checkbox 列表，每个带 label 和 done 状态
+- **`tasks`**：解析后的 checkbox 列表，每项带 `id`、`description`、`done`，以及 v1.14.0 起的来源定位 **`sourcePath` + 1-based `line`**（`e7a951d`；实现在 `src/commands/workflow/instructions.ts` 的 `LocatedTask`/`parseLocatedTasks`——只在共享 parser 结果上补位置，不改任务解析本身）。无描述文本的 checkbox 不进列表但仍计入 progress，所以列表可比 total 短
+- **`taskTrackingConfigured`** / **`unavailableTrackingFiles`**：schema 是否配置了任务追踪；追踪文件存在但读不到时逐个列出 path 与原因（verify 用它判 "not verified"，不在 verify 语境下对 apply 只是信息）
 - **`missingArtifacts`**（仅缺少 required artifact 时）：哪些 artifact 还没创建。注意：tracks 文件缺失或 tasks.md 没有 checkbox 也会 `blocked`，但不一定有 `missingArtifacts`
 
 ---
@@ -112,7 +126,7 @@ const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
 
 > **机制 vs 行为**：下面描述的 7 步流程来自 skill 模板（`src/core/templates/workflows/apply-change.ts`）——它告诉 AI agent "应该怎么做"，而非 CLI 硬编码的执行逻辑。CLI 负责的是第 2 节的 apply gate（状态判定、checkbox 解析），agent 负责的是执行这些步骤。agent 理论上可以不按这 7 步走，但模板的设计意图就是引导 agent 遵循这个流程。
 
-来自 skill 模板 `apply-change.ts`（`instructions` 字段；编号步骤实际位于 `:19 / :28 / :37 / :56 / :63 / :71 / :86`）。
+来自 skill 模板 `apply-change.ts`（`instructions` 字段；编号步骤实际位于 `:50 / :59 / :68 / :105 / :115 / :123 / :141`）。
 
 ### Step 1：选定 change
 
@@ -163,9 +177,13 @@ Progress: 0/7 tasks complete
 for each pending task:
     显示 "Working on task N/M: <description>"
     写代码（最小化、聚焦于该 task）
-    标记完成：- [ ] → - [x]
+    编辑前确认 sourcePath:line 处的 checkbox 仍与任务描述一致；不一致则重跑 apply instructions，用刷新后的位置
+    在返回的 sourcePath:line 处标记完成：- [ ] → - [x]
+    重跑 apply instructions，确认该任务已 done 且 progress 变化
     继续下一个
 ```
+
+v1.14.0 起（`e7a951d`）这个循环是围绕 `sourcePath`/`line` 设计的：在该位置勾选 → 标记完成 → 重查进度。行号是 `instructions apply --json` 返回时刻的快照，所以模板要求"编辑前确认该处 checkbox 仍是这条任务"，防止编辑过程中 tasks.md 变动导致勾错行。
 
 **暂停条件**（任一触发即停）：
 - task 描述不清楚 → 请求澄清

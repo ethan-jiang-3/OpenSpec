@@ -98,6 +98,7 @@ These guide what you write, but should never appear in the output
 ## 命名、顺序与无 spec change
 
 - `openspec new change` 接受数字前缀的 kebab-case 名，例如 `100-add-feature`；不再把数字开头一概拒绝。
+- **capability 命名引导**：proposal 的 Capabilities 段（schema instruction + proposal 模板注释，经 `openspec instructions proposal` 投递）引导 agent 用**耐久的系统行为**命名新 capability（如 `user-auth`），而不是本次工作（如 `add-login-endpoint`）；选一个能随系统演化持续拥有相关 requirement 的内聚边界，避免宽泛的 catch-all 名。新引入的路径段用 kebab-case，并沿用项目既有 spec 组织。
 - `specs` 和 `design` 在 proposal 后都 ready，但 status/模板按 schema 声明顺序先推荐 specs。它不是新增的 `specs -> design` 依赖。
 - 纯重构、工具或文档工作可在 `.openspec.yaml` 声明 `skip_specs: true`。此时 specs 是 `skipped`，而不是待生成的空文件；若需求出现 spec-level 行为变化，必须移除 marker 后再写 delta。
 - nested layout 使用 `specs/<capability-path>/spec.md`，如 `specs/identity/session/spec.md`；默认 schema 文案仍偏 flat，团队应在 config/AGENTS 明确路径约定。
@@ -126,14 +127,16 @@ FAQ `04_propose-to-apply-ready/` 从工程视角分析了 propose 的 artifact D
 
 | 内容 | 行号范围（propose.ts） |
 |---|---|
-| SkillTemplate 定义 | L10-L119 |
-| CommandTemplate 定义 | L122-L231 |
-| Step 1: 询问输入 | L31-L38 |
-| Step 2: new change | L40-L44 |
-| Step 3: status DAG | L46-L53 |
-| Step 4: artifact 循环 | L55-L82 |
-| Step 5: final status | L87-L90 |
-| context/rules 警告 | L106-L108 |
+| SkillTemplate 定义 | L33-L194 |
+| CommandTemplate 定义 | L196-L356 |
+| Step 1: 询问输入/澄清歧义 | L61-L70 |
+| Step 2: 加载 context | L72-L80 |
+| Step 3: schema 选择 | L82-L90 |
+| Step 4: new change | L92-L105 |
+| Step 5: status DAG | L107-L114 |
+| Step 6: artifact 循环 | L116-L157 |
+| Step 7: final status | L159-L162 |
+| context/rules 警告 | L179-L181 |
 
 ## v1.12.0–v1.13.1 行为更新
 

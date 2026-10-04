@@ -100,10 +100,14 @@ remaining = 0
   {
     "id": "1",
     "description": "1.1 Add OAuth callback route",
-    "done": false
+    "done": false,
+    "sourcePath": "…/openspec/changes/add-oauth-login/tasks.md",
+    "line": 12
   }
 ]
 ```
+
+`sourcePath` + 1-based `line`（v1.14.0 起）定位该 checkbox 在 tracking file 中的确切行，供 apply workflow 勾选时使用；解析规则本身未变。
 
 解析规则来自共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`）：
 

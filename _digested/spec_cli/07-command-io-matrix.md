@@ -15,22 +15,25 @@
 ## 总表
 
 > **v1.13.1**：`status` 的 text 输出结尾新增 `Next: <command>` 行（仅 text，JSON 不变；`new change` 自 v1.5.0 即有同款收尾）。
+>
+> **v1.14.0**：新增 `version [--json] [--check]`；`list` 支持 `--archived/--all`；`view` 加 workflow status 行与 "Archived Changes" 分区；`show --json` 的 requirement/scenario 带 `name`；`status --json` 的 `actionContext.allowedEditRoots` 纳入 store 声明项目；`instructions apply --json` 的任务项带 `sourcePath`/`line`。
 
 | 命令 | 主要受众 | 输入来源 | 直接输出 | 间接影响 | 是否改状态 |
 | --- | --- | --- | --- | --- | --- |
 | `init` | 人类 + 工具集成 | 项目路径、global config、工具目录、可选 `--language` | `openspec/` 基础设施、skills/commands、安装报告；greenfield language context | 决定外部工具能否使用 OpenSpec 工作流；已有 config 不被 language flag 覆盖 | 是 |
 | `update` | 人类 + 工具集成 | 当前版本、配置、已配置工具 | 更新后的 skills/commands、同步报告 | 决定工具侧工作流是否与配置一致 | 是 |
-| `list` | 人类 + 机器 | changes/specs 目录、task progress、mtime | 列表或 JSON 索引 | 帮助选择目标 change/spec | 否 |
-| `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard | 改善浏览体验 | 否 |
-| `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON | 帮助人工审阅和调试解析结果 | 否 |
+| `version` | 人类 + 机器 | 当前安装（location/packageManager/scope）；`--check` 时 registry | 版本报告，或 `{ schemaVersion, version, install, update? }` JSON（`update` 仅 `--check` 时出现） | 提示用户是否/如何升级 CLI；`canSelfUpgrade` 判定能否原地升级 | 否 |
+| `list` | 人类 + 机器 | changes/specs 目录（`--archived/--all` 含 `changes/archive/`）、task progress、mtime | 列表或 JSON 索引；归档浏览时条目带 `archived: true/false` | 帮助选择目标 change/spec | 否 |
+| `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard；active change 行带 `└─ [schemaName]` workflow status 行，末尾有 "Archived Changes" 分区 | 改善浏览体验 | 否 |
+| `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON（requirement = `{ name, text, scenarios: [{ name, rawText }] }`） | 帮助人工审阅和调试解析结果；JSON 读者可按 `name` 引用 requirement | 否 |
 | `validate` | 人类 + 机器 | change delta specs、正式 specs；`--archived` 时为 archive 目录的 tasks；bulk scope 可 `--report findings`（v1.12.0） | 合法性报告、退出码；findings 精简报告（JSON 标识 report/scope） | 决定是否需要修复、是否适合 archive；`--archived` 给 CI 抓未勾完的归档工作；merge-conflict 标记作为 informational findings 报告 | 否 |
 | `archive` | 人类 + OPSX | change 内容、主 specs、validate 结果 | 更新后的 specs、archive 目录、报告 | 结束 change 生命周期 | 是 |
 | `config` | 人类 | global config、workflow 选择 | 配置变更与摘要 | 影响后续 `init/update` 投递结果 | 是 |
 | `schema` | 高级用户/作者 | schema 搜索路径、schema.yaml、templates | schema 列表、校验结果、脚手架 | 改变 workflow 定义层 | 可能 |
 | `new change` | 人类 + OPSX | change 名称、schema、项目根目录 | 新建 change 目录与元数据 | 开启一个新的 workflow 实例 | 是 |
-| `status` | 人类 + agent workflow | schema、artifact graph、已存在输出文件、`skip_specs` metadata | artifact 状态图（可含 `skipped`） | 决定下一步应推进哪个 artifact | 否 |
+| `status` | 人类 + agent workflow | schema、artifact graph、已存在输出文件、`skip_specs` metadata、store/declaring project | artifact 状态图（可含 `skipped`）与 `actionContext`（`allowedEditRoots` 含 store 声明项目） | 决定下一步应推进哪个 artifact；store-only apply 的 edit scope | 否 |
 | `instructions <artifact>` | OPSX + 高级用户 | change context、template、rules、dependencies | artifact instruction 包 | 影响 artifact 文档生成质量与顺序 | 否 |
-| `instructions apply` | agent workflow + 高级用户 | apply config、context files、tasks、project context、operation guidance | apply instruction 包 | 决定是否进入代码实施阶段 | 否 |
+| `instructions apply` | agent workflow + 高级用户 | apply config、context files、tasks、project context、operation guidance | apply instruction 包（任务项含 `sourcePath` + 1-based `line`） | 决定是否进入代码实施阶段；apply workflow 按定位勾选任务 | 否 |
 | `instructions archive` | agent workflow + 高级用户 | change、project context、`operations.archive.guidance` | archive operation input | 为 archive skill 提供只读指引 | 否 |
 | `templates` | 高级用户/工具 | schema 解析路径、artifact templates | 模板路径与来源 | 帮助调试模板覆盖与解析 | 否 |
 | `schemas` | 高级用户/工具 | project/user/package schemas（canonical root；可 `--store`） | schema 列表与来源 | 帮助发现可用 workflow 模型 | 否 |
@@ -65,6 +68,7 @@
 - `schemas --json`
 - `templates --json`
 - `list --json`
+- `version --json`
 - `store list --json`
 
 共同特征：

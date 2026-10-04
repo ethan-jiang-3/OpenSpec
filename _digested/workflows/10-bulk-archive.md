@@ -30,11 +30,13 @@ bulk-archive 是 archive 的批量版。它的核心复杂度不在单个 merge 
 3. for each change:
    a. openspec instructions archive --change "<name>" --json # context / archive guidance
    b. openspec status --change "<name>" --json   # artifact 状态（done / skipped 都满足）
-   c. [读 tasks.md]                              # task 完成度
+   c. [openspec list --json（一次）读全部选中 change 的
+      totalTasks/completedTasks —— schema-aware 任务进度；
+      lookup 失败/有遗漏/计数非法 → 报告并停止整批]
    d. [读 artifactPaths.specs.existingOutputPaths]  # delta specs
 4. [冲突检测：capability → [changes]]
 5. [对每个冲突：读 delta specs + 搜代码 → 判断谁实现了]
-6. [对每个 change：archive（sync + mv）]
+6. [对每个 change：archive（inline sync + 阻塞检查 + 验证 + mv）]
 ```
 
 ## 时序图
@@ -61,7 +63,8 @@ sequenceDiagram
         loop 每个选中的 change
             MD->>TS: openspec status --change X --json
             TS-->>MD: artifacts, schemaName
-            MD->>FS: 读 tasks.md（checkbox 统计）
+            MD->>TS: openspec list --json（一次）
+            TS-->>MD: 每个选中 change 的<br/>totalTasks/completedTasks<br/>（schema-aware，含自定义任务文件/glob）
             MD->>FS: 读 delta specs（requirement 列表）
         end
     end
@@ -79,9 +82,13 @@ sequenceDiagram
     rect rgb(240, 255, 240)
         Note over MD,FS: Step 6 · 逐 change archive
         loop 每个 change
-            MD->>MD: sync delta specs（如需）
-            MD->>TS: mkdir -p archive/ && mv change
-            MD-->>User: "Archived: <name>"
+            MD->>MD: inline sync delta specs（如需，不得委托后台）
+            alt sync 报 stop/blocking
+                MD->>MD: 视为该 change 的 sync 失败：<br/>记 Failed、不做 post-sync 比对、<br/>不移 changeRoot，继续下一个 change
+            else 验证通过
+                MD->>TS: mkdir -p archive/ && mv change
+                MD-->>User: "Archived: <name>"
+            end
         end
         MD-->>User: "## Bulk Archive Complete<br/>N changes archived<br/>Conflicts resolved: M"
     end
@@ -99,6 +106,14 @@ template 规定 agent 必须读代码来判断：
 
 这体现了 OpenSpec 的核心工程思想：**代码是最终事实源**。当 delta specs 冲突时，不看谁写得好，看谁的代码真正存在。
 
+## sync 阻塞语义（与单 change archive 相同）
+
+逐 change 执行 sync 时：
+
+- inline sync **不得委托后台任务**——后面的 `mv changeRoot` 会把还在被读的 change 目录移走；只能同步等待。
+- sync 报**任何 stop/blocking 条件**即视为该 change 的 sync 失败：立即停止处理它，结果记 **Failed**（记录阻塞/错误条件），**不做 post-sync 内容比对、不移其 changeRoot**——change 保持原状，随后继续批内其他 change。
+- sync 通过的 change 才进入验证（只验要 sync 的 delta）：ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 的 requirement 已删——retire 掉的 capability（最后一个 requirement 被移除、`## Requirements` 变空）其主 spec 已删除而非留空、RENAMED 用新名；验证不过同样不移 `changeRoot`、不归档该 change。
+
 ## Guardrails
 
 | Guardrail | 含义 |
@@ -107,17 +122,19 @@ template 规定 agent 必须读代码来判断：
 | Detect and resolve spec conflicts agentically | 不盲合并 |
 | Report partial failures clearly | 一个失败不阻塞其他 |
 | Don't auto-select changes | 用户必须显式选 |
+| Task progress comes from schema-aware `openspec list --json` | 不自己数 checkbox；lookup 失败即停整批 |
+| Treat a sync stop/blocking as that change's failure | 记 Failed、不移其 changeRoot，批内其他 change 继续 |
 | Read each selected change's archive inputs | context/guidance 是 prompt input，不改变批量选择或确定性检查 |
 
 ## 源码锚点
 
 | 内容 | 行号范围（bulk-archive-change.ts） |
 |---|---|
-| SkillTemplate 定义 | L10-L132 |
-| CommandTemplate 定义 | L135+ |
-| Step 3: 批量状态收集 | L39-L53 |
-| Step 4: 冲突检测 | L55-L63 |
-| Step 5: 冲突解决 | L65-L79 |
+| SkillTemplate 定义 | L31-L395 |
+| CommandTemplate 定义 | L397-L760 |
+| Step 3: 批量状态收集（含 `list --json` 任务进度） | L89-L124 |
+| Step 4: 冲突检测 | L126-L135 |
+| Step 5: 冲突解决 | L137-L156 |
 
 
 ## v1.13.1 行为更新

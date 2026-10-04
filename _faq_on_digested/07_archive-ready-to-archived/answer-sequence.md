@@ -139,6 +139,12 @@ sequenceDiagram
 
             MD-->>User: "archive 前建议确认：<br/>- tasks 全部完成 ✓<br/>- delta specs 与 main 同步 ✓<br/>确认 archive？"
             User->>MD: 确认
+
+            opt 需要 sync（v1.14.0 阻塞语义）
+                MD->>FS: inline 执行 sync（同步等待，<br/>不委托后台）
+                MD->>MD: sync 报任何 stop/blocking →<br/>视为 sync 失败，立即停止归档：<br/>不比对、不移 changeRoot，<br/>修复后可重跑
+                MD->>MD: sync 成功后结构验证：<br/>主 spec 无 delta header 残留、<br/>REMOVED 已删、retire 的<br/>capability 主 spec 已删
+            end
         end
 
         MD->>TS: openspec archive <name> --yes
@@ -219,6 +225,8 @@ TS→: 进入程序化 archive（路径 A Phase 1-6）
 ```
 
 OPSX 路径的价值就是这一段 MD 前奏。CLI 路径假设用户在调命令之前已经自己做完了这些判断。
+
+v1.14.0（`0ff63dba`）给这段前奏加上了硬规则：sync 报告任何 stop/blocking 条件即视为 sync 失败，立即停止归档（不比对、不移 `changeRoot`，修复后重跑）；sync 成功后还要对全部 capability 做结构验证（无 delta header 残留、REMOVED 已删、被 retire 的 capability 主 spec 已删除而非留空），任何 mismatch 同样停止归档。sync 只能 inline 同步等待——委托后台会让 step 5 移走 `changeRoot`，留下"已归档但主 specs 没更新"的状态。
 
 ## guard 强度分层
 

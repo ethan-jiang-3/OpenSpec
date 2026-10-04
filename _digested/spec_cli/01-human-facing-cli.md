@@ -41,6 +41,7 @@
 - 若已有 config，`--language` 拒绝覆盖并要求手工把语言说明加入 `context`；空值、多行、控制/不可见格式字符以及导致 context 超过 50KB 的值会在写文件前失败。
 - v1.12.0 起 init 给空的 openspec/ 子目录写 `.gitkeep`，空目录会被 Git 跟踪；重跑 init 会安全恢复缺失的 marker 文件。
 - v1.13.0 起 init/update 会点名 profile 没装的 workflow（如 core 之外的 new/continue/ff 等），不再让缺失的 `/opsx:` 命令读起来像安装坏了。
+- v1.14.0 起 `--tools` 目标大幅扩容：新增 dsh（skills-only，`.dsh/skills/`）、codestudio（`.prompt.md` 命令）、gigacode（Markdown 命令 `opsx-<id>.md`）、atomcode（Markdown 命令，`args: optional/none`）、easycode（TOML 命令 `/opsx:<id>`，序列化在共享模块 `command-generation/toml.ts`）、gsd 与 amp（共享 `.agents` 根，detection 分别为 `.gsd`/`.amp`）、grok、warp（skills-invocable，与 codex 同类，可自然语言+斜杠调用）、veai。"Bob Shell" 更名为 "IBM Bob"（tool id `bob` 与 `.bob` 路径不变）；Kilo Code 的命令目录为 `.kilo/command/`。共享 `.agents` 根的成员变为 Codex、Zed、Antigravity、Amp、GSD 加 vendor-neutral `agents` 六方。
 
 ### `openspec update`
 
@@ -71,13 +72,39 @@
 
 - 它不是业务数据升级工具。
 - 它主要更新的是“工具接入层”。
-- v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。
+- v1.7.0 的交互式 `update` 还能发现 PATH 中过旧的全局 CLI 并提示升级；它提示的是二进制版本，和当前源码 checkout 的 Git 版本是两件事。v1.14.0 起按需的版本/更新检查由 `openspec version [--check]` 承担，不必等一次交互式 update。
 - v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。v1.9.0 起，若 `.agents` 已被 `agents` 目标占用，遗留 Codex 升级不会劫持该树。
 - v1.10.0 起该共享根由 Codex、Zed Agent 与 vendor-neutral `agents` 三方协调；Zed 的 tool id 是 `zed`。`update` 只有实际更新带 `requiresIdeRestart` 的 IDE-resident surface 才提示重启；CLI-only/skills 即时加载工具通常不提示。
 - v1.13.0 起 `update` 会刷新内容已 drift 的生成文件（不只看版本戳，`d9e1a28c`）；v1.13.1 起与 init 共享同一套 IDE restart 提示逻辑，workflow 被移除时也准确提示。
 - v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
 
-首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。完整边界见 `../mechanisms/05-cli-infra.md`。
+首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。zsh 的 uninstall 自 v1.14.0 起与 bash 一样逐字节还原：只删 install 加的 separator 行（且仅当 block 在文件顶部），用户自己的空行不动。完整边界见 `../mechanisms/05-cli-infra.md`。
+
+### `openspec version`
+
+本质目标：
+
+- 报告当前安装的 OpenSpec 版本与安装形态，需要时检查是否有新版本。
+
+输入：
+
+- 可选 `--json`：输出结构化报告。
+- 可选 `--check`：只有带上它才查询 registry 对比最新版本；不带时完全不发网络请求。
+
+输出：
+
+- 默认人类可读的版本报告（版本、安装位置、包管理器、scope，以及 `--check` 时的更新结论）。
+- `--json` 输出 `{ schemaVersion: 1, version, install, update? }`：`install` 含 `location` / `packageManager` / `scope`；`update` 只在 `--check` 时出现，含 `status`（`available`/`current`/`disabled`/`offline`）、`latest`，以及 `status: "available"` 时的升级 `command` 与 `canSelfUpgrade`。
+
+影响：
+
+- 它是自述与升级决策端点，不改任何项目或工具状态。
+- 它把"这份安装是谁装的、能不能原地升级"的判断从用户转移给了 CLI（`version-check.ts` 的 `getCliInstallInfo` / `checkForCliUpdate` / `canSelfUpgrade` / `buildVersionReportLines`）。
+
+容易误解：
+
+- `disabled`（检查被关闭或 registry 不可用）与 `offline` 是显式状态而不是错误；`canSelfUpgrade` 会拒绝非默认 registry 等不确定归属的安装，不给出可能落错的升级命令。
+- 它提示的是已安装二进制版本，和源码 checkout 的 Git 版本是两件事（与 `update` 的升级提示同口径）。
 
 ## 2. 发现当前项目里有什么
 
@@ -85,18 +112,19 @@
 
 本质目标：
 
-- 浏览当前活跃的 changes，或已有 specs。
+- 浏览当前活跃的 changes、已归档的 changes，或已有 specs。
 
 输入：
 
-- `openspec/changes/` 目录内容。
+- `openspec/changes/` 目录内容；v1.14.0 起 `--archived`/`--all` 还会读 `changes/archive/` 子目录。
 - 对每个 change 的任务跟踪信息。
-- 每个 change 目录下文件的最近修改时间。
+- 每个 change 目录下文件的最近修改时间；archived 条目的 mtime 用 symlink 自身的 `lstat`（archive 里是移动过去的 symlink），移动 change 不再污染排序。
 
 输出：
 
-- 文本模式下的列表视图。
-- `--json` 时的结构化 change 列表。
+- 文本模式下的列表视图；`--all` 时 active 与 archived 分成两组各带标题。
+- `--json` 时的结构化 change 列表；启用归档浏览（`--archived`/`--all`）时每个条目带 `archived: true/false`。
+- 空输出文案三态：`--all` 是 `No changes found.`，`--archived` 是 `No archived changes found.`，默认是 `No active changes found.`。
 
 影响：
 
@@ -108,6 +136,7 @@
 - change 列表的“完成度”主要来自 tasks 进度，而不是 artifact graph。
 - `list` 是概览，不是 workflow 决策引擎。
 - v1.9.0 起，项目外跑 `list`（没有 OpenSpec root、也没有遗留 `openspec/project.md`）会失败并非零退出，不再假装空项目通过。`--json` 失败时带共享诊断而不是空数组。
+- `--archived` 与 `--all` 只对 change 列表有意义：`list --specs` 模式下带这两个 flag 会直接报错。
 
 ### `openspec view`
 
@@ -122,11 +151,14 @@
 输出：
 
 - 交互式 dashboard。
+- v1.14.0 起，每个 active change 行下新增 `└─ [schemaName]` workflow status 行，逐 artifact 标注状态（done 加 ✓、ready 加 →、blocked 置灰、skipped 标 `(skipped)`）；某个 change 的 workflow 加载不出来时保留任务进度并给出警告。
+- dashboard 末尾新增灰色的 "Archived Changes" 分区，列出归档 change。
 
 影响：
 
 - 更适合人工浏览，不适合作为机器协议端点。
 - 它不能假定总是读取当前 cwd 下最近的 `openspec/`；v1.7.0 会按 root selection 读取被选中的 root。
+- 预告：upstream main 合入的 #2031 已把 view 的 "Archived Changes" 分区移除，下一个版本仪表盘将不再显示归档 change；本节描述的是 v1.14.0 行为。
 
 ## 3. 查看某个具体对象
 
@@ -146,7 +178,7 @@
 输出：
 
 - 人类可读内容。
-- 或 `--json` 结构化内容（`--diff` 时 MODIFIED delta 增补 `diff` 和 `warning` 字段）。
+- 或 `--json` 结构化内容（`--diff` 时 MODIFIED delta 增补 `diff` 和 `warning` 字段）。v1.14.0 起 requirement 与 scenario 带 `name` 字段：requirement 是 `{ name, text, scenarios: [{ name, rawText }] }`，name 由 `normalizeRequirementName` 规范化（去 `Requirement:` 前缀与收尾 `#` run），即 archive 匹配 MODIFIED/REMOVED/RENAMED 用的名字。
 
 影响：
 
@@ -187,6 +219,7 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 - 对 change 来说，重点检查 delta spec 结构和 scenario 完整性。
 - 对 spec 来说，重点检查正式规范结构与 requirement/scenario 完整性。
 - `--archived` 适合 CI / pre-commit，抓“归档时 tasks 没勾完”的工作；它不重验已应用的 delta。
+- v1.14.0 起，`.openspec.yaml` 里出现已知键（`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）之外的未知键会以 WARNING 报告（`status` 与 archive 流程同样告警）；`--strict` 下该 WARNING 升级为失败。
 
 容易误解：
 
@@ -323,6 +356,7 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 本质目标：
 
 - 输出 apply 阶段的实施说明，包括 artifact context files、项目 `context`、`operations.apply.guidance`、task 进度和阻塞状态。
+- v1.14.0 起，`--json` 列出的每个任务项带 `sourcePath` 与 1-based `line`，可以直接定位到 tracking file 中的那一行勾选。
 
 对人类意义：
 

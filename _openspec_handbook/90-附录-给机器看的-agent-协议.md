@@ -2,7 +2,7 @@
 
 > 这一篇不是给第一次上手的人看的，而是给想研究"OpenSpec 怎么喂给宿主 agent"的人看的。
 >
-> **适用版本**：本文以 OpenSpec v1.13.1 为准；涵盖 `--json` 输出、PlanningHome 路由、store-aware specs instruction，以及 Apply/Archive operation inputs。首次遥测披露和 completion tip 在 `--json` 时都会被推迟，避免污染机器输出。
+> **适用版本**：当前行为基线以 [`_digested/README.md`](../_digested/README.md) 的「当前源码基线」为准（本篇用现在时描述）；涵盖 `--json` 输出、PlanningHome 路由、store-aware specs instruction，以及 Apply/Archive operation inputs。首次遥测披露和 completion tip 在 `--json` 时都会被推迟，避免污染机器输出。
 
 ---
 
@@ -125,7 +125,32 @@ sequenceDiagram
 - `artifacts[].status`：`done`（文件存在）| `ready`（依赖满足、可写）| `blocked`（缺依赖）| `skipped`（change 声明 `skip_specs` 后跳过、视为已满足）
 - `isPlanningComplete`：所有非 skipped planning artifact 都存在才算完成（v1.8.0 主字段；`isComplete` 是兼容别名，二者同值）
 - `nextSteps`：数组，给 agent 的建议下一步命令
-- `actionContext`：机器可读约束（`mode` 恒为 `repo-local`，`allowedEditRoots` 指向 project root）
+- `actionContext`：机器可读约束（`mode` 恒为 `repo-local`，`allowedEditRoots` 指向 project root；change 实际位于声明的 store 时，还包括当前路径上声明该 store 的项目 root，store-only apply 不再被 edit scope 卡住）
+
+### `openspec show --json` 的 name 契约
+
+`show <change> --json`、`show <spec> --type spec --json` 里的 requirement 和 scenario 现在都带 `name` 字段：
+
+```json
+{
+  "requirements": [
+    {
+      "name": "User Login",
+      "text": "The system SHALL authenticate users.",
+      "scenarios": [
+        { "name": "Valid credentials", "rawText": "- **WHEN** credentials are valid\n- **THEN** a session is issued" }
+      ]
+    }
+  ]
+}
+```
+
+**字段说明**：
+- `name`：由 `normalizeRequirementName` 规范化——去掉 `Requirement:`/`Scenario:` 前缀和收尾的 `#` 连字符串。**这就是 archive 匹配 MODIFIED/REMOVED/RENAMED 时用的名字**；机器要以名字定位 requirement，必须用这个字段，不要自己从 `text` 的 SHALL 句子反推。
+- `text`：requirement 正文；scenario 的正文在 `rawText`（bullet 原文）。
+- 字段是可加的（additive）：旧读取方不受影响。
+
+它解决的是 #1971 的问题：此前 JSON 只描述"requirement 说了什么"，不描述"它叫什么"，机器无法按 archive 的匹配口径点名某个 requirement。
 
 ### `openspec instructions design --json` 示例（简化）
 
@@ -181,7 +206,9 @@ sequenceDiagram
 - skill/command 是"投递方式"
 - CLI 是"运行时事实来源"
 
-`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，使用 `/openspec-propose`。Codex、Zed、Antigravity 与 vendor-neutral `agents` 共用 `.agents/skills/`，OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`。
+`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，使用 `/openspec-propose`。共享 `.agents/skills/` 树的成员现在是 Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 六方，OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`（Amp 以 `.amp`/`.agents/skills` 检测、GSD 以 `.gsd` 检测，都写同一棵树）。
+
+skills-only（无 command 文件、用 `/openspec-*` 直呼）的还有 DeepSeek Harness（`dsh`，写 `.dsh/skills/`，dsh 把项目 `.dsh/skills/` 当最高优先级 skill root）、Grok Build（`.grok/`）与 Veai（`.veai/`）。Warp 与 Codex 同属 skills-invocable surface：skills 写 `.warp/`，自然语言或 `/openspec-*` 都能触发。带 command 文件的 adapter 家族继续扩大：Code Studio 写 `.codestudio/prompts/opsx-<id>.prompt.md`，GigaCode 写 `.gigacode/commands/opsx-<id>.md`，AtomCode 写 `/opsx-<id>` Markdown 命令，EasyCode 写 TOML 命令（`/opsx:<id>`）。
 
 OpenCode 同时有 skills 和 `.opencode/commands/opsx-*.md` command。v1.10.0 的 adapter 会在生成 command 时加入 `$ARGUMENTS`，把用户在 command 后输入的参数交给 workflow；模板正文已有等价参数占位时不会再重复追加。不要把这个占位符复制到 Claude、Codex 或 Zed 的调用语法里。
 

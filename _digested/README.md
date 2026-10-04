@@ -2,7 +2,7 @@
 
 这个目录是对 OpenSpec 源码的**消化分析**：从 TypeScript 源码出发，理解机制、架构和设计意图。它不是用户指南——想学怎么用 OpenSpec 去 `_openspec_handbook/`。
 
-> **当前源码基线**：本文档集以 OpenSpec `v1.13.1`（upstream/release tag `v1.13.1` = `634c557b`）为准。版本演进和旧行为只记录在 [`_change_log/`](./_change_log/README.md)；正文中的机制结论描述当前 release。
+> **当前源码基线**：本文档集以 OpenSpec `v1.14.0`（upstream/release tag `v1.14.0` = `94ca9c1e`）为准。版本演进和旧行为只记录在 [`_change_log/`](./_change_log/README.md)；正文中的机制结论描述当前 release。
 
 ### 版本约定
 

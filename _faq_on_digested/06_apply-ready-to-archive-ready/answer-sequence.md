@@ -46,7 +46,7 @@ sequenceDiagram
         Note over User,FS: ══════ Phase 2 · apply instructions gate ══════
         MD->>TS: openspec instructions apply --change "X" --json
         TS->>TS: 检查 apply.requires 是否满足<br/>收集所有 artifact → contextFiles<br/>读 tasks.md → 解析 checkbox<br/>（正则：^\s*[-*]\s*\[([\sxX])\]\s*(.*)，允许缩进子任务）<br/>计算 progress
-        TS-->>MD: state, contextFiles,<br/>progress{total, complete, remaining},<br/>tasks[{description, done}],<br/>instruction, [missingArtifacts]
+        TS-->>MD: state, contextFiles,<br/>progress{total, complete, remaining},<br/>tasks[{description, done, sourcePath, line}],<br/>instruction, [missingArtifacts]
     end
 
     %% ===== Branch: state =====
@@ -98,7 +98,7 @@ sequenceDiagram
                     end
 
                     %% 更新 checkbox
-                    MD->>FS: tasks.md 中对应行：<br/>- [ ] → - [x]
+                    MD->>FS: 按 task 的 sourcePath + line 定位<br/>- [ ] → - [x]<br/>（行内容与 task 描述不符时<br/>重跑 apply instructions 刷新定位）
                     FS-->>MD: 写入完成
 
                     %% 可选：刷新进度
@@ -178,12 +178,13 @@ TS 不告诉 MD "改哪个源文件"。它只告诉 MD "读这些 planning 文�
 
 ```text
 MD: 完成 task 2.1 → 写代码 → 测试通过
-MD: tasks.md 里 - [ ] 2.1 → - [x] 2.1
+MD: instructions apply --json 的 task 带 sourcePath + line（1-based）
+MD: 按 sourcePath/line 定位该 checkbox，确认描述仍匹配后 - [ ] 2.1 → - [x] 2.1
 MD: （可选）openspec instructions apply --json
 TS: 重新解析 tasks.md → complete: 3/7 → remaining: 4
 ```
 
-进度不在 agent 的口头总结里，也不在隐藏数据库里。它在 `tasks.md` checkbox 里，由 TS 的共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`）实时解释——缩进的子任务也计入。MD 勾了才算，TS 扫了才认。
+进度不在 agent 的口头总结里，也不在隐藏数据库里。它在 `tasks.md` checkbox 里，由 TS 的共享 parser `parseTaskLines()`（`src/utils/task-progress.ts`）实时解释——缩进的子任务也计入；`parseLocatedTasks()` 只在这层包上 `sourcePath`/`line`，不改变解析结果。MD 勾了才算，TS 扫了才认。
 
 ### 模式 4：MD 遇 guard → 暂停，不硬写
 

@@ -153,6 +153,8 @@ fallback:
 
 如果 `rename` 成功，通常是原子移动。
 
+fallback 的第一跳是把源 rename 到私有 staging sibling，再 `copyThenRemoveDirectory()`（复制到 dest 后删源）。v1.13.2 起（`ba0f5087`），如果 staging rename 本身也遇到 EPERM/EXDEV（Windows 上目录仍被 watcher 句柄枚举时的常见形态），改为直接从原始源复制；fingerprint 仍会在复制窗口内目录变化时中止。非 EPERM/EXDEV 的 staging 失败会报错且不做 fallback 复制，源目录保持不动。
+
 fallback 复制或验证失败时，CLI 会删除自己创建的不完整目标并把 staging path 恢复成 active source。若目标已是唯一完整副本、但 staging cleanup 失败，则保留完整目标并报告 recovery 状态，不为伪造原子性而删除唯一副本。
 
 ## archived 后的风险
@@ -173,6 +175,14 @@ tests / validation 已跑
 delta specs 与 main specs 同步语义清楚
 archive 没有跳过关键 validation
 ```
+
+## workflow 模板侧的 sync 阻塞（v1.14.0）
+
+上面大部分 guard 是 CLI `openspec archive` 的。OPSX archive workflow 模板（`archive-change.ts`/`bulk-archive-change.ts`）在 v1.14.0（`0ff63dba`）新增了同等强度的模板层 guard：
+
+- inline sync 报告任何 stop/blocking 条件 → **视为 sync 失败，立即停止归档**：不做 post-sync 内容比对，不移动 `changeRoot`。一切未动，修复后可直接重跑。
+- sync 成功后还要结构验证：主 spec 不得残留 `## ADDED/MODIFIED/REMOVED/RENAMED Requirements`；REMOVED 的 requirement 必须已删；被 retire 的 capability 主 spec 已删除而非留空。任何 mismatch 都停止归档。
+- sync 不得委托后台——step 5 会移走 `changeRoot`，后台 sync 会读到已被移动的目录，留下"已归档但主 specs 没更新"的状态。
 
 ## 参考来源
 

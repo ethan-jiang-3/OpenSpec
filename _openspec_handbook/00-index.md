@@ -10,14 +10,14 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.10** |
-| **对齐 OpenSpec** | 1.13.1 |
-| **本版日期** | 2026-08 |
+| **手册版本** | **v1.11** |
+| **对齐 OpenSpec** | 1.14.0 |
+| **本版日期** | 2026-09 |
 
 **两个版本维度（别混）**：
 
-- **手册版本**（v1.9）：本手册自身的版次。理解加深、内容大修时升版。
-- **对齐 OpenSpec**（1.11.0）：本手册当前对应的 OpenSpec 上游版本。
+- **手册版本**（v1.11）：本手册自身的版次。理解加深、内容大修时升版。
+- **对齐 OpenSpec**（1.14.0）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
 
@@ -37,6 +37,7 @@
 | v1.5 | 2026-07 | 1.7.0 | 系统性勘误与打磨：修正 Pi/Kiro 版本归属（v1.2.0）、core/custom profile 命令数（6/12）、`apply.tracks` 约束措辞（从硬编码改强烈推荐）；CLI 命令表补全（status/instructions/view/schema/store setup 等）；`.openspec.yaml` 补完整字段表；schema 约束表补 `description`；FAQ 工具列表更新到 v1.7.0；`validate` 描述准确化；删各章尾部 `## 下一步` 跳转；宪章润色。 |
 | v1.6 | 2026-08 | 1.8.0 | 对齐 v1.8：工具投递新增 vendor-neutral `agents` 目标（`.agents/skills/`，与 Codex 共享根、ownership marker）；GitHub Copilot 一等支持（本地 skill + opt-in cloud coding-agent 文件）；Codex skills 迁到 `.agents`；archive 新增 `retire_capabilities`（删除已空 capability 的 main spec）、重复 canonical 名拒绝、note-loss 提示与无法交互时的可重跑命令；`status` 新增 `isPlanningComplete`；validate 的 SHALL/MUST 在 normal 模式降为 guidance、前置检测 MODIFIED scenario-loss；telemetry.enabled 全局配置。 |
 | v1.7 | 2026-08 | 1.9.0 | 对齐 v1.9：Command Code（`.commandcode/skills/` + `/opsx-*` commands）；`validate --archived`（CI 检查 archive 未勾完 tasks）；bulk `list`/`validate --all`/`schemas` 在项目外非零退出；scenario-loss 认所有 `####` 子标题；apply 超出 spec 必须停下来报；archive 非 TTY 无 ANSI、重建 spec 保留空白行；`schema fork` 保 YAML 格式；遗留 Codex 升级不抢 `.agents`。 |
+| v1.11 | 2026-09 | 1.14.0 | 对齐 v1.13.2/v1.14.0：10 个新 `--tools` 目标（dsh/codestudio/gigacode/atomcode/easycode/gsd/amp/grok/warp/veai），`.agents` 共享根扩为 Codex/Zed/Antigravity/Amp/GSD + vendor-neutral，IBM Bob 更名；`list --archived/--all`、`openspec version`、view 的 workflow status 与归档分区；`show --json` requirement/scenario 带 `name`；`status --json` `allowedEditRoots` 纳入声明 store 的当前项目；archive 阻塞语义（sync 失败不归档、sync 后结构验证、retired capability 主 spec 删除）；写回文件行尾保持（CRLF 不再整文件 diff）；`.openspec.yaml` 未知键告警；store-only 仓库可在 root 跑 `init` 装集成。 |
 | v1.10 | 2026-08 | 1.13.1 | 对齐 v1.13：`validate --report findings` 与 archive 拒收预报；SourceCraft（codeassistant）；v1.13.0 delta parser 大修（CommonMark 全标记、多 section 全应用、fence 内空行保留、大小写冲突拒绝）；propose context-first + code-grounded；explore spec inventory、capture 即确认；`/opsx:update` 先起草确认后写入；`status` 给 `Next:` 行；安全加固（指令注入/挂起/`.npmrc` 劫持）；pnpm@10 升级。 |
 | v1.9 | 2026-08 | 1.11.0 | 对齐 v1.11：`show --diff`（彩色 unified diff per requirement）；`status --all`（单进程全部 active change，故障不阻塞）；Explore 写入前确认（命名 artifacts、ask yes/no、单独等待）；Antigravity `.agent → .agents` 迁移，`resolveSharedSkillWriters()` 通用共享根仲裁；`validate` Purpose 占位符 warning（archive 遗留 TBD）；archive rename 保序（不移到 spec 尾部）；`schema init --default` 写入正确键、失败回滚；Fish completion 不再回退文件名；Explore 图例纯 ASCII。 |
 | v1.8 | 2026-08 | 1.10.0 | 对齐 v1.10：`init --language` 与多语言边界；Zed Agent、Codex/Zed/agents 三方共享 `.agents`，OpenCode command 传入 `$ARGUMENTS`；store 场景的 specs instruction 使用 `planningHome.root`；每条 task 自带 verification；no-spec schema 自动 `skip_specs`；capability 退役拒绝删除未归属内容；custom archive/bulk-archive 自动补 sync；移除 npm postinstall，首次交互 CLI 在 stderr 提示 completion；telemetry 提示走 stderr；update 仅在实际更新 IDE 驻留入口时提示重启；feedback 长消息完整保留在 body。 |
@@ -84,7 +85,8 @@ OpenSpec = 整套机制
 
 - `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --json`、`openspec archive <name>`。
 - `/opsx:*` 是有 command adapter 的宿主（例如 Claude Code）里的入口，比如 `/opsx:propose`、`/opsx:apply`；它不是所有工具的通用语法。
-- Codex 在 v1.8.0 起使用 skills-only 投递，入口是 `$openspec-*` skill；v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 目标共享 `.agents/skills/`。Zed 是 skills-only，用 `/openspec-*`（以 init 生成文件中的拼法为准）；v1.9.0 新增的 Command Code 仍使用 `.commandcode/skills/` 与 `/opsx-*`。
+- Codex 在 v1.8.0 起使用 skills-only 投递，入口是 `$openspec-*` skill；v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，v1.14.0 起 Amp 与 GSD 也写入同一棵共享树（六方成员，见下方工具速查）。Zed 是 skills-only，用 `/openspec-*`（以 init 生成文件中的拼法为准）；v1.9.0 新增的 Command Code 仍使用 `.commandcode/skills/` 与 `/opsx-*`。
+- DeepSeek Harness（`dsh`）自 v1.14.0 起是一等目标：skills-only，写入项目级 `.dsh/skills/openspec-*/SKILL.md`；dsh 把项目 `.dsh/skills/` 当最高优先级 skill root，装好后可直接以 `/openspec-*` 呼出。
 - `opsx` 这个名字只是部分工具的 command 命名空间或文件前缀，不是另一套独立系统。
 - 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有与之完全对应的单一命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
 
@@ -249,7 +251,7 @@ graph LR
 |------|------|
 | `openspec init [path] [--tools <ids>] [--language <language>]` | 初始化项目；`--language` 只在创建新 config 时写入 artifact 语言 context，不覆盖已有 config |
 | `openspec new change <name>` | 新建一个 change 目录（脚手架；`/opsx:new` 的 CLI 形态） |
-| `openspec list` | 列出所有 changes |
+| `openspec list` | 列出所有 changes；`--archived` 只看归档、`--all` 两者都看（读 `changes/archive/` 子目录），`--specs` 模式下这两个 flag 直接报错 |
 | `openspec list --specs --json` | 列出 main-spec capability path，作为 discovery 的起点，不会自动读取全文 |
 | `openspec show <name>` | 查看某个 change 详情 |
 | `openspec show <capability> --type spec --json --requirements` | 查看某个 capability 的 requirement 标题；确实要改时再读取完整 block/scenarios |
@@ -273,6 +275,7 @@ graph LR
 | `openspec schemas` | 列出可用 schema |
 | `openspec templates` | 列出/查看 artifact 模板 |
 | `openspec completion` | 生成/安装/卸载 shell 自动补全 |
+| `openspec version [--json] [--check]` | 报告安装版本与更新通道；`--check` 才查 registry，`--json` 输出 `{ schemaVersion, version, install, update? }` |
 | `openspec feedback` | 提交 GitHub issue 反馈 |
 
 ### 工具与环境速查
@@ -280,9 +283,18 @@ graph LR
 | 项 | 当前行为 |
 |---|---|
 | `--tools zed` | 写入 `.agents/skills/openspec-*/SKILL.md`；skills-only（`/openspec-*`），Zed ≥ 1.4.2 且工作树已信任 |
-| `--tools codex,zed,agents` | 共享一个 OpenSpec 管理的 `.agents/skills/` 树（v1.11.0 起 Antigravity 亦写入同一树，`.agents/workflows/` 放它的 commands）；不会生成或改写根 `AGENTS.md` |
+| `--tools codex,zed,agents,antigravity,amp,gsd` | 共享一个 OpenSpec 管理的 `.agents/skills/` 树：v1.10.0 起是 Codex/Zed/vendor-neutral 三方，v1.11.0 加入 Antigravity（`.agents/workflows/` 放它的 commands），v1.14.0 再加入 Amp（detection `.amp`/`.agents/skills`）与 GSD（detection `.gsd`）；不会生成或改写根 `AGENTS.md` |
 | `--tools codeassistant` | v1.12.0 新增 SourceCraft（VS Code 扩展）skills/commands |
+| `--tools dsh` | v1.14.0 新增 DeepSeek Harness：skills-only，写 `.dsh/skills/openspec-*/SKILL.md`，无 command 文件；dsh 以项目 `.dsh/skills/` 为最高优先级 skill root，`/openspec-*` 直呼 |
+| `--tools warp` | v1.14.0 新增 Warp：skills 写 `.warp/`（detection `.warp`/`WARP.md`），属 skills-invocable（与 Codex 同类），自然语言或 `/openspec-*` 均可触发 |
+| `--tools codestudio` | v1.14.0 新增 Code Studio：skills + `.codestudio/prompts/opsx-<id>.prompt.md` 命令 |
+| `--tools gigacode` | v1.14.0 新增 GigaCode：skills + `.gigacode/commands/opsx-<id>.md` Markdown 命令 |
+| `--tools atomcode` | v1.14.0 新增 AtomCode：skills + `/opsx-<id>` Markdown 命令；按 workflow 是否读输入声明 `args: optional`（收 `$ARGUMENTS`）或 `args: none` |
+| `--tools easycode` | v1.14.0 新增 EasyCode：skills + TOML 命令 `/opsx:<id>` |
+| `--tools grok` | v1.14.0 新增 Grok Build：skills-only，写 `.grok/`，`/openspec-*` 调用 |
+| `--tools veai` | v1.14.0 新增 Veai：skills-only，写 `.veai/` |
 | `--tools agents` | 选择器中显示为 "Other / Universal (shared .agents skills)"，搜索 `universal`/`other`/`generic`/`vendor-neutral` 等可命中；只认领 `openspec-*` 目录与 `.openspec-target` marker |
+| `--tools bob` | IBM Bob（v1.14.0 起显示名由 "Bob Shell" 更名，tool id `bob` 与 `.bob` 路径不变） |
 | OpenCode command 参数 | 生成的 command 使用 `$ARGUMENTS` 把用户参数交给 workflow |
 | `OPENSPEC_NO_COMPLETIONS=1` | 抑制首次交互 CLI 的 shell completion 提示 |
 

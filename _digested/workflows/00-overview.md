@@ -111,6 +111,12 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 - **顶层标题**（v1.13.1 `3312af47`）：proposal/spec/design/tasks 模板以 `# <Artifact>` 开头。
 - **`Next:` 行**（v1.13.1）：`status` text 输出结尾给出推进命令。
 
+## v1.14.0 template 层新机制
+
+- **任务源定位**（apply）：`openspec instructions apply --json` 的每个任务带 `sourcePath` 与 1-based `line`（`LocatedTask`，只加定位、不改任务解析）；apply 模板要求在该位置确认 checkbox 仍匹配描述 → 勾选 → 重跑 apply instructions 确认进度变化。见 [`06-apply.md`](06-apply.md)。
+- **verify 改吃 status/apply 契约**：verify 模板不再让 agent 自己解析 checkbox，改用 `instructions apply` 输出的顶层 `tasks`/`progress`（CLI 已按 `apply.tracks` 聚合全部具体任务文件）与 `taskTrackingConfigured`；schema 未定义的检查和 intentional skip（`skip_specs: true`、可选 design、无任务追踪的 schema）标 **Not applicable**，与证据缺失的 **Not verified** 分开；apply 的 `state`/`instruction` 只是 context 不是 verdict。见 [`08-verify.md`](08-verify.md)。
+- **archive 阻塞语义**：inline sync 报任何 stop/blocking 条件即视为 sync 失败——立即停止归档，不做 post-sync 内容比对、不移 `changeRoot`，一切未动可重跑；sync 通过后还要做结构验证（主 spec 不残留 delta headers、REMOVED 的 requirement 已删、retired capability 的主 spec 已删除）。模板同时明确 inline sync **不得委托后台任务**。见 [`09-archive.md`](09-archive.md)。
+
 ## 和 CLI runtime API 的关系
 
 每个 template 调用的 CLI 命令是有限的、固定的集合：
@@ -133,6 +139,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 - 除 bulk archive 外，workflow 选择 change 的默认顺序是：显式名称 → 对话推断 → 唯一 active change 自动选择 → 仅在歧义时列出并询问。
 - Apply/Archive 通过各自的 instructions API 获得当前 config `context` 和 operation guidance；artifact `rules.*` 仍只约束对应 artifact 的生成。
 - status 的 JSON 含 `isPlanningComplete`（与兼容别名 `isComplete`）；planning artifact 的完成与实现进度分开表达。
+- 归档类 workflow（archive / bulk-archive）的任务完成度来自 `list --json` 的 schema-aware `totalTasks`/`completedTasks`——CLI 自己解析 schema 声明的追踪文件（含自定义任务文件名/glob），agent 不再自己数 tasks.md checkbox。
 
 template 不直接操作文件系统——它通过 CLI 命令获取路径，再由 agent 用自己的文件工具去读写。
 

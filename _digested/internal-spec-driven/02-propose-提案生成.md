@@ -116,20 +116,32 @@ openspec status --change "<name>"     # 纯文本模式，给人看
 
 ## Capabilities
 ### New Capabilities
-<!-- Capabilities being introduced. Replace <name> with kebab-case identifier... -->
-- `<name>`: <brief description>
+<!-- Capabilities being introduced. Name each capability for a cohesive system
+     behavior that can own related requirements as the system evolves. Do not name
+     implementation tasks or proposal sections. Avoid broad catch-all names. Use
+     kebab-case for path segments you introduce (e.g., user-auth or identity/user-auth)
+     that follow the project's existing spec organization. Each creates
+     specs/<capability-path>/spec.md. -->
+- `<capability-path>`: <brief description of what this capability covers>
 
 ### Modified Capabilities
-<!-- Existing capabilities whose REQUIREMENTS are changing... -->
-- `<existing-name>`: <what requirement is changing>
+<!-- Existing capabilities whose REQUIREMENTS are changing (not just implementation).
+     Only list here if spec-level behavior changes. Each needs a delta spec file.
+     Use the exact existing path under openspec/specs/. Leave empty if no requirement
+     changes. A change with no capabilities at all (pure refactor, tooling, docs)
+     must set `skip_specs: true` in its .openspec.yaml - openspec validate rejects
+     a zero-delta change without that marker. Do not invent a requirement just to
+     satisfy validation. -->
+- `<existing-capability-path>`: <what requirement is changing>
 
 ## Impact
 <!-- Affected code, APIs, dependencies, systems -->
 ```
 
-**instruction** (`schema.yaml:10-26`) 强调的关键点（v1.13.x 起新增 inventory-first 要求——填 Capabilities 前先跑 `openspec list --specs` 查 capability inventory，再对相关者 `openspec show "<spec-id>" --type spec --json --no-scenarios` 看概要；裸 `openspec list` 列的是 in-flight changes 不是 specs；决定覆盖范围前还要全文读相关 spec；复用已有 capability 的确切 path，不造近义名）：
+**instruction** (`schema.yaml:5-49`) 强调的关键点（v1.13.x 起新增 inventory-first 要求——填 Capabilities 前先跑 `openspec list --specs` 查 capability inventory，再对相关者 `openspec show "<spec-id>" --type spec --json --no-scenarios` 看概要；裸 `openspec list` 列的是 in-flight changes 不是 specs；决定覆盖范围前还要全文读相关 spec；复用已有 capability 的确切 path，不造近义名）：
 - Capabilities 部分是**关键契约** —— 它建立了 proposal 和 specs 阶段之间的连接
 - 每个列出的 capability 需要一个对应的 spec 文件（`specs/<capability-path>/spec.md`）；可以用嵌套 path，如 `identity/session`。
+- **按耐久的系统行为命名 capability**（v1.14.0 起，`e70dcc7`）：名字指向一个能随系统演化持续拥有相关 requirement 的内聚行为（如 `user-auth`），而不是本次改动的工作（如 `add-login-endpoint`）；不要用实现任务或 proposal 章节命名，也避免大而全的 catch-all capability。模板的 New Capabilities 注释同步写了同样的引导。
 - "Keep it concise (1-2 pages). Focus on the 'why' not the 'how' — implementation details belong in design.md."
 
 **proposal 在 DAG 中的位置**：`requires: []`，是 DAG 的根节点，立即可做。完成后解锁 specs 和 design。
@@ -146,7 +158,7 @@ openspec status --change "<name>"     # 纯文本模式，给人看
 - **THEN** <!-- expected outcome -->
 ```
 
-模板只给出了 ADDED 的例子，但 instruction (`schema.yaml:34-83`) 详细描述了全部四种 delta 操作：
+模板只给出了 ADDED 的例子，但 instruction (`schema.yaml:50-151`) 详细描述了全部四种 delta 操作：
 
 ```
 ## ADDED Requirements
@@ -176,7 +188,8 @@ TO: ### Requirement: <new-name>
 2. **每个 requirement 至少要有一个 scenario**。
 3. **MODIFIED 必须复制完整的 requirement block**（包括所有 scenario）—— "Common pitfall: Using MODIFIED with partial content loses detail at archive time."
 4. **用 SHALL/MUST** 写规范性需求，避免 should/may。normal 模式下这条只是 guidance（缺失给 WARNING，非英语 spec 也能过），只有 `validate --strict` 才强制；写作建议不变。
-5. MODIFIED 的 workflow：
+5. **requirement 描述控制在 500 字符以内**（`### Requirement:` 与首个 scenario 之间的正文）。`openspec validate` 会提示进入主 spec 后的超长描述——这是 informational hint，不是 error。写**新** requirement 时一条行为一条 requirement：示例与边界情况挪进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` block，各带自己的 scenario；**MODIFIED 下保持既有 requirement block 完整**，不要为凑长度拆分、删减或改写已有文本（那会丢掉主 spec 还有的 scenario，validate/archive 都会拒绝）。
+6. MODIFIED 的 workflow：
    > 1. 从 instructions JSON 读取 `planningHome.root`，在 `<planningHome.root>/openspec/specs/<capability-path>/spec.md` 中找到已有 requirement
    > 2. 复制完整的 requirement block（从 `### Requirement:` 到所有 scenario）
    > 3. 粘贴到 `## MODIFIED Requirements` 下，编辑以反映新行为
@@ -210,7 +223,7 @@ TO: ### Requirement: <new-name>
 <!-- Outstanding decisions or unknowns to resolve -->
 ```
 
-**instruction** (`schema.yaml:89-112`) 的关键约束：
+**instruction** (`schema.yaml:152-186`) 的关键约束：
 - **不是每次都要创建 design.md**。只有满足以下条件之一才需要：
   - 跨多个服务/模块的变更，或新的架构模式
   - 新的外部依赖，或重大数据模型变更
@@ -234,7 +247,7 @@ TO: ### Requirement: <new-name>
 - [ ] 2.2 <!-- Task description -->
 ```
 
-**instruction** (`schema.yaml:117-146`) 的约束：
+**instruction** (`schema.yaml:187-241`) 的约束：
 
 1. **"Follow the template below exactly."**
    > "The apply phase parses checkbox format to track progress. Tasks not using `- [ ]` won't be tracked."
@@ -260,6 +273,8 @@ TO: ### Requirement: <new-name>
    - [ ] 1.1 Add the parser branch — verify: run `pnpm vitest parser`.
    - [ ] 1.2 Expose the result — verify: invoke the CLI and observe the expected JSON field.
    ```
+
+7. 每个 task group 必须落自己工作所需的测试与文档（v1.14.0 起）：不许把测试/文档堆进最后一个 group——晚期 group 才碰早期工作会让失败沿依赖链层层回传；脚手架、依赖安装这类不需要测试文档的 group 两者都不带；最后一个 group 只做集成检查。
 
 这条是 schema instruction 对生成质量的契约，不是 `openspec validate` 会逐条强制的硬规则。
 

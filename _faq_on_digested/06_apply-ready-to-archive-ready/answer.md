@@ -102,7 +102,7 @@ openspec instructions apply --change "<name>" --json
 | `state` | 决定能不能实施，或是否已经完成。 |
 | `contextFiles` | 必须先读取的 planning artifact 文件列表。 |
 | `progress` | 当前 total/complete/remaining。 |
-| `tasks` | 从 tracking file 解析出的 task 列表和 done 状态。 |
+| `tasks` | 从 tracking file 解析出的 task 列表和 done 状态；v1.14.0 起每个 task 还带 `sourcePath` 和 1-based `line`，指向该 checkbox 在 tracking file 中的确切位置。 |
 | `missingArtifacts` | 缺 required artifact 时才出现。 |
 | `instruction` | schema apply 阶段的动态指导。 |
 | operation inputs | 项目 `context` 与 `operations.apply.guidance`（如配置）；这是 Apply 专属项目指引，不是 `rules.apply`。 |
@@ -164,7 +164,7 @@ for each task where done = false:
   announce task
   implement minimal code change
   run the verification declared by that task
-  update checkbox in tasks.md
+  update checkbox at the task's sourcePath and line
   continue
 ```
 
@@ -200,6 +200,8 @@ Working on task 3/7: Add OAuth callback route
 ```markdown
 - [x] 2.1 Add OAuth callback route — verify: run the focused callback tests
 ```
+
+勾选位置不用 agent 猜：`instructions apply --json` 的每个 task 带 `sourcePath` 和 1-based `line`（v1.14.0 起，任务解析本身未变，只是补了定位）。apply workflow 的做法是：在该位置勾选 → 标记完成 → 重查进度。编辑前先确认 `sourcePath` + `line` 处的 checkbox 描述仍与 task 一致；不一致（例如 tracking file 在会话中被改过）就重跑 apply instructions 拿刷新后的位置，不要按旧行号盲写。
 
 这一步很重要：OpenSpec 的 apply progress 来自 `tasks.md` checkbox，不来自 agent 的口头总结。
 
@@ -281,7 +283,7 @@ Completed this session:
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」为准：
 
 | 来源 | 用到的结论 |
 |---|---|
@@ -298,3 +300,8 @@ Completed this session:
 ## v1.13.0 补充：apply 遇到无 delta spec 的 change 会警告
 
 `openspec instructions apply` 之前只要 tasks 存在就报 ready，哪怕完全没有 spec delta——而这正是 `openspec validate` 拒绝的状态（`8ba4ac1b`）。v1.13.0 起 text 与 `--json` 都会警告，并给出两条出路：补写 specs，或在 `.openspec.yaml` 显式声明 `skip_specs: true`。纯重构/文档类 change 如果确实无行为变化，走后者是合法路径。
+
+## v1.14.0 补充：任务带源定位，归档前的进度判定改 schema-aware
+
+- **apply 任务源定位**（`e7a951d`）：`instructions apply --json` 的每个 task 带 `sourcePath` + 1-based `line`（内部 `LocatedTask`/`parseLocatedTasks`，不改任务解析本身）。apply workflow 据此在确切位置勾选 → 标记完成 → 重查进度，不再靠文本匹配找 checkbox。
+- **归档前的任务进度改 schema-aware**（`fb1b876`，归档工作流侧）：archive workflow 读取进度时认 schema 的 `apply.tracks` 配置（含自定义任务文件/glob），不再硬编码 `tasks.md`——自定义 tracking 文件不会因 CLI 找不到默认文件而误报"未完成"。CLI `openspec archive` 自身的 checkbox 统计行为不变。

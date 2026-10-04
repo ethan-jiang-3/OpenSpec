@@ -2,7 +2,7 @@
 
 > 目标不是研究源码，而是先把它当工具用顺手。如果第一反应是"改个功能干嘛这么折腾"——很正常，这一篇先帮你把这股别扭解开。
 
-> **v1.13.1 使用提示。** 本章把 `/opsx:*` 保留为 Claude 的示例入口；Codex 使用 `$openspec-*`，Zed Agent 使用 `/openspec-*`。Codex、Zed、Antigravity（v1.11.0 起）与 vendor-neutral `agents` 目标共享 `.agents/skills/`，都是宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
+> **宿主入口提示。** 本章把 `/opsx:*` 保留为 Claude 的示例入口；Codex 使用 `$openspec-*`，Zed Agent 使用 `/openspec-*`，DeepSeek Harness（`--tools dsh`）也是 skills-only、装进 `.dsh/skills/` 后用 `/openspec-*` 直呼。Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，都是宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
 
 ---
 
@@ -251,6 +251,14 @@ Add the language instruction to its context field instead.
 此时手工把同样三行加入现有 `context: |`，保留项目已有技术栈和规则。空字符串、多行值、控制字符/不可见格式字符或超出 context 大小限制的值也会被拒绝。完整判断与 YAML 写法只在 [06](06-高级-config-yaml-怎么写到真正好用.md) 展开。
 
 上面的 `--tools zed` 会生成 `.agents/skills/openspec-*/SKILL.md`。Zed Agent 是 skills-only，不会生成 `opsx-*` command；需 Zed ≥ 1.4.2，并先信任当前 worktree。用 `/openspec-propose` 调用（以生成文件中的拼法为准）。
+
+其他宿主换 `--tools` 的值即可，投递形态由各自 adapter 决定。比如 DeepSeek Harness 是 skills-only 的一等目标：
+
+```bash
+openspec init --tools dsh
+```
+
+它只写 `.dsh/skills/openspec-*/SKILL.md`，不生成 command 文件；dsh 把项目级 `.dsh/skills/` 当最高优先级 skill root，装好后 skill 会进入其 catalog，直接 `/openspec-propose` 这类拼法就能呼出。完整的目标列表（含 Claude、Cursor、Codex、Warp、Grok Build 等）以 `openspec init` 的选择器为准。
 
 ### 新手最常问：为什么要有这么多文件？
 

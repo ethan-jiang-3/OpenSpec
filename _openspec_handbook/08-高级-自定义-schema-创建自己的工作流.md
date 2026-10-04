@@ -228,7 +228,7 @@ description: 一句话说清楚这个工作流干什么
 
 artifacts:                      # artifact 列表——定义 DAG
   - id: proposal                # 唯一 ID
-    generates: proposal.md      # 输出文件名，支持 glob（如 specs/**/*.md）
+    generates: proposal.md      # 输出文件名，支持 glob（如 specs/**/*.md；也认 brace expansion，如 reports/{a,b}.md）
     description: 这个 artifact 产出什么
     template: proposal.md       # 对应 templates/ 下的模板文件
     instruction: |              # agent 生成此 artifact 时的提示词
@@ -272,7 +272,7 @@ apply:                          # apply 阶段配置
 | `version` | integer | 是 | 正整数 |
 | `artifacts[].id` | string | 是 | 唯一，DAG 节点标识 |
 | `artifacts[].description` | string | 是 | 对 artifact 的一句话说明 |
-| `artifacts[].generates` | string | 是 | 输出文件，支持 glob（如 `specs/**/*.md`） |
+| `artifacts[].generates` | string | 是 | 输出文件，支持 glob（如 `specs/**/*.md`），也认 brace expansion/extglob；brace 展开的路径限制在 change 目录内 |
 | `artifacts[].template` | string | 是 | 必须对应 `templates/` 下的真实文件 |
 | `artifacts[].instruction` | string | 否 | agent 生成此 artifact 时的完整提示 |
 | `artifacts[].requires` | string[] | 否 | 依赖的 artifact id 列表，空 = DAG 起点 |

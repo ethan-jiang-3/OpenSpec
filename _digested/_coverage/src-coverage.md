@@ -25,7 +25,7 @@
 | `src/commands/workset.ts`、`src/commands/workset-input.ts`、`src/commands/workset-prompts.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `src/commands/doctor.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
 | `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter；v1.12.0 含 Code Assistant adapter `adapters/codeassistant.ts`） |
+| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter；v1.12.0 含 Code Assistant adapter `adapters/codeassistant.ts`；v1.14.0 新增 atomcode/codestudio/easycode/gigacode adapter 与 `command-generation/toml.ts`） |
 | `src/core/shared/skill-generation.ts` | `../mechanisms/02-tool-delivery.md` |
 | `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 起 tool-detection 有 command-drift 检测） |
 | `src/core/init.ts`、`src/core/update.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 `.gitkeep` + 共享 restart；v1.13.0 损坏 command 检测） |
@@ -82,3 +82,15 @@
 | `src/utils/nested-change.ts` | namespace 目录中 change 的报告 | `../specs_truth/06`（已记锚点） |
 
 安全加固（#1835，v1.13.1）涉及 validator/init/update/archive 多处输入校验，暂记于 `../mechanisms/05-cli-infra.md`，未单列模块。
+
+## v1.14.x 新增模块（0011 同步后待深化的覆盖点）
+
+| 新源码 | 职责 | 主要测试 |
+|--------|------|----------|
+| `src/utils/line-endings.ts` | `detectLineEnding`（dominant 判定，CRLF 平局胜出）/`applyLineEnding`/`matchLineEnding`：specs-apply 写回、completions 安装与 `removeMarkerBlock` 保持文件原有行尾（只有文件不存在才写 LF） | `test/utils/line-endings.test.ts`、`test/core/specs-apply.line-endings.test.ts` |
+| `src/core/command-generation/toml.ts` | EasyCode TOML 命令序列化共享模块（`escapeTomlBasicString`/`escapeTomlMultilineBasicString`） | `test/core/command-generation/adapters.test.ts`（easycode 命令形态） |
+| `src/core/command-generation/adapters/atomcode.ts` | AtomCode adapter：`.atomcode` skills + `/opsx-<id>` Markdown 命令，`args: optional`（收 `$ARGUMENTS`）或 `args: none` | `test/core/command-generation/adapters.test.ts` |
+| `src/core/command-generation/adapters/codestudio.ts` | Code Studio adapter：`.codestudio` skills + `.prompt.md` 命令，`requiresIdeRestart` | `test/core/command-generation/adapters.test.ts` |
+| `src/core/command-generation/adapters/easycode.ts` | EasyCode adapter：`.easycode` skills + TOML 命令 `/opsx:<id>` | `test/core/command-generation/adapters.test.ts` |
+| `src/core/command-generation/adapters/gigacode.ts` | GigaCode adapter：`.gigacode` skills + Markdown 命令 `opsx-<id>.md` | `test/core/command-generation/adapters.test.ts` |
+| `src/core/version-check.ts`（扩展） | `openspec version [--json] [--check]` 支撑：install 识别（scope/package manager/ephemeral runner）与 `getCliInstallInfo`/`checkForCliUpdate`/`canSelfUpgrade`/`buildVersionReportLines` | `test/core/version-check.test.ts` |

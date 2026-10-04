@@ -253,6 +253,30 @@ store 不改变核心流程——它只是在 agent 探索时多了一个「可�
 - 名为 `specs`/`changes` 的 store 不再被误当 root。
 - `store setup --no-init-git` 可以在已有 git 仓库（如 dotfiles 仓库）内创建 store；默认/显式 init-git 仍拒绝嵌套仓库。
 
+## v1.14.0 行为修正
+
+### store-only apply 不再被 edit scope 卡住
+
+`openspec status --json` 的 `actionContext.allowedEditRoots` 旧版只指向 project root；当 change 实际放在声明的 store 里时，agent 会在"改实现要去哪个仓库"上无所适从。现在 CLI 会把**当前路径上声明该 store 的项目 root** 一并列入 `allowedEditRoots`：
+
+- change 位于 store、且当前项目声明了它：`allowedEditRoots = [声明项目的 root, store root]`，constraint 明示"实现编辑落在声明项目，动其他仓库前先问用户"。
+- 无法确定哪个仓库实现该 change：仍只有 store root，constraint 要求 agent 先问用户。
+
+也就是说，store-only 场景的 apply 不再因为 edit scope 只有 store root 而被卡住。
+
+### store-only 仓库可在 root 跑 init 装集成
+
+代码仓库只作为 config-only pointer（`openspec/config.yaml` 里写 `store:`）时，以前在它 root 上跑 `openspec init` 会试图把 planning 搬回本地。现在可以直接装 AI 工具集成而不动 store 配置：
+
+```bash
+# 在代码仓库 root 上
+openspec init --tools claude
+```
+
+- 集成文件（skills/commands）写入当前仓库；
+- `openspec/config.yaml` 逐字节保留，包括 `store:` 行；
+- 不会在本地创建 `openspec/specs/` 与 `openspec/changes/`，planning 仍留在 store。
+
 ## 压缩结论
 
 1. Store 是可选的跨仓库 spec **发现索引**，不是本地 spec scaling、自动 retrieval 或协调层。
@@ -260,3 +284,4 @@ store 不改变核心流程——它只是在 agent 探索时多了一个「可�
 3. Store 不改 change 生命周期——所有 change 仍在具体 repo 下，用 `spec-driven`。
 4. Store 不创建跨 repo change、协调视图或 initiative；它只是“注册 + 引用 + 查询”。
 5. Workset 是个人本地视图，不共享。
+6. store-only pointer 仓库可在 root 跑 `openspec init` 装集成：planning 仍留在 store，本地 `store:` 配置逐字节保留。

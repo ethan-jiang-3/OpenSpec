@@ -118,6 +118,7 @@ CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在�
 - task-progress：读取 checkbox progress。
 - command-references：按工具转换 command 引用。
 - change-utils/change-metadata：change 名称和 metadata 辅助。
+- line-endings：写回文件时保持既有行尾（v1.13.2 新增，见下）。
 
 这些 util 通常不是专题核心，但很多机制依赖它们。文档引用源码时要注意 util 里可能有实际行为，不只是“辅助函数”。
 
@@ -147,7 +148,8 @@ CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在�
 | telemetry | `src/telemetry/` |
 | feedback | `src/commands/feedback.ts`、`src/core/templates/workflows/feedback.ts` |
 | interactive prompts | `src/prompts/`、`src/ui/` |
-| utility modules | `src/utils/` |
+| utility modules | `src/utils/`（v1.13.2 新增 `line-endings.ts`） |
+| version / update check | `src/core/version-check.ts`、`version` 命令注册于 `src/cli/index.ts` |
 | converter | `src/core/converters/json-converter.ts` |
 
 ## 测试锚点
@@ -158,6 +160,8 @@ CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在�
 - `test/commands/feedback.test.ts`
 - `test/prompts/`
 - `test/utils/`
+- `test/utils/line-endings.test.ts`、`test/utils/marker-updates.test.ts`（行尾保持）
+- `test/core/version-check.test.ts`
 - `test/core/converters/`
 
 
@@ -172,3 +176,41 @@ CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在�
 - `src/telemetry/opt-out.ts` — 遥测 opt-out 独立模块
 
 **其他**：init 给空目录写 `.gitkeep`；npm git 安装不再要求本机有 pnpm（`1bcdf1b0`）；pnpm overrides 移至 `pnpm-workspace.yaml`；`packageManager` 升至 pnpm@10.34.5。
+
+## v1.13.2–v1.14.0 更新
+
+### 行尾保持：`src/utils/line-endings.ts`（v1.13.2）
+
+新模块三个函数：
+
+- `detectLineEnding(content)`：dominant 判定——CRLF 与 LF 各自计数（CRLF 不重复计为 LF），取多者；**平局 CRLF 胜出**（一个 mostly-CRLF 的文件捡了零星 LF，仍按 CRLF 处理，整文件统一到一个 ending 才能让后续 diff 最小）；无换行时返回 undefined。
+- `applyLineEnding(content, ending)`：先归一到 LF 再重灌指定 ending。
+- `matchLineEnding(content, original)`：按 `original` 的行尾约定重写 `content`；`original` 无换行可判时保持 LF（新文件的 portable 默认）。
+
+消费点：
+
+- **specs-apply 写回**：`toWrite = previous === undefined ? rebuilt : matchLineEnding(rebuilt, previous)`——只有文件不存在时才写 LF。此前编辑 CRLF spec 里的一条 requirement 会把全文件重写成 LF，真实改动被淹没在整文件 diff 里；现在 Windows autocrlf 环境下的 spec 编辑恢复为单行 diff。
+- **completion 安装**：`FileSystemUtils.updateFileWithMarkers` 写 managed block 后同样 `matchLineEnding`——`.bashrc`/`.zshrc` 等宿主文件的既有行尾不再被托管块拼接改写。
+- **`removeMarkerBlock` 的 blank-line collapse**：压缩连续空行时用 `detectLineEnding(content) ?? '\n'` 重建分隔行——同一 dominant 读法，两条写路径口径一致，CRLF 文件里不会留下混杂的孤立 `\r`。
+
+### archive.ts 大改（v1.13.2，+409 行）
+
+Windows 上 staging rename 遇 EPERM/EXDEV 不再直接失败：
+
+- `copyThenRemoveDirectory`：源→dest 逐项复制再删源，替代 rename。
+- **fingerprint 中断检测**：复制前后对目录内容做指纹比对，复制窗口内的并发写入会让指纹变化、move 中止——避免把写到一半的 change 归档成功。
+- `removeVerifiedTree`：只有校验通过的树才允许删除。
+- `captureSpecSnapshots` / `restoreSpecSnapshots`：合并/退役失败时把 spec 文件回滚到归档前快照。
+- `deepestExistingAncestor`：回滚剪裁用——新建 spec 的回滚只删自己创建的 capability 目录，已存在的空目录保留。
+
+非 EPERM/EXDEV 的 staging 失败仍保持源 change 不动。
+
+### version-check 扩展与 `openspec version` 命令（v1.14.0）
+
+`src/core/version-check.ts` 扩展出四个导出：`getCliInstallInfo`（安装方式与位置）、`checkForCliUpdate`（查 registry，仅 `--check` 时调用）、`canSelfUpgrade`（判定能否自行升级）、`buildVersionReportLines`（人类可读输出）。`openspec version [--json] [--check]` 输出 `{ schemaVersion: 1, version, install, update? }`，`update` 含 `command` 与 `canSelfUpgrade`。
+
+### 依赖钉版
+
+root workspace 的 `pnpm-workspace.yaml` 早有 `brace-expansion` override（v1.13.1 前的 audit 修复）；website 侧针对新一批 advisory 把 `brace-expansion` 与 `fast-uri` 的 override 进一步抬高（#2019，`3a34ea30`）。注意该提交落在 v1.14.0 tag 之后的 main 上，不属于本版发布内容。
+
+> 注：CLI 按需加载（#2025）同样是 upstream main 的未发版提交，不属于 v1.14.0 行为，不要写进本版资料。

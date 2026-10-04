@@ -19,7 +19,7 @@ apply 是**唯一真正修改业务代码的 workflow**。它消费 `openspec in
 1. [可选] openspec list --json              # 选择 change
 2. openspec status --change "<name>" --json  # 确认 schema 和 scope
 3. openspec instructions apply --change "<name>" --json  # 获取 apply runtime 包
-4. [agent 读 contextFiles + 逐项实施 task + 更新 checkbox]
+4. [agent 读 contextFiles + 逐项实施 task + 在任务的 sourcePath:line 勾选 checkbox + 重查进度]
 5. [可选，按需] openspec instructions apply --change "<name>" --json  # 刷新进度
 ```
 
@@ -62,7 +62,9 @@ sequenceDiagram
                 opt 有验证
                     MD->>TS: 跑测试/lint
                 end
-                MD->>FS: tasks.md: - [ ] → - [x]
+                MD->>MD: 确认 sourcePath:line 处 checkbox<br/>仍匹配该任务描述（不匹配则<br/>重跑 apply instructions 取新位置）
+                MD->>FS: 在 sourcePath:line 勾选 - [ ] → - [x]
+                MD->>TS: 重跑 instructions apply --json<br/>确认该 task done、progress 变化
             end
         end
 
@@ -93,6 +95,18 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 | `blocked` | 缺 required artifact、缺 tracking file、或无 checkbox | 停止，建议 `/opsx:continue` |
 | `ready` | 一切就绪，有 pending tasks | 读 contextFiles → 开始 task loop |
 | `all_done` | 全部 checkbox 已勾 | 祝贺，建议 archive |
+
+## 任务源定位：sourcePath + line
+
+`instructions apply --json` 的 task 列表里，每个任务现在带 `sourcePath`（checkbox 所在文件）和 1-based `line`（行号）——`src/commands/workflow/instructions.ts` 的 `LocatedTask`/`parseLocatedTasks` 只给解析结果附加定位，**不改任务解析本身**。
+
+模板把 task loop 规定为三步节拍：
+
+1. 动手前先确认返回的 `sourcePath:line` 处 checkbox 仍匹配该任务描述；不匹配就重跑 apply instructions，用刷新后的位置；
+2. 完成后在**该位置**勾选 `- [ ]` → `- [x]`；
+3. 重跑 apply instructions，确认该 task 已 done、progress 已变化，再进入下一个任务。
+
+这消除了"勾在哪"的猜测：自定义任务文件名、glob 追踪的 schema 下，勾选落点由 CLI 给出，不再假设是顶层 `tasks.md`。
 
 ## operation inputs 不等于 artifact rules
 
@@ -148,6 +162,8 @@ template 硬编码了三种输出格式：
 | Task needs work beyond the spec → surface added scope and pause | 不默默缩小/推迟指定行为 |
 | Keep changes minimal and scoped | 不夹带 |
 | Update checkbox immediately after each task | 不拖延 |
+| Use each task's returned `sourcePath` and `line` to update its exact checkbox | 勾选精确到 CLI 返回的位置，不猜文件/行 |
+| Only mark a task `- [x]` when its specified behavior is fully implemented | 部分完成/推迟不算完成 |
 | Use contextFiles from CLI, don't assume file names | 不硬编码 |
 | Read context / consider operation guidance, but preserve CLI gate | config 是 prompt input，不能绕过 blocked/all_done |
 
@@ -159,15 +175,13 @@ FAQ `06_apply-ready-to-archive-ready/` 从工程视角分析了 task loop、chec
 
 | 内容 | 行号范围（apply-change.ts） |
 |---|---|
-| SkillTemplate 定义 | L10-L165 |
-| CommandTemplate 定义 | L168-L323 |
-| Step 1: 选择 change | L22-L29 |
-| Step 2: status | L31-L38 |
-| Step 3: apply instructions | L40-L55 |
-| Step 4: 读 contextFiles | L57-L63 |
-| Step 6: task loop | L72-L86 |
-| Guardrails | L146-L154 |
-| Fluid Workflow | L156-L161 |
+| 共享指令正文 `getApplyInstructions()`（skill 与 command 共用同一份文本） | L39-L224 |
+| SkillTemplate 定义 | L226-L235 |
+| CommandTemplate 定义 | L237-L245 |
+| Step 3: apply instructions + state 处理 | L68-L103 |
+| Step 6: task loop（sourcePath/line 勾选 + pause 条件） | L123-L139 |
+| Guardrails | L200-L216 |
+| Fluid Workflow | L218-L223 |
 
 ## v1.13.0 行为更新
 

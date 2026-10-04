@@ -135,5 +135,6 @@ v1.13.0 的 parser 大修消除了几个「写了但没生效、还报成功」�
 - 重复 delta section 只应用一份 → 已修复（全部应用）
 - fence 内空行被 archive 重写 → 已修复（fence-aware）
 - 折行 scenario bullet 被拆开误读 → 已修复
+- **写入侧行尾噪声（v1.13.2，`1d35e908`）→ 已修复**：CRLF spec（Windows `core.autocrlf=true` 的默认检出）上应用一个 requirement 的 delta，曾把整个文件重写成 LF，一个需求改动变成触碰每一行的 diff——审阅者再也看不出"真实变化"是什么。archive 现在按文件既有主导行尾写回（`src/utils/line-endings.ts` 的 `matchLineEnding`），只有新建 spec 才写 LF。这不是 spec 内容漂移，而是"噪声淹没信号"级别的审阅失真，已消除。
 
 本文描述的失真机理中，凡引用这些 bug 作为实例的段落应视为历史案例；失真的**人为源头**（标题手改不走 RENAMED、requirement 大小写漂移等）仍然存在——且 v1.13.0 起仅大小写不同的 requirement 名会被 archive 显式拒绝，这类漂移从「静默」变为「显式报错」。

@@ -21,8 +21,9 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 作用：
 
-- 发现当前项目有哪些 active changes。
+- 发现当前项目有哪些 active changes；v1.14.0 起 `--archived`（只看 archive）与 `--all`（active + archived）还能浏览 `changes/archive/` 子目录。
 - 提供轻量的索引信息，例如任务完成度和最后修改时间。
+- 启用归档浏览时，每个条目带 `archived: true/false`，文本与 JSON 都按 active/archived 区分；archived 条目的 mtime 取 symlink 自身的 `lstat`。`--specs` 模式不接受这两个 flag（直接报错）。
 
 对机器的意义：
 
@@ -53,6 +54,8 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - `status` 把这件事收敛成一个稳定端点。
 
 **v1.13.1**：text 输出结尾新增 `Next:` 行（仅 text，`--json` 不变），直接给出推进 change 的下一条命令。`new change` 自 v1.5.0 起就有同样的收尾行，本次将 status 补齐为一致体验。
+
+**v1.14.0 — store 的 edit roots**：JSON 携带的 `actionContext.allowedEditRoots` 会把声明该 store 的当前路径项目列入列表（root 是 store 且能确定 declaring project 时，implementation root 与当前路径项目都在里面）。store-only 场景的 apply 因此不再被 edit scope 卡住；constraints 文案同时要求 agent 编辑其他仓库前先问用户。
 
 ### `openspec instructions <artifact> --change <name> --json`
 
@@ -89,7 +92,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - `state`: `blocked` / `ready` / `all_done`
 - `contextFiles`: 可作为实施上下文的 artifact 输出文件集合
 - `progress`: 任务总数、已完成、剩余
-- `tasks`: 从 tracking file 解析出来的任务项
+- `tasks`: 从 tracking file 解析出来的任务项；v1.14.0 起每项带 `sourcePath` 与 1-based `line`（`LocatedTask`），任务解析本身不变——apply workflow 据此定位到该行勾选
 - `context` 与 `guidance`：项目 `context` 以及 `operations.apply.guidance`（如有）。它们是 operation input，不是 artifact rules。
 - `missingArtifacts`: 缺少哪些 prerequisite artifacts
 - `instruction`: 当前阶段应执行什么
@@ -139,6 +142,27 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 - 让工作流从“抽象意图”进入“可落地 change 上下文”。
 - 许多宿主 workflow（Claude 的 `/opsx:*`、Codex 的 `$openspec-*`）先要确保 change 存在，后续状态与文档生成才有挂载点。
+
+### `openspec version [--check] --json`
+
+v1.14.0 新增的自述端点。JSON 契约：
+
+```json
+{
+  "schemaVersion": 1,
+  "version": "<installed>",
+  "install": { "location": "...", "packageManager": "npm|pnpm|bun|yarn|volta|null", "scope": "global|project|temporary|source|null" },
+  "update": { "status": "available|current|disabled|offline", "latest": "...", "command": "...", "canSelfUpgrade": true }
+}
+```
+
+- `install` 描述当前安装的形态（`getCliInstallInfo`）；`update` 只在 `--check` 时出现——不带 `--check` 完全不发网络请求。
+- `update.command` 仅在 `status: "available"` 且安装归属明确（global + 已识别包管理器）时非空；`canSelfUpgrade` 由 `canSelfUpgrade()` 判定，非默认 registry 等不确定归属会返回 false。
+- `disabled`/`offline` 是显式状态而非错误，agent 应按“无法确认更新”处理而不是重试。
+
+对机器的意义：
+
+- agent / 安装器可以据此决定是否提示升级、能不能原地升级，而不必自己猜安装方式。
 
 ## 机器接口的共同模式
 
@@ -234,3 +258,12 @@ v1.4.0 的 workspace guardrail（`actionContext.mode = "workspace-planning"` 阻
 - `validate --report findings`（bulk scope 专用）：JSON 标识 report 与 scope，仅含 error/warning/information 条目；完整统计与退出码不变。默认全量报告不受影响。
 - `show --json --diff`：MODIFIED delta 增补 `diff` 与 `warning` 字段（v1.11.0，见 `04`）。
 - artifact 模板以顶层标题开头（v1.13.1）：`show --json` 与 `change list --json` 对以模板裸标题 `# Proposal` 开头的 proposal 仍按 change id 命名，不受影响。
+
+## v1.14.0 机器面增量
+
+- `version [--json] [--check]` 新端点：契约见上文；`--check` 才查 registry。
+- `list --json`：`--archived`/`--all` 启用归档浏览，条目带 `archived: true/false`；`--specs` 模式下两 flag 报错。
+- `show --json` / `spec --json`：requirement 与 scenario 新增 `name` 字段（`normalizeRequirementName`：去 `Requirement:` 前缀与收尾 `#` run）——就是 archive 匹配 MODIFIED/REMOVED/RENAMED 用的名字；requirement 契约 `{ name, text, scenarios: [{ name, rawText }] }`。
+- `status --json`：`actionContext.allowedEditRoots` 把声明 store 的当前路径项目列入（见 `status` 一节）。
+- `instructions apply --json`：任务项带 `sourcePath` + 1-based `line`（`LocatedTask`）。
+- `.openspec.yaml` 未知键：`status`/`validate`/archive 告警；`validate --strict` 下失败。

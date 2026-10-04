@@ -93,6 +93,7 @@ apply:
 - What Changes（具体变更列表）
 - Capabilities（新增/修改的 capability，每个对应一个 spec 文件）
 - Impact（影响范围）
+- **capability 命名引导（v1.14.0，`e70dcc7`）**：New Capabilities 按**耐久的系统行为**命名（如 `user-auth`），不按本次的工作内容命名（如 `add-login-endpoint`）；选一个能随系统演进持续拥有相关 requirements 的凝聚边界，避免大杂烩式 catch-all capability。`templates/proposal.md` 的骨架注释同步了同款要求。
 
 **关键设计**：Capabilities 部分是 proposal 和 specs 之间的"合同"——有 spec-level 行为改动时，proposal 里列出的每个 capability path，specs 阶段都要生成对应的 `specs/<path>/spec.md`。没有行为 delta 时不要编造 requirement，应显式声明 `skip_specs: true`。
 
@@ -113,6 +114,7 @@ apply:
 - `skip_specs: true` 时不要创建 delta spec；instructions/status 会将 specs 标为 skipped。
 - instruction 明确要求先从 `openspec instructions ... --json` 读取 `planningHome.root`：MODIFIED step 1 必须读 `<planningHome.root>/openspec/specs/<capability-path>/spec.md`；直接修改既有 main spec 的 Purpose 也使用同一 resolved root。这里修的是 agent instruction 的 store-aware 路径，不是 archive/sync 新增了 store 能力，也不代表 CLI 会自动检索 referenced store 的 spec 正文。
 - prose 可以按 `config.context` 中的语言要求本地化；结构标题（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、`### Requirement:`、`#### Scenario:`）保持英文。规范性文字仍推荐 `SHALL`/`MUST`：normal 模式缺关键字是 warning，strict 模式会把 warning 计为失败。
+- **requirement 500 字符口径（v1.14.0，`1872982`）**：schema instruction 明确写出——`### Requirement:` 到首个 scenario 之间的描述文本控制在 500 字符内，`openspec validate` 会对达到主 spec 后的超长描述给出 informational 提示（不是错误）。写新 requirement 时一个 requirement 只陈述一个行为：示例与边界情况移入 scenario；覆盖多个行为的 requirement 拆成多个 block。MODIFIED 下保持既有 requirement block 完整，不得为凑长度而拆分、删减或改写既有文本。
 
 ### design（技术设计）
 
@@ -139,6 +141,7 @@ apply:
 - 要求按依赖排序
 - 每个任务要小到可在一个 session 完成
 - 每个 checkbox 自身必须写明 verification，例如测试、命令、可观察行为或交付 artifact；只有验证横跨多个实现任务时，才另列 `Integration Verification`。
+- **任务分组自带测试/文档（v1.14.0，schema.yaml tasks instruction）**：每个任务组必须落好它自己这份工作需要的测试与文档，**不允许**把测试/文档集中到最后一个组——后面的组第一次运行前面的成果时，失败会级联回中间所有组造成返工。确实两者都不需要的工作（脚手架、依赖安装）可以都不带；最后一组只做集成检查。示例里对应新增的 `- [ ] 2.3 Document the export API in docs/export.md and verify the documented command runs as written`。
 
 推荐示例：
 

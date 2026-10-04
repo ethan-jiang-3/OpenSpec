@@ -36,7 +36,7 @@
 | ARC-09 | validate rebuilt specs | 写入前调用 `validateSpecContent()` 验证 rebuilt 主 spec。 |
 | ARC-10 | write main specs | 把 rebuilt 内容写回 `openspec/specs/<capability-path>/spec.md`。 |
 | ARC-11 | archive target check | 生成 `YYYY-MM-DD-<change>`，检查目标 archive 目录是否已存在。 |
-| ARC-12 | move change dir | 创建 archive 目录并移动 active change；EPERM/EXDEV 时走私有 staging、verified copy 和可恢复 fallback。 |
+| ARC-12 | move change dir | 创建 archive 目录并移动 active change；EPERM/EXDEV 时走复制回退（复制后删源），复制窗口内的写入中断由 fingerprint 检测并可用 snapshots 回滚。 |
 | ARC-13 | archive summary | 输出 change 已归档和 spec update totals。 |
 | ARC-14 | archived handoff | change 不再 active；主 specs 成为新的 formal baseline。 |
 
@@ -395,6 +395,8 @@ openspec instructions archive --change "<name>" --json
 它还可能调用 `openspec-sync-specs` 做 agent-driven sync。这个 sync 路径和 CLI 的 programmatic `buildUpdatedSpec()` 不同：agent 会读 delta spec 和 main spec，然后智能合并。
 
 > **v1.6.0 变更**：OPSX archive template 有重要加固——① sync 必须 **inline** 执行（不等完成绝不 mv，防止 changeRoot 被移走后 sync 读不到文件）；② sync prompt 新增 **Cancel** 选项；③ sync 完成后必须对**全部 capability** 重新验证（ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名），任何 mismatch 都停止 archive。main spec 路径也改用 store-aware `planningHome.root`。
+>
+> **v1.14.0 追加（`0ff63dba`）**：阻塞语义收紧——sync 报告任何 stop/blocking 条件时**视为 sync 失败，立即停止归档**：不做 post-sync 内容比对、不移动 `changeRoot`，一切未动，用户修复后可直接重跑。sync 成功后还有结构验证：主 spec 不得残留 `## ADDED/MODIFIED/REMOVED/RENAMED Requirements`；REMOVED 的 requirement 必须已删；retire 掉的 capability（最后一个 requirement 被移除、`## Requirements` 变空）其主 spec 被删除而非留空。模板同时明确 inline sync 的时序约束：不得把 sync 委托后台——否则 step 5 移走 `changeRoot` 会留下"已归档但主 specs 没更新"的状态。
 
 所以读源码时要分层：
 
@@ -442,7 +444,7 @@ openspec instructions archive --change "<name>" --json
 
 ## 参考来源
 
-源码引用以 v1.10.0（release tag `v1.10.0` = `1ebddd1`）为当前基线：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」为准：
 
 | 来源 | 用到的结论 |
 |---|---|
@@ -464,3 +466,11 @@ openspec instructions archive --change "<name>" --json
 ## v1.13.0–v1.13.1 补充：archive 正确性大修
 
 如果曾遇到「validate 通过、archive 报成功、但 main spec 没变」的情况，大概率是 v1.13.0 修掉的 parser bug：`*`/`+` 列表标记的 REMOVED/RENAMED 被静默忽略、重复 delta section 只应用一份。升级后这些写法全部生效。同时 archive 现在会：拒绝仅大小写不同的 requirement 名（`767d63c9`）、拒绝 merge path 读不到的 delta 文件（`e01ed070`）、fence 内空行不再被重写（`aedf4d0c`）。完整修复表见 `_digested/workflows/09-archive.md`。
+
+## v1.13.2–v1.14.0 补充：Windows 回退、CRLF 保持与 sync 阻塞语义
+
+- **Windows EPERM/EXDEV 回退重写**（`ba0f5087`）：`archive.ts` 的 staging rename 遇 EPERM/EXDEV 时改走 `copyThenRemoveDirectory`（源 → dest 复制后再删源）；fingerprint 检测复制窗口内的写入中断；`captureSpecSnapshots`/`restoreSpecSnapshots` 支持回滚。非 EPERM/EXDEV 的 staging 失败仍保持源目录不动。
+- **新建 spec 的回滚剪裁**（`f2812f62`）：回滚只删本次自己创建的 capability 目录；已存在的空目录保留。
+- **CRLF 保持**（`1d35e908`）：新模块 `src/utils/line-endings.ts`，specs-apply 写回时 `matchLineEnding(rebuilt, previous)`——已有文件保持其行尾，只有新文件才写 LF。Windows 仓库升级后 archive 不再产生全文件行尾 diff。
+- **归档工作流的任务进度改 schema-aware**（`fb1b876`）：workflow 模板读 schema `apply.tracks` 的进度（含自定义任务文件/glob），不再误报"未完成"。
+- **OPSX 模板的 sync 阻塞语义与 sync 后结构验证**（v1.14.0，`0ff63dba`）：见 Step 14 的 v1.14.0 追加——sync 失败立即停止归档、不移 `changeRoot`，可修复后重跑。

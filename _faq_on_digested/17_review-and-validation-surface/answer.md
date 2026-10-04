@@ -109,11 +109,32 @@
 
 ---
 
+## 六、v1.14.0 补充：verify 按 status 契约重写、metadata 未知键告警、500 字符引导
+
+### verify 模板重写（status 契约 + Not applicable + advisory）
+
+verify 不再自己解析 checkbox。它改用 `status --json` 的顶层 `tasks`/`progress`（已聚合 schema `apply.tracks` 匹配的所有可读任务文件）与 `taskTrackingConfigured`：
+
+- **Not applicable 语义**：schema 未定义的检查、status 报告为 intentional skip 的 artifact（`skip_specs: true`、可选 design、无任务追踪的 schema）→ 标 **Not applicable**，不算失败，也不计入 skipped-check 总数。只含 REMOVED/RENAMED 的 delta（无 ADDED/MODIFIED）时，Requirement Implementation Mapping 与 Scenario Coverage 也标 **Not applicable**——Spec Coverage 里的 REMOVED/RENAMED 检查就是这类 change 的证据。
+- **Not verified 的收敛**：`unavailableTrackingFiles` 非空 → Task Completion 记 not verified，并逐条列出不可读路径及原因；`taskTrackingConfigured: true` 但 `tasks` 为空 → 记 not verified 并引用 apply `state`/`instruction` 的原因。空 `tasks` 本身不再等于"缺证据"。
+- **advisory 语义**：apply 的 `state`/`instruction` 只是 context，不是 verdict；验证是 advisory 的，`Not verified` 描述的是本报告的边界，不是新的 archive 前置条件。archive 保留自己的检查与用户确认行为。
+- 提示列表显示**所有** active changes（含 `status: "no-tasks"`），不再只显示有 tasks artifact 的。
+
+### `.openspec.yaml` 未知键告警
+
+`CHANGE_METADATA_KNOWN_KEYS` 白名单（`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）之外的顶层键，status/validate/archive 都会告警"未知键被忽略、无效果"，`validate --strict` 下直接失败。拼写漂移（如把 `skip_specs` 写成 `skipSpecs`）从静默 no-op 变成可见信号。注意：`--strict` 对**超长 requirement** 直接失败是 upstream main 的未发版行为，不属于 v1.14.0。
+
+### requirements 500 字符引导口径
+
+500 字符上限（`MAX_REQUIREMENT_TEXT_LENGTH`）早就存在，v1.14.0 把"怎么写短"写进了 specs instruction 与 validate 提示：新 requirement 一条只写一个行为，示例和边界情况移进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` 块；validate 对超长 requirement 的 flag 是 informational（写入 main spec 后才 flag），不是 error；MODIFIED 下保持既有 requirement block 完整，**不为凑长度拆写、裁剪或重写已有文本**。
+
+---
+
 ## 参考来源
 
-- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)
+- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)
 - 机制：[`../../_digested/mechanisms/03-spec-model.md`](../../_digested/mechanisms/03-spec-model.md)（parser/validator 分工、Purpose 占位符、advisory preflight）
 - 命令面：[`../../_digested/spec_cli/01-human-facing-cli.md`](../../_digested/spec_cli/01-human-facing-cli.md)、[`02-machine-facing-cli.md`](../../_digested/spec_cli/02-machine-facing-cli.md)
 - 失真治理：[`../../_digested/specs_truth/00-map.md`](../../_digested/specs_truth/00-map.md)
-- 源码：`src/utils/requirement-diff.ts`、`src/core/validation/purpose-placeholder.ts`、`src/core/parsers/requirement-blocks.ts`、`src/core/specs-apply.ts`、`src/commands/validate.ts`
+- 源码：`src/utils/requirement-diff.ts`、`src/core/validation/purpose-placeholder.ts`、`src/core/validation/constants.ts`（`MAX_REQUIREMENT_TEXT_LENGTH`）、`src/core/parsers/requirement-blocks.ts`、`src/core/specs-apply.ts`、`src/commands/validate.ts`、`src/utils/change-metadata.ts`（未知键白名单）、`src/core/templates/workflows/verify-change.ts`（status 契约）
 - 手册：[`../../_openspec_handbook/12-实战-如何正确修改-artifacts.md`](../../_openspec_handbook/12-实战-如何正确修改-artifacts.md)、[`90-附录-给机器看的-agent-协议.md`](../../_openspec_handbook/90-附录-给机器看的-agent-协议.md)

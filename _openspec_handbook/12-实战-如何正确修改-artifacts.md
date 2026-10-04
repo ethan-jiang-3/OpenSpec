@@ -976,7 +976,7 @@ rm -rf openspec/changes/add-task-csv-export/
 | `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把 delta spec 写成全量重写；REMOVED 最后一个 requirement 时，先清理未归属内容，再用合法 `retire_capabilities: true` 明确授权删除 |
 | `design.md` | 实现发现方案变化时及时回头修改，说明原因和风险 | 只改代码不改设计，后人看不到真实取舍 |
 | `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节；**v1.8.0 起缩进的子任务也计入进度**（`  - [ ] 1.1.1` 会阻止 "✓ Complete"），别只盯顶层 checkbox |
-| `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析（`retire_capabilities` 与 `schema:` 并存，见上） |
+| `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析（`retire_capabilities` 与 `schema:` 并存，见上）；**未知键会告警**——只认白名单键 `schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`，写错的键在 status/validate/archive 都会提示，`validate --strict` 直接失败 |
 
 一条实用判断准则：
 
@@ -984,6 +984,11 @@ rm -rf openspec/changes/add-task-csv-export/
 - 技术路径变了，优先改 design
 - 执行拆解变了，优先改 tasks
 - change 的 schema/元数据变了，才考虑 `.openspec.yaml`
+
+两个影响 diff 观感的守卫：
+
+- **行尾保持**：写回文件时 CLI 保持原有行尾（CRLF 文件写回仍是 CRLF，只有新文件才写 LF）。在 Windows 仓库手改或让 AI 重写 artifact，不会再出现"整文件被重写成 LF"的噪声 diff——review 时看到的差异就是真实的内容改动。
+- **未知键告警**：`.openspec.yaml` 写进白名单之外的键不会静默被忽略，status/validate/archive 都会点名；用 `validate --strict` 可以把它变成硬失败，适合放进 CI。
 
 #### tasks：可追踪不等于可验证
 

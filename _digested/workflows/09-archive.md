@@ -8,7 +8,7 @@
 > **agent 看到的名字**：`openspec-archive-change`（skill）/ `OPSX: Archive`（command）
 > **独立 CLI 命令**：**有**——`openspec archive <name>` 做 programmatic validate → merge → move。host archive workflow 做 pre-flight checks + agent-driven sync + 手动 mv。**两条路径不同**：CLI 做完整替换式合并，agent workflow 做智能合并。
 > **profile**：core（大多数用户默认可见）
-> **要点**：① 选择 change 后先读取 `openspec instructions archive --json` 的 context/operation guidance；② status 的 `skipped` specs artifact 视为满足；③ sync 仍必须 inline 并逐 capability 验证；④ CLI merge 对 fully early-synced operations 采用 no-op / warnings，而非无意义重写；⑤ 归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`。
+> **要点**：① 选择 change 后先读取 `openspec instructions archive --json` 的 context/operation guidance；② status 的 `skipped` specs artifact 视为满足；③ sync 仍必须 inline 并逐 capability 验证——**不得委托后台任务**（只能同步等待，或"以同步方式委托并等待结果"）；④ CLI merge 对 fully early-synced operations 采用 no-op / warnings，而非无意义重写；⑤ 归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`；⑥ 任务完成度来自 `openspec list --json` 的 schema-aware `totalTasks`/`completedTasks`，lookup 失败即停止；⑦ sync 报任何 stop/blocking 条件即视为 sync 失败——立即停止归档，不做 post-sync 比对、不移 changeRoot；⑧ sync 通过后做结构验证：主 spec 不残留 delta headers、REMOVED 的 requirement 已删、retired capability 的主 spec 已删除。
 > **追加**：非 TTY 时 confirm 无 ANSI、无 change 名则要求先传入名字；重建 spec 保留 `## Requirements` 周围空行且以单个 LF 结尾；scenario-loss 认所有 `####` 子标题。
 > **追加**：CLI retirement 失败分为“只缺 marker”“有 blocking content”“marker 已读但不可 honor/仍被内容阻塞”三路；只有第一路建议添加 marker。
 
@@ -33,11 +33,15 @@ CLI 列中的完整 mutation 边界是：全量预构建 → 全量 rebuilt vali
 1. 显式名称 → 对话推断 → 唯一 active change 自动选择；仅歧义时 `openspec list --json`
 2. openspec instructions archive --change "<name>" --json  # 读取 context + operationGuidance（不影响 CLI contract）
 3. openspec status --change "<name>" --json        # 检查 artifact 完成度；done / skipped 都满足
-4. [agent 读 tasks.md]                             # 统计 checkbox
+4. openspec list --json                            # 任务完成度：同名条目的 totalTasks/completedTasks
+   #   schema-aware（CLI 自己解析追踪文件，含自定义任务文件名/glob）
+   #   查找失败 / 计数非法 → 报告并停止，不 sync 不 archive
 5. [agent 读 delta specs + main specs 对比]         # sync assessment
    → main spec 路径用 <planningHome.root>/openspec/specs/（store-aware）
    → 用户可选 Cancel / Archive without syncing / Sync now / Sync anyway
-   → 若选 sync：inline 执行 → 验证全部 capability → 通过后才继续
+   → 若选 sync：先取一次 specs instructions 快照 → inline 执行（不得委托后台）
+     → sync 报 stop/blocking 即视为失败：立即停止，changeRoot 未动，可重跑
+     → 通过后逐 capability 内容比对 + 结构验证 → 全过才继续
 6. mkdir -p "<changesDir>/archive"                 # 创建 archive 目录
 7. mv "<changeRoot>" "<archiveDir>/YYYY-MM-DD-<name>"  # 移动
 ```
@@ -68,9 +72,11 @@ sequenceDiagram
 
     rect rgb(255, 250, 240)
         Note over MD,FS: Step 3 · task 完成度
-        MD->>FS: 读 tasks.md
-        FS-->>MD: checkbox 统计
-        alt 有未完成 tasks
+        MD->>TS: openspec list --json
+        TS-->>MD: 该 change 的 totalTasks/completedTasks<br/>（schema-aware，CLI 解析追踪文件）
+        alt lookup 失败或计数非法
+            MD-->>User: 报告问题，停止——<br/>不 sync 不 archive
+        else 有未完成 tasks
             MD-->>User: "Warning: N incomplete tasks. Continue?"
             User-->>MD: y/N
         end
@@ -88,8 +94,10 @@ sequenceDiagram
             else 用户选 Archive without syncing
                 Note over MD: 继续 archive
             else 用户选 Sync now / Sync anyway
-                MD->>MD: 调 openspec-sync-specs **inline**<br/>（不等同步完成绝不 mv）
+                MD->>MD: 调 openspec-sync-specs **inline**<br/>（不得委托后台——step 5 的 mv 会<br/>移走 changeRoot；只能同步等待）
+                MD->>MD: sync 报任何 stop/blocking →<br/>视为 sync 失败：立即停止，<br/>不做 post-sync 比对、不移 changeRoot
                 MD->>FS: sync 后重新对比**全部 capability**
+                MD->>MD: 结构验证：主 spec 无 delta headers、<br/>REMOVED 已删、retired capability<br/>主 spec 已删除而非留空
                 MD->>MD: 验证：ADDED 存在、MODIFIED 含变更、<br/>REMOVED 消失、RENAMED 用新名
                 alt sync 失败或验证不通过
                     MD-->>User: "Sync mismatch detected.<br/>停止，不 archive。<br/>changeRoot 完整，可重试。"
@@ -109,16 +117,16 @@ sequenceDiagram
 
 ## sync assessment 的选项和路由
 
-template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然后给用户选项。sync **必须 inline 执行**，且完成后必须重新对比全部 capability 做验证；archive inputs 的 context 是必读 prompt input、operation guidance 是可适用的建议，但二者不会改变任务确认、root 或 CLI merge 规则。
+template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然后给用户选项。sync **必须 inline 执行且不得委托后台任务**，完成后必须重新对比全部 capability 做验证；archive inputs 的 context 是必读 prompt input、operation guidance 是可适用的建议，但二者不会改变任务确认、root 或 CLI merge 规则。
 
 | 用户选择 | agent 行为 |
 |---|---|
 | **Cancel** | 停止，不 archive。changeRoot 完整保留。 |
 | **Archive without syncing** / **Archive now** | 跳过 sync，直接进入 mv |
-| **Sync now** / **Sync anyway** | ① 调 `openspec-sync-specs` **inline**（不委托后台——step 5 的 mv 会移走 changeRoot，后台 sync 读不到文件）；② 等待 sync 完成；③ 对 `artifactPaths.specs.existingOutputPaths` 中的**每个 capability** 重新验证——ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名；④ 验证全部通过才继续 archive；⑤ 任何 mismatch 都停止并报告 |
+| **Sync now** / **Sync anyway** | ① 调 `openspec-sync-specs` **inline**——不委托后台任务（step 5 的 mv 会移走 changeRoot，后台 sync 读不到文件）；agent 只能同步委托并等待结果；② sync 报**任何 stop/blocking 条件**即视为 sync 失败：立即停止归档，**不做 post-sync 内容比对、不移 changeRoot**——一切未动，用户修复后可重跑；③ sync 完成后先做**结构验证**：主 spec 不得残留 `## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、REMOVED 的 requirement 必须已删、retire 掉的 capability（最后一个 requirement 被移除、`## Requirements` 变空）其主 spec 已删除而非留空；④ 再对 `artifactPaths.specs.existingOutputPaths` 中的**每个 capability**（不只 sync 声称碰过的）重新内容比对——ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名；⑤ 全部通过才继续 archive；任何 sync 失败或 mismatch 都停止并报告 |
 | 其他输入 | 重新询问，不 archive |
 
-> **为什么必须 inline**：step 5 会 `mv changeRoot`。如果 sync 在后台运行而 mv 先执行了，sync 读不到 delta spec，结果是 change 已 archived 但 main specs 从未更新。inline 执行 + 完成后验证避免了这种竞态。
+> **为什么必须 inline**：step 5 会 `mv changeRoot`。如果 sync 在后台运行而 mv 先执行了，sync 读不到 delta spec，结果是 change 已 archived 但 main specs 从未更新。inline 执行（同步等待）+ 完成后验证避免了这种竞态；而"sync 一报阻塞就整个停"保证了失败时 changeRoot 一定还在原地。
 
 ## 四种输出格式
 
@@ -135,10 +143,13 @@ template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然�
 |---|---|
 | Always prompt for change selection | 不自动选 |
 | Use artifact graph for completion checking | 不猜 |
+| Task progress comes from schema-aware `openspec list --json` | 不自己数 checkbox；lookup 失败即停，不 sync 不 archive |
 | Don't block archive on warnings | warning 只是确认 |
 | Preserve .openspec.yaml when moving | 随目录移动 |
-| If sync requested, run openspec-sync-specs **inline** | 不等同步完成绝不 mv |
-| Never archive while spec sync is still in flight | inline sync + verify before mv（新增 guardrail） |
+| If sync requested, run openspec-sync-specs **inline**（不得委托后台任务） | 只能同步等待 |
+| If sync reports any stop/blocking condition, treat it as failed and stop | 不做 post-sync 比对、不移 changeRoot，一切未动可重跑 |
+| Verify main-spec structure after sync（无 delta headers、REMOVED 已删、retired capability 主 spec 已删除） | 再逐 capability 内容比对，全过才 mv |
+| Never archive while spec sync is still in flight | inline sync + verify before mv |
 | If delta specs exist, always run sync assessment | 不跳过对比 |
 | Route Cancel as stop | 不 archive，changeRoot 完整 |
 
@@ -162,13 +173,14 @@ FAQ `07_archive-ready-to-archived/` 从 CLI 主线视角分析了 programmatic m
 
 | 内容 | 行号范围（archive-change.ts） |
 |---|---|
-| SkillTemplate 定义 | L10-L131 |
-| CommandTemplate 定义 | L134-L312 |
-| Step 2: artifact 检查 | L31-L43 |
-| Step 3: task 检查 | L45-L56 |
-| Step 4: sync assessment + inline verify | L58-L85 |
-| Step 5: 移动目录 | L87-L102 |
-| Guardrails | L120-L131 |
+| SkillTemplate 定义 | L31-L239 |
+| CommandTemplate 定义 | L241-L495 |
+| Step 1: 选择 change + archive inputs | L47-L84 |
+| Step 2: artifact 检查 | L86-L98 |
+| Step 3: task 检查（schema-aware `list --json`） | L100-L122 |
+| Step 4: sync assessment + 阻塞语义 + 结构/内容验证 | L124-L180 |
+| Step 5: 移动目录 | L182-L197 |
+| Guardrails | L221-L234 |
 
 ## v1.13.0–v1.13.1 正确性大修
 

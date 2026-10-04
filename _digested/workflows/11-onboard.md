@@ -95,6 +95,19 @@ onboard 模板让生成的每条 task 自带 `— verify: <test/command/observab
 | Explain each step as you go | 教学优先 |
 | If user gets stuck, help them through | 引导不是测试 |
 
+## 任务清单的两段式确认（v1.13.2，#1940）
+
+Phase 3 生成 tasks 后不再"保存即继续"，拆成两次暂停：
+
+```text
+[展示任务分组（每组自带该组测试与文档；最后一组只做集成检查）]
+→ "Does this task breakdown look right?" — 等用户确认/反馈（PAUSE 1）
+→ 保存到 openspec instructions tasks --change "<name>" --json 的 resolvedOutputPath
+→ "Tasks are saved. Ready to implement?" — 等用户确认后再进 Phase 4（PAUSE 2）
+```
+
+之前是「保存后直接一句 Ready to implement?」，用户对清单本身没有独立确认点。
+
 ## 源码锚点
 
 | 内容 | 行号范围（onboard.ts） |
