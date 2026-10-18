@@ -17,7 +17,7 @@
 | 00 | `00-index.md` | 总导读 + 术语表 + 命令速查 |
 | 01 | `01-初级-先把-openspec-用起来.md` | 先会用 |
 | 10 | `10-中级-把核心概念真正串起来.md` | 建立心智模型：三层模型 + artifact + delta spec |
-| 11 | `11-中级-定位节奏与边界.md` | 定位（brownfield-first）、节奏（Actions, not phases）、四组边界 |
+| 11 | `11-中级-定位节奏与边界.md` | 定位（brownfield-first）、节奏（Actions, not phases）、四组边界、change 多了之后的三种姿势 |
 | 20 | `20-高级-openspec-的软件开发生命周期思想.md` | SDLC 思想 |
 | 21 | `21-高级-config-schema-与项目边界.md` | 配置和结构边界 |
 | 22 | `22-高级-项目级全局约束到底放哪.md` | 约束层级判断 |
