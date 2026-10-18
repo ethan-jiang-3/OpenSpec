@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- **计划状态**：Phase A–D + E1/E2/E3 完成；仅剩 E5 push（等用户 `gh auth login`）
+- **计划状态**：✅ 全部完成（Phase A–E；E5 push 凭据解除后已推送）。后续 v1.14.0→v1.14.3 见 `_plan-10-v1.14.x-full-sync.md`
 - **本地分支**：`ethan`
 - **工作树**：计划创建时 clean（merge commit `a0cdcbc6` 已存在）
 - **旧基线**：OpenSpec `v1.13.1`，tag/commit `634c557b`（upstream 侧 `bae58cf6` 为上次同步的 main 顶点）
@@ -46,7 +46,7 @@
 - [x] 已确认 v1.14.0 已发布 npm（dist-tag latest）——因此同步到 tag 而非 main 是正确口径
 - [x] 已确认目标区间 73 个提交；`v1.13.2` 为 patch（CRLF、Windows EPERM、Kilo Code 目录、artifact 输出 glob 等），`v1.14.0` 为 minor（10 个新工具目标、archived 浏览、workflow status 展示、version --check 等）
 - [x] 已确认 merge `a0cdcbc6` 零冲突，`pnpm install --frozen-lockfile` + build 通过，216 test files / 6388 tests 全绿
-- [ ] 逐 PR 行为审计（CHANGELOG 之外的行为细节，如 #2031 之前 main 上有 dashboard 归档、tag 内实际状态）→ 产出 0011
+- [x] 逐 PR 行为审计（CHANGELOG 之外的行为细节，如 #2031 之前 main 上有 dashboard 归档、tag 内实际状态）→ 产出 0011
 
 ### 1.2 同步原则（继承 0009/0010）
 
@@ -94,7 +94,7 @@
 - [x] C5 FAQ 17（verify 重写六节补充；明确 #2020 非 v1.14.0 行为）（review/validation）：validate --strict 未知键失败、500 字符口径（tag 内是引导文案，--strict 失败在 main，注意区分）
 - [x] C6 FAQ 03（capability 命名引导补充节）（explore→propose）：capability 命名引导（e70dcc7）若影响 propose 前置
 - [x] C7 其余 11 个目录 [~] 核实（各有一句依据）；README 基线脚注→SSOT
-- [ ] C8 checkpoint：FAQ README 与 16 的"当前版本"一致
+- [x] C8 checkpoint：FAQ README 与 16 的"当前版本"一致（README 不硬编码基线、只引 SSOT；16 的版本号均为历史事实）
 
 ### Phase D：`_openspec_handbook/` 更新
 
@@ -107,12 +107,12 @@
 
 ### Phase E：验收与收尾
 
-- [ ] E1 `pnpm run build` + `pnpm test` 全绿（应与 merge 时同水平：216 files / 6388 tests）
-- [ ] E2 版本一致性：`package.json`=1.14.0、_digested README 基线、FAQ 16、handbook 00-index 四处一致
-- [ ] E3 回填 0011 的「当前处理状态」与「验收基线」
-- [ ] E4 单一 commit 提交资料更新（`docs: 同步三套资料到 v1.14.0（0011）`），本计划文件一并提交
-- [ ] E5 push `origin/ethan`（依赖阻塞解除）
-- [ ] E6 更新 `_change_log/README.md` 索引加 0011 行
+- [x] E1 `pnpm run build` + `pnpm test` 全绿（216 files / 6388 tests 通过）
+- [x] E2 版本一致性：`package.json`、_digested README 基线、FAQ 16、handbook 00-index 四处一致
+- [x] E3 回填 0011 的「当前处理状态」与「验收基线」
+- [x] E4 单一 commit 提交资料更新（`docs: 同步三套资料到 v1.14.0（0011）`），本计划文件一并提交
+- [x] E5 push `ethan`（凭据问题解除后已推送）
+- [x] E6 更新 `_change_log/README.md` 索引加 0011 行
 
 ## 阻塞与决策
 

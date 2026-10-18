@@ -9,6 +9,7 @@
 | `src-coverage.md` | 按源码目录/模块追踪覆盖 |
 | `specs-coverage.md` | 按 `openspec/specs/` 追踪覆盖 |
 | `tests-coverage.md` | 按测试目录追踪覆盖 |
+| `doc-assertions.md` | 三套文档（`_digested` / `_faq_on_digested` / `_openspec_handbook`）里**可机械验证的断言**的校验台账与复跑脚本 |
 
 ## 状态定义
 

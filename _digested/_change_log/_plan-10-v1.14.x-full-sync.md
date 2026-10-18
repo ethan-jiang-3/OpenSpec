@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- **计划状态**：Phase A–E 全部完成（E5 见「阻塞与决策」）
+- **计划状态**：✅ Phase A–E 全部完成；已推送 `git@github.com:ethan-jiang-3/OpenSpec.git` 的 `ethan` 分支
 - **本地分支**：`ethan`
 - **旧基线**：OpenSpec `v1.14.0`，tag/commit `94ca9c1e`
 - **目标基线**：OpenSpec `v1.14.3`，tag/commit `c794978f`
@@ -104,7 +104,7 @@
 | 时间 | 现象 | 证据 | 恢复入口 |
 |------|------|------|----------|
 | Phase A | `pnpm install --frozen-lockfile` 在 workspace 内耗时过长（>5min，仍在跑） | `node_modules` 仅 13 项，`tinyglobby`/`fast-glob` 均未落地 | 等后台 job `bash-14745`；失败的替代方案是在 `/tmp/openspec-v1143` worktree（tag 快照）里安装并跑 build/test，本地目录不装 |
-| Phase E | E5 `git push` 未执行 | 遵循"未经要求不 push"的约定；且此前轮次出现过 push 凭据失败（需 `gh auth login`） | 用户确认后再 `git push origin ethan`；本地 commit 与 tag 已就位 |
+| Phase E | E5 `git push` 已执行 | 用户要求同步推送；SSH 方式（`git@github.com`）可用，`origin` 的 HTTPS 443 在本机不通 | 已推送到 `ethan` 分支（`f90c7222..10c62a4e`）；此后追加的全库扫描修复亦已推送 |
 
 ## 进度日志
 
@@ -133,3 +133,22 @@
 同时补了一条 CI 事实：`8153fc5e`（#981）把 OS 矩阵每格钉死 Node 版本（三平台跑 `engines.node` 下限 20.19.0，Linux 另跑 22/24）——这条此前只在 0012 的提交清单里出现，资料正文没有。
 
 验证：`pnpm test` 223 files / 6585 tests 全绿；三套资料相对链接 0 处失效；编辑过的 `schema-package/schema.yaml` 用 `yaml` 解析器验过结构。
+
+### 收尾：全库可机械验证断言扫描（提交 `e5f66e0f`、`10c62a4e`）
+
+按目录逐轮审完后，改为对 217 个文件做**不设目录边界的断言扫描**，补掉了三类横向传播的错误：
+
+| 类别 | 发现 | 说明 |
+|------|------|------|
+| commit sha 转录错误 | 5 个（跨 7 个文件、4 个目录） | `6e62b5d5`→`6e62b1d5`(#1806)、`db560a63`→`db560ae3`(#1858)、`f2812f62`→`f2812f6d`(#1926)、`e7a951d`→`e7a9512d`(#1994)，均为一位字符错位/互换 |
+| skill 名残留 | `$openspec-propose-change` 3 处（`_digested` 内） | 实测 `init --tools codex` 产出 `openspec-propose`（无 `-change`）；propose 是唯一不带后缀的 |
+| 虚构子命令 | `openspec workset save`（`system/03`） | 应为 `workset create --member`；重定向 `HOME` 实测通过 |
+
+验证口径（可复现）：
+- 189 个后引号 hiphenated sha 全部 `git cat-file -t` 有效
+- 56 组 `sha`+`(#PR)` 配对，commit message 均含该 PR
+- 5 处严格「`sha`（vX.Y.Z）」版本断言，首个包含该 commit 的 tag 均匹配
+- 33 处 `文件:行号` 锚点逐行比对命中
+- 217 文件相对链接/锚点 0 失效；代码围栏全部配平
+
+**方法论结论**：同一错误会跨目录复制，按目录审能保证深度但覆盖不了横向传播；全库机械扫描是必要的收尾网。
