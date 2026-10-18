@@ -4,6 +4,13 @@
 
 > **v1.8.0 同步（2026-08-08）**：nested capability path 语义在 v1.8.0 不变（path namespace、非 retrieval）；源码链接保留到 v1.7.0 作为原始核验锚点，当前行为以 v1.8.0 为准。
 
+> **v1.14.3 复核（本轮同步）**：nested 语义仍未变——目录是命名空间、无继承/聚合/自动 retrieval，`identity` 与 `identity/session` 是两个独立 capability。下面三条历史约束逐条复核结果：
+> - 跳过隐藏目录 —— **仍成立**（`spec-discovery.ts:40`、`:100` `entry.name.startsWith('.')`）
+> - 不追踪**目录** symlink —— **仍成立**（`spec-discovery.ts:48`）
+> - 根目录直放的 `openspec/specs/spec.md` 被忽略 —— **仍成立**
+>
+> **但有一条新增**：v1.14.2（#2052）/ v1.14.3（#2101）起，**`spec.md` 文件本身可以是 symlink**，会被解析（`spec-discovery.ts:19` 注释：`A symlinked \`spec.md\` IS resolved`）。这与"不追踪目录 symlink"不冲突：目录链不跟进，末端的 spec.md 允许是链接。本文其余结论不受影响。
+
 ## 结论
 
 **可以做，而且做对后很有价值；但要分清“源码已实现”“正式 release 可用”“官方默认推荐”这三件事。**
