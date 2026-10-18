@@ -26,7 +26,7 @@
 
 - 角色：安装自述端点（v1.14.0 新增）。
 - 核心对象：当前版本、安装形态（`location`/`packageManager`/`scope`）、可选的 registry 更新检查。
-- 输出语义：`--json` 输出 `{ schemaVersion: 1, version, install, update? }`；`update.status` 为 `available/current/disabled/offline`，`update.command` 与 `canSelfUpgrade` 只在 `available` 且安装归属明确时有意义。
+- 输出语义：`--json` 输出 `{ schemaVersion: 1, version, install, update? }`；`update.status` 为 `available/current/disabled/offline`。只要跑过 `--check`，`update` 对象就**恒带** `command` 与 `canSelfUpgrade` 两个键——`command` 仅在 `status === "available"` 时非 `null`（否则为 `null`），`canSelfUpgrade` 仅在 `available` 时按 `canSelfUpgrade(location, cwd)` 计算（否则为 `false`）。所以别把"键不存在"当成判断依据，要看值。
 - 边界：只读；不做升级动作，也不改项目状态。默认不访问网络，`--check` 才查 registry。
 
 ## 二、发现与浏览类
