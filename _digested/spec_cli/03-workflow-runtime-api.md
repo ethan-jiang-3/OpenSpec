@@ -349,10 +349,13 @@ v1.7.0 新增的 archive instruction endpoint 也遵循“编译而非执行”�
 
 ### 输出
 
-- schema 名称
+text 形态（`schemas.ts:42-60`）：
+
+- schema 名称，**仅当来自 project 或 user 覆盖时才带来源标注**——` (project)` / ` (user override)`；来自 package 的 schema **没有任何标注**（不要指望"来源信息"一定存在）
 - 描述
-- artifact 顺序
-- 来源信息
+- `Artifacts: a → b → c`（声明顺序）
+
+`--json` 直接输出 `listSchemasWithInfo()` 的数组本身，**不再包 envelope**（失败时才用 `{ schemas: [], root: null }`）。
 
 ### 它影响什么
 
