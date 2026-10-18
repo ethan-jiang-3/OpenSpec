@@ -76,17 +76,19 @@ const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
 
 ### rules key 验证
 
-`config.yaml` 的 `rules` 字段 key 不强制与 schema 的 artifact ID 匹配 —— 但你写了一个不存在的 artifact ID，会在**每次 session 首次生成指令时**产生一个 warning：
+`config.yaml` 的 `rules` 字段 key 不强制与 schema 的 artifact ID 匹配 —— 但你写了一个不存在的 artifact ID，会在**每次 session 首次生成指令时**产生一个 warning（`project-config.ts:479-482` 的真实文案）：
 
 ```
-Warning: config.yaml rules contains unknown artifact ID "review" for schema "spec-driven"
+Unknown artifact ID in rules: "review". It matches no artifact in any available schema. Known artifact IDs: <sorted ids>
 ```
 
-验证逻辑在 `validateConfigRules()` / `generateInstructions()` in `src/core/artifact-graph/instruction-loader.ts`：
+**关键：校验基准是「所有可用 schema 的 artifact ID 并集」，不是当前 change 所选 schema 的 artifact 列表。** 所以 `specs`、`review` 这类 key 只要任何一个已安装 schema 里有同名 artifact 就不报警。验证入口在 `generateInstructions()`（`instruction-loader.ts:381-394`）：
 ```typescript
 if (projectConfig?.rules) {
-  const validArtifactIds = new Set(context.graph.getAllArtifacts().map(a => a.id));
-  const warnings = validateConfigRules(projectConfig.rules, validArtifactIds, context.schemaName);
+  const validArtifactIds = new Set(
+    listSchemasWithInfo(effectiveProjectRoot ?? undefined).flatMap((s) => s.artifacts)
+  );
+  const warnings = validateConfigRules(projectConfig.rules, validArtifactIds);
   for (const warning of warnings) {
     if (!shownWarnings.has(warning)) {
       console.warn(warning);
@@ -227,9 +229,9 @@ schema: spec-driven     # 选择用哪个 schema
 - `openspec instructions` 加载哪个 DAG 的 artifact 定义
 - `openspec status` 在 metadata 缺失时可通过 schema 解析回退链确定用哪个 DAG 判断 artifact 状态；正常新 change 会优先使用 `.openspec.yaml` 中已写入的 schema
 
-### 5.2 rules key 校验依赖 schema
+### 5.2 rules key 校验依赖「所有可用 schema」
 
-`config.rules` 的 key（artifact ID）是否合法，取决于所选 schema 定义了哪些 artifact：
+`config.rules` 的 key（artifact ID）是否合法，取决于**任何已安装 schema** 是否定义了该 artifact（取并集，不是只看当前 change 用的那个 schema）：
 
 ```yaml
 # config.yaml
@@ -237,7 +239,7 @@ schema: spec-driven
 rules:
   proposal: [...]    # ✓ spec-driven 有 proposal artifact
   specs: [...]       # ✓ spec-driven 有 specs artifact
-  review: [...]      # ✗ spec-driven 没有 review → 会产生 warning
+  review: [...]      # ✗ 任何已安装 schema 都没有 review → 会产生 warning
 ```
 
 ### 5.3 context 的 50KB 限制是全局的
@@ -346,7 +348,7 @@ rules:
     - Write good code
 ```
 
-`all` 不是合法的 artifact ID → 每次生成指令都会收到 warning → 这条规则**永远不会被注入**。
+`all` 不是任何 schema 的合法 artifact ID → 每次生成指令都会收到 warning → 这条规则**永远不会被注入**。
 
 **正确做法**：明确写清楚每条规则属于哪个 artifact：
 
