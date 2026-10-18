@@ -100,7 +100,7 @@ change/specs/identity/session/spec.md
 |---|---|
 | 可观察行为改变 | 在已有或新 capability 下写 delta spec |
 | 没有可观察行为改变 | 使用 skip_specs |
-| skip_specs 与 specs 下任何非隐藏文件并存 | 视为冲突，应删除其中一侧 |
+| skip_specs 与 specs 下任何非隐藏文件并存 | 视为冲突，应删除其中一侧（`hasAnyFileUnder` 把普通文件和 **symlink** 都算数，`spec-discovery.ts:156`；只有 `.` 开头的隐藏项被跳过） |
 | 不确定是否改变合同 | 在 proposal / explore 先解决，不要靠 skip_specs 逃避判断 |
 
 ## 本文不把什么归因给 nested path

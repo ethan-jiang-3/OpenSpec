@@ -1,6 +1,8 @@
 # 研究笔记：OpenSpec v1.7.0 的长期 capability 治理边界
 
 > 基线：上游 [`v1.7.0`](https://github.com/Fission-AI/OpenSpec/releases/tag/v1.7.0)。本文只区分已发布的运行时能力、已发布但由 agent 执行的 workflow，以及仍需项目自行治理的部分；不改变任何 runtime 行为。后续复核至 v1.13.0：capability 身份/治理结论未变。
+>
+> **v1.14.3 复核**：身份与发现类结论（nested path 递归发现、`/` 连接的 id、无 capability rename、无目录父子语义）自 v1.7.0 起**仍然成立**。但本文原先"复核至 v1.13.0，capability 身份/治理结论未变"漏掉了一整块能力生命周期：**`retire_capabilities: true` 在 v1.8.0 就发布了**（`521ee33e` / #1484，`src/core/change-metadata/schema.ts:61`）。因此下文所有"v1.7.0 实际保证什么"的表格请按"v1.7.0 ≠ 当前"读。相应地，§50 提出的三方一致性检查应扩为**四方**：proposal 的 New/Modified 列表、active change 的 `specs/**/spec.md`、被允许的 `skip_specs`，以及 `retire_capabilities`（哪些 change 声明了要删掉某个 main spec）。另外 external store 的 `references:` 已经把 index-then-fetch 做成已发布 runtime（一跳、50KB 截断），本文 §56 的表述仍准确。
 
 ## 结论先行：两种不同强度的“contract”
 
