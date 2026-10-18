@@ -92,7 +92,7 @@
 | `test/utils/spec-path-containment.test.ts`、`test/cli-e2e/spec-symlink-into-project.test.ts` | `spec.md` 指向项目内 symlink 的包含规则、规划根识别（`<X>/openspec` + `specs|changes`）、悬空链接拒绝、写侧 canonical path 钉定 | `../specs_truth/06-源码锚点与缺口.md` |
 | `test/core/specs-apply.project-linked-spec.test.ts` | 项目内链接 spec 的写入与回滚 | `../internal-spec-driven/04-archive-归档合并.md` |
 | `test/core/parsers/unapplied-content.test.ts` | delta 里"归档不会带走"的文本：首个 `## ` 前正文、首个 requirement 前散文、额外 `##` 段；注释/围栏/`# ` 标题/Purpose/REMOVED-RENAMED 不报 | `../specs_truth/06-源码锚点与缺口.md`、`../workflows/09-archive.md` |
-| `test/core/templates/glob-path-bounding.test.ts` | propose/ff/continue 的 glob 工件路径必须落在 change 目录内（含 symlink 后检查） | `../workflows/02-propose.md`、`../workflows/04-continue.md` |
+| `test/core/templates/glob-path-bounding.test.ts` | propose/ff/continue/explore 的 glob 工件路径必须落在 change 目录内（含 symlink 后检查；explore 因两个分支写在同一句里，按句判定） | `../workflows/02-propose.md`、`../workflows/04-continue.md`、`../workflows/01-explore.md` |
 | `test/core/artifact-graph/outputs.test.ts`（大改） | brace 嵌套 >16 层拒绝、展开 >1024 拒绝、`{draft}` 字面量保留、绝对模式不被重基、`**/../` 提前限制 | `../mechanisms/05-cli-infra.md`、`../schema/02-内置-spec-driven-详解.md` |
 | `test/core/validation.unknown-metadata-keys.test.ts`（扩展） | `x-*` 扩展键不报未知、`X-Tracker`/裸 `x-`/`x- tracker` 仍报、`initiative` 内仍严格 | `../specs_truth/06-源码锚点与缺口.md` |
 | `test/utils/change-metadata.test.ts`（+108 行） | 扩展键在重写时保持（schema strip 后合并回来） | `../specs_truth/06-源码锚点与缺口.md` |
