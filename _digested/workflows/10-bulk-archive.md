@@ -133,7 +133,7 @@ template 规定 agent 必须读代码来判断：
 | SkillTemplate 定义 | L31-L395 |
 | CommandTemplate 定义 | L397-L760 |
 | Step 3: 批量状态收集（含 `list --json` 任务进度） | L89-L124 |
-| Step 4: 冲突检测 | L126-L135 |
+| Step 4: 冲突检测（键是**完整 `<capability-path>`**，不是末级名） | L126-L135 |
 | Step 5: 冲突解决 | L137-L156 |
 | Step 6: 汇总状态表 | L158-L181 |
 | Step 7: 批量确认 | L183-L210 |
