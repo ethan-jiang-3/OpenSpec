@@ -113,7 +113,9 @@
 
 ### verify 模板重写（status 契约 + Not applicable + advisory）
 
-verify 不再自己解析 checkbox。它改用 `status --json` 的顶层 `tasks`/`progress`（已聚合 schema `apply.tracks` 匹配的所有可读任务文件）与 `taskTrackingConfigured`：
+verify 不再自己解析 checkbox。它改读 **`openspec instructions apply --change <name> --json`** 的顶层 `tasks` / `progress`（已聚合 schema `apply.tracks` 匹配的所有可读任务文件）与 `taskTrackingConfigured`。
+
+> **注意别张冠李戴**：这些字段在 `instructions apply --json` 里，**不在 `status --json` 里**。实测 `status --change t1 --json` 不含 `taskTrackingConfigured` / `unavailableTrackingFiles`；`instructions apply --json` 才有（模板原文见 `verify-change.ts:53-54,75-80`）。
 
 - **Not applicable 语义**：schema 未定义的检查、status 报告为 intentional skip 的 artifact（`skip_specs: true`、可选 design、无任务追踪的 schema）→ 标 **Not applicable**，不算失败，也不计入 skipped-check 总数。只含 REMOVED/RENAMED 的 delta（无 ADDED/MODIFIED）时，Requirement Implementation Mapping 与 Scenario Coverage 也标 **Not applicable**——Spec Coverage 里的 REMOVED/RENAMED 检查就是这类 change 的证据。
 - **Not verified 的收敛**：`unavailableTrackingFiles` 非空 → Task Completion 记 not verified，并逐条列出不可读路径及原因；`taskTrackingConfigured: true` 但 `tasks` 为空 → 记 not verified 并引用 apply `state`/`instruction` 的原因。空 `tasks` 本身不再等于"缺证据"。

@@ -124,7 +124,7 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 - `schema init --default` 修复：写入 loader 实际读取的 `schema` 键，失败时回滚两个文件。
 - `openspec validate` 新增 `## Purpose` 占位符 warning：archive 遗留的 `TBD - created by archiving change ...` 会被检测到（默认 warning，`--strict` 才 fail）。
 - archive rename 保序：RENAMED requirement 保持在原位置，不再移到 spec 尾部。
-- 上游删除了 `openspec/schemas/agent-dev-driven/` 和 `requirement-driven/` 两个不再维护的内置 schema。
+- 本仓库移除了自己的项目级 schema `openspec/schemas/agent-dev-driven/` 与 `requirement-driven/`（**非上游改动**——内置 `schemas/` 从 v1.6.0 到 v1.14.3 始终只有 `spec-driven`；本地提交 `52acd036` 删除）。
 - Fish completion 不再回退到文件路径建议。
 - Explore 图例改纯 ASCII。
 

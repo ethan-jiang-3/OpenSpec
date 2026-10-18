@@ -44,7 +44,7 @@ list、show、validate、change parser、apply、archive 全部使用同一条�
 
 上面那六条约束不是"最好遵守"的软建议。每一条背后都有一个具体的、被真实项目验证过的失败模式。按严重程度排列：
 
-**风险 1：path 就是身份，没有 rename——archive 会在写前整批中止。** 把 `auth/` 搬到 `identity/login/` 后，OpenSpec 眼里旧 capability 已经死了、新 capability 是新创建的。任何仍指向 `auth` 的 delta，下次 archive 时直接 `not found`。这一错误发生在 mutation 前，所以整批不落地，连本该成功的新 capability 创建也不会单独写入。本 repo 自己的 `simplify-skill-installation` change 就真实遇到过：16 条 requirement 操作全部 `not found`，一个坏全盘不落。更危险的是，搬完目录**没有任何工具会主动告诉你"还有 3 个 active delta 指向旧 path"**——要到下次 archive 炸了才知道。
+**风险 1：path 就是身份，没有 rename——archive 会在写前整批中止。** 把 `auth/` 搬到 `identity/login/` 后，OpenSpec 眼里旧 capability 已经死了、新 capability 是新创建的。任何仍指向 `auth` 的 delta，下次 archive 时直接 `not found`。这一错误发生在 mutation 前，所以整批不落地，连本该成功的新 capability 创建也不会单独写入。本 repo 自己的 `simplify-skill-installation` change（4 个 capability delta、共 26 条 requirement）就真实遇到过：全部 `not found`，一个坏全盘不落。更危险的是，搬完目录**没有任何工具会主动告诉你"还有 3 个 active delta 指向旧 path"**——要到下次 archive 炸了才知道。
 
 **风险 2：active delta 是悬空炸弹。** 迁移期间，每个 `changes/<id>/specs/<old-path>/spec.md` 还指向旧 ID。如果你搬了 main specs 但没碰这些 delta，它们立刻变成孤儿。这也是为什么 Phase 2 的 active-change 清册被标为"最关键的一步"——你必须明确知道每个 active delta 的最终命运，不能靠猜。
 
