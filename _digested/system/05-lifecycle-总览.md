@@ -81,12 +81,14 @@ status 判断的核心不是“阶段字段”，而是 artifact output 是否�
 store 侧的上下文流：
 
 ```text
-openspec store register <path> --id <id>
-  → openspec/config.yaml 加 references: [<id>]
+openspec store register <path> --id <id>      # 只写全局 registry，不碰项目 config
+  → 手工在 openspec/config.yaml 写 references: [<id>]   ← 这一步不会自动发生
   → openspec context（查看 working set）
   → openspec doctor（健康检查）
   → 从 owning repo: openspec new/propose ...
 ```
+
+`store register` 只接受 `--id` / `--yes` / `--json`，`registerExistingStore()`（`src/core/store/operations.ts:738`）只改全局 registry——`src/core/store/` 里根本没有 `references` 字样。**`references` 是项目侧的显式声明，必须自己写进 `openspec/config.yaml`**；注册 store 不会替你加。
 
 关键点：
 
