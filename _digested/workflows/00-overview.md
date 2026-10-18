@@ -152,6 +152,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 - 除 bulk archive 外，workflow 选择 change 的默认顺序是：显式名称 → 对话推断 → 唯一 active change 自动选择 → 仅在歧义时列出并询问。
 - Apply/Archive 通过各自的 instructions API 获得当前 config `context` 和 operation guidance；artifact `rules.*` 仍只约束对应 artifact 的生成。
 - status 的 JSON 含 `isPlanningComplete`（与兼容别名 `isComplete`）；planning artifact 的完成与实现进度分开表达。
+- **root 缺失时，怎么办取决于是谁发起的**（`#1645`）：模型自己挑中的 workflow（用户没点名 OpenSpec、没点这个 skill、没跑 slash command）应当**直接退出**、按普通请求作答，不许推销安装；用户点名 OpenSpec 的则**停下来问**（`openspec init` / 用已有 store / 这一单先不上 OpenSpec）。这段分叉在 `PROJECT_ROOT_GUARD` 里，同一个字符串同时投给 skill 和 command。
 - 归档类 workflow（archive / bulk-archive）的任务完成度来自 `list --json` 的 schema-aware `totalTasks`/`completedTasks`——CLI 自己解析 schema 声明的追踪文件（含自定义任务文件名/glob），agent 不再自己数 tasks.md checkbox。
 
 template 不直接操作文件系统——它通过 CLI 命令获取路径，再由 agent 用自己的文件工具去读写。
