@@ -63,6 +63,12 @@ seen flag 写 global config 时使用 raw read/merge + 临时文件 rename，不
 
 `openspec completion install` 对 PowerShell 的 managed 配置方式（脚本位置、profile 写入、backup）在 `docs/cli.md` 有正式文档（#1070）。Fish 之外的 shell 面此前只有生成器实现，现在 PowerShell 的 setup 路径有可查文档。
 
+### 测试矩阵扩到 Node 20/22/24（v1.14.1 #981）
+
+CI 的 OS 矩阵每格现在显式钉 Node 版本：Linux/macOS/Windows 全跑**最老的受支持版本**（`package.json` 的 `engines.node` = `>=20.19.0`），Linux 额外跑当前 LTS 线（22、24）。改前只有 Ubuntu 用 runner 的默认 Node，macOS/Windows 的预装版本还各不相同——同一个 tag 在不同时间点测到的 Node 版本并不一样。
+
+对使用者的含义：`engines.node` 是**真的被 CI 覆盖**的下限，不是免责声明。
+
 ### npm git 安装免 pnpm + Node 20 chalk 兼容
 
 - **git 安装免 pnpm**（#792）：`npm install github:...` 这类 git 安装时，package `prepare` 脚本改为 `node build.js`（不再假设 pnpm 在场）。此前 pnpm 是构建前置依赖，git 安装会因缺 pnpm 失败；现在 install scripts 测试（`test/package-install-scripts.test.ts`）覆盖了这条路径。
