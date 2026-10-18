@@ -2,7 +2,7 @@
 
 explore 是四条命令中最特殊的一个 —— 它不是工作流，默认不产生 artifact；写文件（包括创建 OpenSpec artifact）只在用户明确要求且经确认后发生。它是一种**姿态（stance）**。
 
-> **v1.11.0–v1.13.1 写入语义演进**：v1.11.0 起写入需「命名 artifacts + 直接问 + 单独等确认」；v1.13.0（`b9281652`）上游修正了模板中「explore 绝不写文件」的过度承诺措辞；v1.13.1（`4c369e02`）起**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再额外要一轮 yes/no，且每次 handoff 都点名 `/opsx:propose`、`/opsx:apply`。
+> **v1.11.0–v1.13.1 写入语义演进**：v1.11.0 起写入需「命名 artifacts + 直接问 + 单独等确认」；v1.13.1（`b9281652`）上游修正了模板中「explore 绝不写文件」的过度承诺措辞；v1.13.1（`4c369e02`）起**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再额外要一轮 yes/no，且每次 handoff 都点名 `/opsx:propose`、`/opsx:apply`。
 
 ---
 
