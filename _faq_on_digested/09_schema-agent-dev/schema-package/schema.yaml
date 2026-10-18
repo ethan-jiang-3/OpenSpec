@@ -110,14 +110,19 @@ artifacts:
     instruction: |
       Create the task list that breaks down the implementation work.
 
-      **IMPORTANT: Follow the template below exactly.** The apply phase parses
+      **IMPORTANT: Follow the template below for tracked tasks.** The apply phase parses
       checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
 
       Guidelines:
-      - Group related tasks under ## numbered headings
-      - Each task MUST be a checkbox: `- [ ] X.Y Task description`
+      - Group related tracked tasks under ## numbered headings
+      - Each tracked task MUST be a checkbox: `- [ ] X.Y Task description`
       - Tasks should be small enough to complete in one session
       - Order tasks by dependency (what must be done first?)
+      - Track only work that can be completed before archive. If the requested
+        workflow includes archive, or work that requires this change to be
+        archived, preserve those steps as plain bullets in an optional
+        `## Workflow follow-up` section at the end of tasks.md. These bullets are
+        reference information outside tracked task progress.
       - Every checkbox task MUST include its own verification: a test, command,
         observable behavior, or artifact inspection
       - Use a separate Integration Verification task only when the check spans

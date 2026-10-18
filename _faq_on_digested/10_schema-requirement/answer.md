@@ -96,6 +96,7 @@ agent 走完 proposal → specs → tasks 的 artifact 生成后，在 apply 阶
 - **不替代专业 RE 工具**：适合小团队或早期项目的需求定义，不适合审批流、基线管理、需求矩阵追踪等重型 RE 流程
 - **review 质量上限是 agent 能力**：agent 可以检查一致性和完整性，但不能替代有经验的工程师对可行性的判断
 - **verification 是 schema instruction/示例质量，不是 CLI 硬校验**：`openspec validate` 不会替你判断 stakeholder confirmation 是否真实。
+- **两套 requirement 长度口径别混**：OpenSpec 的 500 字符上限只看 `### Requirement:` 到首个 `#### Scenario:` 之间的正文，本 schema 的 PRD 用 `FR-N` 编号和 checkbox 验收标准，不走那套结构，因此不受该上限约束，也不会收到那条 WARNING。代价是 **`openspec validate` 对 PRD 正文的质量几乎无话可说**——它只检查 OpenSpec 结构（`specs/**/*.md` 的存在、scanario 结构等）。PRD 的长度与粒度纪律必须靠 apply instruction 里的 review checklist 和人工审查，不能指望 `--strict`。
 
 ---
 
