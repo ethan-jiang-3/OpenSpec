@@ -152,9 +152,11 @@ v1.14.0 新增的自述端点。JSON 契约：
   "schemaVersion": 1,
   "version": "<installed>",
   "install": { "location": "...", "packageManager": "npm|pnpm|bun|yarn|volta|null", "scope": "global|project|temporary|source|null" },
-  "update": { "status": "available|current|disabled|offline", "latest": "...", "command": "...", "canSelfUpgrade": true }
+  "update": { "status": "available|current|disabled|offline", "latest": "...|null", "command": "...|null", "canSelfUpgrade": false }
 }
 ```
+
+（上面的 `update` 只是**形状示意**：不带 `--check` 时该键整体不存在；且 `latest` / `command` 都可能为 `null`，`canSelfUpgrade` 也常常是 `false`——别把 `true` 当默认值。）
 
 - `install` 描述当前安装的形态（`getCliInstallInfo`）；`update` 只在 `--check` 时出现——不带 `--check` 完全不发网络请求。
 - `update.command` 仅在 `status: "available"` 且安装归属明确（global + 已识别包管理器）时非空；`canSelfUpgrade` 由 `canSelfUpgrade()` 判定，非默认 registry 等不确定归属会返回 false。
