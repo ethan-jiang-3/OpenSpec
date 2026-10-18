@@ -81,9 +81,9 @@ description: ...           # 可选：一句话描述
 artifacts:                 # 必需：至少一个 artifact
   - id: proposal           # 必需：唯一标识，用于依赖引用和 rules 匹配
     generates: proposal.md # 必需：输出文件名，支持 glob（如 specs/**/*.md）
-    description: ...       # 可选：artifact 的简短描述
+    description: ...       # 必需：artifact 的简短描述（z.string()，没有 .optional()）
     template: proposal.md  # 必需：templates/ 下的文件名
-    instruction: |         # 必需（建议）：给 AI 的生成指令
+    instruction: |         # 可选（z.string().optional()），但强烈建议写
       ...
     requires:              # 可选：依赖的 artifact id 列表
       - research
@@ -205,6 +205,7 @@ description: spec-driven + 审核步骤
 artifacts:
   - id: proposal
     generates: proposal.md
+    description: change 提案
     template: proposal.md
     instruction: |
       创建 proposal 文档。
@@ -212,6 +213,7 @@ artifacts:
 
   - id: specs
     generates: "specs/**/*.md"
+    description: 变更规格
     template: spec.md
     instruction: |
       创建规格文件。
@@ -219,6 +221,7 @@ artifacts:
 
   - id: design
     generates: design.md
+    description: 技术设计文档
     template: design.md
     instruction: |
       创建技术设计文档。
@@ -239,6 +242,7 @@ artifacts:
 
   - id: tasks
     generates: tasks.md
+    description: 实现任务清单
     template: tasks.md
     instruction: |
       基于 specs、design 和 review 创建任务清单。
