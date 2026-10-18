@@ -65,7 +65,7 @@
 ## C. `_openspec_handbook/`（逐条核，已完成）
 - [x] C1 入门：01 已含 v1.8.0 提示（Codex `.agents/skills`、`$openspec-*`）；99-FAQ 工具清单修正（Windsurf→Devin、补 v1.8.0 工具行）
 - [x] C2 archive 实战：99-FAQ 已含 `retire_capabilities`
-- [x] C3 validate 章节：09 三处修正（validate 不再"从不打开主 spec"、SHALL/MUST 为 guidance）；00-index validate 行、15-实战 validate 声称修正
+- [x] C3 validate 章节：26 三处修正（validate 不再"从不打开主 spec"、SHALL/MUST 为 guidance）；00-index validate 行、55-实战 validate 声称修正
 - [x] C4 90-附录 status JSON 示例改写为真实形状（changeName/artifacts[]/isPlanningComplete/nextSteps/actionContext；旧 `todo/in_progress/nextRecommended` 移除）
 - [~] C5 README / 00-index / 版本日志：版本表正确（v1.6 对齐 1.8.0），无新增章节故不加版本行；README 待最后核对
 
@@ -100,11 +100,11 @@
 
 ## D4. handbook 深度补漏（用户指出"更新严重不够"后的第二遍正文核查）
 - [x] D4-1 确认问题模式：同步只在每章顶部加 v1.8.0 提示块，正文读者遇到旧行为处未改 → 逐个正文核查
-- [x] D4-2 `12-实战-修改artifacts` 第 3 节修改表：`specs/<capability>/spec.md` 行补 retire（REMOVED 拿掉最后一个 requirement → `retire_capabilities: true`）；`tasks.md` 行补缩进子任务计入；`.openspec.yaml` 行补 retire 与 schema 并存
-- [x] D4-3 `11-实战-change走主线` 第 5 步（tasks）：补 v1.8.0 缩进子任务计数提示 + 四命令共享 parser
-- [x] D4-4 `15-实战-多人协作` 场景 3：补"退役 vs 在途 MODIFIED"冲突（validate 通过 / archive 拒绝 target spec does not exist）
+- [x] D4-2 `52-实战-修改artifacts` 第 3 节修改表：`specs/<capability>/spec.md` 行补 retire（REMOVED 拿掉最后一个 requirement → `retire_capabilities: true`）；`tasks.md` 行补缩进子任务计入；`.openspec.yaml` 行补 retire 与 schema 并存
+- [x] D4-3 `51-实战-change走主线` 第 5 步（tasks）：补 v1.8.0 缩进子任务计数提示 + 四命令共享 parser
+- [x] D4-4 `55-实战-多人协作` 场景 3：补"退役 vs 在途 MODIFIED"冲突（validate 通过 / archive 拒绝 target spec does not exist）
 - [x] D4-5 `90-附录-agent协议`：instructions 示例字段名对齐真实形状（`change`→`changeName`、`outputPath`→`resolvedOutputPath`、dependencies 对象化 + unlocks）
-- [~] D4-6 核对无需改：01/02/03/04/05/06/07/08/10/13/14 正文无 v1.8.0 硬性过时（validate/SHALL/status/archive 声称已逐条扫过）；ch10 已含 `.agents` 共享根；ch01 init 工具选择由 ch10 覆盖
+- [~] D4-6 核对无需改：01/10/20/21/22/23/24/25/50/53/54 正文无 v1.8.0 硬性过时（validate/SHALL/status/archive 声称已逐条扫过）；ch50 已含 `.agents` 共享根；ch01 init 工具选择由 ch50 覆盖
 
 ## E. 新增 FAQ：整体升级 OpenSpec + 逐项目更新（用户提出缺口）
 - [x] E1 调研 v1.8.0 升级机制：无 `openspec upgrade` 命令；全局 CLI 升级走安装方式；`openspec update` 先查版本（`getAvailableCliUpdate` 只在 update 命令调用，init 不做），npm 全局交互 TTY 可自升级并重跑；升级命令按安装方式选择（npm/pnpm/bun/yarn/volta/npx/项目依赖/源码 clone）

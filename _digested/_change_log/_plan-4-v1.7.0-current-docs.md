@@ -38,12 +38,12 @@
 
 | 主题 | `_digested/` 主落点 | `_faq_on_digested/` 主落点 | `_openspec_handbook/` 主落点 | 完成判断 |
 |---|---|---|---|---|
-| nested capability 与 context scaling | `mechanisms/03-spec-model.md`、`internal-spec-driven/04-archive-归档合并.md`、`specs_truth/01,03,04,06,08`、`spec_cli/01,02,04,08` | `11_keep-specs-aligned/`，FAQ 14 只复查不回退 | `02`、`09`、`12`、`13`、`99` | 所有 current capability 定义改为相对 path；明确“不等于 retrieval” |
-| `skip_specs` | `internal-spec-driven/00,02,05`、`schema/02`、`spec_cli/02,03,07`、`workflows/00,02,04,06` | FAQ 04、05 | `01`、`12` | 不再出现“零 delta 必然非法”这种无条件结论；列出 marker 冲突边界 |
-| config operation inputs | `internal-spec-driven/06,07`、`schema/05`、`spec_cli/01,02,03,04,07`、`workflows/01,06,07,09,10` | FAQ 03、08、13 | `04`、`05`、`06`、`12` | 有正确 YAML；明确 context/operation guidance 与 artifact rules 的不同消费者 |
-| archive / sync correctness | `mechanisms/03,04`、`internal-spec-driven/04`、`workflows/07,09,10`、`specs_truth/01,03,04,06,08` | FAQ 07、11 | `02`、`11`、`12`、`15` | Purpose 与 no-op、fence/BOM/root-delta 的表达均符合源码 |
-| CLI / agent delivery | `mechanisms/02,04`、`spec_cli/05,06`、`workflows/00`、`system/04,06` | FAQ 03、04、06、07 | README、`00`、`01`、`02`、`03`、`08`、`90`、`99` | 跨工具文字不再称 `/opsx:*` 为 universal；Claude 专篇保持 Claude 语境 |
-| runtime / store / status | `mechanisms/01`、`spec_cli/01,02,03,04,07`、`workflows/02,04,05,08,12`、`system/03`、`schema/06` | FAQ 01、12 | `07`、`08` | defaultStore、view、auto-select、numeric prefix、update 行为只在需要处补充 |
+| nested capability 与 context scaling | `mechanisms/03-spec-model.md`、`internal-spec-driven/04-archive-归档合并.md`、`specs_truth/01,03,04,06,08`、`spec_cli/01,02,04,08` | `11_keep-specs-aligned/`，FAQ 14 只复查不回退 | `10`、`26`、`52`、`53`、`99` | 所有 current capability 定义改为相对 path；明确“不等于 retrieval” |
+| `skip_specs` | `internal-spec-driven/00,02,05`、`schema/02`、`spec_cli/02,03,07`、`workflows/00,02,04,06` | FAQ 04、05 | `01`、`52` | 不再出现“零 delta 必然非法”这种无条件结论；列出 marker 冲突边界 |
+| config operation inputs | `internal-spec-driven/06,07`、`schema/05`、`spec_cli/01,02,03,04,07`、`workflows/01,06,07,09,10` | FAQ 03、08、13 | `21`、`22`、`23`、`52` | 有正确 YAML；明确 context/operation guidance 与 artifact rules 的不同消费者 |
+| archive / sync correctness | `mechanisms/03,04`、`internal-spec-driven/04`、`workflows/07,09,10`、`specs_truth/01,03,04,06,08` | FAQ 07、11 | `10`、`51`、`52`、`55` | Purpose 与 no-op、fence/BOM/root-delta 的表达均符合源码 |
+| CLI / agent delivery | `mechanisms/02,04`、`spec_cli/05,06`、`workflows/00`、`system/04,06` | FAQ 03、04、06、07 | README、`00`、`01`、`10`、`20`、`25`、`90`、`99` | 跨工具文字不再称 `/opsx:*` 为 universal；Claude 专篇保持 Claude 语境 |
+| runtime / store / status | `mechanisms/01`、`spec_cli/01,02,03,04,07`、`workflows/02,04,05,08,12`、`system/03`、`schema/06` | FAQ 01、12 | `24`、`25` | defaultStore、view、auto-select、numeric prefix、update 行为只在需要处补充 |
 
 对于一篇同时命中多主题的文档，先修正会造成错误操作的结论（archive、config、`skip_specs`），再做术语和示例清理。只含历史案例的文件可只增加一个“以下为历史快照”边界，不能为了统一数字破坏案例的时间含义。
 

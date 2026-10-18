@@ -39,8 +39,8 @@
 
 ### 三、`_openspec_handbook/`：正文对齐到 1.13.0
 
-- **版本戳**：01/02/03/06/07/09/11/12/13/14/15/90 的"当前模型"定位句由 v1.11.0 升到 1.13.0；`00-index.md` L279 标题由"v1.10.0 工具与环境速查"改为"工具与环境速查（v1.10.0 起，含 v1.12.0/v1.13.0）"。
-- **12 章**新增整节"改完怎么审：delta 保真与审阅工具（1.11.0–1.13.0）"：四类静默失效、`show --diff`/`status --all`/`validate --report findings`、advisory preflight、Purpose 占位符、判断锚点。
+- **版本戳**：01/10/20/23/24/26/51/52/53/54/55/90 的"当前模型"定位句由 v1.11.0 升到 1.13.0；`00-index.md` L279 标题由"v1.10.0 工具与环境速查"改为"工具与环境速查（v1.10.0 起，含 v1.12.0/v1.13.0）"。
+- **52 章**新增整节"改完怎么审：delta 保真与审阅工具（1.11.0–1.13.0）"：四类静默失效、`show --diff`/`status --all`/`validate --report findings`、advisory preflight、Purpose 占位符、判断锚点。
 - **26 章**补 `show --diff`、`status --all`、`validate --report findings` 与 rename 保序。
 - **51 章**补 apply 无 spec 警告与 `missingPrerequisites`。
 - **90 章**补 `instructions apply --json`（`missingPrerequisites`/`warning`）与 `validate --report findings`/`show --diff`/`status --all` 的 JSON 形状；工具投递补 Antigravity、SourceCraft、`resolveSharedSkillWriters()`。
