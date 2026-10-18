@@ -123,8 +123,8 @@ new 创建 scaffold 后，典型的后续路径：
 
 | 内容 | 行号范围（new-change.ts） |
 |---|---|
-| SkillTemplate 定义 | L10-L82 |
-| CommandTemplate 定义 | L85-L156 |
+| SkillTemplate 定义 | L28-L102 |
+| CommandTemplate 定义 | L105-L177 |
 | Step 2: 确定 schema | L31-L39 |
 | Step 3: new change | L41-L45 |
 | Step 4: status | L48-L52 |

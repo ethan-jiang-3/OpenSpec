@@ -114,8 +114,8 @@ archive template → 发现 delta specs → sync assessment
 
 | 内容 | 行号范围（sync-specs.ts） |
 |---|---|
-| SkillTemplate 定义 | L10-L153 |
-| CommandTemplate 定义 | L157-L299 |
+| SkillTemplate 定义 | L11-L287 |
+| CommandTemplate 定义 | L290-L565 |
 | Step 3: 找 delta specs | L39-L48 |
 | Step 4: 逐 capability 合并 | L50-L83 |
 | Key Principle | L119-L124 |

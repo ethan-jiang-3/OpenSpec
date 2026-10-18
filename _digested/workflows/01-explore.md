@@ -142,8 +142,8 @@ FAQ `03_explore-to-propose-change/` 是从 "Explore 怎么判断是否 propose" 
 
 | 内容 | 行号范围（explore.ts，v1.14.3） |
 |---|---|
-| SkillTemplate 定义 | L76-L399 |
-| CommandTemplate 定义 | L401-L612 |
+| SkillTemplate 定义 | L76-L398 |
+| CommandTemplate 定义 | L401-L611（文件 611 行） |
 | 捕获表（skill 版 L222-L228 / command 版 L558-L564）+ 默认 schema 限定（L220 / L556） | skill 与 command 各一份 |
 | capture 的输出路径选择（步骤 3） | skill 版 L198；command 版 L534 |
 | STORE_SELECTION_GUIDANCE 注入 | L19, L310 |
