@@ -114,3 +114,22 @@
 - Phase C 完成：FAQ 16（v1.14.1–3 升级提醒）、12（版本表三行 + 部分补强段）、06（`all_done` 与 `## Workflow follow-up`）、07（三类"归档看起来成功"）、03（capture 表限 schema + 输出路径）、17（unapplied 文本 / 清理错误码 / verify 两条口径）、README 条目描述。
 - Phase D 完成：handbook 00-index（1.14.3 + v1.12 行）、01（`all_done` 口径、`## Workflow follow-up`、archive 确认默认 Yes 与散文告警）、04（`x-*` 扩展键 + 五步 schema 解析顺序）、09（unapplied 文本归属表 + spec symlink）、12（update 的两条 glob 边界）。
 - Phase E：`pnpm run build` OK；`pnpm test` **223 files / 6585 tests 全绿**（v1.14.0 基线 216/6388）；版本一致性 package.json=`1.14.3`、SSOT=`v1.14.3 (c794978f)`、handbook 00-index=`1.14.3`；`grep "upstream main|未发版|tag 后"` 在三套资料中已清零；0012 状态已回填；`_change_log/README.md` 已加 0012 与 `_plan-10` 两行。
+### Review 轮（提交后补强）
+
+用户要求"再充分 review 一遍"后，逐条比对 `v1.14.0..v1.14.3` 的 40 个上游提交与三套资料，发现并修复 9 处遗漏/失真：
+
+| 文件 | 问题 | 处理 |
+|---|---|---|
+| `_openspec_handbook/00-index.md` | v1.12 changelog 行插在 v1.7 与 v1.11 之间（表按版本降序）；手册版本仍写 v1.11 | 行移到 v1.11 之上；`手册版本`/`本版日期`/维度说明同步到 v1.12 / 2026-10 |
+| `_openspec_handbook/99-FAQ` | archive 默认 Yes、`all_done` 口径、unapplied 文本、清理错误码、`x-` 扩展键、零宽 TTY、按需加载、`__complete` 跳遥测全部缺失 | 补 Q15/Q16/Q20b/Q27b/Q27d/Q27e（新增 3 个问题） |
+| `_faq_on_digested/11` | 完全没有"散文不会被带走"——而这正是 specs 失真的隐形来源 | 新增第 4 节 + 参考来源两行 |
+| `_digested/internal-spec-driven/02` | 仍写"informational hint，不是 error" | 改为 WARNING（v1.14.1 起）+ ADDED 受限说明 |
+| `_digested/schema/02` | specs 的 `one at a time`、tasks 的 `## Workflow follow-up` 两条 instruction 变更未记 | 两节各补一段（含原文与理由） |
+| `_openspec_handbook/08` | `generates` 行只说"支持 glob"，没有 brace 预算 | 表格行 + 一条纪律 bullet |
+| `_openspec_handbook/07` | symlink 布局只写了"不支持"，实际上是 store 的替代路径 | 新增「v1.14.x 行为修正」段，含与 store 的分工 |
+| `_faq_on_digested/09`+`10` | fork 的 schema-package 未对齐 v1.14.1 tasks 口径；两篇都没提 500 字符/结构校验落不到自定义 schema | 改 `schema.yaml` tasks instruction；两篇「已知限制」各补一条 |
+| 锚点表 | `03-new`/`07-sync`/`11-onboard` 的模板行号是 v1.13 时代的；`ff`/`verify`/`continue`/`propose` 的结束行各偏 1–2 行 | 全部按 `c794978f` worktree 重新核对 |
+
+同时补了一条 CI 事实：`8153fc5e`（#981）把 OS 矩阵每格钉死 Node 版本（三平台跑 `engines.node` 下限 20.19.0，Linux 另跑 22/24）——这条此前只在 0012 的提交清单里出现，资料正文没有。
+
+验证：`pnpm test` 223 files / 6585 tests 全绿；三套资料相对链接 0 处失效；编辑过的 `schema-package/schema.yaml` 用 `yaml` 解析器验过结构。
