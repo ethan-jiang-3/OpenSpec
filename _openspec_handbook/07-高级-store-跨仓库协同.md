@@ -277,6 +277,21 @@ openspec init --tools claude
 - `openspec/config.yaml` 逐字节保留，包括 `store:` 行；
 - 不会在本地创建 `openspec/specs/` 与 `openspec/changes/`，planning 仍留在 store。
 
+## v1.14.x 行为修正
+
+### 不想用 store，也可以把 `openspec/changes` 链到别处
+
+store 是"另一个已 checkout 仓库的 specs"的正式机制，但它要在目标仓库里跑 `store setup` 并注册。如果只是想**把本项目的 `openspec/`、`changes/` 或 `specs/` 目录物理放在其他地方**，v1.14.2 起可以直接用符号链接：
+
+| 可以链接 | 不可以 |
+|---|---|
+| `openspec/` 本身、`openspec/changes/`、`openspec/specs/` | `changes/archive/`（它必须真的在所属 changes 目录里） |
+| 单条 `specs/<capability>/spec.md`，可指向项目内任意位置 | 指向项目外、或悬空的链接 |
+
+判定口径是"叶子可以是链接，它的**父目录**仍必须在受管范围内，且链接必须解析到既有路径"。写侧在写入前后各校验一次 canonical path，链接在写前被换向会直接拒绝而不是写到未校验的文件。
+
+和 store 的分工：**store 是跨仓库的 spec 发现与引用**，symlink 只是**本仓库内的目录摆放**——它不带来 `store list` 索引、不展开 references、也不让别的仓库发现你。多人协作时注意：一个被链出去的 `specs/` 目录若在仓库外，clone 下来就是断链，通常只适合单人开发机或已统一的团队布局。
+
 ## 压缩结论
 
 1. Store 是可选的跨仓库 spec **发现索引**，不是本地 spec scaling、自动 retrieval 或协调层。
