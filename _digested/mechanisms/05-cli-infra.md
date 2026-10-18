@@ -63,6 +63,20 @@ seen flag 写 global config 时使用 raw read/merge + 临时文件 rename，不
 
 `openspec completion install` 对 PowerShell 的 managed 配置方式（脚本位置、profile 写入、backup）在 `docs/cli.md` 有正式文档（#1070）。Fish 之外的 shell 面此前只有生成器实现，现在 PowerShell 的 setup 路径有可查文档。
 
+### 依赖与安全公告清理（v1.14.1–v1.14.3）
+
+三个补丁版本里有一整类改动只在 `package.json` 和 `pnpm.overrides` 上，不影响 CLI 行为，但决定了 `npm audit` 干不干净：
+
+| 版本 | 改动 |
+|---|---|
+| v1.14.1 (#2019) | 钉 `brace-expansion` 与 `fast-uri` 越过新公告 |
+| v1.14.1 (#2048) | 在 `pnpm audit` 里显式接受当时尚未修补的 `braces` 公告 |
+| v1.14.1 (#2085) | override `shell-quote`（critical 公告） |
+| v1.14.2 (#2096) | website 侧 override `compression`（GHSA-vc2v-76pw-4v95） |
+| v1.14.3 (#2103) | 根治品：移除 `fast-glob`，`braces` 不再经由本包传递，此前那条"接受公告"的豁免随之作废 |
+
+对消费者的含义：装 `@fission-ai/openspec` 不会再把你项目的 `npm audit` 染红出 GHSA-vfj7-8cjw-p6xm（`braces`）。#2048 那条豁免只在 v1.14.1–v1.14.2 期间有意义，v1.14.3 起已无对象。
+
 ### 测试矩阵扩到 Node 20/22/24（v1.14.2 #981）
 
 CI 的 OS 矩阵每格现在显式钉 Node 版本：Linux/macOS/Windows 全跑**最老的受支持版本**（`package.json` 的 `engines.node` = `>=20.19.0`），Linux 额外跑当前 LTS 线（22、24）。改前只有 Ubuntu 用 runner 的默认 Node，macOS/Windows 的预装版本还各不相同——同一个 tag 在不同时间点测到的 Node 版本并不一样。
