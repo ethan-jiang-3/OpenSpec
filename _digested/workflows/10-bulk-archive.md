@@ -135,6 +135,11 @@ template 规定 agent 必须读代码来判断：
 | Step 3: 批量状态收集（含 `list --json` 任务进度） | L89-L124 |
 | Step 4: 冲突检测 | L126-L135 |
 | Step 5: 冲突解决 | L137-L156 |
+| Step 6: 汇总状态表 | L158-L181 |
+| Step 7: 批量确认 | L183-L210 |
+| Step 8: 逐个执行 archive | L212-L264 |
+| Step 9: 输出摘要 | L266-L361 |
+| Guardrails | L363-L390 |
 
 
 ## v1.13.1 行为更新
