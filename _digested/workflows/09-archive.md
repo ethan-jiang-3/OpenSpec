@@ -208,7 +208,7 @@ FAQ `07_archive-ready-to-archived/` 从 CLI 主线视角分析了 programmatic m
 | Step 4: sync assessment + 阻塞语义 + 结构/内容验证 | L124-L180 |
 | Step 5: 移动目录 | L182-L197（含 `mv` 代码块） |
 | Step 6: 输出摘要 | L199-L219 |
-| Guardrails | L221-L234（14 条；235-238 是返回对象的收尾） |
+| Guardrails | L221-L234（13 条；235-238 是返回对象的收尾） |
 
 ## v1.13.0–v1.13.1 正确性大修
 

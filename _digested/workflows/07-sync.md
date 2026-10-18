@@ -122,4 +122,4 @@ archive template → 发现 delta specs → sync assessment
 | Step 5: validate 主 specs（`openspec validate --specs`） | L171-L174 |
 | Step 6: 总结 | L176-L184 |
 | Key Principle: Intelligent Merging | L247-L270 |
-| Guardrails | L272-L283（12 条；284-287 是返回对象收尾） |
+| Guardrails | L272-L283（11 条；284-287 是返回对象收尾） |
