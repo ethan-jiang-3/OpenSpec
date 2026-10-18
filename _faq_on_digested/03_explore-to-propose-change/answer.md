@@ -375,7 +375,7 @@ Explore 认为可以 propose 时，agent 不应该只说”我来创建 change�
 - src/routes/oauth/*
 - auth integration tests
 
-如果你认可这个边界，我可以进入 propose workflow（Claude：`/opsx:propose add-oauth-login`；Codex：`$openspec-propose-change`）。
+如果你认可这个边界，我可以进入 propose workflow（Claude：`/opsx:propose add-oauth-login`；Codex：`$openspec-propose`）。
 ```
 
 这段说明本质上是 proposal 之前的 pre-proposal boundary check。它让用户和 agent 在创建文件前先对齐 scope。

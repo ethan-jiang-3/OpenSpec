@@ -303,7 +303,7 @@ Completed this session:
 
 ## v1.14.0 补充：任务带源定位，归档前的进度判定改 schema-aware
 
-- **apply 任务源定位**（`e7a951d`）：`instructions apply --json` 的每个 task 带 `sourcePath` + 1-based `line`（内部 `LocatedTask`/`parseLocatedTasks`，不改任务解析本身）。apply workflow 据此在确切位置勾选 → 标记完成 → 重查进度，不再靠文本匹配找 checkbox。
+- **apply 任务源定位**（`e7a9512d`，#1994，v1.14.0）：`instructions apply --json` 的每个 task 带 `sourcePath` + 1-based `line`（内部 `LocatedTask`/`parseLocatedTasks`，不改任务解析本身）。apply workflow 据此在确切位置勾选 → 标记完成 → 重查进度，不再靠文本匹配找 checkbox。
 - **归档前的任务进度改 schema-aware**（`fb1b876`，归档工作流侧）：archive workflow 读取进度时认 schema 的 `apply.tracks` 配置（含自定义任务文件/glob），不再硬编码 `tasks.md`——自定义 tracking 文件不会因 CLI 找不到默认文件而误报"未完成"。CLI `openspec archive` 自身的 checkbox 统计行为不变。
 
 ## v1.14.1 补充：`all_done` 只说明跟踪任务完成，不说明可以归档

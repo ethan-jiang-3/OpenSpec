@@ -77,7 +77,7 @@ openspec/changes/<change>/    是目录
 如果没有 OpenSpec changes 目录，会报：
 
 ```text
-No OpenSpec changes directory found. Run 'openspec init' first.
+Change '<name>' not found. Available changes: <ids>   （root 下没有任何 active change 时是 ... No active changes exist in this root.）
 ```
 
 如果指定 change 不存在，会报：
@@ -470,7 +470,7 @@ openspec instructions archive --change "<name>" --json
 ## v1.13.2–v1.14.0 补充：Windows 回退、CRLF 保持与 sync 阻塞语义
 
 - **Windows EPERM/EXDEV 回退重写**（`ba0f5087`）：`archive.ts` 的 staging rename 遇 EPERM/EXDEV 时改走 `copyThenRemoveDirectory`（源 → dest 复制后再删源）；fingerprint 检测复制窗口内的写入中断；`captureSpecSnapshots`/`restoreSpecSnapshots` 支持回滚。非 EPERM/EXDEV 的 staging 失败仍保持源目录不动。
-- **新建 spec 的回滚剪裁**（`f2812f62`）：回滚只删本次自己创建的 capability 目录；已存在的空目录保留。
+- **新建 spec 的回滚剪裁**（`f2812f6d`）：回滚只删本次自己创建的 capability 目录；已存在的空目录保留。
 - **CRLF 保持**（`1d35e908`）：新模块 `src/utils/line-endings.ts`，specs-apply 写回时 `matchLineEnding(rebuilt, previous)`——已有文件保持其行尾，只有新文件才写 LF。Windows 仓库升级后 archive 不再产生全文件行尾 diff。
 - **归档工作流的任务进度改 schema-aware**（`fb1b876`）：workflow 模板读 schema `apply.tracks` 的进度（含自定义任务文件/glob），不再误报"未完成"。
 - **OPSX 模板的 sync 阻塞语义与 sync 后结构验证**（v1.14.0，`0ff63dba`）：见 Step 14 的 v1.14.0 追加——sync 失败立即停止归档、不移 `changeRoot`，可修复后重跑。

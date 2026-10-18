@@ -27,7 +27,7 @@ brief ──→ outline ──→ tasks ──↴
 | `research` | 来源包、关键事实、证据缺口 | 没有直接对应，代码实现在这个阶段看源码就够了 |
 | `tasks` | 可追踪的写稿/编辑/发布清单 | tasks（同名，职责一致） |
 | `draft` | 完整初稿 | 没有直接对应，代码实现的"产物"是源码文件 |
-| `edit` | 编辑审读 + 修改记录 | review artifact（部分 schema 会定义） |
+| `edit` | 编辑审读 + 修改记录 | 无内置对应；内置 spec-driven 只有 proposal/specs/design/tasks，不定义 review artifact |
 | `publish` | CMS-ready 发布包（终稿 + 元数据 + 分发清单） | archive 的部分职责 |
 
 依赖关系写在 `schema.yaml` 的 `requires` 字段里：
@@ -42,17 +42,32 @@ brief ──→ outline ──→ tasks ──↴
 
 ## 关键设计决策
 
-### 为什么保留 tasks.md 文件名
+### 为什么保留 tasks 这个 artifact id（但文件名其实可以改）
 
-`openspec archive` 在 core logic 里对 `tasks.md` 有硬编码检查 —— 它通过文件名是否存在判断"apply tracking file 是否完成"。如果改成别的名字（比如 `checklist.md`），archive 会直接失败。
+**tracking 文件名是可配置的，不是硬编码。** `src/utils/task-progress.ts:106-112` 的 `findTrackedTasksArtifact()` 先读 schema 的 `apply.tracks`，拿它的值去匹配某个 artifact 的 `generates`：
 
-这个约束不是 schema 系统的问题，而是当前 archive 实现的假设：tracking file 叫 tasks。article-driven 选择保留它，以此为代价换取零源码修改的兼容性。**如果要彻底脱离代码命名习惯，需要在 OpenSpec 源码层面把 tracking filename 做成 schema 可配置项。**
+```ts
+const tracks = schema.apply?.tracks;
+if (tracks != null) return schema.artifacts.find((a) => a.generates === tracks);
+return schema.artifacts.find((a) => a.id === 'tasks');   // 没设 tracks 时才回退到 id
+```
+
+所以只要写成 `apply.tracks: checklist.md` 且某个 artifact `generates: checklist.md`，list / status / archive 都会认它。实测（自定义 schema + 一个 change）：
+
+```text
+$ openspec list --json
+{ "changes": [{ "name": "t1", "completedTasks": 1, "totalTasks": 2, "status": "in-progress" }] }
+```
+
+—— tracking 文件叫 `checklist.md`，计数照常。
+
+article-driven 仍把 artifact id 叫 `tasks`、文件名写 `tasks.md`，理由不是"不改就失败"，而是：**`apply.tracks` 必须与某个 artifact 的 `generates` 字符串完全相等**（否则会 warn `apply.tracks '<x>' does not exactly match any artifact's generates value`），沿用默认名就少一处要维护的一致性；而且 `openspec instructions apply` 等提示文案里的 "tasks" 不会让读者意外。
 
 ### 为什么 apply gate 设成 draft + tasks
 
 `apply.requires: [draft, tasks]` 的含义是："进入生产阶段"的条件是初稿骨架和施工清单都准备好。
 
-spec-driven 的 apply gate 通常是 design + tasks（技术方案 + 实现清单）。article-driven 里 design 的对应物是 outline，但 outline 偏结构骨架，真正的"内容产出"从 draft 开始。所以 gate 放在 draft：意思是"你知道要写什么、怎么写、写出来是什么样了，现在可以动笔了"。
+内置 spec-driven 的 `apply.requires` 只有 `[tasks]`——**design 不在 gate 里**（它是可选 artifact，`tasks.requires: [specs, design]` 才引用它）。article-driven 里 design 的对应物是 outline，但 outline 偏结构骨架，真正的"内容产出"从 draft 开始。所以 gate 放在 draft：意思是"你知道要写什么、怎么写、写出来是什么样了，现在可以动笔了"。
 
 同时要求 tasks 是为了让执行阶段有可追踪的进度 —— apply 的核心机制就是读 tasks、执行、勾 checkbox、继续下一个。
 
@@ -77,7 +92,7 @@ spec-driven 的 apply gate 通常是 design + tasks（技术方案 + 实现清�
 
 1. 把 `schema-package/` 下的 `schema.yaml` 和 `templates/` 复制到项目的 `openspec/schemas/article-driven/`。
 2. 创建 change：`openspec new change write-<topic> --schema article-driven`
-3. 走标准流程：`openspec status` → `openspec instructions brief` → `openspec instructions apply`
+3. 走标准流程：`openspec status --change <name>` → `openspec instructions brief --change <name>` → `openspec instructions apply --change <name>`（**`--change` 是必需的**，即使 root 下只有一个 change 也不会自动推断）
 
 agent 会像处理代码 change 一样走完 brief → outline → research → tasks → draft → edit → publish 的全流程。
 

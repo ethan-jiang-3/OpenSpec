@@ -76,10 +76,12 @@ What change do you want to work on? Describe what you want to build or fix.
 change name 需要通过 `validateChangeName()`：
 
 ```text
-^[a-z][a-z0-9]*(-[a-z0-9]+)*$
+^[a-z0-9]+(?:-[a-z0-9]+)*$
 ```
 
-也就是：小写字母开头，只含小写字母、数字和连字符；不能有空格、下划线、大写、首尾连字符、连续连字符或数字开头。
+也就是：只含小写字母、数字和连字符；不能有空格、下划线、大写、首尾连字符或连续连字符。**首字符可以是数字**——源码注释明写这个口子是为排序约定留的（`change-utils.ts:55-58`："A leading digit is allowed so ordering conventions like `100-add-feature` or `00001-add-auth` work"），实测 `openspec new change 100-add-feature` 直接成功。
+
+另外长度上限是 200 字符（`change-utils.ts:75`，超了报 `Change name is too long (200 characters max)`），避免变成一个裸的 `ENAMETOOLONG`。
 
 ## Step 2：创建 change 容器，而不是直接创建 artifacts
 

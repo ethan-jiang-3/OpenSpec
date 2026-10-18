@@ -21,7 +21,7 @@ dist/cli/index.js         ← npm 安装到机器上的（JavaScript 编译产�
 **运行 `pnpm build` 的人，不是安装的人。**
 
 ```json
-// package.json:45
+// package.json:41 (scripts) / :43 (build) / :53 (prepublishOnly)
 "scripts": {
   "build": "node build.js",
   "prepublishOnly": "pnpm run build"
@@ -48,7 +48,7 @@ dist/cli/index.js         ← npm 安装到机器上的（JavaScript 编译产�
 ### npm 发布的包里有什么？
 
 ```json
-// package.json:32-40
+// package.json:33-40
 "files": [
   "dist",       // ← 编译产物 (ts → js)
   "bin",        // ← 入口脚本 (不是 ts, 天生就是 js)
@@ -129,13 +129,33 @@ program.command('list').action(...);
 program.command('archive').action(...);
 // ... 几百行命令注册 ...
 
-program.parse();   // ← 第 510 行！这是关键！
+// 文件末尾（src/cli/index.ts:845-853）
+export { program };
+
+export function runCli(argv = process.argv): void {
+  program.parse(argv);          // ← parse 在函数里，不在顶层
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runCli();
+}
 ```
 
-这个文件有两个事实：
+这个文件有三个事实：
 
-1. **`program.parse()` 在文件顶层**（不在任何 function 里），这是 commander 的约定：`parse()` 读取 `process.argv`，匹配用户输入的子命令，执行对应的 handler
-2. **文件里没有 `export` 任何东西被消费** — 这个文件的导入方 `bin/openspec.js` 只写了 `import '../dist/cli/index.js'`，没有解构任何导出
+1. **`program.parse()` 在 `runCli()` 函数体里**（`index.ts:848`），**不在模块顶层**。模块顶层只有命令注册 + 一个"被直接运行时才执行"的守卫
+2. **模块显式导出 `program` 和 `runCli`**（`:845`、`:847`），导入方解构使用
+3. **`bin/openspec.js` 调它**：
+
+```js
+#!/usr/bin/env node
+
+import { runCli } from '../dist/cli/index.js';
+
+runCli();
+```
+
+也就是说这不是"import 即执行"，而是**标准的具名导出 + 显式调用**，外加一个 `process.argv[1] === import.meta.url` 守卫（等价于 Python 的 `if __name__ == '__main__'`，让 `node dist/cli/index.js` 也能直接跑）
 
 所以执行流程是：
 
@@ -149,61 +169,67 @@ Shell 找到 /usr/local/bin/openspec（symlink）
 内核读 shebang → 用 node 执行 bin/openspec.js
   │
   ▼
-bin/openspec.js:  import '../dist/cli/index.js'
+bin/openspec.js:  import { runCli } from '../dist/cli/index.js'
   │
   ▼
 Node.js 加载 dist/cli/index.js 模块
-  │  └─> 执行该文件的顶层代码：
+  │  └─> 执行该文件的顶层代码（只做构建，不启动）：
   │       1. import 各种依赖（commander 等）
   │       2. new Command() → 构建 program 对象
   │       3. 注册所有子命令
-  │       4. program.parse()  ← 整个 CLI 在这一行启动！
-  │          └─> 读 process.argv: ['node', 'openspec', 'init', 'myproject']
-  │          └─> 匹配到 'init' 命令
-  │          └─> 执行 init 的 action handler
-  │          └─> handler 结束 → process.exit(0) 或返回
+  │       4. 定义并导出 runCli()；顶层守卫检查 argv[1] 是否就是自己
+  │          （从 bin 进来时不是，守卫跳过）
+  │
+  ▼
+bin/openspec.js 显式调用 runCli()
+  │  └─> runCli() 里 program.parse(process.argv)
+  │        └─> 读 process.argv: ['node', 'openspec', 'init', 'myproject']
+  │        └─> 匹配到 'init' 命令
+  │        └─> 执行 init 的 action handler
+  │        └─> handler 结束 → process.exit(0) 或返回
   │
   ▼
 用户看到输出
 ```
 
-### 这个模式叫什么：side-effect import（副作用导入）
+### 这个模式叫什么：带 main 守卫的具名导出
 
-这是一种 JS 生态里常见但不常被解释的模式：
-
-```js
-// bin/openspec.js
-import '../dist/cli/index.js';
-// 我不需要它的导出，我只需要"执行它"
-```
-
-对比标准用法：
+它是**普通具名导出 + 显式调用**，不是 side-effect import：
 
 ```js
-// 标准用法：导入后自己调用
-import { run } from '../dist/cli/index.js';
-run();
+// bin/openspec.js —— 解构导出，然后自己调
+import { runCli } from '../dist/cli/index.js';
+runCli();
 ```
 
-但 OpenSpec（以及几乎所有用 commander 的 CLI）选择让入口文件「自执行」—— 文件被 import 的那一刻就是程序启动的那一刻。这样 `bin/openspec.js` 保持极简，不需要知道 CLI 入参格式。
+`src/cli/index.ts` 末端的守卫则让同一个模块既能被 import（不执行），也能被直接 `node dist/cli/index.js` 运行：
+
+```ts
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  runCli();
+}
+```
 
 ### 一个类比：Python 的 `if __name__ == '__main__'`
 
-如果你是 Python 背景：
+几乎是字面对应：
 
 ```python
-# Python 里的等价心理模型
-# bin/openspec.js 相当于：
-import dist.cli.index  # 导入就执行了，不需要再调 main()
+# dist/cli/index.ts 的等价物
+def run_cli(argv=None):
+    program.parse(argv if argv is not None else sys.argv)
 
-# dist/cli/index.js 相当于：
-def main():
-    parser.parse_args()
-
-main()  # 顶层调用 —— 文件被 import 时就会执行
+if __name__ == '__main__':
+    run_cli()
 ```
 
-Python 里通常有个 guard `if __name__ == '__main__': main()` 防止被 import 时意外执行。但 Node.js CLI 场景下正相反 —— **就是要让 import 触发执行**，因为 bin 入口的唯一职责就是执行 CLI。
+```python
+# bin/openspec.js 的等价物
+from dist.cli.index import run_cli
+run_cli()
+```
+
+两点好处和 Python 那边一样：**被 import 时不会意外执行**，**同时又能直接当脚本跑**。OpenSpec 的测试就是靠这个直接 import `runCli` 而不启动整个 CLI。
 
 ---
 
@@ -212,8 +238,8 @@ Python 里通常有个 guard `if __name__ == '__main__': main()` 防止被 impor
 | 问题 | 答案 |
 |------|------|
 | TS → JS 谁编译的？ | `pnpm build` → `build.js` → 调 tsc |
-| 什么时候编译的？ | `npm publish` 之前（prepublishOnly hook），安装者不需要编译 |
+| 什么时候编译的？ | `npm publish` 之前（`prepublishOnly`，package.json:53）。从 **registry** 安装不需要编译；但 `prepare`（:52）也是 `node build.js`，所以 git/directory 安装仍会就地构建一次 |
 | npm 包里有源码吗？ | 没有。`files` 字段只包含 `dist/`、`bin/`、`schemas/` |
 | 安装时会跑 completion 脚本吗？ | 不会。registry 包已删除 `postinstall`；completion tip 改到首次 CLI 运行后的 stderr。 |
-| 为什么 import 就跑起来了？ | ESM 的 `import` 会执行模块顶层代码，`program.parse()` 就在顶层 |
-| 这个模式叫什么？ | side-effect import / 自执行入口模块 |
+| import 会跑起来吗？ | 不会。`program.parse()` 在 `runCli()` 里，顶层只构建 program；由 bin 显式调用 |
+| 这个模式叫什么？ | 具名导出 + main 守卫（main-guard），不是 side-effect import |

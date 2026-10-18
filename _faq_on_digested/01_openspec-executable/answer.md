@@ -10,7 +10,7 @@
 npm install -g @fission-ai/openspec
 │
 ├─1─ npm 读取 package.json "bin" 字段
-│     package.json:33:
+│     package.json:30:
 │       "bin": { "openspec": "./bin/openspec.js" }
 │
 ├─2─ npm 创建符号链接（非拷贝）
@@ -27,12 +27,15 @@ npm install -g @fission-ai/openspec
 │     bin/openspec.js:1: #!/usr/bin/env node
 │     └─> 内核调用 node 执行此文件
 │
-├─4─ 入口文件三行代码
+├─4─ 入口文件四行代码
 │     bin/openspec.js 完整内容：
 │       #!/usr/bin/env node
-│       import '../dist/cli/index.js';
 │
-│     这是唯一入口。真正的 CLI 在 dist/cli/index.js
+│       import { runCli } from '../dist/cli/index.js';
+│
+│       runCli();
+│
+│     这是 npm 包的 "bin" 入口。真正的 CLI 在 dist/cli/index.js
 │
 ├─5─ TypeScript 编译产物
 │     src/cli/index.ts ──tsc──> dist/cli/index.js
@@ -100,14 +103,14 @@ $ file $(which openspec)
 
 这告诉 Node.js：此包内所有 `.js` 文件默认是 ESM。所以 `bin/openspec.js` 可以用 `import` 语法，不需要 `.mjs` 后缀。
 
-注意 `bin/openspec.js` 里只有一行 `import '../dist/cli/index.js'`。这里没有做任何 CLI 参数的预处理，也没有检查 `dist/` 是否存在 —— 如果 `dist/` 没编译（比如 dev 环境），Node.js 会直接报 `ERR_MODULE_NOT_FOUND`。
+注意 `bin/openspec.js` 只是「具名 import + 调用 `runCli()`」，没有做任何 CLI 参数的预处理（argv 由 `runCli(argv = process.argv)` 默认处理），也没有检查 `dist/` 是否存在 —— 如果 `dist/` 没编译（比如 dev 环境），Node.js 会直接报 `ERR_MODULE_NOT_FOUND`。
 
 ## 关键文件清单
 
 | 文件 | 作用 |
 |---|---|
-| `package.json` L29-31 | 声明 `"bin": {"openspec": "./bin/openspec.js"}` |
-| `bin/openspec.js` | 3 行 shebang 入口，import dist 产物 |
+| `package.json` L30-32 | 声明 `"bin": {"openspec": "./bin/openspec.js"}` |
+| `bin/openspec.js` | 4 行 shebang 入口：具名 import `runCli` 后调用它 |
 | `src/cli/index.ts` | CLI 源码（commander），所有命令的注册 |
 | `build.js` | 构建脚本，调用 tsc 编译 |
 | `tsconfig.json` | TypeScript 配置，rootDir=src → outDir=dist |
