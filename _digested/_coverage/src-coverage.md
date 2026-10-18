@@ -11,20 +11,20 @@
 | `src/core/project-config.ts` | `../schema/05-四层注入机制.md`、`../internal-spec-driven/06-config-yaml-机制与约束.md` |
 | `src/core/planning-home.ts` | `../system/03-planning-home-与-store-模型.md` |
 | `src/core/config.ts`、`src/core/global-config.ts`、`src/core/profiles.ts`、`src/core/config-schema.ts` | `../spec_cli/05-config-profile-delivery.md`、`../mechanisms/02-tool-delivery.md` |
-| `src/core/store/` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/worksets.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/references.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/root-selection.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/relationship-health.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/working-set.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/openers.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/file-state.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/core/openspec-root.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/commands/store.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/commands/context.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/commands/workset.ts`、`src/commands/workset-input.ts`、`src/commands/workset-prompts.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/commands/doctor.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/store/` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/worksets.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/references.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/root-selection.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/relationship-health.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/working-set.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/openers.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/file-state.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/openspec-root.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/commands/store.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/commands/context.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/commands/workset.ts`、`src/commands/workset-input.ts`、`src/commands/workset-prompts.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/commands/doctor.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter；v1.12.0 含 Code Assistant adapter `adapters/codeassistant.ts`；v1.14.0 新增 atomcode/codestudio/easycode/gigacode adapter 与 `command-generation/toml.ts`） |
 | `src/core/shared/skill-generation.ts` | `../mechanisms/02-tool-delivery.md` |
 | `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 起 tool-detection 有 command-drift 检测） |
@@ -47,7 +47,7 @@
 | `src/core/change-metadata/`、`src/utils/change-metadata.ts`、`src/core/change-status-policy.ts` | `../internal-spec-driven/03-apply-实施执行.md`、`../spec_cli/03-workflow-runtime-api.md` |
 | `src/commands/workflow/instructions.ts` | `../internal-spec-driven/03-apply-实施执行.md`（v1.13.0 no-spec 警告 + `missingPrerequisites` 链） |
 | `src/core/specs-apply.ts` | `../internal-spec-driven/04-archive-归档合并.md`（v1.13.0 fence 外空行压缩） |
-| `src/core/id.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `src/core/id.ts` | 未专章覆盖：它只有 store id / change id / legacy initiative id 共享的 kebab 语法（`KEBAB_ID_REGEX`、`isKebabId`、`KEBAB_ID_DESCRIPTION`），散见于 `../mechanisms/01-store-模型与仓库协同.md` 与 `../spec_cli/` 的 id 讨论 |
 
 ## 部分覆盖
 

@@ -5,21 +5,21 @@
 | 测试目录 | 对应 digest |
 |----------|-------------|
 | `test/core/artifact-graph/` | `../schema/` |
-| `test/core/store/` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/commands/store*.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/commands/context.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/commands/workset.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/commands/doctor.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/commands/declared-store-fallback.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/commands/legacy-groups-removed.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/core/references.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/core/root-selection.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/core/relationship-health.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/core/working-set.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/core/openers.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/core/file-state.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/core/openspec-root.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
-| `test/core/worksets.test.ts` | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `test/core/store/` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/commands/store*.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/commands/context.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/commands/workset.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/commands/doctor.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/commands/declared-store-fallback.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/commands/legacy-groups-removed.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/core/references.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/core/root-selection.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/core/relationship-health.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/core/working-set.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/core/openers.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/core/file-state.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/core/openspec-root.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `test/core/worksets.test.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `test/core/command-generation/`、`test/core/shared/` | `../mechanisms/02-tool-delivery.md` |
 | `test/core/completions/`、`test/core/completion-tip.test.ts`、`test/cli-e2e/completion-tip.test.ts`、`test/commands/completion.test.ts` | `../mechanisms/05-cli-infra.md` |
 | `test/core/parsers/`、`test/core/validation*.test.ts`、`test/core/converters/` | `../mechanisms/03-spec-model.md`（v1.13.0 新增 `test/core/specs-apply.fence-preservation.test.ts`、`test/core/validation.archive-preflight.test.ts`） |
@@ -76,7 +76,7 @@
 | `test/core/templates/verify-change.test.ts`、`verify-change-delta-operations.test.ts` | verify 模板按 status 契约重写（tasks/progress、Not applicable）+ 四种 delta 操作覆盖 | `../mechanisms/04-workflow-templates.md` |
 | `test/core/templates/schema-docs-instruction-parity.test.ts` | schema instruction 与 docs 声明一致 | `../schema/02-内置-spec-driven-详解.md` |
 | `test/core/completions/installers/zsh-installer.round-trip.test.ts` | zsh completion 卸载逐字节还原（对齐 0009 的 bash 版） | `../mechanisms/05-cli-infra.md` |
-| `test/commands/store-action-context.test.ts` | store-only 场景 `actionContext.allowedEditRoots` 列入 store 路径项目（#2013） | `../mechanisms/01-store-模型与仓库协同.md`（pending） |
+| `test/commands/store-action-context.test.ts` | store-only 场景 `actionContext.allowedEditRoots` 列入 store 路径项目（#2013） | `../mechanisms/01-store-模型与仓库协同.md` |
 | `test/core/config-prompts.test.ts` | config 模板引导口径（项目文档与代码事实不进 config.yaml） | `../mechanisms/05-cli-infra.md` |
 | `test/utils/path-containment.test.ts` | `assertPathWithin` 受管写路径防越界（symlink、`openspec-evil` 前缀陷阱） | `../mechanisms/05-cli-infra.md` |
 | `test/apply-docs-claims.test.ts`、`test/init-store-docs-claims.test.ts`、`test/setup-docs-claims.test.ts`、`test/skills-docs-claims.test.ts` | 用户 docs 中命令/行为声明的一致性校验 | docs-lab 文档面，digest 未单列 |
