@@ -138,7 +138,7 @@ if (effectiveProjectRoot) {
 
 ### resilience 设计
 
-config 读取失败（文件不存在、YAML 解析错误、字段类型不匹配）**不会抛异常中断流程**。每个消费点都有独立的 try/catch，失败时降级为空 config。
+config 读取失败（文件不存在、YAML 解析错误、字段类型不匹配）**不会抛异常中断流程**。原因是 **`readProjectConfig()` 自己就吞掉了所有异常**并返回 `null` 或部分 config（源码注释原话：`readProjectConfig never throws: missing/unparseable configs are null.`），所以消费点（`loadRootConfigContext()`、`createChange()`、archive instructions 等）都是**直接调用、外面不再包 try/catch**——这一点容易反过来记成"消费点各自防御"。
 
 ---
 
