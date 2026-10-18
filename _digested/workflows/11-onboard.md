@@ -112,8 +112,8 @@ Phase 3 生成 tasks 后不再"保存即继续"，拆成两次暂停：
 
 | 内容 | 行号范围（onboard.ts） |
 |---|---|
-| SkillTemplate 定义 | L73-L81 |
-| `getOnboardInstructions()` 定义 | L84+ |
+| SkillTemplate 定义 | L73-L82 |
+| `getOnboardInstructions()` 定义 | L84-L624 |
 | Preflight | L93-L109 |
 | Phase 1: Welcome | L111-L133 |
 | Phase 2: Task Selection | L135-L208 |
@@ -122,5 +122,5 @@ Phase 3 生成 tasks 后不再"保存即继续"，拆成两次暂停：
 | Phase 5: Proposal | L275-L341 |
 | Phase 6: Specs | L343-L388 |
 | Phase 7: Design | L390-L435 |
-| Phase 8: Tasks | L437+ |
+| Phase 8: Tasks | L437-L559 |
 | `EXPLORE_MODE_NOTE` / `COMMAND_REFERENCE_ROWS` / `QUICK_REFERENCE_ROWS` / `RESUME_HINTS` / `NEXT_STEP_INVITE` / `QUICK_REFERENCE_INVITE` | L18 / L29 / L40 / L55 / L61 / L67 |
