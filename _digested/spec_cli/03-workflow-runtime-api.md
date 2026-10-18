@@ -319,14 +319,13 @@ v1.7.0 新增的 archive instruction endpoint 也遵循“编译而非执行”�
 
 ### 输入
 
-- schema 名称
-- schema 解析结果
-- schema 所在目录
+- `--schema <name>`（缺省 `spec-driven`）
+- **当前工作目录**：`templates` 用 `process.cwd()` 作为 projectRoot（`templates.ts:40`），**它不参与 root / `--store` 的解析**——这一点和其他 workflow 命令不一样。所以在子目录里跑，或想查某个 registered store 的模板，会得到与预期不同的结果。
 
 ### 输出
 
 - 每个 artifact 对应的 template 路径
-- 模板来源层级：project / user / package
+- 模板来源层级：project / user / package（`--json` 形如 `{ <artifactId>: { path, source } }`）
 
 ### 它影响什么
 
