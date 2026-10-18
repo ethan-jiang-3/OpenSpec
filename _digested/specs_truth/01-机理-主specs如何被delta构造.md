@@ -39,7 +39,7 @@ openspec/changes/<id>/specs/<capability-path>/spec.md   ← delta（提案要改
 | `openspec archive <change>` | **唯一的确定写入 CLI 动词**；写前全量 fail-fast，mutation 后失败用 snapshot 尽力回滚 | 是 |
 | host 的 sync workflow（Codex: `$openspec-sync-specs`；Claude command adapter 常显示 `/opsx:sync`） | LLM 读 delta + 主 spec 再对齐，非确定、幂等 | 否（它只改 spec） |
 
-> 注意：**没有 `openspec apply` 命令**。`applySpecs()` 是 `archive` 内部调用的引擎函数，不是一个对外 CLI 动词（`src/cli/index.ts` 里 `.command('archive')` 有、`.command('apply')` 没有）。对外能以确定规则写主 spec 的路径就 `archive` 一条；想在归档前做更灵活的整段重写，走 host 的 sync workflow（它本质是让 agent 手动改 spec）。
+> 注意：**没有 `openspec apply` 命令**。delta→主 spec 的合并（`findSpecUpdates` → `buildUpdatedSpec` → `writeUpdatedSpec`，都在 `src/core/specs-apply.ts`）是 `archive` 内部调用的能力，不是一个对外 CLI 动词（`src/cli/index.ts` 里 `.command('archive')` 有、`.command('apply')` 没有）。对外能以确定规则写主 spec 的路径就 `archive` 一条；想在归档前做更灵活的整段重写，走 host 的 sync workflow（它本质是让 agent 手动改 spec）。
 
 ## 身份模型：两层「以名字为身份」，无稳定 ID
 
@@ -74,7 +74,7 @@ export function normalizeRequirementName(name: string): string {
 一个容易踩的细节：**delta 的段落标题大小写不敏感，但 requirement 名字的大小写敏感**。
 
 ```text
-## ADDED Requirements          ← 段头：getSectionCaseInsensitive()，大小写不敏感
+## ADDED Requirements          ← 段头：getSectionsCaseInsensitive()，大小写不敏感
                                 （写成 "## added requirements" 也能认）
 ### Requirement: Skill Gen     ← 名字：normalizeRequirementName()，只 trim
                                 （"Skill Gen" 与 "skill gen" 是两个不同 key）
@@ -139,7 +139,7 @@ Aborted. No files were changed.
 | 机制 | 路径 |
 |------|------|
 | 身份规范化（仅 trim） | `src/core/parsers/requirement-blocks.ts` — `normalizeRequirementName` |
-| delta 段头解析（大小写不敏感） | `src/core/parsers/requirement-blocks.ts` — `getSectionCaseInsensitive` |
+| delta 段头解析（大小写不敏感） | `src/core/parsers/requirement-blocks.ts` — `getSectionsCaseInsensitive` |
 | delta 四操作解析 | `src/core/parsers/requirement-blocks.ts` — `parseDeltaSpec` |
 | **唯一改写器** | `src/core/specs-apply.ts` — `buildUpdatedSpec` |
 | 合并顺序 RENAMED→REMOVED→MODIFIED→ADDED | `src/core/specs-apply.ts`（`Apply operations in order` 注释处） |
@@ -147,7 +147,7 @@ Aborted. No files were changed.
 | recursive capability discovery | `src/utils/spec-discovery.ts` — `discoverSpecFiles` |
 | BOM / fenced code 解析边界 | `src/core/parsers/requirement-blocks.ts`、`src/core/parsers/code-fence.ts` |
 | 落盘 | `src/core/specs-apply.ts` — `writeUpdatedSpec` |
-| 内部引擎（被 archive 调用） | `src/core/specs-apply.ts` — `applySpecs` |
+| 内部引擎（被 archive 调用） | `src/core/specs-apply.ts` — `findSpecUpdates` / `buildUpdatedSpec` / `writeUpdatedSpec`（archive 组合调用，无单一 `applySpecs` 入口） |
 | archive 流程（全量写前校验、snapshot 回滚、移动 change） | `src/core/archive.ts` |
 | CLI 命令注册（证实无 `apply`） | `src/cli/index.ts` |
 | /opsx:sync LLM 模板 | `src/core/templates/workflows/sync-specs.ts` |
