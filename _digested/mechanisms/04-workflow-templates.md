@@ -40,7 +40,7 @@ workflow template
 
 ## planning 模板：动作而非阶段
 
-`propose` 是默认 quick path：创建 change，并持续生成 artifact，直到 schema 的 apply requirements 满足。它适合用户已经有比较明确意图，想快速得到完整规划。
+`propose` 是默认 quick path：创建 change，并持续生成 artifact，**直到 `applyRequires` 及其整个 `requires` 依赖闭包都存在**（`propose.ts:146` 明确写着 "not just `apply.requires`"）——只满足 apply 的前置不够，因为 `status` 只看文件是否存在。它适合用户已经有比较明确意图，想快速得到完整规划。
 
 `new` 只创建 change scaffold，不生成 artifact 内容。它把“创建实例”和“生成内容”拆开，适合先占位、手动推进、显式选择 schema 或 initiative linkage。
 
@@ -50,7 +50,7 @@ workflow template
 
 | workflow | 创建 change | 生成 artifact | 粒度 |
 |----------|-------------|---------------|------|
-| `propose` | 会 | 会，直到可 apply | 快速完整 |
+| `propose` | 会 | 会，直到 `applyRequires` + 依赖闭包齐备 | 快速完整 |
 | `new` | 会 | 不会 | scaffold |
 | `continue` | 不一定 | 一次一个 | 增量 |
 | `ff` | 可用于已有 change | 多个 | 批量推进 |
