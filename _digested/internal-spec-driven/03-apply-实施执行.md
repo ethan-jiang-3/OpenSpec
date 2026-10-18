@@ -202,7 +202,7 @@ v1.14.0 起（`e7a951d`）这个循环是围绕 `sourcePath`/`line` 设计的：
 
 apply 的 skill 模板 (`apply-change.ts`) 末尾有一段关键声明：
 
-> "This skill supports the 'actions on a change' model:
+> "This skill supports the \"actions on a change\" model:
 > - Can be invoked anytime: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
 > - Allows artifact updates: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly"
 
