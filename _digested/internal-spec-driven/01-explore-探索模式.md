@@ -164,9 +164,11 @@ Agent: 那就不一样了。
 
 explore 明确禁止写应用代码（"Never write code or implement features"），但**可以创建 OpenSpec artifact** —— 如果用户要求。
 
-这种"捕捉"算记录思考结果，不算实施。skill 模板中的原话：
+这种"捕捉"算记录思考结果，不算实施。skill 模板中的原话（`explore.ts:82`，注意那个 **"within a confirmed scope"** 限定不能省）：
 
-> "You MAY create OpenSpec artifacts (proposals, designs, specs) if the user asks — that's capturing thinking, not implementing."
+> "You MAY create or update OpenSpec change artifacts (proposals, designs, specs) **within a confirmed scope**—that's capturing thinking, not implementing."
+
+模板紧接着还要求：第一次写操作前必须先说明会改哪些文件、问一个是/否问题，并在**下一条消息**里等用户确认；确认只覆盖你描述过的范围。
 
 **关键设计点**：agent 不应该自动捕捉。模板反复强调：
 
