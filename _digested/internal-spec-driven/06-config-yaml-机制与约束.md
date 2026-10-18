@@ -48,7 +48,7 @@ const ProjectConfigSchema = z.object({
 });
 ```
 
-> **注意**：Zod schema 中 `context` 字段**只有 `z.string().optional()`，没有 `.max(...)` 约束**。50KB 的长度上限是**在 `readProjectConfig()` 运行时手动检查**的（`project-config.ts:102-103`，用 `Buffer.byteLength` 比对 `MAX_CONTEXT_SIZE`），不在 Zod 类型定义里。Zod schema 在这里主要起"类型推导 + 文档"作用；真正的逐字段容错解析逻辑写在 `readProjectConfig()` 函数体中，而非依赖 `ProjectConfigSchema.safeParse()` 整体校验。
+> **注意**：Zod schema 中 `context` 字段**只有 `z.string().optional()`，没有 `.max(...)` 约束**。50KB 的长度上限是**在 `readProjectConfig()` 运行时手动检查**的（`project-config.ts:350-357`，用 `Buffer.byteLength` 比对 `MAX_CONTEXT_SIZE`），不在 Zod 类型定义里。Zod schema 在这里主要起"类型推导 + 文档"作用；真正的逐字段容错解析逻辑写在 `readProjectConfig()` 函数体中，而非依赖 `ProjectConfigSchema.safeParse()` 整体校验。
 
 ### 字段约束表
 
@@ -72,7 +72,7 @@ const ProjectConfigSchema = z.object({
 const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
 ```
 
-如果 `context` 字段超过 50KB，**该 context 字段被忽略并打印 warning**（不截断，全有或全无）。注意：只是忽略 `context` 字段，**不影响 config 的其他字段** —— `schema` 和 `rules` 照常生效（`project-config.ts:101-110`）。
+如果 `context` 字段超过 50KB，**该 context 字段被忽略并打印 warning**（不截断，全有或全无）。注意：只是忽略 `context` 字段，**不影响 config 的其他字段** —— `schema` 和 `rules` 照常生效（`project-config.ts:347-358`）。
 
 ### rules key 验证
 
