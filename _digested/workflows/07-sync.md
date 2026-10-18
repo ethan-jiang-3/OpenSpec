@@ -69,8 +69,9 @@ sequenceDiagram
     end
 
     rect rgb(240, 255, 240)
-        Note over MD,FS: Step 5 · 总结
+        Note over MD,FS: Step 5 · validate 主 specs
         MD-->>User: "## Specs Synced<br/>Updated: user-auth (+1 added, ~1 modified)<br/>Change remains active."
+        Note over MD,FS: Step 6 · 总结
     end
 ```
 
@@ -118,5 +119,7 @@ archive template → 发现 delta specs → sync assessment
 | CommandTemplate 定义 | L290-L566 |
 | Step 3: 找 delta specs | L49-L77 |
 | Step 4: 逐 capability 合并 | L79-L245 |
+| Step 5: validate 主 specs（`openspec validate --specs`） | L171-L174 |
+| Step 6: 总结 | L176-L184 |
 | Key Principle: Intelligent Merging | L247-L270 |
 | Guardrails | L272-L283（12 条；284-287 是返回对象收尾） |
