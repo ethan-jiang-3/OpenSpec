@@ -140,7 +140,7 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 
 ### 输入
 
-- `changeName` —— **CLI 上是必填的**：`--change <name>`。即使仓库里只有一个 change 也不会自动推断，不传直接以退出码 1 失败：`Missing required option --change. Available changes:`。
+- `changeName` —— **CLI 上是必填的**：`--change <name>`。即使仓库里只有一个 change 也不会自动推断，不传直接以退出码 1 失败。文本模式渲染为 `✖ Error: Missing required option --change. Available changes:`（换行后跟候选列表）；`--json` 时同一句话在 `status[].message` 里（`code: "change_error"`），没有 `✖ ` 前缀。
 - `artifactId`
 - 可选 schema
 - schema 里的 artifact 定义
