@@ -335,12 +335,19 @@ openspec instructions research --change intro-to-rust-async --json | jq '.'
 
 > `--change` 是**必填**的，即使仓库里只有一个 change 也不会自动推断——不传会得到 `Missing required option --change. Available changes:\n  <列出所有 change>`。
 
-输出会包含：
-- `context`（来自 config.yaml 的 project context）
-- `rules`（来自 config.yaml 的 rules.research）
+输出恒含：
+- `artifactId` / `changeName` / `changeDir` / `schemaName` / `description`
 - `template`（research.md 的模板内容）
 - `instruction`（schema.yaml 中 research 的 instruction）
-- `dependencies`（哪些 artifact 已完成/未完成）
+- `outputPath` / `resolvedOutputPath` / `existingOutputPaths`
+- `dependencies`（本 artifact 的 requires）、`unlocks`（依赖它的下游 artifact）
+- `planningHome`、`root`
+
+**条件出现**（取决于 config.yaml）：
+- `context` —— 配了 project `context` 才有
+- `rules` —— 配了 `rules.<artifactId>` 才有
+
+所以照抄上面命令时，如果 config.yaml 没配 `context`/`rules`，这两个键根本不会出现——不是命令出错。
 
 ---
 
