@@ -103,9 +103,9 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 - `done`: 输出已存在。
 - `ready`: 依赖已满足，可以开始创建。
 - `blocked`: 依赖未满足，暂时不应创建。
-- `skipped`: schema 的 specs artifact 被 change metadata 中的 `skip_specs: true` 显式跳过。该标记只适用于没有 spec-level 行为变化的 change，且不得与任何非隐藏 delta spec 文件共存。
+- `skipped`: change metadata 里 `skip_specs: true` 时，**`generates` 路径落在 `specs/` 下的 artifact**（按路径前缀判定，**不是按 artifact id 叫 `specs`**）被显式跳过。该标记只适用于没有 spec-level 行为变化的 change，且不得与任何非隐藏 delta spec 文件共存（validate 会报错，`validation/constants.ts:39`）。
 
-`skip_specs` 有两种来源：作者为纯重构/工具/文档 change 手工声明；或 v1.10.0 在 `new change` 解析到一个不产生 specs artifact 的 schema 时自动写入。后者会归一化 `./specs/`、`specs/` 和 Windows separator；两种来源进入 status 后的 `skipped` 语义相同。
+`skip_specs` 有两种来源：作者为纯重构/工具/文档 change 手工声明；或 v1.10.0 在 `new change` 解析到一个不产生 specs artifact 的 schema 时自动写入。后者的判定就是「该 schema 没有任何 artifact 的 `generates` 落在 `specs/` 下」（`change-utils.ts:190-192`），`isSpecsArtifactPath()` 本身容得下 `./specs/`、`specs/` 与 Windows 分隔符——**并没有一个单独的"归一化"步骤**；两种来源进入 status 后的 `skipped` 语义相同。
 
 ### 它影响谁
 
