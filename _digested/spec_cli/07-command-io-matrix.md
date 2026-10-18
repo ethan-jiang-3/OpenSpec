@@ -43,7 +43,7 @@
 | `store list` | 人类 + 机器 | registry | store 列表及 backend | 发现已注册的 store | 否 |
 | `store unregister` | 人类 | store id | 从 registry 删除条目 | 注销不再需要的 store | 是 |
 | `context` | 人类 + 机器 | root + references | working set（human/JSON/.code-workspace） | 查看当前上下文引用的仓库 | 否 |
-| `workset save` | 人类 | name、root、store list | `~/.openspec/worksets/worksets.yaml` | 保存多仓库打开视图 | 是 |
+| `workset create` / `list` / `open` / `remove` | 人类 | name、选中的文件夹/root、opener | 保存的 workset 定义（本地） | 保存与恢复多仓库打开视图 | 是（create/remove）/ 否（list/open 之外的开窗） |
 | `workset open` | 人类 + editor | workset name、opener | 在 editor 中打开多仓库视图 | 一键恢复开发环境 | 是 |
 | `doctor` | 人类 | root、references、store registry | 诊断报告 | 排查 store 注册/引用/checkout 健康 | 否 |
 
@@ -87,7 +87,6 @@
 - `update`
 - `new change`
 - `archive`
-- `workspace setup` / `workspace update`
 - 部分 `config` / `schema` 子命令
 
 其中：
