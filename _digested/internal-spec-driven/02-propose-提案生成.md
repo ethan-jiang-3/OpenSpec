@@ -1,6 +1,6 @@
 # 02 — propose：Proposal 生成
 
-propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用名由宿主决定：Claude 可显示 `/opsx:propose`，Codex 使用 `$openspec-propose-change`。
+propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用名由宿主决定：Claude 可显示 `/opsx:propose`，Codex 使用 `$openspec-propose`。
 
 ---
 

@@ -104,7 +104,7 @@ Referenced stores
 `openspec workset` 提供纯本地的、手动组合的、命名的多仓库打开视图：
 
 ```bash
-openspec workset save my-session --root . --store platform-api
+openspec workset create my-session --member . --member platform-api=<path/to/platform-api>
 openspec workset open my-session   # 在编辑器里打开所有 member
 openspec workset list
 ```
