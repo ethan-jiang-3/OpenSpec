@@ -87,7 +87,7 @@ artifacts:
 
 apply:
   requires: [polish]
-  tracks: polish.md
+  tracks: final.md
   instruction: |
     最终检查：格式、链接、引用完整性。确认后发布。
 ```
@@ -168,7 +168,7 @@ artifacts:
 
 apply:
   requires: [scenes]
-  tracks: scenes
+  tracks: null   # scenes 是 glob（scenes/**/*.md），tracks 无法精确匹配；显式置 null 表示不靠 artifact 图数进度
   instruction: |
     通读全稿，检查一致性、节奏、角色声音。标记需要修改的场景。
 ```
@@ -237,7 +237,7 @@ artifacts:
 
 apply:
   requires: [skills, scripts, tests]
-  tracks: tests
+  tracks: null   # tests 是 glob（tests/**/*），同上
   instruction: |
     就绪检查：所有 skill 有对应 test，所有脚本可执行。
     集成到 Agent 运行时并验证。
@@ -257,6 +257,7 @@ description: TDD 驱动的开发工作流
 artifacts:
   - id: proposal
     generates: proposal.md
+    description: TDD 提案
     template: proposal.md
     instruction: |
       创建 proposal，要求：
@@ -266,6 +267,7 @@ artifacts:
 
   - id: specs
     generates: "specs/**/*.md"
+    description: 可测试规格
     template: spec.md
     instruction: |
       写规格，强制 GIVEN/WHEN/THEN 格式。
@@ -283,6 +285,7 @@ artifacts:
 
   - id: tasks
     generates: tasks.md
+    description: TDD 任务清单
     template: tasks.md
     instruction: |
       按 TDD 顺序组织任务：测试先行，实现随后。
