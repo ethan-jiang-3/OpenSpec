@@ -34,14 +34,21 @@ openspec list --json
 返回活跃的 change 列表，让 agent 知道当前项目的 OpenSpec 上下文：
 
 ```json
-[
-  {
-    "name": "add-dark-mode",
-    "schema": "spec-driven",
-    "tasks": { "total": 7, "completed": 3 }
-  }
-]
+{
+  "changes": [
+    {
+      "name": "add-dark-mode",
+      "completedTasks": 3,
+      "totalTasks": 7,
+      "lastModified": "2026-01-01T00:00:00.000Z",
+      "status": "in-progress"
+    }
+  ],
+  "root": { "...": "解析到的 OpenSpec 根" }
+}
 ```
+
+注意字段形状（`src/core/list.ts:198-223`）：是**外层对象** `{changes, warnings?, root?}` 而非裸数组；条目用扁平的 `completedTasks`/`totalTasks`，**没有 `schema` 字段**，也没有嵌套的 `tasks` 对象。还有可选的 `warnings`（`nested_change_directory`）和条目的 `nested`/`archived`（后者只在 `--archived` 时出现）。
 
 agent 不需要对每个 change 都做处理 —— 它只是"感知"到项目中有哪些活跃 change，如果用户提到某个 change 或讨论自然地关联到它，agent 才会进一步探查。
 
@@ -106,7 +113,7 @@ explore 的提问方式在 v1.12.0 系统化：
 ---
 ## 3. 零活跃 change 场景
 
-`openspec list --json` 返回 `[]`（项目中没有活跃 change）时，explore 不需要任何 OpenSpec 上下文就能工作。agent 直接从用户的问题出发，读代码、画图、讨论方案——这和 classic 模式下的通用代码讨论没有本质区别，但 explore 的 guardrails（第 8 节）仍然适用。
+`openspec list --json` 返回 `{"changes": []}`（项目中没有活跃 change，`src/core/list.ts:153`）时，explore 不需要任何 OpenSpec 上下文就能工作。agent 直接从用户的问题出发，读代码、画图、讨论方案——这和 classic 模式下的通用代码讨论没有本质区别，但 explore 的 guardrails（第 8 节）仍然适用。
 
 只有在用户明确表示"值得做一个 change"时，agent 才会建议 `/opsx:propose`，从而进入有状态的工作流轨道。
 
