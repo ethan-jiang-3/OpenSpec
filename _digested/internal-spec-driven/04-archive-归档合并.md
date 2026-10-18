@@ -42,11 +42,11 @@ Phase 3: Move
 
 ### 2.1 proposal 验证（非阻塞）
 
-`archive.ts:96-111`：用 `Validator.validateChange()`（`src/core/validation/validator.ts`）验证 proposal.md 的结构（Why/What Changes 等 section 是否存在、长度是否合理）。但**验证失败不会阻止 archive**——proposal 验证是信息性的。
+`archive.ts` 的 `ArchiveCommand.execute()` 内（`validator.validateChange(changeFile)` 调用点）：用 `Validator.validateChange()`（`src/core/validation/validator.ts`）验证 proposal.md 的结构（Why/What Changes 等 section 是否存在、长度是否合理）。但**验证失败不会阻止 archive**——proposal 验证是信息性的。
 
 ### 2.2 delta spec 验证（阻塞）
 
-`archive.ts:113-151`：扫描 `<changeDir>/specs/` 下每个子目录中带 delta header 的文件（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）。
+`validator.validateChangeDeltaSpecs(changeDir)` 调用点：扫描 `<changeDir>/specs/` 下每个子目录中带 delta header 的文件（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）。
 
 如果发现 delta spec，用 `Validator.validateChangeDeltaSpecs()`（`src/core/validation/validator.ts`）做结构与内容验证：
 
@@ -67,7 +67,7 @@ Phase 3: Move
 
 ### 2.3 任务完成检查
 
-`archive.ts:174-194`：读取 tasks.md，统计未完成 checkbox。如果有未完成任务，警告并要求确认。与 `list` / `view` / `instructions apply` 共用 `src/utils/task-progress.ts` 的同一 parser——**缩进的子任务也计入**（旧版只认列 0 的 checkbox，未完成的 `  - [ ] 1.1.1` 会被漏掉，archive 于是"✓ Complete"却带着半截活收档）。
+`getTaskProgressForChange(changesDir, changeName, projectRoot)` 调用点：读取任务追踪文件，统计未完成 checkbox。如果有未完成任务，警告并要求确认。与 `list` / `view` / `instructions apply` 共用 `src/utils/task-progress.ts` 的同一 parser——**缩进的子任务也计入**（旧版只认列 0 的 checkbox，未完成的 `  - [ ] 1.1.1` 会被漏掉，archive 于是"✓ Complete"却带着半截活收档）。
 
 ---
 
@@ -129,7 +129,7 @@ interface DeltaPlan {
 
 ### 3.3 预验证（合并前）
 
-`specs-apply.ts:113-200`，在修改任何文件之前先做六重检查（前五项是"重复/冲突"类，最后一项是"空 delta"防护）：
+`buildUpdatedSpec()` 在修改任何文件之前先做六重检查（前五项是"重复/冲突"类，最后一项是"空 delta"防护）：
 
 1. **section 内重复**：同一个 ADDED section 内不能有两个同名 requirement；MODIFIED/REMOVED/RENAMED 同理
 2. **跨 section 冲突**：同一个 requirement 名不能同时出现在 ADDED 和 MODIFIED 中（或任何其他组合）
@@ -160,9 +160,9 @@ after:    ""（Requirements section 之后的文字）
 
 ### 3.5 按序应用操作
 
-这是整个archive 流程中最关键的代码段 (`specs-apply.ts:244-306`)。操作有严格的顺序，**不能打乱**：
+这是整个 archive 流程中最关键的代码段（`buildUpdatedSpec()` 的合并主体，`specs-apply.ts` 的 `// RENAMED` / `// REMOVED` / `// MODIFIED` / `// ADDED` 四个注释块）。操作有严格的顺序，**不能打乱**：
 
-#### 第一：RENAMED（`specs-apply.ts:245-266`）
+#### 第一：RENAMED（`specs-apply.ts` 的 `// RENAMED` 块）
 
 ```typescript
 // 1. 在 map 中查找 from → 找不到报错
@@ -175,7 +175,7 @@ after:    ""（Requirements section 之后的文字）
 
 **修复**：rename 操作现在使用 `orderedKeys` 列表追踪位置标识。rename 更新 key 而不把块移到 spec 尾部（之前的 Map delete+set 会将条目移到插入顺序末尾），因此 RENAMED + MODIFIED 同一条时 rename 保持在原位置，archive diff 更易读。
 
-#### 第二：REMOVED（`specs-apply.ts:269-281`）
+#### 第二：REMOVED（`specs-apply.ts` 的 `// REMOVED` 块）
 
 ```typescript
 // 1. 在 map 中查找 name → 找不到报错（新 spec 除外）
@@ -186,7 +186,7 @@ after:    ""（Requirements section 之后的文字）
 
 为什么 REMOVED 在 RENAMED 后？因为 RENAMED 改了 key，REMOVED 应该针对的是新 key。
 
-#### 第三：MODIFIED（`specs-apply.ts:284-297`）
+#### 第三：MODIFIED（`specs-apply.ts` 的 `// MODIFIED` 块）
 
 ```typescript
 // 1. 在 map 中查找 name → 找不到报错
@@ -196,7 +196,7 @@ after:    ""（Requirements section 之后的文字）
 
 完整的 requirement block（包括所有 scenario）必须在 MODIFIED 中提供 —— 不是 diff，是整个替换。这就是为什么 schema instruction 反复强调"copy the ENTIRE requirement block"。
 
-#### 第四：ADDED（`specs-apply.ts:300-306`）
+#### 第四：ADDED（`specs-apply.ts` 的 `// ADDED` 块）
 
 ```typescript
 // 1. 在 map 中查找 name → 已存在报错

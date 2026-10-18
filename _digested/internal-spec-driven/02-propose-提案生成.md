@@ -224,7 +224,7 @@ TO: ### Requirement: <new-name>
 <!-- Outstanding decisions or unknowns to resolve -->
 ```
 
-**instruction** (`schema.yaml:152-186`) 的关键约束：
+**instruction** (`schema.yaml:163-197`) 的关键约束：
 - **不是每次都要创建 design.md**。只有满足以下条件之一才需要：
   - 跨多个服务/模块的变更，或新的架构模式
   - 新的外部依赖，或重大数据模型变更
@@ -248,7 +248,7 @@ TO: ### Requirement: <new-name>
 - [ ] 2.2 <!-- Task description -->
 ```
 
-**instruction** (`schema.yaml:187-241`) 的约束：
+**instruction** (`schema.yaml:198-262`) 的约束：
 
 1. **"Follow the template below exactly."**
    > "The apply phase parses checkbox format to track progress. Tasks not using `- [ ]` won't be tracked."
