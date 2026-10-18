@@ -146,14 +146,15 @@
 ### `store register`
 
 - 角色：全局注册一个仓库 checkout。
-- 核心对象：store id、backend（git type + local_path + remote + branch）。
+- 核心对象：store id、backend（git type + `local_path` + 可选 `remote` / `branch`）。注意 `branch` 虽是 `store.yaml` 的合法字段（`store/foundation.ts:41`），但**没有任何 `store` 子命令带 `--branch` 选项**——它只能手工写进 store 元数据。`register` 只接受 `--id` / `--yes` / `--json`；`--remote <url>` 属于 `store setup`。
 - 产出：在 `<globalDataDir>/stores/registry.yaml` 中写入条目，在 checkout 下创建 `.openspec-store/store.yaml`。
 - 边界：只记录已有目录，不 clone、不 init。
 
-### `store list` / `unregister` / `info`
+### `store list` / `unregister` / `remove` / `doctor`
 
-- 角色：store 发现与注销。
-- 边界：纯 registry 操作，不改 store checkout 内容。
+- 角色：store 发现、注销（`unregister` 保留文件，`remove` 连本地文件夹一起删）与健康检查（`doctor`）。
+- 边界：纯 registry 操作，不改 store checkout 内容（`remove` 除外）。
+- **没有 `store info` 子命令。**
 
 ### `context`
 
