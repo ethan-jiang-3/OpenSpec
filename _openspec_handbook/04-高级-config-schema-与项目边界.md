@@ -95,7 +95,7 @@ operations:
       - Review migration/rollback evidence before archive.
 ```
 
-**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类），不支持纯文本格式。Apply/Archive 不是 artifact rule consumers：它们读取 project `context` 以及 `operations.apply/archive.guidance`；`rules.apply` / `rules.archive` 不会成为 operation 指令。
+**注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类）。写成纯文本不会报错——它会被静默忽略，只在 stderr 留一条 `Invalid 'rules' field in config (must be object)` 这类 warning。也就是说**配置看着写进去了，实际什么都没注入**，比直接报错更难发现。Apply/Archive 不是 artifact rule consumers：它们读取 project `context` 以及 `operations.apply/archive.guidance`；`rules.apply` / `rules.archive` 不会成为 operation 指令。
 
 ### config.yaml vs schema：对比表
 
@@ -306,17 +306,18 @@ schema 决定：
 
 所以 change 的实际解析顺序，通常会优先看 change 自己，再回退到项目默认。
 
-完整的解析优先级是：
+完整的解析优先级是**四步**（`resolveSchemaForChange()`，`src/utils/change-metadata.ts:260-296`）：
 
 ```text
 CLI flag（--schema）
   → change 的 .openspec.yaml
   → 项目 config.yaml 的 schema
-  → planning home 的默认 schema
   → 硬编码默认（spec-driven）
 ```
 
-注意第三、四步的顺序：**项目 config 优先于 planning home 默认**，即使 planning home 自己声明过默认 schema。两者都没有时才落到内置的 `spec-driven`。
+**没有"planning home 的默认 schema"这一层。** `REPO_DEFAULT_SCHEMA = 'spec-driven'`（`planning-home.ts:20`）只出现在 status 输出的 `planningHome.defaultSchema` 摘要字段里，从不参与 schema 名解析——所以不存在"项目 config 与 planning home 谁优先"的问题。
+
+创建新 change 时的阶梯更短，只有三步：`--schema` → `config.yaml` 的 `schema` → 默认 `spec-driven`（`change-utils.ts:142-157`）；创建后会把结果写进该 change 的 `.openspec.yaml` 钉住。
 
 还会在**当前 schema 根本不产生 specs artifact**时，由 `openspec new change` 自动写入：
 

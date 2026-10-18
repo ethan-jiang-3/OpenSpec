@@ -24,14 +24,14 @@
 
 - `openspec`：终端 CLI，例如 `openspec init`、`openspec status --json`、`openspec archive <name>`
 - `/opsx:*`：Claude 等宿主里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
-- `$openspec-*`：Codex v1.8.0 的 skills-only 入口（装在 `.agents/skills/`），例如 `$openspec-propose-change`、`$openspec-apply-change`
+- `$openspec-*`：Codex v1.8.0 的 skills-only 入口（装在 `.agents/skills/`），例如 `$openspec-propose`、`$openspec-apply-change`
 - `.claude/commands/opsx/`：Claude Code 里保存这些入口文件的位置
 
 所以不要把 `opsx` 理解成另一个产品。它只是让 agent 工具能触发 OpenSpec workflow 的入口层。
 
 ### Q5: 宿主 propose workflow 和 CLI 是什么关系？
 **A**: 
-- Claude 的 `/opsx:propose`（或 Codex 的 `$openspec-propose-change`）：宿主 workflow，agent 会按 workflow 自动跑多步 CLI
+- Claude 的 `/opsx:propose`（或 Codex 的 `$openspec-propose`）：宿主 workflow，agent 会按 workflow 自动跑多步 CLI
 - CLI 里没有 `openspec propose` 这个等价命令
 - 对应的底层步骤通常是 `openspec new change <name>`，再用 `openspec status --json` 和 `openspec instructions <artifact> --json` 生成 artifacts
 - 机器协议层面（status/instructions 返回什么、agent 怎么跑多步），详见 [90 附录·给机器看的 agent 协议](90-附录-给机器看的-agent-协议.md)
@@ -255,7 +255,7 @@ specs/
 1. 在项目里运行 `openspec init`（v1.2.0+ 会自动检测已安装的工具并预选）
 2. 也可以手动指定：`openspec init --tools claude,cursor`
 3. 运行 `openspec update` 确保 skills/commands 是最新的
-4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose-change`，Zed 为 `/openspec-propose`
+4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose`，Zed 为 `/openspec-propose`
 
 ### Q27a: Zed 和 Codex 为什么都写 `.agents/skills/`？
 **A**: 它们共用一个 OpenSpec 管理的 skill 树：v1.10.0 是 Codex、Zed Agent 与 vendor-neutral `agents` 三方，v1.11.0 起 Antigravity 也迁入（它另写 `.agents/workflows/` commands），v1.14.0 起 Amp（`.amp`/`.agents/skills` 检测）与 GSD（`.gsd` 检测）同样写入这棵树。OpenSpec 只管理 `openspec-*` 目录和 `.openspec-target` ownership marker，不创建/修改根 `AGENTS.md`；共享树每次运行只写一份，写入者由 marker 决定。

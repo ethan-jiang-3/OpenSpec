@@ -154,6 +154,8 @@ sequenceDiagram
 
 ### `openspec instructions design --json` 示例（简化）
 
+> 下面为便于阅读内联了 `//` 注释，**不是合法 JSON**；真实输出无注释。字段名与 `instruction-loader.ts:404-430` 一致。
+
 ```json
 {
   "changeName": "add-task-csv-export",                             // 所属 change
@@ -163,8 +165,12 @@ sequenceDiagram
     "changesDir": "/srv/stores/platform-api/openspec/changes",
     "defaultSchema": "spec-driven"
   },
-  "artifactPath": "openspec/changes/add-task-csv-export/design.md", // 实际输出路径
+  "artifactId": "design",                                          // artifact 身份（不是路径）
+  "schemaName": "spec-driven",                                     // 解析到的 schema
+  "changeDir": "/srv/.../openspec/changes/add-task-csv-export",
+  "outputPath": "design.md",                                       // schema 里 generates 的原值（可能是 glob）
   "resolvedOutputPath": "openspec/changes/add-task-csv-export/design.md", // 应该写到的绝对/相对路径
+  "existingOutputPaths": ["openspec/changes/add-task-csv-export/design.md"], // 已存在的具体文件（glob 时有多个）
   "template": "# Design\n\n## Approach\n## Decisions\n## Risks\n",  // 文本模板
   "instruction": "Describe technical approach and key tradeoffs.",   // 生成指令
   "context": "Stack: TypeScript, React, Node.js",                    // 项目背景（来自 config.yaml）

@@ -127,7 +127,7 @@ openspec/changes/add-dark-mode/
 
 任务全部勾完时它会告诉你 **"All tracked tasks are complete. Review or verify the change as appropriate before archiving."**——注意这是"跟踪的任务做完了"，不是"可以归档了"。归档前值得花两分钟看一眼 diff 或跑一次 verify。
 
-顺带一个写 `tasks.md` 的小习惯：**只有归档之后才能做的事**（部署验证、清理临时开关、回填指标之类）不要写成 checkbox，把它们列在 `tasks.md` 末尾的 `## Workflow follow-up` 段里——那一节是纯项目符号，不计入进度，所以不会让"任务全完成"永远差一步。
+顺带一个写 `tasks.md` 的小习惯：**只有归档之后才能做的事**（部署验证、清理临时开关、回填指标之类）不要写成 checkbox，把它们列在 `tasks.md` 末尾的 `## Workflow follow-up` 段里，写成**不带 checkbox 的普通项目符号**——`parseTaskLines()`（`task-progress.ts:74-80`）是逐行扫 checkbox 的，不认标题、不认段落边界，所以真正豁免的是"没有 `- [ ]`"，而**不是**"在 `## Workflow follow-up` 标题下"。写成了 `- [ ]` 照样计入进度，"任务全完成"就永远差一步。
 
 你可以把它理解成：
 

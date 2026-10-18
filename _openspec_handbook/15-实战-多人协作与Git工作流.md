@@ -685,7 +685,7 @@ Bob:   add-qc-report    → 也改 specs/quality/spec.md（修改 Requirement: R
 
 `/opsx:sync` 把当前 change 的全部 delta spec 按 ADDED/MODIFIED/REMOVED/RENAMED 语义合并到 `openspec/specs/` 的对应 main spec 中。关键行为：
 
-- **智能合并，不是文件覆盖**——MODIFIED 只改提到的 requirement，不改的保留原样。ADDED 如果 main spec 已经有了同名 requirement 就当 MODIFIED 处理
+- **智能合并，不是文件覆盖**——MODIFIED 只改提到的 requirement，不改的保留原样。ADDED 如果 main spec 已经有了同名 requirement 就当 MODIFIED 处理（sync workflow 模板原文：`If requirement already exists → update it to match (treat as implicit MODIFIED)`，`sync-specs.ts:114`。注意这是 **sync workflow 的行为**；程序化合并路径遇到同名 ADDED 会直接抛 `<spec> ADDED failed for header "### Requirement: X" - already exists`，`specs-apply.ts:577`）
 - **幂等**——同样的 delta 跑两次 sync，结果一样
 - **不归档**——change 仍然 active，代码实现和 tasks 不受影响
 - **sync 后再 archive**——v1.8.0（v1.7.0 起）中，sync 后的 delta 和 main spec 完全一致时，archive 是 no-op（只移动目录，不重写文件）
