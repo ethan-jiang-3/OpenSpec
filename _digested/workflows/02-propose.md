@@ -31,7 +31,7 @@ ff:       已有或新 change → 批量生成剩余 artifact → apply-ready（
    a. openspec instructions <artifact> --change "<name>" --json  # 取操作包
    b. [agent 读依赖 + 写 artifact 文件]
    c. openspec status --change "<name>" --json                   # 刷新状态
-   until applyRequires 全部 done
+   until applyRequires 及其 requires 传递闭包全部 done 或 skipped
 4. openspec status --change "<name>"       # 展示最终状态（人类可读）
 ```
 
@@ -77,7 +77,7 @@ sequenceDiagram
 
     rect rgb(240, 255, 240)
         Note over MD,FS: Step 5 · apply gate
-        MD->>MD: 检查 applyRequires 全部满足<br/>（done 或显式 skipped）
+        MD->>MD: 检查 required set 全部满足<br/>（applyRequires + requires 闭包，done 或 skipped）
         MD->>TS: openspec status --change X
         TS-->>MD: 最终状态（人类可读）
         MD-->>User: "All artifacts created! Ready for implementation."
@@ -121,13 +121,13 @@ artifact 循环里 `resolvedOutputPath` 有两副面孔：**具体路径**，或
 | 3. 委托 | `instruction` 把创建委托给某个 skill/command 时，只有它**能写到这个输出路径**才调用，否则停下告知用户 |
 | 4. 写 + 验 | 写到该输出路径，然后确认文件确实在那里 |
 
-这条规则在 propose、ff、continue 三套模板里是同一句（#2104 之前只把 `resolvedOutputPath` 当作写入目标，glob 工件会落成字面文件名或逃出 change 目录）。它和 update 的 glob 例外（[`12-update.md`](./12-update.md#v1142-起例外写在两处2083)）是一对：一边是**新建**工件时选路径，一边是**修订**已有 change 时补缺失文件，两者的包含检查口径一致。
+这条规则出现在 propose、ff、continue、explore 四套模板里（`update` 早就有等价口径；`apply` 不在其中——#2104 没碰 `apply-change.ts`）。措辞并不完全相同：propose 与 ff 是**逐字同一句**，continue 换了主语（"the `resolvedOutputPath` specified in instructions is a glob pattern"，并多一句"using the schema instruction and the change's context"），explore 则把它并进 capture 步骤 3 的长句里。四者**顺序与判定相同**：先选具体路径 → resolve symlink 后仍在 `changeRoot` 内 → 委托时只有对方能写到该路径才调用 → 写完确认文件在该路径。（#2104 之前只把 `resolvedOutputPath` 当作写入目标，glob 工件会落成字面文件名或逃出 change 目录。）它和 update 的 glob 例外（[`12-update.md`](./12-update.md#v1142-起例外写在两处2083)）是一对：一边是**新建**工件时选路径，一边是**修订**已有 change 时补缺失文件，两者的包含检查口径一致。
 
 ## Guardrails
 
 | Guardrail | 含义 |
 |---|---|
-| 创建 ALL artifacts（满足 apply.requires） | 不半途而废 |
+| 创建 ALL artifacts（required set = `applyRequires` + 沿 `requires` 边的传递闭包，不是只看 `applyRequires`） | 不半途而废 |
 | 写之前重读依赖（从磁盘，不从内存） | 用户可能已编辑过 |
 | context 不清时问用户 | 但优先保持 momentum |
 | change 同名时问用户 | 避免覆盖 |

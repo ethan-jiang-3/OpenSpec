@@ -170,7 +170,7 @@ RENAMED 分支原有的行为（FROM 名下没有时才按 TO 名读）不变；
 
 ## 源码锚点
 
-| 内容 | 行号范围（verify-change.ts，v1.14.3；skill 与 command 共享同一份步骤文本） |
+| 内容 | 行号范围（verify-change.ts，v1.14.3；skill 与 command 各有一份**重复的**步骤文本，不是同一字面量） |
 |---|---|
 | `getVerifyChangeSkillTemplate()` / `getOpsxVerifyCommandTemplate()` | L11-L221 / L223-L431（文件 431 行；两者共用同一份步骤文本，只有 frontmatter 与调用面不同） |
 | Step 1: 选择 change（含 no-tasks 列表） | L25-L36 |

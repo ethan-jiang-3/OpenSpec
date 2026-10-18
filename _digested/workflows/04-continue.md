@@ -80,10 +80,10 @@ sequenceDiagram
     rect rgb(255, 250, 240)
         Note over MD,FS: Step 2 · 状态分支
         MD->>TS: openspec status --change X --json
-        TS-->>MD: schemaName, artifacts, isComplete
+        TS-->>MD: schemaName, artifacts, isPlanningComplete<br/>（旧 CLI 称 isComplete，同值）
     end
 
-    alt isComplete: true
+    alt isPlanningComplete: true（legacy isComplete: true）
         MD-->>User: "All artifacts complete!<br/>可以 apply 或 archive。"
     else 有 ready artifact
         rect rgb(255, 240, 255)

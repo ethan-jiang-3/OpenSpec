@@ -133,14 +133,17 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 
 | CLI 命令 | 被哪些 workflow 调用 |
 |---|---|
-| `openspec list --json` | explore, continue, apply, archive, sync, verify, update |
-| `openspec status --change X --json` | **全部**（除 onboard） |
-| `openspec new change "<name>"` | propose, new, ff |
-| `openspec instructions <artifact> --json` | propose, continue, ff, update（仅大改时） |
-| `openspec instructions apply --json` | apply |
+| `openspec list --json` | **每个 template 都有**（`${PROJECT_ROOT_GUARD}` 强制它在第一次写操作前跑），由 `project-root.ts` 注入；各 workflow 自己也跑：explore、continue、apply、archive、bulk-archive、sync、verify、update |
+| `openspec status --change X --json` | 除 new 与 onboard 之外的**全部**（new 与 onboard 也各自调用一次，但不在主循环里） |
+| `openspec new change "<name>"` | explore（capture）、new、propose、ff、update |
+| `openspec instructions <artifact> --json` | propose、ff、continue、new（首个工件）、update（仅大改时） |
+| `openspec instructions apply --json` | apply、verify（Step 3 读契约）、continue/ff/propose（判断是否已 apply-ready）、explore |
 | `openspec instructions archive --json` | archive、bulk-archive（读取 operation inputs） |
-| `openspec schemas --json` | new（可选） |
-| `openspec validate` | verify |
+| `openspec instructions specs --json` | archive、sync、onboard |
+| `openspec schemas --json` | new、propose |
+| `openspec validate` | **只有 sync**（`--specs`）——verify 自己**不**跑 validate，它读 apply 契约后由 agent 判断，这个分工见 [`08-verify.md`](08-verify.md) |
+
+`status` 与 `list` 都有，但语义不同：`list` 回答"这个仓库有没有 OpenSpec root"，`status` 回答"这个 change 的工件到哪一步"。
 
 ## 运行时要点
 

@@ -201,7 +201,7 @@ FAQ `06_apply-ready-to-archive-ready/` 从工程视角分析了 task loop、chec
 
 | 内容 | 行号范围（apply-change.ts，v1.14.3） |
 |---|---|
-| 共享指令正文 `getApplyInstructions()`（skill 与 command 共用同一份文本） | L39-L225 |
+| 共享指令正文 `getApplyInstructions()`（skill 与 command 共用同一份文本） | L39-L224（Fluid Workflow 段 L219-L224） |
 | SkillTemplate 定义 | L227-L236 |
 | CommandTemplate 定义 | L238-L246（文件 246 行） |
 | Step 3: apply instructions + state 处理（含 `all_done` 语义） | L67-L105 |
@@ -216,5 +216,5 @@ FAQ `06_apply-ready-to-archive-ready/` 从工程视角分析了 task loop、chec
 ## v1.14.x 行为更新
 
 - **完成语义**（`7056a580`，#1791）：`all_done` 不再等同"可归档"；新增 `## Workflow follow-up` 约定，归档之后的步骤用纯项目符号表达，不进 checkbox 进度。
-- **glob 路径边界**（`276d0150`，#2104）：propose/ff/continue 与 apply 的 `instruction` 委托都要求「先定输出路径、再做任何创建」，且路径在 resolve symlink 后必须仍在 `changeRoot` 内；代理的 skill/command 写不到该校验过的路径时停下告知用户，而不是换个地方写。
+- **glob 路径边界**（`276d0150`，#2104）：propose/ff/continue/explore 的 `instruction` 委托都要求「先定输出路径、再做任何创建」，且路径在 resolve symlink 后必须仍在 `changeRoot` 内；代理的 skill/command 写不到该校验过的路径时停下告知用户，而不是换个地方写。**apply 不在 #2104 的改动范围内**（`276d0150` 只改 explore/continue/ff/propose/update）——apply 只负责勾选既有 checkbox，不新建 artifact，所以不涉及选路径。
 - **任务源定位不受影响**：`sourcePath`/`line` 契约（v1.14.0 引入）在本轮没有变化。

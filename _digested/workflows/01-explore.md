@@ -34,13 +34,22 @@ template 要求 agent 启动时跑一次：
 openspec list --json
 ```
 
-仅此一个命令。如果发现相关 active change，可能再跑：
+**这只是 change 清点那一步的命令**——不是 explore 全程只用这一个。发现相关 active change 时它还会：
 
 ```bash
 openspec status --change "<name>" --json
 ```
 
-但这不是强制的——explore 不强求有 change 上下文。
+`status` 不是强制的——explore 不强求有 change 上下文。
+
+OpenSpec Awareness 段里还有 spec 侧和 capture 侧的命令：
+
+| 用途 | 命令 | 何时 |
+|---|---|---|
+| 清点 capability | `openspec list --specs` | 判断讨论是否触及既有 capability |
+| 读 spec 正文 | `openspec show "<spec-id>" --type spec` | 用户提到某能力时 |
+| 项目上下文 | 读 `openspec/config.yaml` 的 `context` | 需要遵守项目约定时 |
+| 落地捕获 | `openspec new change "<name>"` → `openspec status --change "<name>" --json` → `openspec instructions <artifact-id> --change "<name>" --json` | 用户确认要捕获成 change 时 |
 
 ## 时序图
 
@@ -81,9 +90,9 @@ sequenceDiagram
     end
 ```
 
-## 五个 entry point 场景
+## 四个 entry point 场景
 
-template 里硬编码了五种典型入口的示例对话：
+template 里硬编码了四种典型入口的示例对话（`## Handling Different Entry Points`，explore.ts L253/L276/L307/L324）。**没有"空输入"这一种**——直接进入 explore mode 而不给具体入口时，template 不做特殊处理，走自由对话：
 
 | 入口 | 用户说什么 | agent 怎么回应 |
 |---|---|---|
@@ -91,7 +100,6 @@ template 里硬编码了五种典型入口的示例对话：
 | 具体问题 | "The auth system is a mess" | 读代码 → 画架构图 → 找痛点 |
 | 实施卡住 | "/opsx:explore add-auth-system" | 读 artifacts → 追踪复杂度 → 建议方向 |
 | 方案比较 | "Should we use Postgres or SQLite?" | 追问上下文 → 建对比表 → 给推荐 |
-| 空输入 | 只进入 explore mode | 自由对话 |
 
 > **v1.8.0**：捕捉成**新 change** 时必须先 `openspec new change "<name>"` scaffold（保住 `.openspec.yaml` metadata），再按 `status`/`instructions` 建 artifact；capture 后不需用户再跑额外命令。详见 `../internal-spec-driven/01-explore-探索模式.md` 第五节。
 
@@ -111,7 +119,7 @@ explore 的内置「捕获到哪里」表（New requirement → `specs/<capabili
 
 ## Guardrails
 
-template 里写了 8 条 guardrail：
+template 里写了 9 条 guardrail：
 
 | Guardrail | 类型 |
 |---|---|
@@ -120,6 +128,7 @@ template 里写了 8 条 guardrail：
 | **Don't rush** — 探索是思考时间，不是任务时间 | 姿态 |
 | **Don't force structure** — 让模式自然浮现 | 姿态 |
 | **Don't auto-capture** — 提议保存洞察，但不替用户决定。只读工具和命令不需要确认；在第一次写操作之前（含 `openspec new change`），命名拟创建/编辑的 artifacts 或文件，ask a direct yes/no question，在单独的 user message 中等待确认。答案设计/澄清问题不是写入授权。 | 硬约束 |
+| **Don't manually scaffold changes** — 绝不手建 `openspec/changes/<name>/`，一律走 `openspec new change "<name>"`（必要时 `--store <id>`），好让 `.openspec.yaml` 这类必需元数据先于工件落盘 | 硬约束 |
 | **Do visualize** — 好图胜过千言 | 鼓励 |
 | **Do explore the codebase** — 扎根现实 | 鼓励 |
 | **Do question assumptions** — 包括用户的和你自己的 | 鼓励 |
