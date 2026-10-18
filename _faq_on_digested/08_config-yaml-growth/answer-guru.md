@@ -42,7 +42,18 @@ fork 优先——它落到 `openspec/schemas/my-driven/`，跟代码一起版本
 
 ## 关键契约：config 与 schema 是 key-coupled 的
 
-你改了 artifact 集合（比如换成 `brief` / `outline` / `draft`），config.yaml 里 `rules` 的 key **必须跟着改**——`validateConfigRules`（`src/core/project-config.ts:173-191`，在 `instruction-loader.ts:300-316` 用**当前 schema 的 artifact 集**校对）会对你写 `rules.proposal:` 报 `Unknown artifact ID in rules: "proposal". Valid IDs for schema "my-driven": brief, draft, outline`，且规则永不注入。**结构层一动，提示层的 key 就得对齐。**
+你改了 artifact 集合（比如换成 `brief` / `outline` / `draft`），config.yaml 里 `rules` 的 key **必须跟着改**——`validateConfigRules`（`src/core/project-config.ts:469-486`，由 `instruction-loader.ts:381-385` 调用）会报 warning，且该条规则永不注入。真实文案是：
+
+```text
+Unknown artifact ID in rules: "proposal". It matches no artifact in any available schema. Known artifact IDs: brief, design, draft, outline, proposal, specs, tasks
+```
+
+**关键细节：校对用的是「所有已安装 schema 的 artifact ID 并集」，不是当前 change 的那个 schema。** `instruction-loader.ts:379-382` 的注释写得很明确——rules 表是全局的，而每个 change 可以用不同 schema，所以只有"在**任何**已安装 schema 里都找不到"的 key 才算 unknown。后果有两条，方向相反：
+
+- 你写 `rules.proposal:`，只要内置 `spec-driven` 还在，就**不会**报警——哪怕你当前用的是自己的 `my-driven`
+- 改名 artifact 后旧 key 也不会立刻变非法，它会静默留在 config 里、对什么都不生效
+
+所以"结构层一动，提示层的 key 就得对齐"这个建议仍然成立，但依据不是"会报错"，而是"旧 key 会静默失效"。
 
 ## 三层一起用
 

@@ -13,12 +13,12 @@
 | `src/core/config-prompts.ts` | config stub 与 language context 序列化 |
 | `src/cli/index.ts` | `init --language <language>` CLI surface |
 | `openspec/specs/cli-init/spec.md`、`test/core/init.test.ts` | flag 行为、已有 config 不覆盖与输入边界 |
-| `src/commands/config.ts:268-279` | `openspec config` 只管全局 JSON；preAction 钩子拒绝 project scope（*"Project-local config is not yet implemented"*） |
+| `src/cli/commands/config.ts:13-19` | `openspec config` 只管全局 JSON；preAction 钩子拒绝 project scope（*"Project-local config is not yet implemented"*） |
 | `src/commands/schema.ts` | `schema init --default` 写入 loader 实际读取的 `schema` 键并删除遗留 `defaultSchema`（修复；此前写入的 `defaultSchema` 不被 project config 消费者读取）——init 外唯一写 config.yaml 的地方（不碰 context/rules） |
-| `src/core/templates/workflows/propose.ts:64-65,103-105` | agent 把 context/rules 当只读约束（"do NOT include in output"） |
+| `src/core/templates/workflows/propose.ts:128-129` | agent 把 context/rules 当只读约束（"do NOT include in output"） |
 | `src/core/templates/workflows/onboard.ts` | onboard skill 全文不提 config.yaml/context/rules（grep 零匹配） |
 | `src/core/artifact-graph/instruction-loader.ts:319-321,335-336` | context/rules 缺失时静默 `undefined`；`openspec instructions` 返回带这两个字段（agent 能看到当前状态）；每次重读、即时生效 |
-| `src/core/project-config.ts:103-107,173-191` | context 50KB 硬上限（超了忽略+warning）；`validateConfigRules`：rules 用未知 artifact ID 会 warning 且不注入 |
+| `src/core/project-config.ts:248,469-486` | context 50KB 硬上限（超了忽略+warning）；`validateConfigRules`：rules 用未知 artifact ID 会 warning 且不注入 |
 | `src/core/templates/workflows/explore.ts` | Explore 是 stance（无脚本）、建项目理解（`:42-46`）；capture 表（`:117-124`）和 hand-off（`:250-273`）无 config 行 → "在 Explore 里长 config"是 emergent |
 | `src/core/artifact-graph/types.ts:4-31` | schema 结构权威：`ArtifactSchema`(id/generates/template/instruction/requires) + `ApplyPhaseSchema`(requires/tracks/instruction) + `SchemaYamlSchema`——guru 改 schema 时能动的 5 件事 |
 | `src/commands/schema.ts` | schema 工具命令：`init` / `fork` / `validate` / `which`（fork 优先：落 `openspec/schemas/` 版本控制、覆盖 package 默认） |

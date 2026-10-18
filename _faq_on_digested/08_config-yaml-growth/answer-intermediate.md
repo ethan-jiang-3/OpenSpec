@@ -33,7 +33,7 @@
 
 1. **Explore 的工作就是建项目级理解。** `explore.ts:42-46` 让 agent "Map existing architecture / Find integration points / Identify patterns already in use"。这正是 `context` 该装的（稳定的项目背景，`project-config.ts:28-32` + digested 06:244-249："context 放技术栈/领域/质量优先级"）。propose 忙着生成 artifact、apply 在实施、archive 在合并——只有 Explore 在专门建这个项目模型。
 2. **Explore 会冒出反复的模式和坑。** `explore.ts:72-73` "Identify what could go wrong"。这种"反复出错、每次都要提醒"的沉淀，正是 `rules` 该装的（digested 06:258："看 agent 反复犯什么错误，再针对性地加 rules"）。
-3. **时序闭合（最关键）。** Explore 在 propose 之前；而 `config.yaml` 每次 `openspec instructions` 都重读（`instruction-loader.ts:290-298` + digested 06:107："最新修改立即生效"）。所以你在 Explore 期间改了 config，紧接着 propose 生成 artifact 时，context/rules 已经生效（`propose.ts:64-72` 把它们当约束消费）。不用重启、不用 re-init。
+3. **时序闭合（最关键）。** Explore 在 propose 之前；而 `config.yaml` 每次 `openspec instructions` 都重读（`instruction-loader.ts:369-403` + digested 06:107："最新修改立即生效"）。所以你在 Explore 期间改了 config，紧接着 propose 生成 artifact 时，context/rules 已经生效（`propose.ts:64-72` 把它们当约束消费）。不用重启、不用 re-init。
 4. **Explore 无脚本、对话式——你的问题补上 skill 没写的那条路由。** `explore.ts:17` "stance, not a workflow"、`:23` "Curious, not prescriptive"。你问"什么是全局的"，就是把 global 发现路由到 `config.yaml`。
 
 **诚实说明：这是 emergent，不是 Explore 明示的功能。** Explore 的 capture 表（`explore.ts:117-124`）和 hand-off（`:250-273`）只列 change 级 artifact（specs/design/proposal/tasks），**没有 config.yaml 这一行**。所以 agent 不会主动把全局发现写进 config——是**你的问题**激活了它。这也正是"能人"路径的价值：你知道在 Explore 里问对的问题，agent 就有足够上下文帮你落地到 config，而不必等一个还不存在的 config 编辑命令。
@@ -85,7 +85,7 @@ openspec init --language "Japanese (ja-JP)"
 
 要让 agent **避开**：PRD 级的详细功能、本次 change 的目标、容易变的东西——这些塞进 `context` 会污染每个 artifact 的指令。详细需求放 `openspec/specs/`。
 
-长度红线：`context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:103-107`）。实践上保持在半屏以内。
+长度红线：`context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:248`（`MAX_CONTEXT_SIZE`，超限 warn 并丢弃在 :350-353））。实践上保持在半屏以内。
 
 ## 补 `rules`（按 artifact）
 
@@ -121,7 +121,7 @@ reactive 比 proactive 靠谱——因为它是真实使用反馈沉淀的，不
 | `design` | 技术决策质量 | `Design decisions must note the rejected alternative and why.` |
 | `tasks` | 可追踪性 | `Each task group must reference the spec requirement it implements.` |
 
-**key 必须是合法 artifact ID。** 让 agent 补完 `rules` 后，对照 schema 检查 key——写成 `all` / `general` 这类，每次生成指令会 warning 且规则永不注入（`src/core/project-config.ts:173-191` 的 `validateConfigRules`）。
+**key 必须是合法 artifact ID。** 让 agent 补完 `rules` 后，对照 schema 检查 key——写成 `all` / `general` 这类，每次生成指令会 warning 且规则永不注入（`src/core/project-config.ts:469-486` 的 `validateConfigRules`，由 `instruction-loader.ts:381-385` 用**所有已安装 schema 的 artifact ID 并集**校对）。
 
 ## 让 agent 用 schema 的术语
 

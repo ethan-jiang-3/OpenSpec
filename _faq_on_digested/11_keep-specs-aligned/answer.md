@@ -126,7 +126,12 @@ openspec archive <change> -y
 | `## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文 | 分组说明、迁移注意事项 |
 | Purpose 与四类 delta 段之外的任何 `## ` 段 | `## Notes`、`## Migration`、`## Open questions` |
 
-现在 `validate` 报 WARNING、`archive` 也 `warn()`，文案点名行号：`... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.`
+现在 `validate` 报 WARNING、`archive` 也 `warn()`，两者都点名行号，但**文案不同**：
+
+- `validate`（`validator.ts:268-270`）：`... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.` —— 带处置建议
+- `archive`（`specs-apply.ts:258`）：`<spec> - <text> (line N) is not carried into the main spec.` —— 只陈述事实，没有建议
+
+看到后者时照前者的建议处理即可。
 
 判断归属，而不是压掉警告：
 

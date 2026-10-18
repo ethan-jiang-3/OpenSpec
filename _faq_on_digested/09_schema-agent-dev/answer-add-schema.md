@@ -14,7 +14,7 @@ OpenSpec 的 schema 系统允许你定义自己的 artifact 种类、依赖关�
 
 **fork 优先**——`agent-dev-driven` 就是 spec-driven 的 instruction 级 fork：artifact 名和 DAG 完全一样，改的只是 design 和 tasks 的 instruction 与 template（proposal 和 specs 几乎不动）。
 
-> **fork 的对象是内置 `spec-driven`。** `agent-dev-driven` / `requirement-driven` 不再是 OpenSpec 内置 schema，所以对它们没有 "fork 内置" 一说——直接用本目录的 `schema-package/` 安装即可。
+> **fork 的对象是内置 `spec-driven`。** `agent-dev-driven` / `requirement-driven` 从来不是 OpenSpec 内置 schema（内置 `schemas/` 只有 `spec-driven`），所以对它们没有 "fork 内置" 一说——直接用本目录的 `schema-package/` 安装即可。
 
 ## 装在哪里——两个位置
 
@@ -70,10 +70,10 @@ openspec instructions tasks --change build-my-agent --json
 
 | 报错 | 原因 | 修法 |
 |------|------|------|
-| `Duplicate artifact id` | 两个 artifact 同名 | 改其中一个 |
-| `Unknown artifact id in requires` | requires 引用不存在 | 检查 id 拼写 |
+| `Duplicate artifact ID: <id>` | 两个 artifact 同名 | 改其中一个 |
+| `Invalid dependency reference in artifact '<id>': '<req>' does not exist` | requires 引用不存在 | 检查 id 拼写 |
 | `Cyclic dependency detected` | requires 成环 | 画 DAG，砍一条边 |
-| `Template file not found` | template 文件不存在 | 创建文件或改 template 字段 |
+| `Template file '<tpl>' not found for artifact '<id>'` | template 文件不存在 | 创建文件或改 template 字段 |
 
 agent 实际收到的 prompt 用 `openspec instructions <artifact> --change <name> --json` 看——instruction + template + context + dependencies 全部拼在一起。
 
@@ -82,7 +82,21 @@ agent 实际收到的 prompt 用 `openspec instructions <artifact> --change <nam
 项目默认——在 `openspec/config.yaml` 设 `schema: agent-dev-driven`。
 per-change——`openspec new change <topic> --schema agent-dev-driven`。
 
-解析优先级：CLI `--schema` > change 的 `.openspec.yaml` > config.yaml 的 `schema` 字段 > 内置 spec-driven。
+解析优先级分两种场景，**不要混用**：
+
+- **创建新 change**（`openspec new change`）：CLI `--schema` → `config.yaml` 的 `schema` 字段 → 硬编码 `spec-driven`。
+- **解析已存在的 change**（`status` / `instructions` 等）：CLI `--schema` → change 的 `.openspec.yaml` → `config.yaml` 的 `schema` 字段 → 硬编码 `spec-driven`。
+
+关键在于**创建时会把这个选择写进 `.openspec.yaml`**，实测：
+
+```text
+$ openspec new change zz --schema spec-driven
+$ cat openspec/changes/zz/.openspec.yaml
+schema: spec-driven
+created: 2026-10-18
+```
+
+所以 `--schema my-driven` 建出来的 change 会**长期钉住** `my-driven`——之后即使改 `config.yaml` 的项目默认值，也不会迁移正在进行的 change。这也解释了为什么第二条阶梯里 `.openspec.yaml` 排在 `config.yaml` 前面。
 
 ## 迭代改 schema 后要做什么
 
@@ -92,7 +106,7 @@ per-change——`openspec new change <topic> --schema agent-dev-driven`。
 
 - **fork 优先、不改内置**。直接改 `node_modules` 里的 schema 会被覆盖。
 - **每次改完先 `validate`**。schema.yaml 写错不像 config.yaml 那样 fail-open——硬错误会阻止指令生成。
-- **`apply.tracks` 用 `tasks.md`**。change 列表的进度计数硬编码了这个文件名，用别的名字计数永远是 0/0。
+- **`apply.tracks` 要精确等于某个 artifact 的 `generates`**。进度计数不认文件名，认的是这个映射：`task-progress.ts:106-112` 先取 `schema.apply.tracks`，再找 `generates` 等于它的 artifact（没设 tracks 时才回退到 id === `tasks`）。所以改名完全可行——只要 `apply.tracks` 同步改成新值。真正的坑是 **`tracks` 必须与 `generates` 字符串完全相等**，写成 glob 或目录永远匹配不上，那时才会退回按 `tasks.md` 计数并给 warning（`schema.ts:122-133`）。
 - **artifact 名和 DAG 尽量对齐 spec-driven**。除非你的领域确实需要不同的 artifact 结构——否则只改 instruction 内容就够了。
 
 ---

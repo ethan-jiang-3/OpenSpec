@@ -40,7 +40,7 @@ openspec init                → 不动 config（schema: spec-driven 一行够�
 - 放：技术栈、领域、质量优先级、兼容性约束。
 - 不放：PRD、本次 change 的目标、容易变的东西（它注入所有 artifact，临时内容会反复干扰）。
 
-`context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:103-107`）。实践上控制在半屏以内。
+`context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:248`（`MAX_CONTEXT_SIZE`，超限 warn 并丢弃在 :350-353））。实践上控制在半屏以内。
 
 写得好不好，套 handbook 06 的三个特质（见 [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md)）：**高杠杆**（一条影响很多 change）、**可判断**（有对象和方向）、**长期稳定**（不是一次性的）。6 个 bad smell（太 PRD / 太口号 / 太一次性 / 太像能力清单 / 太像 schema 定义 / 又长又稀）也都在那。
 
@@ -68,7 +68,7 @@ Do not <危险行为> unless <例外>.
 
 砍掉一切口号（`clean` / `proper` / `best practice`）——它们没判断力，白占每个 artifact 的 token。4 类规则（结构 / artifact / 测试 / 风险）的完整展开见 handbook 06。
 
-**key 必须合法**。写成 `all` / `general` → 每次生成指令 warning 且规则永不注入（`src/core/project-config.ts:173-191` 的 `validateConfigRules`）。
+**key 必须合法**。写成 `all` / `general` → 每次生成指令 warning 且规则永不注入（`src/core/project-config.ts:469-486` 的 `validateConfigRules`，由 `instruction-loader.ts:381-385` 用**所有已安装 schema 的 artifact ID 并集**校对）。
 
 ## 回响 schema 的术语
 
