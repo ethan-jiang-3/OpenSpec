@@ -134,7 +134,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | CLI 命令 | 被哪些 workflow 调用 |
 |---|---|
 | `openspec list --json` | **每个 template 都有**（`${PROJECT_ROOT_GUARD}` 强制它在第一次写操作前跑），由 `project-root.ts` 注入；各 workflow 自己也跑：explore、continue、apply、archive、bulk-archive、sync、verify、update |
-| `openspec status --change X --json` | 除 new 与 onboard 之外的**全部**（new 与 onboard 也各自调用一次，但不在主循环里） |
+| `openspec status --change X --json` | **全部** 11 个 workflow（onboard 用它列出既有 artifacts，new 用它展示首个工件的状态） |
 | `openspec new change "<name>"` | explore（capture）、new、propose、ff、update |
 | `openspec instructions <artifact> --json` | propose、ff、continue、new（首个工件）、update（仅大改时） |
 | `openspec instructions apply --json` | apply、verify（Step 3 读契约）、continue/ff/propose（判断是否已 apply-ready）、explore |
