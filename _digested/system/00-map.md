@@ -58,7 +58,7 @@ OpenSpec 当前系统
 | Schema runtime | 一次 change 应该有哪些 artifact，依赖关系是什么？ | `schema.yaml`、templates |
 | Agent runtime API | agent 此刻应该写什么、能写什么、缺什么？ | `status` / `instructions` JSON |
 | Tool delivery | 哪些 workflow 以什么形式交给哪个 coding agent？ | global config、skills、commands |
-| Store coordination | 哪些其他仓库的 specs 与当前项目相关？agent 怎么引用它们？ | `~/.openspec/stores/registry.yaml`、`openspec/config.yaml` references、working set |
+| Store coordination | 哪些其他仓库的 specs 与当前项目相关？agent 怎么引用它们？ | `<globalDataDir>/stores/registry.yaml`、`openspec/config.yaml` references、working set |
 
 ## 现有专题怎么分工
 

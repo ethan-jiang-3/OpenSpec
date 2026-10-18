@@ -78,7 +78,7 @@ openspec/specs/
 store/reference 模型提供跨 repo 上下文引用，但它也不是”agent 私有记忆”。它是本机可管理的、可读的、可检查的：
 
 ```text
-~/.openspec/stores/registry.yaml     ← 注册的 store
+<globalDataDir>/stores/registry.yaml     ← 注册的 store
 openspec/config.yaml references:     ← 声明的依赖
 openspec context                     ← 查询 working set
 ```

@@ -35,10 +35,10 @@ interface PlanningHome {
 
 ### Store：注册一个仓库
 
-Store 是**全局注册的仓库 checkout**。数据放在 `~/.openspec/stores/`：
+Store 是**全局注册的仓库 checkout**。数据放在 `<globalDataDir>/stores/`（macOS/Linux 是 `~/.local/share/openspec/stores/`，**不是** `~/.openspec`）：
 
 ```yaml
-# ~/.openspec/stores/registry.yaml
+# <globalDataDir>/stores/registry.yaml
 version: 1
 stores:
   platform-api:
@@ -61,10 +61,12 @@ remote: https://github.com/team/platform-api.git
 CLI 操作：
 
 ```bash
-openspec store register <path> --id <store-id>   # 注册
+openspec store setup [id] --remote <url>          # 新克隆一个 store 并注册（--remote 只在这有）
+openspec store register <path> --id <store-id>    # 注册已有的本地 checkout（只有 --id/--yes/--json）
 openspec store list                               # 列出
-openspec store unregister <id>                    # 注销
-openspec store info <id>                          # 详情
+openspec store unregister <id>                    # 注销（保留文件）
+openspec store remove <id>                        # 连本地文件夹一起删
+openspec store doctor [id]                        # 健康检查
 ```
 
 ### Reference：声明依赖
@@ -107,7 +109,7 @@ openspec workset open my-session   # 在编辑器里打开所有 member
 openspec workset list
 ```
 
-数据存在 `~/.openspec/worksets/worksets.yaml`。不提交、不共享、不写入 member 目录。
+数据存在 `<globalDataDir>/worksets/worksets.yaml`。不提交、不共享、不写入 member 目录。
 
 ### Doctor：健康检查
 
