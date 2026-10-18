@@ -228,12 +228,23 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 
 ### 输出包含什么
 
-- `state`
+JSON 是 `{ ...instructions, root }`（`instructions.ts:765`），`instructions` 里固定带：
+
+- `changeName` / `changeDir` / `schemaName`
 - `contextFiles`
-- `progress`
+- `progress`（`{ total, complete, remaining }`）
 - `tasks`（v1.14.0 起每项含 `sourcePath` 与 1-based `line`）
-- `missingArtifacts`
+- `taskTrackingConfigured`（schema 是否配了 tracking file）
+- `state`
 - `instruction`
+
+条件出现的字段：
+
+- `missingArtifacts` —— `apply.requires` 里仍缺的那些（**就是阻塞门**）
+- `missingPrerequisites` —— 按 build order 展开的**传递闭包**，通常比 `missingArtifacts` 长，只用于诊断提示
+- `unavailableTrackingFiles` —— 配了却读不出来的 tracking 文件
+- `warnings` / `references`
+- `context` / `operationGuidance` —— 来自 config 的 operation 层输入
 
 ### 典型状态
 
@@ -241,9 +252,12 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 
 触发条件可能有：
 
-- apply 依赖的 artifacts 还没生成。
+共有四条触发路径（`instructions.ts:634-664`）：
+
+- apply 依赖的 artifacts 还没生成（`missingArtifacts` 非空）。
 - schema 要求 tracking file 存在，但文件还不存在。
-- tracking file 存在，但里面没有任务。
+- tracking file 存在但**读不出来**，且解析不到任何任务 → instruction 为 `No readable task descriptions are available.`
+- tracking file 存在可读，但里面没有可解析的任务项。
 
 意义：
 
@@ -255,6 +269,13 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 
 - 必需 artifacts 已齐备。
 - 如果需要 tracking file，则也已存在并含有任务，或者 schema 根本不要求 tracking file。
+
+`ready` 的 `instruction` 有两套默认文案，且都**优先采用 schema 里配置的 `apply.instruction`**：
+
+| 情形 | schema 未配置时的默认文案 |
+|---|---|
+| schema 不要求 tracking file | `All required artifacts complete. Proceed with implementation.` |
+| 有 tracking file 且还有未完成任务 | `Read context files, work through pending tasks, mark complete as you go.` … |
 
 意义：
 
