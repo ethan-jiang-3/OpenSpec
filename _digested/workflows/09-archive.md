@@ -64,7 +64,7 @@ sequenceDiagram
         Note over MD,FS: Step 2 · artifact 完成度
         MD->>TS: openspec status --change X --json
         TS-->>MD: artifacts[{id, status}]
-        alt 有 artifact 未 done
+        alt 有 artifact 既非 done 也非 skipped
             MD-->>User: "Warning: N artifacts incomplete. Continue?"
             User-->>MD: y/N
         end
