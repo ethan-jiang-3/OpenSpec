@@ -253,11 +253,11 @@ root workspace 的 `pnpm-workspace.yaml` 早有 `brace-expansion` override（v1.
 
 同一手法还用在三处 barrel 上：`completion-tip.ts` 的 `CompletionFactory` 改为在**真需要判定是否已安装**时才 import；`completion-provider.ts` 的 `listSchemas` 改为直接 import `artifact-graph/resolver.js`（绕过会把 `tinyglobby` 一起拉进来的 barrel）；`failWithError` 的 ora 与 `shared-output` 也延后。
 
-效果：`--version` / `--help` 加载 **24** 个模块（原 485）；`config list`、`store list`、`doctor` 只加载自己用到的。输出、帮助文本、补全、退出码、遥测全部不变。
+效果：`--version` / `--help` 加载 **24** 个模块（原 485；这两个数出自发布说明，`test/cli-e2e/startup-modules.test.ts` 只断言"只加载 commander、零实现模块"，不校验具体计数）；`config list`、`store list`、`doctor` 只加载自己用到的。输出、帮助文本、补全、退出码、遥测全部不变。
 
 ### Tab 补全不再付遥测的账（v1.14.2 #2064）
 
-`isCompletionRun` 之外新增 `__complete` 的单独判定：Tab 每次按都会跑的解析器**完全跳过遥测与补全提示**。补全 changes/specs 时加载 **48** 个模块（原 344），且一次按键不会等 telemetry 请求，也不会在没人看得见的地方消耗掉首次运行的遥测提示。
+`isCompletionRun` 之外新增 `__complete` 的单独判定：Tab 每次按都会跑的解析器**完全跳过遥测与补全提示**。补全 changes/specs 时加载 **48** 个模块（原 344，同为发布说明数字），且一次按键不会等 telemetry 请求，也不会在没人看得见的地方消耗掉首次运行的遥测提示。
 
 ### 零宽 TTY：spinner 会挂死（v1.14.3 #2108）
 
