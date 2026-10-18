@@ -171,14 +171,14 @@ update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。�
 | 内容 | 行号范围（update-change.ts，v1.14.3） |
 |---|---|
 | continue/apply/archive/new 的 optionalWorkflow handoff 常量 | L18-L74 |
-| SkillTemplate 定义 | L76-L171 |
-| CommandTemplate 定义 | L174-L268 |
-| Step 2: 获取 artifacts（含 glob 新文件例外） | L106-L124 |
-| Step 3: 理解请求 | L126-L128 |
-| Step 4: 读 + 修订 + 一致性（含 glob 补文件协议 L131-L135） | L130-L142 |
-| Step 5: 确认 + 写入 | L144-L150 |
-| Step 6: 建议下一步 | L152-L155 |
-| Guardrails（例外在两处一致） | L163-L170 |
+| SkillTemplate 定义 | L76-L172 |
+| CommandTemplate 定义 | L174-L269 |
+| Step 2: 获取 artifacts（含 glob 新文件例外） | L108-L120 |
+| Step 3: 理解请求 | L122-L124 |
+| Step 4: 读 + 修订 + 一致性（含 glob 补文件协议） | L126-L137 |
+| Step 5: 确认 + 写入 | L139-L146 |
+| Step 6: 建议下一步 | L148-L159 |
+| Guardrails（例外在两处一致） | L161-L167（7 条；168-171 是返回对象收尾） |
 
 ## v1.13.1 行为更新
 
