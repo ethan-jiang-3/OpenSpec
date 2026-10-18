@@ -21,9 +21,15 @@
 先把 `validate` 的身份钉死（很多人这里就误会了）：
 
 - **它是 `openspec` CLI 命令**（和 `archive` 同列），**不是 `/opsx:` slash 技能**（没有 `/opsx:validate`）。
-- 它是**结构 linter**：`Validator.validateChangeDeltaSpecs()` 只读 `changeDir/specs/` 下的 delta 文件，检查它们**自身**的结构（段头齐不齐、有没有 SHALL/MUST、有没有 scenario、段内重不重名）。默认（normal）模式下，缺失 SHALL/MUST 只是 guidance（WARNING），`--strict` 才强制。它**从不打开 `openspec/specs/<cap>/spec.md`**。
+- 它是**结构 linter**：`Validator.validateChangeDeltaSpecs()` 只读 `changeDir/specs/` 下的 delta 文件，检查它们**自身**的结构（段头齐不齐、有没有 SHALL/MUST、有没有 scenario、段内重不重名）。默认（normal）模式下，缺失 SHALL/MUST 只是 guidance（WARNING），`--strict` 才强制。`Validator.validateChangeDeltaSpecs()` **本身**不碰主 spec——但 `openspec validate <change>` 会额外传 `mainSpecsDir`，于是它复用 archive 的合并器（`findArchiveBlockers` → `findSpecUpdates` + `buildUpdatedSpec`）预演一次合并冲突，命中时以 **INFO** 报告（`Archive would refuse this delta: …`）。`archive` 自己走的内部校验不传这个参数，那条预演不会跑。
 
-后果：一个 `MODIFIED` 指向一个根本不存在于主 spec 的 requirement、一个 `REMOVED` 删一个早已不在的东西、一个 `RENAMED` 改一个不存在的标题——**依旧能通过 `validate`**。这些只有等到 `archive` 时撞上，用一句 `not found` 暴露（见 `04`）。
+后果分三种，不能一概而论：
+
+- **MODIFIED 指向主 spec 里不存在的 requirement**：`buildUpdatedSpec` 会抛错，`validate <change>` 接住后报 INFO（**退出码仍是 0**）——有信号但不失败；
+- **REMOVED 删一个早已不在的东西**：`buildUpdatedSpec` 只 `warn()` 然后当作 no-op，**不抛错**，所以预演也报不出东西；
+- **RENAMED 改一个不存在的标题**：同样是静默 `continue` 的 no-op。
+
+后两种只有等到 `archive` 时才能发现。精确名找不到时，报错只说 `not found`；但如果主 spec 里存在只差大小写或内部空白的近似名（`foldRequirementName`），v1.14.x 的报错会**指名那个真实 header**，让你按它逐字改。
 
 补了其中一个缺口：当 `validate <change>` 能拿到 main specs 时，会前置检测 **MODIFIED 省略了主 spec 仍有的 scenario**——这正是 archive 拒绝的那种 loss，现在在 authoring 阶段就失败，错误信息会指名要抄回的 scenarios。其余匹配类缺口（指向不存在的 requirement、改名不存在标题等）仍是 archive 时发现。（`validate` 的完整选项/CI 用途/与 archive 的冗余关系，见 `06` 的 validate 命令参考。）
 

@@ -59,7 +59,7 @@ Phase 3: Move
 | 同一 section 内 requirement 名重复 | ERROR |
 | 同一 requirement 出现在多个 section 中（如同时 ADDED 和 MODIFIED） | ERROR |
 | requirement 文本过长 | WARNING |
-| delta 数量超过阈值 | WARNING |
+| delta 数量超过 10 个（`MAX_DELTAS_PER_CHANGE`） | **ERROR**（Zod 校验失败，一律 ERROR，archive 直接拒） |
 
 如果存在任何 ERROR，**CLI 拒绝 archive**。WARNING 只显示，不阻止。
 
@@ -154,7 +154,7 @@ body:     [RequirementBlock, RequirementBlock, ...]
 after:    ""（Requirements section 之后的文字）
 ```
 
-然后构建 `nameToBlock` map：key 是 normalized requirement name（当前 `normalizeRequirementName()` 只做 `name.trim()`），value 是完整的 `RequirementBlock`。
+然后构建 `nameToBlock` map：key 是 normalized requirement name（当前 `normalizeRequirementName()` 做的是「剥收尾 `#` run + `trim()`」，不 lower-case），value 是完整的 `RequirementBlock`。
 
 注意：`normalizeRequirementName` 只做 trim，**不做 toLowerCase**。header 匹配用的 regex 是大小写不敏感的（`/^###\s*Requirement:\s*(.+)\s*$/i`），但 map key 保留原始大小写。这意味着 `### Requirement: User Auth` 和 `### Requirement: user auth` 的 header 能被同一个 regex 匹配，但它们在 map 中是不同的 key。
 

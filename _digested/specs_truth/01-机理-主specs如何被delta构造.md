@@ -61,7 +61,8 @@ openspec/changes/<id>/specs/<capability-path>/spec.md   ← delta（提案要改
 ```ts
 // src/core/parsers/requirement-blocks.ts
 export function normalizeRequirementName(name: string): string {
-  return name.trim();   // 只 trim，不 lower-case，不做任何其他规范化
+  // 剥掉 ATX 收尾的 `#` run（`### Requirement: Foo ###` 渲染成 `Foo`），再 trim
+  return name.replace(/[ \t]+#+[ \t]*$/, '').trim();
 }
 ```
 
@@ -113,7 +114,7 @@ Aborted. No files were changed.
 
 注意几点：
 
-- 报错只输出一行 `... - not found`，**不会提示"你是否想指…"，也不会列出当前 spec 里实际存在的名字**。
+- 精确名找不到时只报一行 `... - not found`。**但如果主 spec 里有只差大小写或内部空白的近似名，报错会指名那个真实 header**（`... not found, but "### Requirement: <真实名>" exists; fix the header to match it exactly`）——这是 v1.14.x 在 identity 诊断上唯一的增强，比纯粹的 `not found` 好查多了。
 - 因为是原子的，连本来能成功创建的 `profiles`/`propose-workflow` 也一并没动。一个 delta 坏，整批不落地。
 - 这种"找不到"几乎都来自身份脆弱性：主 spec 的标题被改过、被别的 archive 重写过、或 delta 本身就指向一个从没存在过的名字。
 
@@ -138,7 +139,7 @@ Aborted. No files were changed.
 
 | 机制 | 路径 |
 |------|------|
-| 身份规范化（仅 trim） | `src/core/parsers/requirement-blocks.ts` — `normalizeRequirementName` |
+| 身份规范化（剥收尾 `#` run + trim，不 lower-case） | `src/core/parsers/requirement-blocks.ts` — `normalizeRequirementName` |
 | delta 段头解析（大小写不敏感） | `src/core/parsers/requirement-blocks.ts` — `getSectionsCaseInsensitive` |
 | delta 四操作解析 | `src/core/parsers/requirement-blocks.ts` — `parseDeltaSpec` |
 | **唯一改写器** | `src/core/specs-apply.ts` — `buildUpdatedSpec` |

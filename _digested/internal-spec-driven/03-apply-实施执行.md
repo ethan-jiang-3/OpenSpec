@@ -91,7 +91,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 计数器仍在 `src/utils/task-progress.ts`（`parseTaskLines` / `getTaskProgressDetailForChange`），`list` / `view` / `instructions apply` / `validate --archived` / archive 共享同一判断；v1.13.1 起认全 CommonMark 标记（`-`/`*`/`+`/有序 `1.`/`1)`，最多九位数字）。另注意：新模块 `src/core/validation/task-checkboxes.ts` 职责不同——它只做「tasks 文件有列表项但一个 checkbox 都没有」的检测，供 validate 警告（`09984b8`）：
 
 ```typescript
-const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
+const TASK_LINE_PATTERN = /^\s*(?:[-*+]|\d{1,9}[.)])\s*\[(?:\s*([^\]\s]?)\s*\](?![([])|\s+\])\s*(.*)/;
 ```
 
 三个关键点（v1.8.0 放宽/修正）：

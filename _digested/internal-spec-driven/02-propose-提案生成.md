@@ -254,7 +254,7 @@ TO: ### Requirement: <new-name>
 
 2. checkbox 解析（统一走共享 parser `parseTaskLines()` in `src/utils/task-progress.ts`）：
    ```typescript
-   const TASK_LINE_PATTERN = /^\s*[-*]\s*\[([\sxX])\]\s*(.*)/;
+   const TASK_LINE_PATTERN = /^\s*(?:[-*+]|\d{1,9}[.)])\s*\[(?:\s*([^\]\s]?)\s*\](?![([])|\s+\])\s*(.*)/;
    // done = checkboxMatch[1].toLowerCase() === 'x'
    ```
    - `- [ ]` → 未完成

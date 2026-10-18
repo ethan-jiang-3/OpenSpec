@@ -72,7 +72,7 @@
   <text x="140" y="410" font-size="9" fill="#4b5563">· requirement 没有稳定 ID</text>
   <text x="140" y="426" font-size="9" fill="#4b5563">· 身份 = "### Requirement: &lt;Name&gt;" 标题原文</text>
   <text x="140" y="442" font-size="9" fill="#4b5563">· normalizeRequirementName() 仅 .trim()    ⇒  大小写敏感：Login ≠ login</text>
-  <text x="140" y="458" font-size="9" fill="#4b5563">· 段头 ## ADDED Requirements 却用 getSectionCaseInsensitive    ⇒  大小写不敏感</text>
+  <text x="140" y="458" font-size="9" fill="#4b5563">· 段头 ## ADDED Requirements 却用 getSectionsCaseInsensitive    ⇒  大小写不敏感</text>
   <text x="140" y="480" font-size="9" font-weight="bold" fill="#b91c1c">★ 这个不对称 = ⑥ 身份脆弱性的根源：改个大小写，后续 delta 默默失配。</text>
-  <text x="140" y="494" font-size="8" fill="#9ca3af">源码：requirement-blocks.ts（normalizeRequirementName / getSectionCaseInsensitive）、specs-apply.ts（buildUpdatedSpec）</text>
+  <text x="140" y="494" font-size="8" fill="#9ca3af">源码：requirement-blocks.ts（normalizeRequirementName / getSectionsCaseInsensitive）、specs-apply.ts（buildUpdatedSpec）</text>
 </svg>
