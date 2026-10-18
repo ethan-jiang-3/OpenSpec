@@ -161,6 +161,16 @@ apply:
 - 要求按依赖排序
 - 每个任务要小到可在一个 session 完成
 - 每个 checkbox 自身必须写明 verification，例如测试、命令、可观察行为或交付 artifact；只有验证横跨多个实现任务时，才另列 `Integration Verification`。
+- **`## Workflow follow-up`（v1.14.1 #1791）**：instruction 原文是 `Follow the template below for tracked tasks`——**只约束被跟踪的任务**。只能发生在归档**之后**的步骤（归档、验证归档结果）不写成 checkbox，而是以普通项目符号放在 `tasks.md` 末尾一个可选的 `## Workflow follow-up` 段，instruction 明确说明它们"属于参考信息，不在跟踪任务进度之内"。判定这些步骤本身就是归档时，归档永不可能被勾上，apply 的完成度会永远卡在 N-1。示例：
+
+  ```markdown
+  ## Workflow follow-up
+
+  - Archive the change after the project's review requirements are satisfied.
+  - Verify the archived result.
+  ```
+
+  配套改动在 `apply` 的 `all_done` 文案：`All tracked tasks are complete.` / `Review or verify the change as appropriate before archiving.`——它说的是"跟踪任务完成"，不再暗示"可以归档了"。
 - **任务分组自带测试/文档（v1.14.0，schema.yaml tasks instruction）**：每个任务组必须落好它自己这份工作需要的测试与文档，**不允许**把测试/文档集中到最后一个组——后面的组第一次运行前面的成果时，失败会级联回中间所有组造成返工。确实两者都不需要的工作（脚手架、依赖安装）可以都不带；最后一组只做集成检查。示例里对应新增的 `- [ ] 2.3 Document the export API in docs/export.md and verify the documented command runs as written`。
 
 推荐示例：

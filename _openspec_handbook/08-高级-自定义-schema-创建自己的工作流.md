@@ -272,7 +272,7 @@ apply:                          # apply 阶段配置
 | `version` | integer | 是 | 正整数 |
 | `artifacts[].id` | string | 是 | 唯一，DAG 节点标识 |
 | `artifacts[].description` | string | 是 | 对 artifact 的一句话说明 |
-| `artifacts[].generates` | string | 是 | 输出文件，支持 glob（如 `specs/**/*.md`），也认 brace expansion/extglob；brace 展开的路径限制在 change 目录内 |
+| `artifacts[].generates` | string | 是 | 输出文件，支持 glob（如 `specs/**/*.md`），也认 brace expansion/extglob；brace 展开的路径限制在 change 目录内。**有预算**：brace/括号嵌套 ≤16 层、展开 ≤1024 个模式（v1.14.3），超了在任何匹配发生前就报错，报错会点名上限 |
 | `artifacts[].template` | string | 是 | 必须对应 `templates/` 下的真实文件 |
 | `artifacts[].instruction` | string | 否 | agent 生成此 artifact 时的完整提示 |
 | `artifacts[].requires` | string[] | 否 | 依赖的 artifact id 列表，空 = DAG 起点 |
@@ -425,6 +425,7 @@ agent 不需要你在 instruction 里教它怎么沟通、怎么审查——它�
 - **artifact 名尽量对齐 spec-driven**——proposal/specs/design/tasks 这套动词用户已经会了，不要为了"领域感"发明新名字。除非你的流程真的装不进这个框架
 - **fork 优先**——比 init 和手写快，而且继承了源 schema 的验证过的 DAG
 - **装项目级、验证完再用**——`openspec/schemas/<name>/` + `openspec schema validate <name> --verbose`
+- **glob 不要堆嵌套或范围**：`{a,{b,{c,...}}}` 这类嵌套超过 16 层、`file-{1..5000}.md` 这类展开超过 1024 个模式都会被拒绝，且报错发生在匹配之前。真实 schema 只需要一两个层级——几条清晰的 glob 比一条聪明的一行更可维护。
 - **`apply.tracks` 强烈推荐 `tasks.md`**——默认脚手架和模板都用它；如果换成自定义文件名，确保有 `generates` 匹配的 artifact，且 fallback（按 `id === 'tasks'` 查找）能正确回退
 - **改 artifact id 记得同步 config.yaml 的 rules key**——key 耦合，不同步 rule 静默失效
 - **apply.instruction 保持简短**——只写执行循环和 done 标准，方法论留给 agent

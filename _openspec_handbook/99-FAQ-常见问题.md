@@ -114,6 +114,10 @@ v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 sp
 
 宿主 archive workflow 在 v1.8.0（v1.7.0 起）还会读取 `instructions archive` 的 context/guidance；已正确 early-sync 的完全一致 delta 会是 no-op，近似内容仍会报错。
 
+CLI 的确认提示是 `Proceed with spec updates? (Y/n)`——**默认 Yes，回车即更新**。只是想归档、不更新 specs（纯探索/纯工具 change）时，显式输入 `n` 或用 `--skip-specs`；脚本里别指望"回车=跳过"。
+
+全勾完 tasks 时的 `all_done` 提示是 `All tracked tasks are complete. Review or verify the change as appropriate before archiving.`——它说的是"跟踪的任务做完了"，不是"可以归档了"。
+
 ### Q16: archive 时有冲突怎么办？
 **A**: OpenSpec 不会在 main spec 写入 Git 式 conflict marker。发生真实冲突时，archive 会中止，main spec 与 change 都保持原样。正确做法是：
 
@@ -122,6 +126,10 @@ v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 sp
 3. 运行 `openspec validate <change> --type change --strict`，再 archive。
 
 完全相同、已 early-sync 的 delta 可以是 no-op；内容近似但不同仍必须人工重基线，不能期待自动合并。
+
+delta 里"归档不会带走"的文本现在会告警（v1.14.2 起）：第一个 `## ` 之前的正文、`## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文、以及除 Purpose 与四类 delta 段之外的任何 `## ` 段（`## Notes` 之类）都算。文案是 `... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.` 正常校验仍通过，`--strict` 会失败——该挪的挪，别当噪声压掉。
+
+还有一类"看起来成功其实有残留"：**change 已进 archive，但退役备份校验或清理失败**。v1.14.1 起它不再混在通用失败里，而是独立错误码 `archive_retirement_cleanup_failed`，消息会点名可能已变化的备份路径，或 fallback 复制失败留下的 staged 源。此时 change 已经在 `archive/` 里了——**重跑 archive 不会清理这些路径**，要先自己检查 archive 与所有被点名的恢复路径，保留需要的内容再动手。
 
 退役失败要按三分支判断：
 1. **只缺授权 marker**：REMOVED 拿掉最后一个 requirement，重建结果没有未归属内容时，CLI 才建议在合法 `.openspec.yaml` 中加 `retire_capabilities: true`。
@@ -164,7 +172,8 @@ profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schem
 ### Q20a: 怎样让新项目用中文或其他语言写 artifacts？
 **A**: 新项目用 `openspec init --language "简体中文"`；它会在新 config 的 `context` 写语言提示。已有 config 时该命令会失败且不覆盖，请手工合并 context。artifact prose 可本地化，但 `## ADDED Requirements`、`### Requirement:`、`#### Scenario:` 与 `SHALL`/`MUST` 保持英文。完整 YAML 和判断表见 [01](01-初级-先把-openspec-用起来.md#新项目想让-artifacts-使用中文或其他语言) 与 [06](06-高级-config-yaml-怎么写到真正好用.md#多语言greenfield-用-flagbrownfield-手改-context)。
 
----
+### Q20b: 我能在 `.openspec.yaml` 里放自己的元数据吗？
+**A**: 可以。**顶层**、以**小写 `x-`** 开头、前缀后至少一个非空白字符的键属于使用者（如 `x-tracker: SB-5497`、`x-jiraKey: ABC-1`）。值可以是任意 YAML，OpenSpec 不读也不校验它，它不改变任何行为；这类键**永远不算未知键**，所以带它们的 change 过得了 `openspec validate --strict`。`initiative:` 内部仍然严格——那里放 `x-` 键照样报错。archive 时文件连同扩展键一起搬走，不做改动。
 
 ## 高级话题
 
@@ -252,10 +261,18 @@ specs/
 **A**: 它们共用一个 OpenSpec 管理的 skill 树：v1.10.0 是 Codex、Zed Agent 与 vendor-neutral `agents` 三方，v1.11.0 起 Antigravity 也迁入（它另写 `.agents/workflows/` commands），v1.14.0 起 Amp（`.amp`/`.agents/skills` 检测）与 GSD（`.gsd` 检测）同样写入这棵树。OpenSpec 只管理 `openspec-*` 目录和 `.openspec-target` ownership marker，不创建/修改根 `AGENTS.md`；共享树每次运行只写一份，写入者由 marker 决定。
 
 ### Q27b: 为什么全局安装后没有 completion 提示？
-**A**: npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction` 的交互式 CLI 运行才会在 stderr 一次提示 `openspec completion install`；JSON、非 TTY 和 completion 子命令会 defer，CI、已安装 completions、不可支持 shell 或 `OPENSPEC_NO_COMPLETIONS=1` 会保持安静。只设置 `process.exitCode` 的失败仍会进 hook；直接 `process.exit(1)` 的失败跳过 hook且不消费提示。
+**A**: v1.14.2 起 Tab 补全走的 `__complete` 路径**完全跳过遥测**——既不会因为一次按键而等遥测请求，也不会在没人看得见的补全调用里把"首次运行的遥测提示"消费掉。补全本身的模块加载也从 344 降到 48（v1.14.1 的按需加载 + v1.14.2 的补全路径优化）。
+
+npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction` 的交互式 CLI 运行才会在 stderr 一次提示 `openspec completion install`；JSON、非 TTY 和 completion 子命令会 defer，CI、已安装 completions、不可支持 shell 或 `OPENSPEC_NO_COMPLETIONS=1` 会保持安静。只设置 `process.exitCode` 的失败仍会进 hook；直接 `process.exit(1)` 的失败跳过 hook且不消费提示。
 
 ### Q27c: custom profile 只选 archive，为什么还出现 sync？
 **A**: archive/bulk-archive 依赖 sync。v1.10.0 会在第一个依赖项前自动插入 sync；已有 sync 不重复、不重排，custom 也不会因此变成 core。
+
+### Q27d: 为什么 `openspec validate --all` 在 pre-commit 里挂住了？
+**A**: 如果它挂住（而不是报错），多半是老版本在**零宽 TTY** 上的死循环：某些 pty（lefthook、部分 CI wrapper）报告 `isTTY: true` 但 `columns: 0`，ora 清行时算出 `Infinity` 的行数，`clear()` 永远退不出来。v1.14.3 的 `canRenderSpinner()` 明确拒绝这种流——不是 TTY 才允许动效，TTY 但宽度为 0 就退化成普通输出。升级即解决。
+
+### Q27e: `openspec --help` 为什么变快了？
+**A**: v1.14.1 把命令的**注册**与**实现**拆开了：`src/cli/index.ts` 只装配 program，各命令在 `src/cli/commands/*.ts` 里注册、action 时才 `await import()` 真正的 `src/commands/*`。`--version`/`--help` 从 485 个模块降到 24 个。输出、帮助文本、补全结果、退出码、遥测行为都没变——纯加载时机重构。
 
 ### Q28: 为什么有 `.claude/` 和 `openspec/` 两个目录？
 **A**: 

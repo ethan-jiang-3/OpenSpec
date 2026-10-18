@@ -188,7 +188,7 @@ TO: ### Requirement: <new-name>
 2. **每个 requirement 至少要有一个 scenario**。
 3. **MODIFIED 必须复制完整的 requirement block**（包括所有 scenario）—— "Common pitfall: Using MODIFIED with partial content loses detail at archive time."
 4. **用 SHALL/MUST** 写规范性需求，避免 should/may。normal 模式下这条只是 guidance（缺失给 WARNING，非英语 spec 也能过），只有 `validate --strict` 才强制；写作建议不变。
-5. **requirement 描述控制在 500 字符以内**（`### Requirement:` 与首个 scenario 之间的正文）。`openspec validate` 会提示进入主 spec 后的超长描述——这是 informational hint，不是 error。写**新** requirement 时一条行为一条 requirement：示例与边界情况挪进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` block，各带自己的 scenario；**MODIFIED 下保持既有 requirement block 完整**，不要为凑长度拆分、删减或改写已有文本（那会丢掉主 spec 还有的 scenario，validate/archive 都会拒绝）。
+5. **requirement 描述控制在 500 字符以内**（`### Requirement:` 与首个 scenario 之间的正文）。`openspec validate` 会对超长描述报 **WARNING**（v1.14.1 起，此前是 informational hint）——normal 仍通过，`--strict` 失败；同一限制也作用于 change 里的 **ADDED** requirement，MODIFIED 不受限。写**新** requirement 时一条行为一条 requirement：示例与边界情况挪进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` block，各带自己的 scenario；**MODIFIED 下保持既有 requirement block 完整**，不要为凑长度拆分、删减或改写已有文本（那会丢掉主 spec 还有的 scenario，validate/archive 都会拒绝）。
 6. MODIFIED 的 workflow：
    > 1. 从 instructions JSON 读取 `planningHome.root`，在 `<planningHome.root>/openspec/specs/<capability-path>/spec.md` 中找到已有 requirement
    > 2. 复制完整的 requirement block（从 `### Requirement:` 到所有 scenario）

@@ -114,6 +114,28 @@ openspec archive <change> -y
 
 只有当整段已经面目全非、对不上号时，才升级到宿主 sync workflow（Claude 示例 `/opsx:sync`；让 agent 重对齐），或手改 spec + 再写个 rebaseline change——这是最后手段，平时用不到。
 
+## 4）写进 delta 的散文，archive 不会带走（v1.14.2 起会告警）
+
+这是"specs 对不上"的一类隐形来源：你以为写进了 delta，archive 只看 requirement 块，那些文本就留在归档目录里，主 spec 从来没有过。
+
+三处会被丢掉的文本：
+
+| 位置 | 例子 |
+|---|---|
+| 第一个 `## ` 之前的正文 | 你在 delta 文件顶上写的"这次为什么改" |
+| `## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文 | 分组说明、迁移注意事项 |
+| Purpose 与四类 delta 段之外的任何 `## ` 段 | `## Notes`、`## Migration`、`## Open questions` |
+
+现在 `validate` 报 WARNING、`archive` 也 `warn()`，文案点名行号：`... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.`
+
+判断归属，而不是压掉警告：
+
+- 对行为的约束、边界、例外 → 写进 requirement（必要时新建一个）；
+- 为什么这么改、取舍、被否掉的方案 → proposal 或 design；
+- 一次性说明、给 reviewer 的备注 → 删掉，本来就该在 PR 描述里。
+
+`# ` 标题与 `#### ` scenario 正文不在告警范围；REMOVED/RENAMED 的正文也不告警——那些位置没有"会被丢掉"的问题。
+
 ## 常见误区
 
 ### 误区 1：以为 `validate` 能查出 specs 和代码对不上
@@ -154,6 +176,8 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 | [`../../_digested/specs_truth/03-手段清单-到底有多少种修法.md`](../../_digested/specs_truth/03-手段清单-到底有多少种修法.md) | 修法：纠正型 delta、AUTHOR-NEW、DELETE/SHELVE |
 | [`../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md`](../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md) | `archive ... not found` 怎么排错 |
 | [`../../_digested/specs_truth/06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md)（validate 命令参考） | `validate` 是 CLI 命令（非 slash）、结构 linter、抓不出漂移；archive 自校验使单独 validate 冗余 |
+| [`../../_digested/specs_truth/06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md)（delta 文本边界） | `unappliedContent` 三处边界与 WARNING 口径（v1.14.2） |
+| [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md#写进-delta-的散文不会进主-specv1142-起会告警) | 用户向的归属判断表 |
 | [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md) | capability=specs 相对 path=身份、capability 无独立 rename；specs 漂移与维护（用户向） |
 | `src/core/specs-apply.ts` | `buildUpdatedSpec`：MODIFIED 整块替换、按标题精确匹配、原子 fail-fast |
 | `src/core/validation/validator.ts` | `validateChangeDeltaSpecs` 只读 change delta、不打开主 spec（误区 1 的根） |
