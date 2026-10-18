@@ -19,7 +19,7 @@
 
 ### 1. Nested path 已是正式的 identity 与生命周期地址
 
-`discoverSpecFiles()` 递归寻找非隐藏目录中的 `spec.md`，将目录相对路径正规化为 `/` 分隔的 ID；它跳过 `specs/spec.md`、不跟随目录 symlink、但接受有效的 `spec.md` 文件 symlink，并对不可读目录报错而不是静默漏读。[源码](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/src/utils/spec-discovery.ts#L4-L62) `findSpecUpdates()` 再将每个 ID 的分段重新拼到 `mainSpecsDir/<id>/spec.md`。[源码](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/src/core/specs-apply.ts#L48-L77)
+`discoverSpecFiles()` 递归寻找非隐藏目录中的 `spec.md`，将目录相对路径正规化为 `/` 分隔的 ID；它跳过 `specs/spec.md`、不跟随目录 symlink、但接受有效的 `spec.md` 文件 symlink，并对不可读目录报错而不是静默漏读。（**"不跟随目录 symlink"只是这个发现函数的行为，不等于该 capability 不可用**：v1.14.3 实测 `list --specs` 不列出 symlink 目录，但 `show <id>` / `validate <id>` 按 ID 正常读写、`archive` 也会穿透链接写入真实文件并保留链接。详见 [`../specs_truth/_research-nested-capability-paths.md`](../specs_truth/_research-nested-capability-paths.md) 的更正块。）[源码](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/src/utils/spec-discovery.ts#L4-L62) `findSpecUpdates()` 再将每个 ID 的分段重新拼到 `mainSpecsDir/<id>/spec.md`。[源码](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/src/core/specs-apply.ts#L48-L77)
 
 所以 `identity/session`、`billing/invoices` 或更深路径都能被 list、show、validate、parse 和 archive 使用；这正是 [#1355](https://github.com/Fission-AI/OpenSpec/pull/1355) 修复的跨路径一致性。它是“nested 能安全工作”的强证据，但不把 `identity/` 变成具有继承或聚合语义的 capability。
 
