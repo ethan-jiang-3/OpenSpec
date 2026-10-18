@@ -18,7 +18,7 @@
 >
 > **v1.14.0**：新增 `version [--json] [--check]`；`list` 支持 `--archived/--all`；`view` 加 workflow status 行与 "Archived Changes" 分区；`show --json` 的 requirement/scenario 带 `name`；`status --json` 的 `actionContext.allowedEditRoots` 纳入 store 声明项目；`instructions apply --json` 的任务项带 `sourcePath`/`line`。
 >
-> **v1.14.2**：`view` **移除**了 v1.14.0 加的 "Archived Changes" 分区——归档多时它把活动工作挤出屏幕，现在只看当前工作；`list --archived/--all` 仍然照看归档。
+> **v1.14.1**：`view` **移除**了 v1.14.0 加的 "Archived Changes" 分区——归档多时它把活动工作挤出屏幕，现在只看当前工作；`list --archived/--all` 仍然照看归档。
 
 | 命令 | 主要受众 | 输入来源 | 直接输出 | 间接影响 | 是否改状态 |
 | --- | --- | --- | --- | --- | --- |

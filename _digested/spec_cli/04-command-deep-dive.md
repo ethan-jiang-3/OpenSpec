@@ -47,7 +47,7 @@
 - 角色：交互式仪表盘；v1.7.0 按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
 - 核心对象：聚合浏览。
 - active change 行下有 `└─ [schemaName]` workflow status 行，逐 artifact 标 done/ready/blocked/skipped（workflow 加载不出时保留任务进度）。
-- v1.14.0 曾在末尾加过灰色的 "Archived Changes" 分区；**v1.14.3 起已移除**（#2031），dashboard 只显示 active changes 与 specs。看归档用 `list --archived`/`--all`。
+- v1.14.0 曾在末尾加过灰色的 "Archived Changes" 分区；**v1.14.1 起已移除**（#2031），dashboard 只显示 active changes 与 specs。看归档用 `list --archived`/`--all`。
 - 更偏人类，不偏自动化。
 
 ### `show`

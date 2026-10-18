@@ -94,7 +94,7 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 ## v1.14.1–v1.14.3 的具体提醒（来自同步记录 0012）
 
 - **升级目标**：全局 CLI 升到 v1.14.3 后逐项目 `openspec update`。这一轮的 workflow 模板改动（glob 工件的补完协议、输出路径先定后写、`all_done` 改为"归档前先复核"、verify 的工件发现与 REMOVED 基线读取）都只在 update 之后才投递到项目里。
-- **升级后 view 会"变少"**：v1.14.3 移除了 v1.14.0 加的 "Archived Changes" 分区（#2031 撤回），dashboard 只显示 active changes 与 specs。要看归档用 `openspec list --archived` / `--all`——这不是数据丢了。
+- **升级后 view 会"变少"**：v1.14.1 移除了 v1.14.0 加的 "Archived Changes" 分区（#2031 撤回），dashboard 只显示 active changes 与 specs。要看归档用 `openspec list --archived` / `--all`——这不是数据丢了。
 - **`--strict` 的失败面变宽**（v1.14.1/v1.14.2）：requirement 正文 >500 字从 INFO 升 WARNING；change 里的 **ADDED** requirement 也受同一限制；delta 里"归档不会带走"的文本（首个 `##` 前正文、首个 requirement 前散文、`## Notes` 之类的额外段）也报 WARNING。已有 CI 跑 `validate --all --strict` 的项目，升级后可能新红——先跑一遍看清单，把该拆的拆、该挪的挪，别急着加 `--no-…` 绕过。
 - **`.openspec.yaml` 卫生（更新）**：未知顶层键仍会告警并让 `--strict` 失败，但**小写 `x-` 开头的键现在合法**（`x-jiraKey`、`x-trackerID`）。升级前不必再为了塞自定义元数据而去改已知键。注意 `X-Tracker`、裸 `x-`、`x- tracker` 仍报未知；`initiative:` 内部仍严格。
 - **symlink 布局现在被支持**：`openspec/`、`changes/`、`specs/` 本身，以及单条 `spec.md`，都可以是指向项目内其他位置的相对 symlink（典型：`openspec/` 指向共享文档仓库）。`archive/` 仍不允许是链接。之前为绕开限制而做的复制/软链 workaround 可以撤掉了。
