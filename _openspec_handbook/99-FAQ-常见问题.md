@@ -269,7 +269,7 @@ npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction`
 **A**: archive/bulk-archive 依赖 sync。v1.10.0 会在第一个依赖项前自动插入 sync；已有 sync 不重复、不重排，custom 也不会因此变成 core。
 
 ### Q27d: 为什么 `openspec validate --all` 在 pre-commit 里挂住了？
-**A**: 如果它挂住（而不是报错），多半是老版本在**零宽 TTY** 上的死循环：某些 pty（lefthook、部分 CI wrapper）报告 `isTTY: true` 但 `columns: 0`，ora 清行时算出 `Infinity` 的行数，`clear()` 永远退不出来。v1.14.3 的 `canRenderSpinner()` 明确拒绝这种流——不是 TTY 才允许动效，TTY 但宽度为 0 就退化成普通输出。升级即解决。
+**A**: 如果它挂住（而不是报错），多半是老版本在**零宽 TTY** 上的死循环：某些 pty（lefthook、部分 CI wrapper）报告 `isTTY: true` 但 `columns: 0`，ora 清行时算出 `Infinity` 的行数，`clear()` 永远退不出来。v1.14.3 的 `canRenderSpinner()` 把这一种情况单独拒掉：**非 TTY 仍然返回 `true`**（ora 会自己静默、只打一行纯文本），只有「是 TTY 但 `columns` 为 0」才返回 `false`，让调用方退回普通输出。升级即解决。
 
 ### Q27e: `openspec --help` 为什么变快了？
 **A**: v1.14.1 把命令的**注册**与**实现**拆开了：`src/cli/index.ts` 只装配 program，各命令在 `src/cli/commands/*.ts` 里注册、action 时才 `await import()` 真正的 `src/commands/*`。`--version`/`--help` 从 485 个模块降到 24 个。输出、帮助文本、补全结果、退出码、遥测行为都没变——纯加载时机重构。
