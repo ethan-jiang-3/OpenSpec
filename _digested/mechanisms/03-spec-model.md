@@ -62,7 +62,7 @@ delta 与 main spec 都通过 `discoverSpecFiles()` 递归发现：`specs/auth/s
 重要细节：
 
 - requirement header 匹配大小写不敏感。
-- `normalizeRequirementName()` 当前只 trim，不 lower-case。
+- `normalizeRequirementName()` 只做 trim + 剥离尾部 ATX 结尾 `#` 串（`requirement-blocks.ts:22`：`name.replace(/[ \t]+#+[ \t]*$/, '').trim()`），不 lower-case。
 - REMOVED 支持 `### Requirement:` header，也支持 bullet list header。
 - RENAMED 用 FROM/TO pair。
 - UTF-8 BOM 会被剥离，fenced code block 中的 header 不参与 section/requirement 识别。
@@ -122,7 +122,11 @@ archive 写入的占位符是 `TBD - created by archiving change <name>. Update 
 新增 `src/core/validation/purpose-placeholder.ts` 的 `findPurposePlaceholderIssue()`，只认两件事：
 
 - writer 生成的整句——通过 `PURPOSE_PLACEHOLDER_PREFIX` / `PURPOSE_PLACEHOLDER_SUFFIX` 两个共享常量匹配，和 archive writer 使用同一份定义；
-- **开头**是 `TBD` 或 `TODO` 的 Purpose（`^(?:TBD|TODO)(?![\p{L}\p{N}\p{M}_])`，所以 `TBDs` / `TODOs` 不算，`TODO:` / `TBD -` 算）。
+- **开头**是 `TBD` 或 `TODO` 的 Purpose。分两套规则（`purpose-placeholder.ts:60-70`）：
+  - **全大写**即命中 marker，后面跟什么都不管：`^(?:TBD|TODO)(?![\p{L}\p{N}\p{M}_])`
+  - **其他大小写**还需紧跟标点或行尾：再加 `(?=[ \t]*(?:$|\n|[:\-\u2013\u2014.,;()\[\]{}]))`（`/iu`）——这是为了不误报西班牙语/葡萄牙语 "Todo el…"
+
+  两种规则下 `TBDs` / `TODOs` 都不算（词尾边界）；`TODO:` / `TBD -` 算。
 
 句子中间的 `TBD`（如 `The retry budget is TBD`）是有效 Purpose，不报——否则会训练用户忽略警告。fence 内的引用先被读出（复用 `buildCodeFenceMask`），空 Purpose 交给已有的 `SPEC_PURPOSE_EMPTY` 规则，不重复报。
 

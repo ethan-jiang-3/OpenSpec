@@ -106,14 +106,14 @@ v1.14.0 一次性新增 10 个 `--tools` 目标，全部注册在 `src/core/conf
 
 ### v1.10.0→v1.11.0：共享 `.agents` 根与通用写入权仲裁
 
-v1.8.0 起 `.agents/skills/` 由 `agents`、`codex`、`zed` 三方共享。v1.11.0 将共享根仲裁从硬编码三元组升级为通用 `resolveSharedSkillWriters()` 机制：
+`agents`、`codex`、`zed` 三方共享 `.agents/skills/` 的格局起于 **v1.10.0**（v1.8.0/v1.9.0 没有 `zed` 工具条目，v1.10.0 起才是 `skillsDir: '.agents'`）。v1.11.0 将共享根仲裁从硬编码三元组升级为通用 `resolveSharedSkillWriters()` 机制：
 
 1. **Antigravity 迁入 `.agents/` 共享根**（v1.11.0）：`antigravity` 的 `skillsDir` 从 `.agent` 改为 `.agents`（`.agent` 变成 `legacySkillsDirs`），旧 `.agent/workflows/openspec-*.md` 在 update 时被迁移或保留用户定制。检测键现在是 `.agent` 或 `.agents/workflows`（而非裸 `.agents/` 根）。
 
 2. **通用写入权仲裁**（v1.11.0 新增 `src/core/shared-skill-target.ts` 的 `resolveSharedSkillWriters`）：不再硬编码 Codex/Zed/agents 三方的排序规则。该函数遍历所有选中工具的 `skillsDir`，对每个共享物理根（如 `.agents/skills/`）选出一个 active writer：
    - **已有 compatible owner**（通过 `.openspec-target` marker 或推断）胜出。
    - **skills-native 渲染器优先于 adapter-backed**，因为其引用可被共享树的所有消费者使用。
-   - **新根默认指向 Codex**，因为其渲染器同时包含 Codex 和通用 skill 调用形式。
+   - **新根默认指向 `agents` 还是 Codex 取决于现状**：优先级是"已有 marker 的 > 推断出的 > （当前已有 `.agents/skills` 树则 `agents`）> `codex` > 池中第一个"（`src/core/shared-skill-target.ts:118-125`）。所以**全新根**才回退到 Codex；已有 `.agents/skills` 树时是 `agents` 先胜。
    - 只有 active writer 生成 skill 文件；其他共享同一根的选中工具仍能独立写入 command surface（如 Antigravity 在 Codex 拥有 `.agents/skills/` 写入权时仍可安装 `.agents/workflows/` command 文件）。
 
 3. **`openspec init` 和 `openspec update` 均使用同一仲裁**：`init.ts` 和 `update.ts` 都调用 `resolveSharedSkillWriters`，确保初始化和增量更新使用相同的写入权判定。
@@ -183,7 +183,7 @@ formatFile(content: CommandContent): string
 |------|--------------|------|
 | Claude | `.claude/commands/opsx/<id>.md` | 项目内 command 文件，带 frontmatter |
 | Codex | `.agents/skills/openspec-*/SKILL.md` | v1.8.0 skills-only；以 `$openspec-*` 调用，`.codex` 是 legacy 迁移源 |
-| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | vendor-neutral 目标，与 Codex、Zed、Antigravity、Amp、GSD 共享 `.agents` 根（v1.14.0 起六方） |
+| agents（通用） | `.agents/skills/openspec-*/SKILL.md` | vendor-neutral 目标，与 Codex、Zed、Antigravity、Amp、GSD 共享 `.agents` 根（**当前六方**；版本分界：Zed 自 v1.10.0、Antigravity 自 v1.11.0、Amp 与 GSD 自 v1.14.0，所以 v1.14.0 当时是五方） |
 | GitHub Copilot | `.github/skills/` 等 | v1.8.0 本地 skill + opt-in cloud coding-agent 文件（见下） |
 | Antigravity | `.agents/skills/` + `.agents/workflows/opsx-<id>.md` | v1.11.0 从 `.agent` 迁入 `.agents`；共享技能根通过 `resolveSharedSkillWriters` 仲裁。`.agent` 是 legacy 迁移源 |
 | Command Code | `.commandcode/skills/` + `.commandcode/commands/opsx-<id>.md` | v1.9.0 adapter-backed：skills 调用 `/openspec-*`，slash command 为 `/opsx-<id>` |
