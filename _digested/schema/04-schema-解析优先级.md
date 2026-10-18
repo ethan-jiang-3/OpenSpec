@@ -15,12 +15,12 @@ OpenSpec 需要确定"用哪个 schema"时，走两层解析。理解这两层�
         ↓
 2. Change 元数据       openspec/changes/<name>/.openspec.yaml 的 schema 字段
         ↓
-3. Planning-home 默认   始终为 spec-driven
+3. 项目 config         openspec/config.yaml 的 schema 字段
         ↓
-4. 项目 config         openspec/config.yaml 的 schema 字段
-        ↓
-5. 硬编码默认          spec-driven
+4. 硬编码默认          spec-driven
 ```
+
+**只有四步**（`resolveSchemaForChange()`，`src/utils/change-metadata.ts:260-297`）。注意 **planning-home 不参与这一步**——`~/.local/share/openspec` 决定的是 schema *文件*和 store 数据放哪，不是"用哪个 schema 名"。另一个入口 `createChange()`（`new change`）走的是三步：`--schema` → `config.schema` → `DEFAULT_SCHEMA`（`change-utils.ts:142-157`），它不看 `.openspec.yaml`，因为 change 还没建。
 
 ### 具体例子
 
