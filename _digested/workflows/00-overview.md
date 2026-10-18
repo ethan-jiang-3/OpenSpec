@@ -120,7 +120,7 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 ## v1.14.1–v1.14.3 template 层新机制
 
 - **先定输出路径再创建**（v1.14.3 #2104）：propose / ff / continue / explore 的 artifact 创建统一为四步——glob `resolvedOutputPath` 先选成 `changeRoot` 内的具体路径（匹配该 glob）、解析 symlink 后仍在 `changeRoot` 内、委托给 skill/command 时只有它能写到该路径才调用、写完确认文件在该路径。见 [`02-propose.md`](02-propose.md)。
-- **局部工件补完**（v1.14.1 #2034/#2037）：`PARTIAL_ARTIFACT_CHECK` 注入 continue 的 skill 版与 command 版——glob 工件读作 `done` 不等于文件齐全，先比对 `existingOutputPaths` 与应有文件，只补缺失的，算作本次调用的那一个工件。见 [`04-continue.md`](04-continue.md)。
+- **局部工件补完**（v1.14.1 #2037）：`PARTIAL_ARTIFACT_CHECK` 注入 continue 的 skill 版与 command 版——glob 工件读作 `done` 不等于文件齐全，先比对 `existingOutputPaths` 与应有文件，只补缺失的，算作本次调用的那一个工件。见 [`04-continue.md`](04-continue.md)。
 - **完成 ≠ 可归档**（v1.14.1 #1791）：apply 的 `all_done` 只报「跟踪任务已完成，归档前请复核/验证」；归档之后才能做的步骤写进 tasks.md 末尾的 `## Workflow follow-up`（纯项目符号，不进 checkbox 进度）。见 [`06-apply.md`](06-apply.md)。
 - **verify 按输出路径找工件 + REMOVED 先读基线**（v1.14.1 #2028 / v1.14.2 #2083）：spec 工件 = `outputPath` 在 `specs/` 之下者，design 工件 = id 为 `design` 或 `outputPath` 命中 `design.md` 者；REMOVED 分支必须先从主 spec（必要时从该文件历史）取回基线，拿不到可用基线就标 not verified 并跳过搜索。见 [`08-verify.md`](08-verify.md)。
 - **specs 逐文件写入**（v1.14.1 #2037）：按 proposal 列出的 capability 从第一个缺失的开始写，草稿完成即落盘，不再先规划全部文件。

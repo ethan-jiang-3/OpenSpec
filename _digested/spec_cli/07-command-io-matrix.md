@@ -17,6 +17,8 @@
 > **v1.13.1**：`status` 的 text 输出结尾新增 `Next: <command>` 行（仅 text，JSON 不变；`new change` 自 v1.5.0 即有同款收尾）。
 >
 > **v1.14.0**：新增 `version [--json] [--check]`；`list` 支持 `--archived/--all`；`view` 加 workflow status 行与 "Archived Changes" 分区；`show --json` 的 requirement/scenario 带 `name`；`status --json` 的 `actionContext.allowedEditRoots` 纳入 store 声明项目；`instructions apply --json` 的任务项带 `sourcePath`/`line`。
+>
+> **v1.14.2**：`view` **移除**了 v1.14.0 加的 "Archived Changes" 分区——归档多时它把活动工作挤出屏幕，现在只看当前工作；`list --archived/--all` 仍然照看归档。
 
 | 命令 | 主要受众 | 输入来源 | 直接输出 | 间接影响 | 是否改状态 |
 | --- | --- | --- | --- | --- | --- |
@@ -24,7 +26,7 @@
 | `update` | 人类 + 工具集成 | 当前版本、配置、已配置工具 | 更新后的 skills/commands、同步报告 | 决定工具侧工作流是否与配置一致 | 是 |
 | `version` | 人类 + 机器 | 当前安装（location/packageManager/scope）；`--check` 时 registry | 版本报告，或 `{ schemaVersion, version, install, update? }` JSON（`update` 仅 `--check` 时出现） | 提示用户是否/如何升级 CLI；`canSelfUpgrade` 判定能否原地升级 | 否 |
 | `list` | 人类 + 机器 | changes/specs 目录（`--archived/--all` 含 `changes/archive/`）、task progress、mtime | 列表或 JSON 索引；归档浏览时条目带 `archived: true/false` | 帮助选择目标 change/spec | 否 |
-| `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard；active change 行带 `└─ [schemaName]` workflow status 行，末尾有 "Archived Changes" 分区 | 改善浏览体验 | 否 |
+| `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard；active change 行带 `└─ [schemaName]` workflow status 行；**不含归档 change**（v1.14.2 #2031 起 dashboard 只显示当前工作，归档改用 `openspec list --archived`） | 改善浏览体验 | 否 |
 | `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON（requirement = `{ name, text, scenarios: [{ name, rawText }] }`） | 帮助人工审阅和调试解析结果；JSON 读者可按 `name` 引用 requirement | 否 |
 | `validate` | 人类 + 机器 | change delta specs、正式 specs；`--archived` 时为 archive 目录的 tasks；bulk scope 可 `--report findings`（v1.12.0） | 合法性报告、退出码；findings 精简报告（JSON 标识 report/scope） | 决定是否需要修复、是否适合 archive；`--archived` 给 CI 抓未勾完的归档工作；merge-conflict 标记作为 informational findings 报告 | 否 |
 | `archive` | 人类 + OPSX | change 内容、主 specs、validate 结果 | 更新后的 specs、archive 目录、报告 | 结束 change 生命周期 | 是 |
