@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="900" height="420" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans CJK SC','PingFang SC',sans-serif">
+  <rect width="900" height="420" fill="#ffffff"/>
+  <text x="32" y="38" font-size="20" font-weight="700" fill="#1f2328">分级过滤读的实测削减</text>
+  <text x="32" y="62" font-size="13" fill="#59636e">同一份数据，四种读法的上下文代价。数字为 openspec show --json 的实际字节数。</text>
+
+  <!-- legend -->
+  <rect x="600" y="84" width="14" height="14" rx="3" fill="#0969da"/>
+  <text x="620" y="96" font-size="12" fill="#59636e">全量</text>
+  <rect x="674" y="84" width="14" height="14" rx="3" fill="#1a7f37"/>
+  <text x="694" y="96" font-size="12" fill="#59636e">--no-scenarios</text>
+
+  <!-- rows -->
+  <g font-size="12.5">
+    <text x="32" y="146" font-weight="600" fill="#1f2328">cli-archive</text>
+    <rect x="150" y="130" width="600" height="20" rx="4" fill="#0969da"/>
+    <text x="760" y="145" font-size="12" font-weight="700" fill="#0969da">18,013</text>
+    <rect x="150" y="154" width="95" height="20" rx="4" fill="#1a7f37"/>
+    <text x="255" y="169" font-size="12" font-weight="700" fill="#1a7f37">2,845　−84%</text>
+
+    <text x="32" y="222" font-weight="600" fill="#1f2328">artifact-graph</text>
+    <rect x="150" y="206" width="407" height="20" rx="4" fill="#0969da"/>
+    <text x="567" y="221" font-size="12" font-weight="700" fill="#0969da">12,209</text>
+    <rect x="150" y="230" width="86" height="20" rx="4" fill="#1a7f37"/>
+    <text x="246" y="245" font-size="12" font-weight="700" fill="#1a7f37">2,573　−79%</text>
+
+    <text x="32" y="298" font-weight="600" fill="#1f2328">instruction-loader</text>
+    <rect x="150" y="282" width="140" height="20" rx="4" fill="#0969da"/>
+    <text x="300" y="297" font-size="12" font-weight="700" fill="#0969da">4,208</text>
+    <rect x="150" y="306" width="40" height="20" rx="4" fill="#1a7f37"/>
+    <text x="200" y="321" font-size="12" font-weight="700" fill="#1a7f37">1,189　−72%</text>
+  </g>
+
+  <!-- inventory -->
+  <rect x="32" y="348" width="836" height="54" rx="9" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="50" y="371" font-size="12.5" font-weight="700" fill="#1f2328">更便宜的一层：全库盘点</text>
+  <text x="50" y="391" font-size="12" fill="#59636e">openspec list --specs --json →</text>
+  <text x="252" y="391" font-size="12" font-weight="700" fill="#1a7f37">2,687 B</text>
+  <text x="322" y="391" font-size="12" fill="#59636e">覆盖全部 36 个 capability 的 id 与 requirement 数 —— 先盘点，再决定读哪几份全文。</text>
+</svg>

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="900" height="400" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans CJK SC','PingFang SC',sans-serif">
+  <rect width="900" height="400" fill="#ffffff"/>
+  <text x="32" y="38" font-size="20" font-weight="700" fill="#1f2328">注入体不随规格树增长</text>
+  <text x="32" y="62" font-size="13" fill="#59636e">agent 拿到的是「去哪读 + 什么规则 + 门开没开」，不是规格正文。堆积的是磁盘，不是上下文。</text>
+
+  <!-- disk bar -->
+  <text x="32" y="104" font-size="13" font-weight="600" fill="#1f2328">磁盘上的规格树</text>
+  <rect x="32" y="114" width="700" height="34" rx="5" fill="#ddf4ff" stroke="#0969da" stroke-width="1.4"/>
+  <text x="44" y="136" font-size="12.5" font-weight="600" fill="#0969da">36 个 spec.md ｜ 5,758 行 ｜ 252 条 requirement ｜ 749 个 scenario</text>
+  <text x="744" y="136" font-size="13" font-weight="700" fill="#0969da">261,948 B</text>
+
+  <!-- injected bar -->
+  <text x="32" y="196" font-size="13" font-weight="600" fill="#1f2328">单次注入（openspec instructions specs --json）</text>
+  <rect x="32" y="206" width="26" height="34" rx="4" fill="#1a7f37" stroke="#1a7f37" stroke-width="1.4"/>
+  <text x="68" y="219" font-size="12.5" font-weight="700" fill="#1a7f37">9,315 B</text>
+  <text x="68" y="236" font-size="11.5" fill="#59636e">占规格树 3.6%</text>
+  <line x1="58" y1="148" x2="58" y2="206" stroke="#d0d7de" stroke-width="1.2" stroke-dasharray="4 3"/>
+
+  <!-- breakdown -->
+  <rect x="32" y="268" width="836" height="122" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="50" y="294" font-size="13.5" font-weight="700" fill="#1f2328">9,315 B 的构成</text>
+  <rect x="50" y="308" width="555" height="22" rx="4" fill="#1a7f37"/>
+  <text x="58" y="324" font-size="11.5" font-weight="600" fill="#ffffff">instruction 6,476 B（本 artifact 的写作指令）</text>
+  <rect x="609" y="308" width="73" height="22" rx="4" fill="#57606a"/>
+  <text x="617" y="324" font-size="10.5" font-weight="600" fill="#ffffff">847</text>
+  <rect x="686" y="308" width="163" height="22" rx="4" fill="#afb8c1"/>
+  <text x="694" y="324" font-size="10.5" font-weight="600" fill="#1f2328">其他 1,992</text>
+  <text x="50" y="352" font-size="11" fill="#59636e">847 = <tspan font-family="ui-monospace,Menlo,monospace">config.yaml</tspan> 的 <tspan font-family="ui-monospace,Menlo,monospace">context:</tspan> 字段（每个 artifact 都注入）　｜　其他 = rules + template + 依赖/路径字段</text>
+  <text x="50" y="374" font-size="11.5" fill="#59636e"><tspan font-family="ui-monospace,Menlo,monospace">contextFiles</tspan> 字段给的是<tspan font-weight="700" fill="#1f2328">本 change 文件的绝对路径</tspan>，完全不指向 <tspan font-family="ui-monospace,Menlo,monospace">openspec/specs/</tspan> —— 规格内容由 agent 按需自取。</text>
+</svg>

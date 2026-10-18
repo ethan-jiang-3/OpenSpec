@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" width="900" height="440" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans CJK SC','PingFang SC',sans-serif">
+  <rect width="900" height="440" fill="#ffffff"/>
+  <text x="32" y="38" font-size="20" font-weight="700" fill="#1f2328">线 B 的全部硬能力：归档路径上的五道闸门</text>
+  <text x="32" y="62" font-size="13" fill="#59636e">方向漂移在自带能力里，最终都收敛到「这一次归档是否正确」。</text>
+
+  <!-- pipeline -->
+  <g>
+    <rect x="32" y="92" width="156" height="72" rx="9" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
+    <text x="46" y="118" font-size="13" font-weight="700" fill="#1a7f37">① validate</text>
+    <text x="46" y="138" font-size="11" fill="#1f2328">结构 + delta 规则集</text>
+    <text x="46" y="154" font-size="11" fill="#1f2328">写作期就能 exit 1</text>
+
+    <rect x="204" y="92" width="156" height="72" rx="9" fill="#ddf4ff" stroke="#0969da" stroke-width="1.5"/>
+    <text x="218" y="118" font-size="13" font-weight="700" fill="#0969da">② 干跑合并预检</text>
+    <text x="218" y="138" font-size="11" fill="#1f2328">buildUpdatedSpec</text>
+    <text x="218" y="154" font-size="11" fill="#1f2328">silent 试跑，免费</text>
+
+    <rect x="376" y="92" width="156" height="72" rx="9" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
+    <text x="390" y="118" font-size="13" font-weight="700" fill="#1a7f37">③ 合并</text>
+    <text x="390" y="138" font-size="11" fill="#1f2328">scenario 丢失</text>
+    <text x="390" y="154" font-size="11" font-weight="700" fill="#cf222e">→ 硬拒绝合并</text>
+
+    <rect x="548" y="92" width="156" height="72" rx="9" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
+    <text x="562" y="118" font-size="13" font-weight="700" fill="#1a7f37">④ 全或无写入</text>
+    <text x="562" y="138" font-size="11" fill="#1f2328">写前校验 + 指纹</text>
+    <text x="562" y="154" font-size="11" fill="#1f2328">零计数跳过写入</text>
+
+    <rect x="720" y="92" width="148" height="72" rx="9" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
+    <text x="734" y="118" font-size="13" font-weight="700" fill="#1a7f37">⑤ 退场门控</text>
+    <text x="734" y="138" font-size="11" fill="#1f2328">retire_capabilities</text>
+    <text x="734" y="154" font-size="11" fill="#1f2328">作者显式声明</text>
+  </g>
+  <!-- arrows -->
+  <g stroke="#8c959f" stroke-width="1.6" fill="none">
+    <path d="M188 128 L200 128" marker-end="url(#a)"/>
+    <path d="M360 128 L372 128" marker-end="url(#a)"/>
+    <path d="M532 128 L544 128" marker-end="url(#a)"/>
+    <path d="M704 128 L716 128" marker-end="url(#a)"/>
+  </g>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#8c959f"/></marker></defs>
+
+  <!-- false positives notice -->
+  <rect x="204" y="176" width="328" height="26" rx="6" fill="#fff8c5"/>
+  <text x="216" y="193" font-size="11.5" fill="#9a6700">② 刻意定为 INFO 不阻塞：缺失目标可能只是笔误或兄弟 change 未归档</text>
+
+  <!-- boundary box -->
+  <rect x="32" y="222" width="836" height="86" rx="10" fill="#ffebe9" stroke="#cf222e" stroke-width="1.2" stroke-dasharray="5 4"/>
+  <text x="50" y="248" font-size="13.5" font-weight="700" fill="#cf222e">它不管什么</text>
+  <text x="50" y="270" font-size="12" fill="#1f2328">· 方向本身 —— 无 goal / roadmap / direction 概念，跨 change 依赖与重叠检测完全不存在。</text>
+  <text x="50" y="290" font-size="12" fill="#1f2328">· 内容一致性 —— 闸门判定的是「结构可合并」，不是「语义仍正确」。三个静默 no-op 会让陈旧 delta 看起来像成功。</text>
+
+  <!-- numbers -->
+  <rect x="32" y="326" width="836" height="92" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
+  <text x="50" y="352" font-size="13.5" font-weight="700" fill="#1f2328">本仓实测：闸门确实在拦人（66 个 item）</text>
+  <rect x="50" y="366" width="250" height="26" rx="5" fill="#dafbe1"/>
+  <text x="62" y="384" font-size="12" fill="#1a7f37">非严格　60 passed / 6 failed</text>
+  <rect x="312" y="366" width="250" height="26" rx="5" fill="#fff8c5"/>
+  <text x="324" y="384" font-size="12" fill="#9a6700">严格　　53 passed / 13 failed</text>
+  <rect x="574" y="366" width="282" height="26" rx="5" fill="#ffebe9"/>
+  <text x="586" y="384" font-size="12" fill="#cf222e">scenario 丢失 10 条，跨 5 个 change</text>
+  <text x="50" y="410" font-size="11.5" fill="#59636e">ERROR 11 ｜ WARNING 12 ｜ INFO 2　——　--strict 把 warning 也算失败，所以多翻 7 项。</text>
+</svg>

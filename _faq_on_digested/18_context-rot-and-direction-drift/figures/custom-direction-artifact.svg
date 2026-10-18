@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" width="900" height="480" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans CJK SC','PingFang SC',sans-serif">
+  <rect width="900" height="480" fill="#ffffff"/>
+  <text x="32" y="38" font-size="20" font-weight="700" fill="#1f2328">给「方向」建机器门控：唯一的内置路径</text>
+  <text x="32" y="62" font-size="13" fill="#59636e">内置 schema 没有 direction 概念 —— 但自带的自定义 schema 机制能把它变成一等 artifact，并接入同一套 DAG 门控。</text>
+
+  <!-- left: schema -->
+  <rect x="32" y="84" width="404" height="204" rx="10" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1.4"/>
+  <text x="50" y="109" font-size="12.5" font-weight="700" fill="#1f2328">openspec/schemas/&lt;name&gt;/schema.yaml</text>
+  <rect x="50" y="120" width="368" height="152" rx="7" fill="#ffffff" stroke="#d0d7de"/>
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11.5" fill="#1f2328">
+    <text x="62" y="141">artifacts:</text>
+    <text x="62" y="160" fill="#1a7f37">  - id: direction</text>
+    <text x="62" y="177">    generates: direction.md</text>
+    <text x="62" y="194">    description: Locked direction…</text>
+    <text x="62" y="211">    requires: []</text>
+    <text x="62" y="230">  - id: proposal</text>
+    <text x="62" y="247">    requires:</text>
+    <text x="62" y="264" fill="#0969da">      - direction</text>
+  </g>
+  <text x="50" y="292" font-size="11.5" fill="#59636e">建法：openspec schema init &lt;name&gt; ／ schema fork spec-driven &lt;name&gt;</text>
+
+  <!-- right: measured status -->
+  <rect x="464" y="84" width="404" height="204" rx="10" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
+  <text x="482" y="109" font-size="12.5" font-weight="700" fill="#1a7f37">实测 openspec status --change &lt;id&gt;</text>
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12" fill="#1f2328">
+    <text x="482" y="137">[ ] direction</text>
+    <text x="482" y="161">[-] proposal (blocked by: direction)</text>
+    <text x="482" y="185">[-] tasks    (blocked by: proposal)</text>
+  </g>
+  <line x1="482" y1="200" x2="850" y2="200" stroke="#1a7f37" stroke-width="1" stroke-dasharray="4 3"/>
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="11.5" fill="#59636e">
+    <text x="482" y="221">direction  status=ready    requires=[]</text>
+    <text x="482" y="241">proposal   status=blocked  missingDeps=["direction"]</text>
+    <text x="482" y="261" font-size="10.5">instructions proposal → dependencies=[{id:"direction"}]</text>
+    <text x="482" y="281">nextSteps → 先跑 direction</text>
+  </g>
+
+  <!-- arrow down -->
+  <line x1="450" y1="300" x2="450" y2="322" stroke="#8c959f" stroke-width="1.6"/>
+  <polygon points="450,330 445,320 455,320" fill="#8c959f"/>
+
+  <!-- boundary -->
+  <rect x="32" y="336" width="836" height="112" rx="10" fill="#ffebe9" stroke="#cf222e" stroke-width="1.2" stroke-dasharray="5 4"/>
+  <text x="50" y="362" font-size="13.5" font-weight="700" fill="#cf222e">边界：门控的是「存在」，不是「一致」</text>
+  <text x="50" y="386" font-size="12" fill="#1f2328">写一个只有 <tspan font-family="ui-monospace,Menlo,monospace" font-size="11.5"># Direction</tspan> 一行的空 direction.md，<tspan font-family="ui-monospace,Menlo,monospace" font-size="11.5">openspec validate</tspan> 照样回 <tspan font-weight="700">“Change 'test-dir' is valid”</tspan>。</text>
+  <text x="50" y="408" font-size="12" fill="#1f2328">validate 根本不读非 spec 的自定义 artifact；archive 也不读。所以它只能保证「方向被写下来了」，</text>
+  <text x="50" y="430" font-size="12" fill="#1f2328"><tspan font-weight="700">不能</tspan>保证「proposal 与方向不矛盾」—— 矛盾检测在自带能力里没有任何机制。</text>
+</svg>
