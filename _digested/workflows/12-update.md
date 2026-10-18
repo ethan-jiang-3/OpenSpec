@@ -81,7 +81,7 @@ sequenceDiagram
             MD-->>User: "建议改 proposal.md：<br/>将 scope 从 X 改为 Y<br/>原因：…"
             alt 用户确认
                 opt 大改需要 template/rules
-                    MD->>TS: openspec instructions <artifact> --json
+                    MD->>TS: openspec instructions <artifact> --change <name> --json
                     TS-->>MD: template, instruction, context, rules
                 end
                 MD->>FS: 写修订后的 artifact

@@ -22,7 +22,7 @@
 这里的边界是：
 
 ```text
-起点：openspec instructions apply --json 返回 state: "ready"
+起点：openspec instructions apply --change <name> --json 返回 state: "ready"
 过程：agent 读取 contextFiles，逐个执行 pending tasks，更新 checkbox
 终点：所有 checkbox tasks 完成，apply 输出完成总结并建议 archive
 ```

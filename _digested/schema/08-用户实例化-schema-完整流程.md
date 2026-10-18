@@ -301,8 +301,18 @@ openspec schema validate writing-pipeline
 openspec schema init writing-pipeline --default
 ```
 
-> **不要写 `openspec config set schema <name>`** —— `config set` 操作的是*全局*配置（`<globalDataDir>/config.yaml`），顶层没有 `schema` 这个 key，会直接报错：
-> `Error: Invalid configuration key "schema". Unknown top-level key "schema".`（`openspec config list` 里只有 `featureFlags` / `profile` / `delivery` / `telemetry` / `workflows` 等。）
+> **不要写 `openspec config set schema <name>`** —— `config set` 操作的是*全局*配置（`~/.config/openspec/config.json`，见下），顶层没有 `schema` 这个 key，会直接报错：
+> `Error: Invalid configuration key "schema". Unknown top-level key "schema".`
+> `Use "openspec config list" to see available keys.`（`openspec config list` 里的 key 是 `featureFlags` / `profile` / `delivery` / `workflows` / `defaultStore` / `openers` / `telemetry` / `completionTipSeen`，`global-config.ts:25-38`。）
+
+> **别再混淆这两个目录**（这是本资料反复踩过的坑）：
+>
+> | 用途 | 路径 | 解析函数 |
+> |------|------|---------|
+> | 机器级**配置**（`config set/list/get`） | `$XDG_CONFIG_HOME/openspec/config.json`，Unix 回退 `~/.config/openspec/config.json`（Windows `%APPDATA%\openspec\`） | `getGlobalConfigDir()`，`global-config.ts:56` |
+> | 机器级**数据**（store 注册表、worksets、用户级 schema） | `$XDG_DATA_HOME/openspec`，Unix 回退 `~/.local/share/openspec` | `getGlobalDataDir()`，`global-config.ts:99` |
+>
+> 两者目录名相同（都叫 `openspec`）但父目录不同；配置是 **JSON**（`config.json`），项目级才是 **YAML**（`openspec/config.yaml`）。用 `openspec config path` 可直接打印真实路径，不要靠猜。
 
 如果 schema 已存在还想改默认，编辑 `openspec/config.yaml` 最直接（`schema init` 同名会报 `Schema '<name>' already exists`，要覆盖得加 `--force`）。
 

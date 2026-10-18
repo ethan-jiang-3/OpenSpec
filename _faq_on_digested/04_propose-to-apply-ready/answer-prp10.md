@@ -140,7 +140,7 @@ instruction: "The tasks.md file exists but contains no tasks..."
 ```text
 apply.requires satisfied
 并且
-openspec instructions apply --json 返回 state: "ready"
+openspec instructions apply --change <name> --json 返回 state: "ready"
 ```
 
 ## contextFiles 是怎么来的

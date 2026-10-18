@@ -32,23 +32,33 @@
 
 它更依赖几类运行时查询，例如：
 
-- `openspec status --json`
-- `openspec instructions <artifact> --json`
-- `openspec instructions apply --json`
-- `openspec instructions archive --json`
+- `openspec status --change "<name>" --json`
+- `openspec instructions <artifact> --change "<name>" --json`
+- `openspec instructions apply --change "<name>" --json`
+- `openspec instructions archive --change "<name>" --json`
 - `openspec schemas`
 - `openspec templates`
 
 这些命令提供的是机器可消费的上下文，而不是给人看的长篇解释。
 
+> **`--change` 不是可选项，agent 最容易在这里踩坑。** 项目里只要有**一个及以上**活跃 change，上面前四条少了 `--change`（或 `status` 用 `--all`）就会直接以退出码 1 失败：
+>
+> ```
+> $ openspec status --json
+> { "status": [ { "severity": "error", "code": "change_error",
+>     "message": "Missing required option --change (or --all for every active change). Available changes:\n  only-one" } ] }
+> ```
+>
+> 只有 `openspec schemas` 和 `openspec templates` 不需要 change 上下文（`templates` 也接受可选的 `--schema`）。零活跃 change 时 `status --json` 会返回 `{"changes": []}` 而不是报错——所以"在空项目里试通了"不能证明写法正确。
+
 ### 这些查询分别在干什么
 
 | 命令 | 机器拿来做什么 | 人类可理解成 |
 |------|---------------|-------------|
-| `openspec status --json` | 判断当前 change 到哪一步了、哪些 artifact 已完成 | 看项目仪表盘 |
-| `openspec instructions <artifact> --json` | 生成某个 artifact 时拿到模板、规则、上下文、输出路径和 `planningHome` | 拿到一份"写作任务单" |
-| `openspec instructions apply --json` | 获取 Apply 的 artifact 文件、项目 context 与 apply guidance | 拿到一份"实施任务单" |
-| `openspec instructions archive --json` | 获取 Archive 的项目 context 与 archive guidance | 拿到一份"归档前置输入" |
+| `openspec status --change "<name>" --json` | 判断当前 change 到哪一步了、哪些 artifact 已完成 | 看项目仪表盘 |
+| `openspec instructions <artifact> --change "<name>" --json` | 生成某个 artifact 时拿到模板、规则、上下文、输出路径和 `planningHome` | 拿到一份"写作任务单" |
+| `openspec instructions apply --change "<name>" --json` | 获取 Apply 的 artifact 文件、项目 context 与 apply guidance | 拿到一份"实施任务单" |
+| `openspec instructions archive --change "<name>" --json` | 获取 Archive 的项目 context 与 archive guidance | 拿到一份"归档前置输入" |
 | `openspec schemas` | 获取可用的 change 结构定义 | 看有哪几种工作流骨架 |
 | `openspec templates` | 获取每类 artifact 的文本模板 | 看每种文档的推荐写法 |
 

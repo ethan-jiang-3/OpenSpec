@@ -55,9 +55,9 @@ openspec/schemas/
 OpenSpec CLI 的关键职责是把文件状态解释成 agent 可消费的结构：
 
 ```text
-openspec status --json
-openspec instructions <artifact> --json
-openspec instructions apply --json
+openspec status --change "<name>" --json
+openspec instructions <artifact> --change "<name>" --json
+openspec instructions apply --change "<name>" --json
 openspec templates
 openspec schemas
 ```

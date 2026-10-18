@@ -7,7 +7,7 @@ Explore 已经把一个想法收敛成了明确 change，接下来触发 propose
 - change name 或 description 如何变成一个真实的 change 目录？
 - `.openspec.yaml` 和 schema 是怎么决定后续 artifact 顺序的？
 - agent 如何知道先写 proposal，再写 specs/design，最后写 tasks？
-- `openspec instructions <artifact> --json` 到底给了 agent 什么？
+- `openspec instructions <artifact> --change <name> --json` 到底给了 agent 什么？
 - 什么情况下算 propose 完整完成？
 - 完成后为什么就可以进入 `/opsx:apply`？
 

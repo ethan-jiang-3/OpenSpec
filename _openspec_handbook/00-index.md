@@ -84,7 +84,7 @@ OpenSpec = 整套机制
   └── workflow skill / command  投递到 agent 工具里的入口
 ```
 
-- `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --json`、`openspec archive <name>`。
+- `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --change <name> --json`、`openspec archive <name>`。
 - `/opsx:*` 是有 command adapter 的宿主（例如 Claude Code）里的入口，比如 `/opsx:propose`、`/opsx:apply`；它不是所有工具的通用语法。
 - Codex 在 v1.8.0 起使用 skills-only 投递，入口是 `$openspec-*` skill；v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，v1.14.0 起 Amp 与 GSD 也写入同一棵共享树（六方成员，见下方工具速查）。Zed 是 skills-only，用 `/openspec-*`（以 init 生成文件中的拼法为准）；v1.9.0 新增的 Command Code 仍使用 `.commandcode/skills/` 与 `/opsx-*`。
 - DeepSeek Harness（`dsh`）自 v1.14.0 起是一等目标：skills-only，写入项目级 `.dsh/skills/openspec-*/SKILL.md`；dsh 把项目 `.dsh/skills/` 当最高优先级 skill root，装好后可直接以 `/openspec-*` 呼出。
@@ -258,7 +258,7 @@ graph LR
 | `openspec show <capability> --type spec --json --requirements` | 查看某个 capability 的 requirement 标题；确实要改时再读取完整 block/scenarios |
 | `openspec validate` | 验证 artifacts 结构、格式和最低内容门槛（场景存在、描述长度下限；SHALL/MUST 自 v1.8.0 起是 guidance，normal 模式缺失仅 WARNING、strict 才强制；`validate <change>` 还做 MODIFIED scenario-loss 前置检测，v1.9.0 起任何 `####` 子标题都算 scenario）；`--archived` 另查 archive 里未勾完的 tasks；`--all`/`--changes`/`--specs` 在项目外非零退出。不验证需求合理性或设计质量 |
 | `openspec status` | 查看 change 当前进展（artifact 完成状态、进度计数） |
-| `openspec instructions [artifact]` | 输出指定 artifact 的生成指令（agent 可消费的 `--json` 格式） |
+| `openspec instructions [artifact] --change <name>` | 输出指定 artifact 的生成指令（agent 可消费的 `--json` 格式）；`--change` 必填 |
 | `openspec archive <name>` | 归档 change |
 | `openspec config profile` | 切换工作流 profile |
 | `openspec update` | 更新 AI 工具的 skills/commands |

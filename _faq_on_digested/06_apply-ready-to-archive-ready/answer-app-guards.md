@@ -6,7 +6,7 @@
 
 ## blocked：不能开始实施
 
-`openspec instructions apply --json` 返回 `state: "blocked"` 时，agent 不能写业务代码。
+`openspec instructions apply --change <name> --json` 返回 `state: "blocked"` 时，agent 不能写业务代码。
 
 常见原因：
 

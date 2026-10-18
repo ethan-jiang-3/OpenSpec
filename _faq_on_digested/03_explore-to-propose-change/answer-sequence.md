@@ -246,7 +246,7 @@ MD 的职责：把 JSON + 用户意图 + 代码事实 → 工程判断 → artif
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/explore.ts` | Explore skill 规定了 `openspec list --json`、`openspec status --json`、读 artifacts、读代码但不实施的完整协议 |
+| `src/core/templates/workflows/explore.ts` | Explore skill 规定了 `openspec list --json`、`openspec status --change "<name>" --json`、读 artifacts、读代码但不实施的完整协议 |
 | `src/core/templates/workflows/propose.ts` | Propose skill 规定了 `openspec new change`、`openspec status`、`openspec instructions` 的 artifact 生成循环 |
 | `src/commands/workflow/status.ts` | `status --json` 的实现：解析 planning home → 加载 change context → formatChangeStatus |
 | `src/commands/workflow/instructions.ts` | `instructions --json` 的实现：loadChangeContext → generateInstructions → dependencies/template/instruction |

@@ -14,7 +14,7 @@
 
 - **agent 能读你的项目**——它是 coding agent，有文件读取工具，能读 `package.json`、源码树、`README`、已有的 `openspec/specs/`。技术栈这类事实它能自己推断。
 - **agent 能看到 config 的格式**——`openspec init` 写的 stub（`src/core/config-prompts.ts:9-39`）里，`context` 和 `rules` 虽是注释，但格式例子就在那；`docs/customization.md:29-46` 也有完整例子。agent 照着填不会跑偏。
-- **agent 能看到当前 config 的状态**——它跑 `openspec instructions <artifact> --json` 时，返回里带 `context` 和 `rules` 字段（`src/core/artifact-graph/instruction-loader.ts:335-336`）。空的就是 `undefined`，agent 能据此判断"项目还没配背景"。
+- **agent 能看到当前 config 的状态**——它跑 `openspec instructions <artifact> --change <name> --json` 时，返回里带 `context` 和 `rules` 字段（`src/core/artifact-graph/instruction-loader.ts:335-336`）。空的就是 `undefined`，agent 能据此判断"项目还没配背景"。
 
 缺的只有一样：**OpenSpec 没有 skill 提示 agent "context 空就去问用户、然后改 config.yaml"**（`onboard` skill 全文不提 config）。所以这个引导得你给——但最佳引导时机其实是 Explore（见下）。
 

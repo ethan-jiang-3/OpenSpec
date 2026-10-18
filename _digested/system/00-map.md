@@ -30,11 +30,12 @@ OpenSpec 当前系统
    schemas/<name>/templates/*.md
    artifact graph / status / instructions
 
-3. Agent runtime API
-   openspec status --json
-   openspec instructions ... --json
+3. Agent runtime API（前三条必须带 --change "<name>"，否则有活跃 change 时报错）
+   openspec status --change "<name>" --json
+   openspec instructions <artifact> --change "<name>" --json
    openspec new change
-   openspec schemas/templates
+   openspec schemas
+   openspec templates
 
 4. Tool delivery
    global config profile + delivery

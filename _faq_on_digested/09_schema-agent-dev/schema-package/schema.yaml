@@ -93,7 +93,7 @@ artifacts:
       - **Commands**: Slash-command design——if this change needs user-facing commands, define: command name (/agent:do-x), which skills it orchestrates and in what order, argument prelude, expected output. Skip if not needed.
       - **Tools**: Runtime tool/script design——if this change needs tools, define: tool name, input schema, return format, side effects, harness adapter notes (same tool may need different wrappers for OpenSpec vs Claude Code vs Cursor). Skip if not needed.
       - **Evals**: Behavior test plan——for each skill, define: normal path case, boundary case, refusal case. Each with concrete assertion method (grep/jq/file existence/exit code). Skip if not needed.
-      - **CLI**: CLI surface design——if this agent is a CLI tool, define: binary name, subcommands mapped to skills, flags, status API (analogous to `openspec status --json`). Skip if not needed.
+      - **CLI**: CLI surface design——if this agent is a CLI tool, define: binary name, subcommands mapped to skills, flags, status API (analogous to `openspec status --change <name> --json`). Skip if not needed.
       - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered.
       - **Risks / Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
       - **Migration Plan**: Steps to deploy, rollback strategy

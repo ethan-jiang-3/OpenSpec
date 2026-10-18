@@ -123,7 +123,7 @@ MD 不能按自己喜好决定顺序。每一轮必须查 status JSON 的 `ready
 TS: resolveArtifactOutputs() 判定 proposal.md 不存在 → proposal: ready
 TS: resolveArtifactOutputs() 判定 specs/ 无 .md → specs: blocked
 
-MD 看到 proposal: ready → openspec instructions proposal --json
+MD 看到 proposal: ready → openspec instructions proposal --change <name> --json
 TS 返回：dependencies=[], template="## Why...", instruction="..."
 MD 按操作包写 proposal.md
 ```
@@ -166,7 +166,7 @@ MD 在写 design.md 时：
 ### 模式 4：循环终止条件来自 TS
 
 ```text
-MD 写完 tasks.md → openspec status --json
+MD 写完 tasks.md → openspec status --change <name> --json
 TS 扫描：tasks.md 是文件（非目录）→ tasks: done
 TS 检查 applyRequires: [tasks] → 全部 done
 TS 返回 nextSteps: "All apply requirements met."

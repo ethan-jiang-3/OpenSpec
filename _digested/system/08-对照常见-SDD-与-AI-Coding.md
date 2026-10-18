@@ -148,8 +148,8 @@ archive 把 delta specs 合并回主 specs
 | Workflow definition | schema artifact DAG，不只是 prompt |
 | Agent prompt | workflow template + CLI instructions 输出 |
 | Tool integration | skill/command delivery |
-| Runtime state API | `openspec status --json` |
-| Action instruction API | `openspec instructions ... --json` |
+| Runtime state API | `openspec status --change <name> --json` |
+| Action instruction API | `openspec instructions <artifact> --change <name> --json` |
 | Multi-repo context | store registry + references + working set |
 
 ## 什么时候 OpenSpec 的设计特别有价值

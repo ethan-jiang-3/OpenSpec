@@ -88,7 +88,7 @@ sequenceDiagram
     else 有 ready artifact
         rect rgb(255, 240, 255)
             Note over MD,FS: Step 3 · 创建 ONE artifact
-            MD->>TS: openspec instructions <first-ready> --json
+            MD->>TS: openspec instructions <first-ready> --change <name> --json
             TS-->>MD: dependencies, template, instruction,<br/>context, rules, resolvedOutputPath
             MD->>FS: 从磁盘重读依赖文件<br/>（即使用户可能已编辑过）
             MD->>MD: 按 template + instruction 写内容<br/>context/rules 不写入！

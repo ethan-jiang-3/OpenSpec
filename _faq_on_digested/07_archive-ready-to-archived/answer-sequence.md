@@ -212,7 +212,7 @@ TS: buildUpdatedSpec()
 ### 模式 4（仅 OPSX 路径）：MD 做 sync assessment → 再交 TS 执行
 
 ```text
-MD: openspec status --json → artifacts 都 done
+MD: openspec status --change <name> --json → artifacts 都 done
 MD: 读 change delta specs + main specs
 MD: 判断 sync 状态：
   - delta 是否已经合理反映到 main？

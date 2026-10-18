@@ -257,7 +257,7 @@ store 不改变核心流程——它只是在 agent 探索时多了一个「可�
 
 ### store-only apply 不再被 edit scope 卡住
 
-`openspec status --json` 的 `actionContext.allowedEditRoots` 旧版只指向 project root；当 change 实际放在声明的 store 里时，agent 会在"改实现要去哪个仓库"上无所适从。现在 CLI 会把**当前路径上声明该 store 的项目 root** 一并列入 `allowedEditRoots`：
+`openspec status --change <name> --json` 的 `actionContext.allowedEditRoots` 旧版只指向 project root；当 change 实际放在声明的 store 里时，agent 会在"改实现要去哪个仓库"上无所适从。现在 CLI 会把**当前路径上声明该 store 的项目 root** 一并列入 `allowedEditRoots`：
 
 - change 位于 store、且当前项目声明了它：`allowedEditRoots = [声明项目的 root, store root]`，constraint 明示"实现编辑落在声明项目，动其他仓库前先问用户"。
 - 无法确定哪个仓库实现该 change：仍只有 store root，constraint 要求 agent 先问用户。

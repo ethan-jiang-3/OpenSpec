@@ -64,7 +64,7 @@ sequenceDiagram
     rect rgb(255, 240, 255)
         Note over MD,FS: Step 4 · artifact 生成循环
         loop 每轮：status → instructions → write → status
-            MD->>TS: openspec instructions <artifact> --json
+            MD->>TS: openspec instructions <artifact> --change <name> --json
             TS-->>MD: dependencies, template, instruction,<br/>context, rules, resolvedOutputPath
             MD->>FS: 从磁盘重读依赖文件<br/>（不用内存中的旧版本——<br/>用户可能已编辑过）
             MD->>MD: 按 template 组织 + instruction 约束<br/>context/rules 不写入文件！

@@ -180,7 +180,7 @@ TS 不告诉 MD "改哪个源文件"。它只告诉 MD "读这些 planning 文�
 MD: 完成 task 2.1 → 写代码 → 测试通过
 MD: instructions apply --json 的 task 带 sourcePath + line（1-based）
 MD: 按 sourcePath/line 定位该 checkbox，确认描述仍匹配后 - [ ] 2.1 → - [x] 2.1
-MD: （可选）openspec instructions apply --json
+MD: （可选）openspec instructions apply --change <name> --json
 TS: 重新解析 tasks.md → complete: 3/7 → remaining: 4
 ```
 

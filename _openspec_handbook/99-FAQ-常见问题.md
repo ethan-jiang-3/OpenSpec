@@ -22,7 +22,7 @@
 ### Q4: OpenSpec 和 OPSX 是两个东西吗？
 **A**: 不是。OpenSpec 是整套机制；`opsx` 是 Claude 等 adapter 的一个 workflow command 命名空间，不是所有 agent 工具的通用语法。
 
-- `openspec`：终端 CLI，例如 `openspec init`、`openspec status --json`、`openspec archive <name>`
+- `openspec`：终端 CLI，例如 `openspec init`、`openspec status --change <name> --json`、`openspec archive <name>`
 - `/opsx:*`：Claude 等宿主里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
 - `$openspec-*`：Codex v1.8.0 的 skills-only 入口（装在 `.agents/skills/`），例如 `$openspec-propose`、`$openspec-apply-change`
 - `.claude/commands/opsx/`：Claude Code 里保存这些入口文件的位置
@@ -33,7 +33,7 @@
 **A**: 
 - Claude 的 `/opsx:propose`（或 Codex 的 `$openspec-propose`）：宿主 workflow，agent 会按 workflow 自动跑多步 CLI
 - CLI 里没有 `openspec propose` 这个等价命令
-- 对应的底层步骤通常是 `openspec new change <name>`，再用 `openspec status --json` 和 `openspec instructions <artifact> --json` 生成 artifacts
+- 对应的底层步骤通常是 `openspec new change <name>`，再用 `openspec status --change <name> --json` 和 `openspec instructions <artifact> --change <name> --json` 生成 artifacts
 - 机器协议层面（status/instructions 返回什么、agent 怎么跑多步），详见 [90 附录·给机器看的 agent 协议](90-附录-给机器看的-agent-协议.md)
 
 ### Q6: 我必须按 propose → apply → archive 的顺序吗？

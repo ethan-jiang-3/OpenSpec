@@ -236,7 +236,7 @@ Claude Code 下通常会同时投递 skills 和 commands。
 |---|---|---|
 | skill | `.claude/skills/openspec-propose/SKILL.md` | 告诉 Claude Code：什么时候该使用这个 OpenSpec workflow，以及执行步骤是什么 |
 | command | `.claude/commands/opsx/propose.md` | 给用户一个 `/opsx:propose` 入口 |
-| CLI | `openspec status --json`、`openspec instructions ... --json` | 返回真实状态、路径、依赖、模板、context/rules |
+| CLI | `openspec status --change <name> --json`、`openspec instructions <artifact> --change <name> --json` | 返回真实状态、路径、依赖、模板、context/rules |
 | 文件系统 | `openspec/specs/`、`openspec/changes/` | 保存项目事实和 change 状态 |
 
 一个容易混淆的地方是：skill/command 里确实有很多说明文字，但它们不是事实源。真正的状态来自 `openspec/`，真正的运行时解释来自 CLI。

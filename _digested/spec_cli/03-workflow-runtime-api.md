@@ -64,7 +64,7 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 
 ### 输入
 
-- `changeName`
+- `changeName` —— **CLI 上是必填的**：`--change <name>`，或用 `--all` 一次性要全部活跃 change 的状态。两者互斥。项目里有 ≥1 个活跃 change 时，裸跑 `openspec status --json` 会以退出码 1 失败：`Missing required option --change (or --all for every active change). Available changes:`；只有**零**活跃 change 时它才返回 `{"changes": []}`。所以"空项目里试通了"不等于写法对。
 - 可选 `schema`
 - project root
 - schema 中声明的 artifacts
@@ -133,7 +133,7 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 
 ### 输入
 
-- `changeName`
+- `changeName` —— **CLI 上是必填的**：`--change <name>`。即使仓库里只有一个 change 也不会自动推断，不传直接以退出码 1 失败：`Missing required option --change. Available changes:`。
 - `artifactId`
 - 可选 schema
 - schema 里的 artifact 定义
