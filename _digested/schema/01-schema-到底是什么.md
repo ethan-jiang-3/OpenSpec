@@ -43,13 +43,17 @@
 ```
 schema.yaml 定义的 artifact 依赖图（spec-driven 为例）：
 
-  proposal ──→ specs
-     │            │
-     └──→ design  │
-            │     │
-            └──→ tasks
-                   │
-                   └──→ apply (实现阶段)
+  proposal ──→ specs ──────┐
+     │                     │
+     └──→ design ──────────┤
+                          ↓
+                        tasks ──→ apply (实现阶段)
+
+  真实的 requires（schemas/spec-driven/schema.yaml）：
+    specs.requires  = [proposal]
+    design.requires = [proposal]      ← 注意：不含 specs
+    tasks.requires  = [specs, design]
+  apply 是顶层块，通过 apply.requires = [tasks] 挂到 tasks 之后。
 ```
 
 这不是业务图，不是架构图，是 **artifact 依赖图**。它描述的是"一个 change 的产物之间怎么关联"。
