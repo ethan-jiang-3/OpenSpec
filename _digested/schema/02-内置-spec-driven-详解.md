@@ -14,7 +14,7 @@
 
 - **artifact DAG**（`requires`）：`proposal → {specs, design} → tasks` 的依赖是工具判断"下一个该生成什么 / 是否完成"的依据；同级推荐顺序按 schema 声明为 specs 再 design，自己加/漏 artifact 会破坏 `apply`/`status` 的判断。
 - **delta 操作段头**（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）：archive 靠它解析；写错段头 → delta 不被识别。
-- **格式**：`### Requirement: <name>`、scenario **必须 4 个 `#`**（写成 3 个或 bullet 会**静默失败**）。约定写法是 `#### Scenario:`；loss guard / 计数认 requirement 下任何 `#### ` 子标题（如 `#### Edge case`），但作者仍应写 `#### Scenario:`。requirement 正文建议含 `SHALL`/`MUST`——这是 guidance 而非硬错误：正文整体缺失才 ERROR，正文在但缺关键字仅 WARNING（strict 模式才强制）。
+- **格式**：`### Requirement: <name>`、scenario **必须 4 个 `#`**——schema instruction 的原话是"3 个 `#` 或 bullet 会静默失败"（`will fail silently`），但那说的是**你的眼睛**：`openspec validate` 会明确报 ERROR（`ADDED "<name>" must include at least one scenario`），不会默默放过。真正静默的是没跑 validate 的人。约定写法是 `#### Scenario:`；loss guard / 计数认 requirement 下任何 `#### ` 子标题（如 `#### Edge case`），但作者仍应写 `#### Scenario:`。requirement 正文建议含 `SHALL`/`MUST`——这是 guidance 而非硬错误：正文整体缺失才 ERROR，正文在但缺关键字仅 WARNING（strict 模式才强制）。
 - **能力契约**：proposal 列的 capability 必须与 `specs/<capability-path>/spec.md` 的相对路径一致。内置 guidance 默认举 flat kebab-case 名；runtime 也支持 `identity/session` 这类 nested path，团队采用它时应在 config/AGENTS 明确约定。
 - **无行为 delta 的边界**：纯重构、工具或文档 change 可在 `.openspec.yaml` 设 `skip_specs: true`；它使 specs artifact 显式 skipped，且不能和任何 delta spec 文件共存。
 
@@ -116,7 +116,7 @@ apply:
 - prose 可以按 `config.context` 中的语言要求本地化；结构标题（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、`### Requirement:`、`#### Scenario:`）保持英文。规范性文字仍推荐 `SHALL`/`MUST`：normal 模式缺关键字是 warning，strict 模式会把 warning 计为失败。
 - **requirement 500 字符口径（v1.14.0，`1872982`）**：schema instruction 明确写出——`### Requirement:` 到首个 scenario 之间的描述文本控制在 500 字符内，`openspec validate` 会对超长描述报警（v1.14.1 起是 **WARNING**，此前 INFO；`--strict` 会失败，且 change 里的 **ADDED requirement 也受同一限制**，MODIFIED 不受限）。写新 requirement 时一个 requirement 只陈述一个行为：示例与边界情况移入 scenario；覆盖多个行为的 requirement 拆成多个 block。MODIFIED 下保持既有 requirement block 完整，不得为凑长度而拆分、删减或改写既有文本。
 
-**specs 的写入方式（v1.14.1 #2037）**：instruction 的原文是 `Write the spec files one at a time`，具体四条：
+**specs 的写入方式（v1.14.1 #2037）**：instruction 的首句原文是 `Write the spec files one at a time, so the user sees progress and an interrupted run keeps the files it already wrote:`——它把**理由**写进了同一句，既是格式要求也是收益说明。具体四条：
 
 1. 写之前先比对 proposal 列出的 capability 与磁盘上已有的 `specs/<capability-path>/spec.md`，**从第一个没有文件的那个开始**；除非用户要求，不重写已有文件；
 2. 每个文件之前，用一行说明正在写哪个 capability；
@@ -157,11 +157,11 @@ apply:
 | `requires` | `[specs, design]` | 依赖 specs 和 design 都完成 |
 
 **instruction 核心内容**：
-- 强制 checkbox 格式：`- [ ] X.Y Task description`（v1.13.1 起计数器认全部 CommonMark 标记——`+`/有序 `1. [ ]` 同样被追踪；`- [x]`/`- [ x]` 算完成，`- [~]`/`- [-]`/空 `- []` 算未完成；无 checkbox 的行不追踪）
+- 强制 checkbox 格式：instruction 只要求 `- [ ] X.Y Task description`，并规定 `- [X]`/`- [x]`/`- [ x]` 都算完成（大小写与空格皆可）。**但解析器比 instruction 宽**：`src/utils/task-progress.ts` 认全部 CommonMark 列表标记（`-`、`*`、`+`、有序 `1.` / `1)`），所以手写 `+ [ ]` 或 `1. [ ]` 同样被计数；`- [~]`/`- [-]`/空 `- []` 算未完成；无 checkbox 的行不追踪
 - 要求按依赖排序
 - 每个任务要小到可在一个 session 完成
 - 每个 checkbox 自身必须写明 verification，例如测试、命令、可观察行为或交付 artifact；只有验证横跨多个实现任务时，才另列 `Integration Verification`。
-- **`## Workflow follow-up`（v1.14.1 #1791）**：instruction 原文是 `Follow the template below for tracked tasks`——**只约束被跟踪的任务**。只能发生在归档**之后**的步骤（归档、验证归档结果）不写成 checkbox，而是以普通项目符号放在 `tasks.md` 末尾一个可选的 `## Workflow follow-up` 段，instruction 明确说明它们"属于参考信息，不在跟踪任务进度之内"。判定这些步骤本身就是归档时，归档永不可能被勾上，apply 的完成度会永远卡在 N-1。示例：
+- **`## Workflow follow-up`（v1.14.1 #1791）**：instruction 原文是 `**IMPORTANT: Follow the template below for tracked tasks.**`——**只约束被跟踪的任务**。只能发生在归档**之后**的步骤（归档、验证归档结果）不写成 checkbox，而是以普通项目符号放在 `tasks.md` 末尾一个可选的 `## Workflow follow-up` 段，instruction 明确说明它们"属于参考信息，不在跟踪任务进度之内"。判定这些步骤本身就是归档时，归档永不可能被勾上，apply 的完成度会永远卡在 N-1。示例：
 
   ```markdown
   ## Workflow follow-up
@@ -223,9 +223,9 @@ proposal (root)
 
 | 模板文件 | 核心结构 |
 |---------|---------|
-| `proposal.md` | `## Why` / `## What Changes` / `## Capabilities` / `## Impact` |
-| `spec.md` | `## ADDED Requirements` / `### Requirement:` / `#### Scenario:` |
-| `design.md` | `## Context` / `## Goals / Non-Goals` / `## Decisions` / `## Risks` |
+| `proposal.md` | `## Why` / `## What Changes` / `## Capabilities`（下含 `### New Capabilities` 与 `### Modified Capabilities`）/ `## Impact` |
+| `spec.md` | 标题 `# Spec Delta` → `## Purpose`（仅新 capability）→ `## ADDED Requirements` / `### Requirement:` / `#### Scenario:` |
+| `design.md` | `## Context` / `## Goals / Non-Goals` / `## Decisions` / `## Risks / Trade-offs` |
 | `tasks.md` | `## 1. <Group>` / `- [ ] 1.1 <Task>` |
 
 模板里的 HTML 注释（`<!-- ... -->`）作为给 AI 的内联提示。

@@ -21,9 +21,9 @@ continue 是**增量路径**：每次调用只推进一个 ready artifact。它�
 | 停止条件 | applyRequires 满足 | applyRequires 满足 | 写完一个立即 STOP |
 | 适用 | 新 change，快速启动 | 已有 change，批量补齐 | 逐步推进，每步 review |
 
-## 三个状态分支
+## 状态分支
 
-continue 根据 `status --json` 的结果有三个分支：
+continue 根据 `status --json` 的结果分成三段：一段**先于所有分支**执行的半写工件补完，加上 `status` 给出的三选一主分支（合计四条路径）：
 
 | 状态 | agent 行为 |
 |---|---|
@@ -153,13 +153,13 @@ template 里硬编码了 spec-driven schema 的 artifact 创建指引：
 
 | 内容 | 行号范围（continue-change.ts，v1.14.3） |
 |---|---|
-| `PARTIAL_ARTIFACT_CHECK` 共享片段 | L25-L35 |
+| `PARTIAL_ARTIFACT_CHECK` 共享片段 | 注释 L27-L31；常量 L32-L35 |
 | SkillTemplate 定义 | L37-L158 |
 | CommandTemplate 定义 | L161-L281 |
 | Step 1: 选 change | L51-L65 |
 | Step 2: status | L67-L75 |
 | Step 2.5: 半写工件检查（注入点） | L81 |
-| Step 3: 三向分支（含输出路径选择 L109 / L235） | L77-L129 |
+| Step 3: 主分支三选一（含输出路径选择 L109 / L235） | L77-L129 |
 | Output 段 | L130-L138 |
 | Artifact Creation Guidelines | L139-L144 |
 | Guardrails | L145-L155 |

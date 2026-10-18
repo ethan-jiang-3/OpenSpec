@@ -172,12 +172,11 @@ RENAMED 分支原有的行为（FROM 名下没有时才按 TO 名读）不变；
 
 | 内容 | 行号范围（verify-change.ts，v1.14.3；skill 与 command 共享同一份步骤文本） |
 |---|---|
-| SkillTemplate 定义 | L11-L220 |
-| CommandTemplate 定义 | L223-L430 |
+| `getVerifyChangeSkillTemplate()` / `getOpsxVerifyCommandTemplate()` | L11-L221 / L223-L431（文件 431 行；两者共用同一份步骤文本，只有 frontmatter 与调用面不同） |
 | Step 1: 选择 change（含 no-tasks 列表） | L25-L36 |
 | Step 3: 读取 apply 契约（tasks/progress/taskTrackingConfigured） | L40-L58 |
 | Step 4: 报告初始化 + Not applicable 规则 | L60-L72 |
 | Step 5: Completeness（Task Completion L76；Spec Coverage 按 outputPath 发现 + REMOVED 基线） | L74-L114 |
 | Step 6: Correctness（removal-only → Not applicable） | L116-L136 |
-| Step 7: Coherence（Design Adherence 按 outputPath 发现） | L138-L158 |
-| Step 8: 生成报告（skipped 检查的计分与最终判定） | L160-L201 |
+| Step 7: Coherence（Design Adherence 按 outputPath 发现） | L138-L156 |
+| Step 8: 生成报告（skipped 检查的计分与最终判定） | L158-L199 |

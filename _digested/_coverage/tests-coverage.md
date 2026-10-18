@@ -87,7 +87,7 @@
 
 | 新测试 | 覆盖主题 | 对应 digest |
 |--------|----------|-------------|
-| `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs` | 启动时加载模块数的回归闸：`--version`/`--help` 24 个、补全 changes/specs 48 个（防止按需加载被无意退回） | `../mechanisms/05-cli-infra.md` |
+| `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs` | 启动加载面回归闸（用 `--import` hook 记录加载过的模块）：`--version`/`--help`/`validate --help` 只允许 `commander` 一个包、不加载任何命令实现；`__complete changes/specs` 只加载 `commander` + 补全实现、**不加载 telemetry**。断言的是「加载了哪些」而不是「加载了多少个」，所以模块数（24/48）变动不会误报，但按需加载被退回一定会失败 | `../mechanisms/05-cli-infra.md` |
 | `test/utils/interactive.test.ts` | `canRenderSpinner`：零宽 TTY（`columns === 0`）拒绝 spinner、非 TTY 允许；`OPEN_SPEC_INTERACTIVE=0`/`CI` 关 spinner | `../mechanisms/05-cli-infra.md` |
 | `test/utils/spec-path-containment.test.ts`、`test/cli-e2e/spec-symlink-into-project.test.ts` | `spec.md` 指向项目内 symlink 的包含规则、规划根识别（`<X>/openspec` + `specs|changes`）、悬空链接拒绝、写侧 canonical path 钉定 | `../specs_truth/06-源码锚点与缺口.md` |
 | `test/core/specs-apply.project-linked-spec.test.ts` | 项目内链接 spec 的写入与回滚 | `../internal-spec-driven/04-archive-归档合并.md` |

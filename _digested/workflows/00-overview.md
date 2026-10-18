@@ -107,13 +107,13 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 ## v1.12.x–v1.13.x template 层新机制
 
 - **optional-workflow**（`src/core/templates/optional-workflow.ts`）：workflow 之间的相互引用（如 explore → propose）在**生成时**按 profile 解析，没装的 workflow 自动回退到 explore 自身 capture 或 CLI——custom profile 不再产出指向不存在命令的 handoff。
-- **project-root guard**（`src/core/templates/workflows/project-root.ts`）：所有 workflow 写文件前先确认项目已 `openspec init`（`openspec/config.yaml` 存在），绝不把创建 `openspec/` 目录当成副作用。
+- **project-root guard**（`src/core/templates/workflows/project-root.ts`）：所有 workflow 在**第一个写文件的步骤之前**（`new change`、`archive`、`sync specs`、或落盘 artifact）先跑 `openspec list --json` 并读 `root`——`root` 是对象才算初始化；`"root": null` 说明这里没有 `openspec/`，此时 `openspec new change` 会顺手建一个。判定用 `list --json` 而不是查 `config.yaml`，因为它拒绝凭空造一个隐式 root；该命令此时**非零退出**，那是答案本身而不是 CLI 坏了。`root: null` 之后怎么做还取决于是谁发起的：模型自己选的 workflow 应当直接退出、不推销安装；用户点名 OpenSpec 的则停下来问（`init` / 已有 store / 不用 OpenSpec）。两边都不许把建 root 当副作用。
 - **顶层标题**（v1.13.1 `3312af47`）：proposal/spec/design/tasks 模板以 `# <Artifact>` 开头。
 - **`Next:` 行**（v1.13.1）：`status` text 输出结尾给出推进命令。
 
 ## v1.14.0 template 层新机制
 
-- **任务源定位**（apply）：`openspec instructions apply --json` 的每个任务带 `sourcePath` 与 1-based `line`（`LocatedTask`，只加定位、不改任务解析）；apply 模板要求在该位置确认 checkbox 仍匹配描述 → 勾选 → 重跑 apply instructions 确认进度变化。见 [`06-apply.md`](06-apply.md)。
+- **任务源定位**（apply）：`openspec instructions apply --json` 的每个任务带 `sourcePath` 与 1-based `line`（`LocatedTask` 只附加定位，不改任务解析——源码注释原话 `without changing task parsing`）；apply 模板要求在该位置确认 checkbox 仍匹配描述 → 勾选 → 重跑 apply instructions 确认进度变化。见 [`06-apply.md`](06-apply.md)。
 - **verify 改吃 status/apply 契约**：verify 模板不再让 agent 自己解析 checkbox，改用 `instructions apply` 输出的顶层 `tasks`/`progress`（CLI 已按 `apply.tracks` 聚合全部具体任务文件）与 `taskTrackingConfigured`；schema 未定义的检查和 intentional skip（`skip_specs: true`、可选 design、无任务追踪的 schema）标 **Not applicable**，与证据缺失的 **Not verified** 分开；apply 的 `state`/`instruction` 只是 context 不是 verdict。见 [`08-verify.md`](08-verify.md)。
 - **archive 阻塞语义**：inline sync 报任何 stop/blocking 条件即视为 sync 失败——立即停止归档，不做 post-sync 内容比对、不移 `changeRoot`，一切未动可重跑；sync 通过后还要做结构验证（主 spec 不残留 delta headers、REMOVED 的 requirement 已删、retired capability 的主 spec 已删除）。模板同时明确 inline sync **不得委托后台任务**。见 [`09-archive.md`](09-archive.md)。
 

@@ -143,13 +143,13 @@ FAQ `03_explore-to-propose-change/` 是从 "Explore 怎么判断是否 propose" 
 | 内容 | 行号范围（explore.ts，v1.14.3） |
 |---|---|
 | SkillTemplate 定义 | L76-L398 |
-| CommandTemplate 定义 | L401-L611（文件 611 行） |
-| 捕获表（skill 版 L222-L228 / command 版 L558-L564）+ 默认 schema 限定（L220 / L556） | skill 与 command 各一份 |
+| CommandTemplate 定义 | L401-L612（文件 612 行） |
+| 捕获表 + 默认 schema 限定 | 限定句 L219-L220 / L555-L556；表头 L222 / L558；表行 L223-L229 / L559-L565 |
 | capture 的输出路径选择（步骤 3） | skill 版 L198；command 版 L534 |
-| STORE_SELECTION_GUIDANCE 注入 | L19, L310 |
-| OpenSpec Awareness 段 | L82-L136, L379-L433 |
-| 五个 entry point 示例 | L149-L249 |
-| Guardrails | L282-L291, L461-L470 |
+| `STORE_SELECTION_GUIDANCE` 注入（import 在 L9） | L86, L413 |
+| `## OpenSpec Awareness` 段 | L157-L238 / L491-L575 |
+| 四个 entry point 示例 | L253, L276, L307, L324 |
+| `## Guardrails` 段 | L384-L393 / L600-L609 |
 
 - **捕获表限定默认 schema（v1.14.2，`9cb5ba8c` #2086）**：捕获表与示例 offer 标注为默认 spec-driven schema；换 schema 时按 `artifactPaths` 选该 schema 定义的工件并点名，绝不创建 schema 未定义的文件。
 - **输出路径先定后写（v1.14.3，`276d0150` #2104）**：capture 步骤 3 与 propose/ff/continue 同口径——先定并校验 `changeRoot` 内的具体路径，再创建。

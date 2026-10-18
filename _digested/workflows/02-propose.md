@@ -143,7 +143,7 @@ FAQ `04_propose-to-apply-ready/` 从工程视角分析了 propose 的 artifact D
 | 内容 | 行号范围（propose.ts，v1.14.3） |
 |---|---|
 | SkillTemplate 定义 | L33-L194 |
-| CommandTemplate 定义 | L197-L357 |
+| CommandTemplate 定义 | L199-L357（文件 358 行） |
 | Step 1: 询问输入/澄清歧义 | L63-L72 |
 | Step 2: 加载 context | L74-L82 |
 | Step 3: schema 选择 | L84-L92 |
