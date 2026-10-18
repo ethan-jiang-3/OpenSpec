@@ -121,7 +121,7 @@ Warning: N incomplete task(s) found. Continue?
 如果找到 updates，CLI 显示每个 capability 是 `create` 还是 `update`，没有 `--yes` 时询问：
 
 ```text
-Proceed with spec updates?
+Proceed with spec updates? (Y/n)
 ```
 
 用户拒绝时，CLI 不更新主 specs，但仍然 archive change。

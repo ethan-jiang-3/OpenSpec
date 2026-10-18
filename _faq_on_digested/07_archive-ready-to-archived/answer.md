@@ -200,7 +200,7 @@ Specs to update:
 没有 `--yes` 时会询问：
 
 ```text
-Proceed with spec updates?
+Proceed with spec updates? (Y/n)
 ```
 
 如果用户拒绝，CLI 会打印：
