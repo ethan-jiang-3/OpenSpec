@@ -12,7 +12,7 @@
 
 | 你遇到的问题 | 先用什么 | 为什么不是 store |
 |---|---|---|
-| 一个仓库的 main specs 太多，agent 不知道该读哪份 | [09](09-高级-能力身份与specs漂移维护.md) 的 taxonomy、薄 catalog、候选 path discovery | store 不会替你挑本仓库相关 capability，也不自动注入正文 |
+| 一个仓库的 main specs 太多，agent 不知道该读哪份 | [09](26-高级-治理边界与漂移维护.md) 的 taxonomy、薄 catalog、候选 path discovery | store 不会替你挑本仓库相关 capability，也不自动注入正文 |
 | 一个 change 跨身份、权限、事件等多个本地 domain | proposal/design 的 impact matrix | 这是一个 repo-local change 的范围判断，不是跨仓库规划 home |
 | 想让一条 change 同时修改多个 repo | 各 repo 保持自己的 change，并用明确的跨 repo 协作/PR 纪律 | store 不创建跨 repo change，不管理依赖顺序或 archive |
 

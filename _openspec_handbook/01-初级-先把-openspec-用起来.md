@@ -257,7 +257,7 @@ context: |
 Add the language instruction to its context field instead.
 ```
 
-此时手工把同样三行加入现有 `context: |`，保留项目已有技术栈和规则。空字符串、多行值、控制字符/不可见格式字符或超出 context 大小限制的值也会被拒绝。完整判断与 YAML 写法只在 [06](06-高级-config-yaml-怎么写到真正好用.md) 展开。
+此时手工把同样三行加入现有 `context: |`，保留项目已有技术栈和规则。空字符串、多行值、控制字符/不可见格式字符或超出 context 大小限制的值也会被拒绝。完整判断与 YAML 写法只在 [06](23-高级-config-yaml-怎么写到真正好用.md) 展开。
 
 上面的 `--tools zed` 会生成 `.agents/skills/openspec-*/SKILL.md`。Zed Agent 是 skills-only，不会生成 `opsx-*` command；需 Zed ≥ 1.4.2，并先信任当前 worktree。用 `/openspec-propose` 调用（以生成文件中的拼法为准）。
 

@@ -11,7 +11,7 @@
 
 **必须先读过的**：
 - `01` 初级篇 - 知道几个基本命令
-- `02` 中级篇 - 理解 specs/changes/artifact/delta spec
+- `10` 中级篇 - 理解 specs/changes/artifact/delta spec
 
 **如果没读过上面两篇**：
 - 你会不理解"为什么要有这么多文件"
@@ -584,7 +584,7 @@ openspec/changes/add-task-csv-export/
 
 ---
 
-## 第 10 步：`/opsx:archive`，不是"收起来"，而是"正式沉淀"
+## 第 50 步：`/opsx:archive`，不是"收起来"，而是"正式沉淀"
 
 现在执行：
 
@@ -613,7 +613,7 @@ openspec validate add-task-csv-export --type change --strict
 
 ---
 
-## 第 11 步：archive 前后，项目到底发生了什么变化
+## 第 51 步：archive 前后，项目到底发生了什么变化
 
 ### archive 之前
 
@@ -656,7 +656,7 @@ openspec/
 
 ---
 
-## 第 12 步：这个案例里，前面几篇的概念分别落在哪
+## 第 52 步：这个案例里，前面几篇的概念分别落在哪
 
 为了帮助你把前面几篇串起来，我们现在回看这次案例。
 
@@ -668,7 +668,7 @@ openspec/
 /opsx:propose → /opsx:apply → /opsx:archive
 ```
 
-### 对应 `02` 中级篇
+### 对应 `10` 中级篇
 
 你已经看到了：
 
@@ -677,7 +677,7 @@ openspec/
 - `artifact` 是 change 内部的四类 artifact
 - delta spec 是"增量变化"表达层
 
-### 对应 `03` 生命周期思想篇
+### 对应 `20` 生命周期思想篇
 
 这整个案例本身就在体现那套思想：
 
@@ -687,7 +687,7 @@ openspec/
 - 在实现过程中允许回头修改前面的 artifact
 - 最后通过 archive 把变化沉淀回正式基线
 
-### 对应 `04` config/schema 边界篇
+### 对应 `21` config/schema 边界篇
 
 虽然这次案例没重点展开，但它背后默认已经在工作：
 
@@ -695,7 +695,7 @@ openspec/
 - schema 在决定这次 change 的 artifact 结构
 - `.openspec.yaml` 记录 change 绑定的 schema
 
-### 对应 `10` Claude Code 实战篇
+### 对应 `50` Claude Code 实战篇
 
 如果你是在 Claude Code 中敲命令，那么：
 

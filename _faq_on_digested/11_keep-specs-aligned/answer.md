@@ -49,7 +49,7 @@ archive    校验 + 把 delta 合进主 spec + 收档      ← ★ specs 只在�
 - **apply 完就 archive，别卡着** —— specs 只在 archive 时更新。change 停在 apply 之后不归档，是最常见的失真 + 噪声源（它要么指向早不存在的方向，要么没建完）。走完圈、到 archive 收尾。
 - **改 requirement 名字走 RENAMED，别"删旧 + 加新"** —— requirement 没有稳定 ID，身份就是它的标题。删了再加等于把历史连续性掐断，以后任何指向旧名字的 delta 都失配。
 - **apply 改代码时，顺手想一句"这段 spec 还准吗"** —— 最廉价的对齐动作。改完一个行为，花 10 秒问：spec 里有没有描述这个？我这一改让它更准还是更不准？不准就在下一个 propose 的 delta 里带上。
-- **capability relative path = 它的身份，别随意搬** —— `openspec/specs/<capability-path>/spec.md` 的相对 path（可嵌套）就是 capability ID，也是 delta 的靶心。requirement 改名还有 `RENAMED`；capability path 仍没有独立 rename operation，裸搬会让旧 path 的 delta 悬空。所以完整 path 当稳定性契约对待。（详见 [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md)。）
+- **capability relative path = 它的身份，别随意搬** —— `openspec/specs/<capability-path>/spec.md` 的相对 path（可嵌套）就是 capability ID，也是 delta 的靶心。requirement 改名还有 `RENAMED`；capability path 仍没有独立 rename operation，裸搬会让旧 path 的 delta 悬空。所以完整 path 当稳定性契约对待。（详见 [`../../_openspec_handbook/26-高级-治理边界与漂移维护`](../../_openspec_handbook/26-高级-治理边界与漂移维护.md)。）
 - **别手改主 spec** —— 要改就走 propose（写 delta）再 archive。手改是核选项，而且改完没有任何工具知道你动过。
 
 （`openspec validate` 是真实的 CLI 命令（和 `archive` 同列），但**不是工作流一步**——archive 自己会先校验，平时不用单独跑它；而且它只查结构、查不出 specs↔代码漂移，见误区 1 和 [`06` validate 命令参考](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
@@ -182,7 +182,7 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 | [`../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md`](../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md) | `archive ... not found` 怎么排错 |
 | [`../../_digested/specs_truth/06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md)（validate 命令参考） | `validate` 是 CLI 命令（非 slash）、结构 linter、抓不出漂移；archive 自校验使单独 validate 冗余 |
 | [`../../_digested/specs_truth/06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md)（delta 文本边界） | `unappliedContent` 三处边界与 WARNING 口径（v1.14.2） |
-| [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md#写进-delta-的散文不会进主-specv1142-起会告警) | 用户向的归属判断表 |
-| [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md) | capability=specs 相对 path=身份、capability 无独立 rename；specs 漂移与维护（用户向） |
+| [`../../_openspec_handbook/26-高级-治理边界与漂移维护.md`](../../_openspec_handbook/26-高级-治理边界与漂移维护.md#写进-delta-的散文不会进主-specv1142-起会告警) | 用户向的归属判断表 |
+| [`../../_openspec_handbook/26-高级-治理边界与漂移维护.md`](../../_openspec_handbook/26-高级-治理边界与漂移维护.md) | capability=specs 相对 path=身份、capability 无独立 rename；specs 漂移与维护（用户向） |
 | `src/core/specs-apply.ts` | `buildUpdatedSpec`：MODIFIED 整块替换、按标题精确匹配、原子 fail-fast |
 | `src/core/validation/validator.ts` | `validateChangeDeltaSpecs` 只读 change delta、不打开主 spec（误区 1 的根） |

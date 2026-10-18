@@ -365,8 +365,8 @@ git commit -m "Sync with add-request-filter changes"
 v1.14.2/v1.14.3 起 `openspec/`、`changes/`、`specs/` 目录和单条 `spec.md` 都可以是项目内符号链接，于是很容易想到"把 `specs/` 链到一个共享目录，两个人就不用抢同一个文件了"。这解决不了上面的问题，只把冲突换了个地方：
 
 - 链接指向的仍是**同一个文件**，两人改的还是同一份正文，Git 里该冲突照样冲突；若共享目录在仓库外，clone 下来直接是断链。
-- OpenSpec 对 spec 正文没有 hash、没有变更记录，链接让"谁在什么时候手改了哪一段"更难追溯（见 [09](09-高级-能力身份与specs漂移维护.md) 的漂移维护）。
-- symlink 的定位是**本仓库内的目录摆放**，不是跨人协作机制。真要跨仓库共享正式 spec，用 store（见 [07](07-高级-store-跨仓库协同.md)），它带来的是可发现的索引与显式引用，而不是一个隐式共享的目录。
+- OpenSpec 对 spec 正文没有 hash、没有变更记录，链接让"谁在什么时候手改了哪一段"更难追溯（见 [09](26-高级-治理边界与漂移维护.md) 的漂移维护）。
+- symlink 的定位是**本仓库内的目录摆放**，不是跨人协作机制。真要跨仓库共享正式 spec，用 store（见 [07](24-高级-store-跨仓库协同.md)），它带来的是可发现的索引与显式引用，而不是一个隐式共享的目录。
 
 并行改同一 capability 时的正解仍是本节的纪律：**按 capability path 切分工作**，或者错开时间、由后完成的一方 rebase 并重跑 `openspec validate`。
 
@@ -792,6 +792,6 @@ Bob 需要等 Alice 的 change archive 后再开始。
 - **Change 生命周期不变** — 实现完成后，各 repo 各自 archive 自己的 change
 - **`openspec context` 提供 referenced store 的 working set、路径和 `show --store` 入口**，作为按需读取的起点
 
-详细机制见 [07 高级·store 跨仓库协同](07-高级-store-跨仓库协同.md)。
+详细机制见 [07 高级·store 跨仓库协同](24-高级-store-跨仓库协同.md)。
 
 ---

@@ -5,7 +5,7 @@
 
 > **v1.14.3 配置路由。** `context` 进入 artifact instructions，也进入 Apply/Archive；`rules.<artifact>` 只进入同名 artifact；Apply/Archive 专属的短稳定步骤写到 `operations.apply/archive.guidance`。`init --language` 只是创建新 config 时写入语言 context 的快捷入口。
 
-本章是手册内唯一维护**可复制 YAML、字段消费者和验证命令**的配置写法页；[05](05-高级-项目级全局约束到底放哪.md) 只负责先判断一条信息该不该进入项目层。
+本章是手册内唯一维护**可复制 YAML、字段消费者和验证命令**的配置写法页；[05](22-高级-项目级全局约束到底放哪.md) 只负责先判断一条信息该不该进入项目层。
 
 ---
 

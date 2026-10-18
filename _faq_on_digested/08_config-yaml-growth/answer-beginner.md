@@ -6,7 +6,7 @@
 
 ## 先认清楚这个文件
 
-`openspec/config.yaml` 在三层里属于**项目全局层**——“这个项目长期按什么原则开发”（另两层：`specs/` 是“系统现在会什么”，`changes/` 是“这次改什么”，细节见 [`../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md)）。对日常作者最重要的字段有：
+`openspec/config.yaml` 在三层里属于**项目全局层**——“这个项目长期按什么原则开发”（另两层：`specs/` 是“系统现在会什么”，`changes/` 是“这次改什么”，细节见 [`../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md)）。对日常作者最重要的字段有：
 
 | 字段 | 作用 |
 |---|---|
@@ -124,7 +124,7 @@ schema: spec-driven
 2. **抄一个有经验的人的 config.yaml，改成你的项目。** 这是最现实的路——让别人踩过的坑、沉淀的 context/rules 给你打底，你只改技术栈/领域。去哪找：
    - 这个 repo 自己的 [`../../openspec/config.yaml`](../../openspec/config.yaml)——OpenSpec 团队 dogfood 的成品，最现成的范本（就是上面那段）。
    - 你团队里已经在用 openspec 的项目，或同事的 config。
-   - [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md) 末尾有 4 种项目类型（审批系统 / API 平台 / SaaS 控制台 / 数据编排）的完整 sample config，挑最像你项目的抄。
+   - [`../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md) 末尾有 4 种项目类型（审批系统 / API 平台 / SaaS 控制台 / 数据编排）的完整 sample config，挑最像你项目的抄。
 
    抄来后只改 `context` 里的技术栈/领域/质量优先级；`rules` 先原样保留，等你用一阵、看懂每条在卡什么，再动。
 3. **rules 先别自己发明。** 抄来的先用着；真要加新规则，照着抄来的格式写——key 用真实的 artifact ID（`proposal`/`specs`/`design`/`tasks`），别发明 `all`/`general`/`apply`/`archive` 这种（不会作为 artifact rule 生效）。Apply/Archive 的稳定步骤放到上面的 `operations.*.guidance`。

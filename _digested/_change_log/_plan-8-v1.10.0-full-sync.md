@@ -462,7 +462,7 @@
   - [x] 生成的 context 示例
   - [x] 已有项目失败与手改入口
   - [x] Zed 的入口和目录
-- [x] `06-高级-config-yaml-怎么写到真正好用.md`
+- [x] `23-高级-config-yaml-怎么写到真正好用.md`
   - [x] 作为多语言深度单一事实源
   - [x] `init --language` 与手改 context 判断表
   - [x] 本地化 prose 与英文结构词边界
@@ -472,7 +472,7 @@
 
 ### 6.3 Store 与机器协议
 
-- [x] `07-高级-store-跨仓库协同.md`
+- [x] `24-高级-store-跨仓库协同.md`
   - [x] 增加 store-aware main-spec 路径
   - [x] 给出错误/正确路径对照
   - [x] 给出 `instructions specs --json` 排错步骤
@@ -486,29 +486,29 @@
 
 ### 6.4 Tasks verification 与实战示例
 
-- [x] `03-高级-openspec-的软件开发生命周期思想.md`
+- [x] `20-高级-openspec-的软件开发生命周期思想.md`
   - [x] tasks 定义增加 verification 脚注并回链 12
-- [x] `08-高级-自定义-schema-创建自己的工作流.md`
+- [x] `25-高级-自定义-schema-创建自己的工作流.md`
   - [x] fork spec-driven 时同步 tasks instruction
-- [x] `11-实战-从一个真实-change-走完整条主线.md`
+- [x] `51-实战-从一个真实-change-走完整条主线.md`
   - [x] 至少一组 tasks 示例逐条嵌入 verification
-- [x] `12-实战-如何正确修改-artifacts.md`
+- [x] `52-实战-如何正确修改-artifacts.md`
   - [x] 写清 schema instruction 要求与 validate 硬校验的区别
   - [x] bad/good task 对照
-- [x] `13-实战-从零开始设计一个较复杂系统.md`
+- [x] `53-实战-从零开始设计一个较复杂系统.md`
   - [x] 实际 tasks 示例遵守新契约
-- [x] `14-实战-用-openspec-管理-devops-部署与验证.md`
+- [x] `54-实战-用-openspec-管理-devops-部署与验证.md`
   - [x] 现有 post-deploy verification 已加强为逐项验证
 
 ### 6.5 Archive retirement 与治理
 
-- [x] `09-高级-能力身份与specs漂移维护.md`
+- [x] `26-高级-治理边界与漂移维护.md`
   - [x] 退役前“可干净合并”检查
-- [x] `12-实战-如何正确修改-artifacts.md`
+- [x] `52-实战-如何正确修改-artifacts.md`
   - [x] 带 `## Notes` 的反例
   - [x] blocking content 的三步修复
   - [x] marker cannot be honored
-- [x] `15-实战-多人协作与Git工作流.md`
+- [x] `55-实战-多人协作与Git工作流.md`
   - [x] 退役与在途 MODIFIED 冲突
   - [x] 退役与 orphan content 冲突
 - [x] `99-FAQ-常见问题.md`
@@ -516,25 +516,25 @@
 
 ### 6.6 Tool delivery、completion、update、profile
 
-- [x] `02-中级-把核心概念真正串起来.md`
+- [x] `10-中级-把核心概念真正串起来.md`
   - [x] Codex/Zed/agents 三方共享 `.agents`
   - [x] completion 首次 stderr tip
   - [x] `OPENSPEC_NO_COMPLETIONS`
   - [x] feedback title/body 行为
-- [x] `04-高级-config-schema-与项目边界.md`
+- [x] `21-高级-config-schema-与项目边界.md`
   - [x] custom archive 自动依赖 sync
   - [x] no-spec schema 自动 marker
-- [x] `10-实战-claude-code-里的-openspec-到底怎么落地.md`
+- [x] `50-实战-claude-code-里的-openspec-到底怎么落地.md`
   - [x] update 后重启是条件性的；CLI-only 工具通常不需重启
-- [x] `12-实战-如何正确修改-artifacts.md`
+- [x] `52-实战-如何正确修改-artifacts.md`
   - [x] 不再笼统要求所有 AI 工具更新后重启
 - [x] `99-FAQ-常见问题.md`
   - [x] Zed、profile sync、completion tip 可检索
 
 ### 6.7 明确复核、预计无需正文修改
 
-- [~] `05-高级-项目级全局约束到底放哪.md`：约束分层未变，仅随跨章节契约加强 task 示例
-- [~] `14-实战-用-openspec-管理-devops-部署与验证.md`：主线未变，仅加强逐项 verification
+- [~] `22-高级-项目级全局约束到底放哪.md`：约束分层未变，仅随跨章节契约加强 task 示例
+- [~] `54-实战-用-openspec-管理-devops-部署与验证.md`：主线未变，仅加强逐项 verification
 - [~] capability identity/path 主干：v1.10.0 未改变身份模型
 
 **Checkpoint F：[x] 通过。** 19 个文件完成同步；P0 主题均有正文级示例、对照或排错步骤。最终验收覆盖三套资料 208 个 Markdown 文件中的 132 个 YAML fence，全部可解析。
@@ -563,9 +563,9 @@
 - [x] `_digested/` 承载源码机制和边界
 - [x] FAQ 回答问题并链接机制篇，不复制大段源码
 - [x] handbook 承载用户做法和完整示例
-- [x] handbook 多语言深文只在 06 展开，01/99 回链
-- [x] handbook store path 以 07/90 为深文
-- [x] archive retirement 以 internal archive / handbook 12 为深文
+- [x] handbook 多语言深文只在 23 展开，01/99 回链
+- [x] handbook store path 以 24/90 为深文
+- [x] archive retirement 以 internal archive / handbook 52 为深文
 - [x] change log 只记录版本变化，不冒充当前操作手册
 
 ### 7.3 历史保护

@@ -6,7 +6,7 @@ guru 不只调 `config.yaml`（提示层），而是重塑工作流的**结构�
 
 ## 什么时候该升到 guru
 
-边界论断（[`../../_openspec_handbook/04-高级-config-schema-与项目边界.md`](../../_openspec_handbook/04-高级-config-schema-与项目边界.md) `:56`）：
+边界论断（[`../../_openspec_handbook/21-高级-config-schema-与项目边界.md`](../../_openspec_handbook/21-高级-config-schema-与项目边界.md) `:56`）：
 
 > **`config.yaml` 改的是提示层，`schema` 改的是结构层。**
 

@@ -42,7 +42,7 @@
 - [~] A5-6 `workflows/03-new`、`11-onboard`——无 v1.8.0 敏感内容，无需改
 
 ### A6. 扫尾追加（"从不打开主 spec" 残留）
-- [x] A6-1 `_openspec_handbook/09` L156 同句修正（validate 不做跨文件对账 + MODIFIED 例外）
+- [x] A6-1 `_openspec_handbook/26` L156 同句修正（validate 不做跨文件对账 + MODIFIED 例外）
 - [x] A6-2 `_faq_on_digested/11_keep-specs-aligned/answer.md` L118 "从不打开主 spec"→"不跨文件对账"，补 scenario-loss 例外
 - [x] A6-3 `_digested/specs_truth/figures/overview.svg`、`drift-gaps.svg` 文字微调（"基本不读主 spec（MODIFIED 例外 / 仅 scenario-loss）"）
 
@@ -96,7 +96,7 @@
 - [x] D3-3 `internal-spec-driven/07-config-yaml` L180/L183：`parseTasksFile()` → `parseTaskLines()`，parser 识别范围更新
 - [x] D3-4 `internal-spec-driven/04-archive` 2.3：补共享 parser + 子任务计入
 - [x] D3-5 FAQ `06/answer-app03` L108-121/L168、`answer-sequence` L48/L186/L216：旧正则 + `parseTasksFile()` → 共享 parser
-- [~] D3-6 `workflows/06-apply` L129 已覆盖（同步时已加）；handbook 11/12 为概念层无旧正则声称，无需改
+- [~] D3-6 `workflows/06-apply` L129 已覆盖（同步时已加）；handbook 51/52 为概念层无旧正则声称，无需改
 
 ## D4. handbook 深度补漏（用户指出"更新严重不够"后的第二遍正文核查）
 - [x] D4-1 确认问题模式：同步只在每章顶部加 v1.8.0 提示块，正文读者遇到旧行为处未改 → 逐个正文核查

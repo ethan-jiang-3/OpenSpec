@@ -6,7 +6,7 @@ Handbook v1.1，对齐 OpenSpec 1.4.1。19 个文件中，6 个完全不受影�
 
 ## 3A. 🔴 完全重写
 
-### `07-高级-workspace-跨仓库规划.md` → `07-高级-store-跨仓库协同.md`
+### `07-高级-workspace-跨仓库规划.md` → `24-高级-store-跨仓库协同.md`
 
 **重写原因**：整篇文章基于已删除的 `workspace` 命令体系。
 
@@ -26,7 +26,7 @@ Handbook v1.1，对齐 OpenSpec 1.4.1。19 个文件中，6 个完全不受影�
 - 版本号：1.4.1 → 1.5.0
 - CLI 命令表：删除 `workspace` 行，新增 `store`/`context`/`workset`/`doctor`
 - 术语表：删除 workspace/context-store/initiative，新增 store/workset/reference/context
-- 文件地图：07 文件名更新
+- 文件地图：24 文件名更新
 - 阅读路径 5：更新描述
 
 ## 3B. 🟠 大幅修改
@@ -39,11 +39,11 @@ Q32-Q36 "Workspace (v1.4.0 新增)" 章节全部改写：
 - Q35: context-store vs workspace vs initiative 三者区别 → store/context/workset 三者区别
 - Q36: 实操步骤全部重写（旧步骤基于 `openspec context-store setup` + `workspace setup` + `workspace open`）
 
-### `04-高级-config-schema-与项目边界.md`
+### `21-高级-config-schema-与项目边界.md`
 
 L324-351 "v1.4.0 补充：第四层 — workspace 层" → 改写为 v1.5.0 store 层或标注此层概念已变化
 
-### `15-实战-多人协作与Git工作流.md`
+### `55-实战-多人协作与Git工作流.md`
 
 L684-704 "跨仓库协作（workspace 场景）" → 改为 "跨仓库协作（store 场景）"
 
@@ -52,12 +52,12 @@ L684-704 "跨仓库协作（workspace 场景）" → 改为 "跨仓库协作（s
 | 文件 | 修改内容 |
 |------|----------|
 | `README.md` | 版本号 + TOC 中 07 文件名 |
-| `05-高级-项目级全局约束到底放哪.md` | L60 workspace 层 → store 层 |
+| `22-高级-项目级全局约束到底放哪.md` | L60 workspace 层 → store 层 |
 | `90-附录-给机器看的-agent-协议.md` | L5 workspace 上下文路由 → store |
-| `03-高级-openspec-的软件开发生命周期思想.md` | L4 workspace 引用 |
-| `06-高级-config-yaml-怎么写到真正好用.md` | L947-949 workspace 章引用 → store 章 |
-| `09-高级-能力身份与specs漂移维护.md` | L139 workspace 交叉引用 |
-| `14-实战-用-openspec-管理-devops-部署与验证.md` | L238 workspace 级规划 → store |
+| `20-高级-openspec-的软件开发生命周期思想.md` | L4 workspace 引用 |
+| `23-高级-config-yaml-怎么写到真正好用.md` | L947-949 workspace 章引用 → store 章 |
+| `26-高级-治理边界与漂移维护.md` | L139 workspace 交叉引用 |
+| `54-实战-用-openspec-管理-devops-部署与验证.md` | L238 workspace 级规划 → store |
 
 ## 3D. ✅ 不改（6 个文件）
 

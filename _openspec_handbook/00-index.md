@@ -10,7 +10,7 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.12** |
+| **手册版本** | **v1.13** |
 | **对齐 OpenSpec** | 1.14.3 |
 | **本版日期** | 2026-10 |
 
@@ -22,16 +22,16 @@
 **freshness 约定**：
 
 - **版本敏感页**（如 store 篇等与特定版本特性深度绑定的页面）在内容中注明适用版本，不要求在文件名标版本号。
-- **概念页**（01-06、08、09 等）通用、不标版本；随对齐 OpenSpec 升级时复审。
+- **概念页**（01、10、20–23、25、26 等）通用、不标版本；随对齐 OpenSpec 升级时复审。
 - 每次大修 / 对齐新版本，在下面 changelog 记一行。
 
 **变更记录**：
 
 | 手册版本 | 日期 | 对齐 OpenSpec | 主要变更 |
 |---------|------|--------------|---------|
-| v1.0 | 2026-06 | 1.4.1 | 首版编号化；新增 `09-能力身份与specs漂移维护`（spec-driven 是 driver + capability=相对 path 身份 + 两层 name-as-identity + 漂移维护）；`02`/`04`/`99` 补 capability 身份与 RENAMED 前向指针。 |
-| v1.1 | 2026-06 | 1.4.1 | `explore` 地位补全（贯穿 02/03/11/13）：02 状态机补 explore 两处、03 新增 explore 深层机制（反复打磨 proposal / 对抗 LLM 幻觉 / change 作围栏）+ 生命周期补全四动词 `explore→propose→apply→archive`、11/13 实战织入 explore（change 出来后反复打磨保质量）；宪章「三层递进梯度」原则微调（高级可作精炼对照锚点）。 |
-| v1.2 | 2026-07 | 1.5.0 | 07 章重写：workspace → store 模型（跨仓库上下文引用）；00-index 版本/术语/命令表/阅读路径更新；workspace/initiative/context-store 概念全部删除。 |
+| v1.0 | 2026-06 | 1.4.1 | 首版编号化；新增 `26-高级-治理边界与漂移维护`（spec-driven 是 driver + capability=相对 path 身份 + 两层 name-as-identity + 漂移维护）；`10`/`21`/`99` 补 capability 身份与 RENAMED 前向指针。 |
+| v1.1 | 2026-06 | 1.4.1 | `explore` 地位补全（贯穿 10/20/51/53）：10 状态机补 explore 两处、20 新增 explore 深层机制（反复打磨 proposal / 对抗 LLM 幻觉 / change 作围栏）+ 生命周期补全四动词 `explore→propose→apply→archive`、51/53 实战织入 explore（change 出来后反复打磨保质量）；宪章「三层递进梯度」原则微调（高级可作精炼对照锚点）。 |
+| v1.2 | 2026-07 | 1.5.0 | 24 章重写：workspace → store 模型（跨仓库上下文引用）；00-index 版本/术语/命令表/阅读路径更新；workspace/initiative/context-store 概念全部删除。 |
 | v1.3 | 2026-07 | 1.7.0 | 对齐 v1.7：nested capability path 完整生命周期、`skip_specs`、Apply/Archive operation guidance、工具投递与 Codex skills-only、store/default 与 archive/sync 可靠性更新。 |
 | v1.4 | 2026-07 | 1.7.0 | 将 capability 专题正式纳入手册主线：按行为合同切分、浅 taxonomy、path identity、catalog discovery、同路径 delta/archive、rebaseline 与并发治理；不再只把 nested path 当目录技巧。 |
 | v1.5 | 2026-07 | 1.7.0 | 系统性勘误与打磨：修正 Pi/Kiro 版本归属（v1.2.0）、core/custom profile 命令数（6/12）、`apply.tracks` 约束措辞（从硬编码改强烈推荐）；CLI 命令表补全（status/instructions/view/schema/store setup 等）；`.openspec.yaml` 补完整字段表；schema 约束表补 `description`；FAQ 工具列表更新到 v1.7.0；`validate` 描述准确化；删各章尾部 `## 下一步` 跳转；宪章润色。 |
@@ -42,6 +42,7 @@
 | v1.10 | 2026-08 | 1.13.1 | 对齐 v1.13：`validate --report findings` 与 archive 拒收预报；SourceCraft（codeassistant）；v1.13.0 delta parser 大修（CommonMark 全标记、多 section 全应用、fence 内空行保留、大小写冲突拒绝）；propose context-first + code-grounded；explore spec inventory、capture 即确认；`/opsx:update` 先起草确认后写入；`status` 给 `Next:` 行；安全加固（指令注入/挂起/`.npmrc` 劫持）；pnpm@10 升级。 |
 | v1.11 | 2026-09 | 1.14.0 | 对齐 v1.13.2/v1.14.0：10 个新 `--tools` 目标（dsh/codestudio/gigacode/atomcode/easycode/gsd/amp/grok/warp/veai），`.agents` 共享根扩为 Codex/Zed/Antigravity/Amp/GSD + vendor-neutral，IBM Bob 更名；`list --archived/--all`、`openspec version`、view 的 workflow status 与归档分区；`show --json` requirement/scenario 带 `name`；`status --json` `allowedEditRoots` 纳入声明 store 的当前项目；archive 阻塞语义（sync 失败不归档、sync 后结构验证、retired capability 主 spec 删除）；写回文件行尾保持（CRLF 不再整文件 diff）；`.openspec.yaml` 未知键告警；store-only 仓库可在 root 跑 `init` 装集成。 |
 | v1.12 | 2026-10 | 1.14.3 | 对齐 v1.14.1–v1.14.3：artifact 创建前先定并校验输出路径（glob 工件必须落在 change 目录内，propose/ff/continue/explore 统一）；glob 工件「done 但文件不全」的补完协议；`all_done` 只报跟踪任务完成、归档前需复核/验证；verify 改按输出路径发现工件，REMOVED requirement 必须先读主 spec 基线；archive 的退役清理失败有独立错误码 `archive_retirement_cleanup_failed`；`openspec/`、`changes/`、`specs/` 与 spec 文件可以是项目内 symlink（`archive/` 不行）；delta 里「归档不会带走」的文本与超长 requirement 升为 WARNING；`.openspec.yaml` 顶层 `x-` 扩展键；glob 引擎由 fast-glob 换到 tinyglobby（brace 嵌套 ≤16、展开 ≤1024）；CLI 按需加载与 Tab 补全跳过遥测；零宽 TTY 不再挂死；view 移除归档分区。 |
+| v1.13 | 2026-10 | 1.14.3 | **两件事：① 09 章扩写改名 ② 全手册重编号。** ① 原 `09-高级-能力身份与specs漂移维护` 扩写并改名为 `26-高级-治理边界与漂移维护`，新增全手册分析轴「**硬能力 vs 软能力**」（代码判定 vs prompt 文字，违反后果不同）；agent 上下文的字段级事实（`instructions` 注入哪些字段、`contextFiles` 只给路径不给正文、注入体不随 specs 规模增长）；三级过滤读与 50 KB `context` 预算（超限整段丢弃）、`rules` 按 artifact id 分流、artifact DAG 门控与「`status` 是文件存在性不是新鲜度」；归档五道机器闸门（validate 规则集分级 / scenario 丢失双闸 / 干跑合并预检 / 全或无写入 / `retire_capabilities`）；跨 change 缺口（依赖与重叠零检测、近似重复 capability 零检测、三个静默 no-op、无陈旧废弃墓碑）；用自定义 schema 给「方向」建硬前置及其边界（门控**存在**而非**一致**）；新增「判断锚点三问」。保留原 capability 身份、两层 name-as-identity、catalog discovery、rebaseline 与维护节奏主体。素材来源：`_faq_on_digested/18_context-rot-and-direction-drift/`。② **全手册按难度层级重编号**：初级 `0N`、中级 `1N`、高级 `2N`、实战 `5N`（`00`/`90`/`99` 不变）。映射 `02→10`；`03→20`、`04→21`、`05→22`、`06→23`、`07→24`、`08→25`、`09→26`；`10→50`、`11→51`、`12→52`、`13→53`、`14→54`、`15→55`。三套文档（`_digested`/`_faq_on_digested`/`_openspec_handbook`）的章节引用、链接与锚点同步更新；宪章区间改为 `00–09 / 10–19 / 20–29 / 50–59 / 90 / 99`；本表历史行一并改用新号，不保留旧号换算。 |
 
 ---
 
@@ -136,28 +137,28 @@ OpenSpec = 整套机制
 
 ```mermaid
 graph LR
-    A[01-初级] --> B[02-中级]
+    A[01-初级] --> B[10-中级]
 ```
 
 ### 路径 2：我已经能用了，想真正理解它
 
 ```mermaid
 graph LR
-    A[01-初级] --> B[02-中级] --> C[03-高级<br/>SDLC思想]
-    C --> D[04-高级<br/>config/schema] --> E[05-高级<br/>全局约束]
-    E --> F[06-高级<br/>config写法]
-    F --> H[09-高级<br/>capability 身份/漂移]
+    A[01-初级] --> B[10-中级] --> C[20-高级<br/>SDLC思想]
+    C --> D[21-高级<br/>config/schema] --> E[22-高级<br/>全局约束]
+    E --> F[23-高级<br/>config写法]
+    F --> H[26-高级<br/>治理边界与漂移]
 ```
 
 ### 路径 3：我要看实战落地
 
 ```mermaid
 graph LR
-    A[10-实战<br/>Claude Code] --> B[11-实战<br/>brownfield]
-    B --> C[12-实战<br/>artifact修改]
-    C --> D[13-实战<br/>greenfield]
-    D --> E[14-实战<br/>DevOps]
-    E --> F[15-实战<br/>多人Git]
+    A[50-实战<br/>Claude Code] --> B[51-实战<br/>brownfield]
+    B --> C[52-实战<br/>artifact修改]
+    C --> D[53-实战<br/>greenfield]
+    D --> E[54-实战<br/>DevOps]
+    E --> F[55-实战<br/>多人Git]
 ```
 
 ### 路径 4：我要研究它背后的机制
@@ -173,8 +174,8 @@ graph LR
 
 ```mermaid
 graph LR
-    A[01-初级] --> B[02-中级] --> C[04-高级<br/>config/schema]
-    C --> D[07-高级<br/>可选 store 引用]
+    A[01-初级] --> B[10-中级] --> C[21-高级<br/>config/schema]
+    C --> D[24-高级<br/>可选 store 引用]
 ```
 
 先确认问题不是“本地 specs 太大、不知道该读哪份”；后者应走路径 7 的 capability catalog/discovery，而不是引入 store。
@@ -183,20 +184,32 @@ graph LR
 
 ```mermaid
 graph LR
-    A[04-高级<br/>config/schema] --> B[06-高级<br/>config写法]
-    B --> C[08-高级<br/>自定义schema]
+    A[21-高级<br/>config/schema] --> B[23-高级<br/>config写法]
+    B --> C[25-高级<br/>自定义schema]
 ```
 
 ### 路径 7：我的 main specs 已经很多，怎么仍然选对要改的合同？
 
 ```mermaid
 graph LR
-    A[02-中级<br/>specs 与 delta] --> B[09-高级<br/>capability 规划与治理]
-    B --> C[11 / 13-实战<br/>brownfield / greenfield]
+    A[10-中级<br/>specs 与 delta] --> B[26-高级<br/>capability 身份与治理边界]
+    B --> C[11 / 53-实战<br/>brownfield / greenfield]
     C --> D[专题<br/>spec-driven-capability]
 ```
 
-先在 09 建立“行为合同切片、稳定 path、catalog 只导航”的判断，再按需要深入 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md)。嵌套目录可被 v1.9.0 完整处理（v1.7.0 起），但它不会替 agent 自动挑选相关 specs。
+先在 09 建立“行为合同切片、稳定 path、catalog 只导航、**机器挡什么与不挡什么**”的判断，再按需要深入 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md) 与 [`_faq_on_digested/18_context-rot-and-direction-drift/`](../_faq_on_digested/18_context-rot-and-direction-drift/answer.md)。嵌套目录可被 v1.9.0 完整处理（v1.7.0 起），但它不会替 agent 自动挑选相关 specs。
+
+### 路径 8：我想知道它到底强制什么、agent 每次又看到多少
+
+```mermaid
+graph LR
+    A[10-中级<br/>心智模型] --> B[05 / 23-高级<br/>约束放哪 / config 怎么写]
+    B --> C[26-高级<br/>治理边界与漂移]
+    C --> D[25-高级<br/>自定义 schema]
+    C --> E[专题<br/>_faq_on_digested 18]
+```
+
+这条路径回答的是一个常被默认错的问题：**"我写错了，工具会拦住我吗？"** 09 把能力分成**硬**（代码判定：`validate` 规则集、scenario 丢失双闸、合并硬拒绝、50 KB 预算、DAG 门控）与**软**（prompt 文字：instruction、workflow 模板）两层，并给出 agent 上下文的字段级事实——注入的是导航简报而非 spec 正文，main specs 靠 `list --specs` → `--no-scenarios` → 全文三级按需读。读完能自己判断"哪些纪律要另加外部检查"。机制级细节见 [`_faq_on_digested/18_context-rot-and-direction-drift/`](../_faq_on_digested/18_context-rot-and-direction-drift/answer.md)。
 
 ---
 
@@ -208,7 +221,7 @@ graph LR
 | **artifact** | change 内部的文档产物类型 | proposal.md、specs/*.md、design.md、tasks.md |
 | **delta spec** | 描述"这次改了哪里"的增量 spec | `## ADDED Requirements` / `## MODIFIED Requirements` |
 | **specs/** | 项目当前正式 spec 基线 | `openspec/specs/auth/spec.md` |
-| **capability / 能力** | 可独立解释、独立改变、独立验证的行为合同切片；身份 = `specs/` 下的相对路径 | `auth`、`identity/session`；domain 只用于导航，不是父合同（详见 [09](09-高级-能力身份与specs漂移维护.md)） |
+| **capability / 能力** | 可独立解释、独立改变、独立验证的行为合同切片；身份 = `specs/` 下的相对路径 | `auth`、`identity/session`；domain 只用于导航，不是父合同（详见 [09](26-高级-治理边界与漂移维护.md)） |
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
 | **profile** | 选择安装哪些工作流命令 | core（v1.2.0 引入 4 个，v1.4.0 起 5 个，v1.6.0 起 6 个）vs custom（自选命令） |
@@ -272,7 +285,7 @@ graph LR
 | `openspec view` | 在终端中浏览 working set（支持 `--store <id>`） |
 | `openspec workset create/open/list/remove` | 创建/打开/列出/移除个人本地目录视图；不从 `references:` 推导 |
 | `openspec doctor` | 检查 root 和 store reference 健康状态 |
-| `openspec schema fork/init/validate/which` | 自定义工作流 schema（详见 [08](08-高级-自定义-schema-创建自己的工作流.md)） |
+| `openspec schema fork/init/validate/which` | 自定义工作流 schema（详见 [08](25-高级-自定义-schema-创建自己的工作流.md)） |
 | `openspec schemas` | 列出可用 schema |
 | `openspec templates` | 列出/查看 artifact 模板 |
 | `openspec completion` | 生成/安装/卸载 shell 自动补全 |
@@ -306,20 +319,20 @@ graph LR
 | 文件 | 角色 | 适合谁 |
 |------|------|--------|
 | [01-初级-先把-openspec-用起来.md](01-初级-先把-openspec-用起来.md) | 先会用 | 第一次接触 OpenSpec 的人 |
-| [02-中级-把核心概念真正串起来.md](02-中级-把核心概念真正串起来.md) | 建立正确心智模型 | 已经知道命令，但理解还发散的人 |
-| [03-高级-openspec-的软件开发生命周期思想.md](03-高级-openspec-的软件开发生命周期思想.md) | 理解 OpenSpec 怎样看待软件开发生命周期 | 想真正吃透这套方法论的人 |
-| [04-高级-config-schema-与项目边界.md](04-高级-config-schema-与项目边界.md) | 看清配置和结构边界 | 想定制或深入理解的人 |
-| [05-高级-项目级全局约束到底放哪.md](05-高级-项目级全局约束到底放哪.md) | 判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和 capability spec 彻底分开的人 |
-| [06-高级-config-yaml-怎么写到真正好用.md](06-高级-config-yaml-怎么写到真正好用.md) | 讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
-| [07-高级-store-跨仓库协同.md](07-高级-store-跨仓库协同.md) | 可选的跨仓库 OpenSpec 引用与按需读取 | 当前 change 需查看已 checkout 的其他仓库 specs 的人 |
-| [08-高级-自定义-schema-创建自己的工作流.md](08-高级-自定义-schema-创建自己的工作流.md) | 自定义 schema——从 fork 到完全自定义 DAG | config.yaml 不够用、想创建自己工作流的人 |
-| [09-高级-能力身份与specs漂移维护.md](09-高级-能力身份与specs漂移维护.md) | capability 规划、path identity、catalog discovery、结构迁移与 specs 漂移维护 | 想搞懂 specs 怎么切、怎么选对、为什么会漂、怎么守的人 |
-| [10-实战-claude-code-里的-openspec-到底怎么落地.md](10-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
-| [11-实战-从一个真实-change-走完整条主线.md](11-实战-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
-| [12-实战-如何正确修改-artifacts.md](12-实战-如何正确修改-artifacts.md) | artifact 修改指南 | 想知道 artifacts 该怎么改、怎么验证的人 |
-| [13-实战-从零开始设计一个较复杂系统.md](13-实战-从零开始设计一个较复杂系统.md) | 看 greenfield 复杂系统怎样建立第一版正式基线 | 想理解从零构建时 OpenSpec 怎么切系统的人 |
-| [14-实战-用-openspec-管理-devops-部署与验证.md](14-实战-用-openspec-管理-devops-部署与验证.md) | 把部署、验证、回滚纳入 change 闭环 | 想让 OpenSpec 和 CI/CD、监控、发布流程配合的人 |
-| [15-实战-多人协作与Git工作流.md](15-实战-多人协作与Git工作流.md) | 多人团队使用 OpenSpec + Git 的最佳实践 | 团队协作、并行开发、冲突处理 |
+| [10-中级-把核心概念真正串起来.md](10-中级-把核心概念真正串起来.md) | 建立正确心智模型 | 已经知道命令，但理解还发散的人 |
+| [20-高级-openspec-的软件开发生命周期思想.md](20-高级-openspec-的软件开发生命周期思想.md) | 理解 OpenSpec 怎样看待软件开发生命周期 | 想真正吃透这套方法论的人 |
+| [21-高级-config-schema-与项目边界.md](21-高级-config-schema-与项目边界.md) | 看清配置和结构边界 | 想定制或深入理解的人 |
+| [22-高级-项目级全局约束到底放哪.md](22-高级-项目级全局约束到底放哪.md) | 判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和 capability spec 彻底分开的人 |
+| [23-高级-config-yaml-怎么写到真正好用.md](23-高级-config-yaml-怎么写到真正好用.md) | 讲 `config.yaml` 怎样从空配置写成强配置 | 想把项目级配置写出真实约束力的人 |
+| [24-高级-store-跨仓库协同.md](24-高级-store-跨仓库协同.md) | 可选的跨仓库 OpenSpec 引用与按需读取 | 当前 change 需查看已 checkout 的其他仓库 specs 的人 |
+| [25-高级-自定义-schema-创建自己的工作流.md](25-高级-自定义-schema-创建自己的工作流.md) | 自定义 schema——从 fork 到完全自定义 DAG | config.yaml 不够用、想创建自己工作流的人 |
+| [26-高级-治理边界与漂移维护.md](26-高级-治理边界与漂移维护.md) | **治理边界**（机器强制什么、只是建议什么）+ agent 上下文注入与预算 + capability 身份与 path identity + 归档五道闸门 + specs/方向漂移维护 | 想搞懂「它到底管不管」、specs 怎么切、为什么会漂、怎么守的人 |
+| [50-实战-claude-code-里的-openspec-到底怎么落地.md](50-实战-claude-code-里的-openspec-到底怎么落地.md) | 看 Claude Code 落地 | 想把 OpenSpec 放进 Claude Code 工作流的人 |
+| [51-实战-从一个真实-change-走完整条主线.md](51-实战-从一个真实-change-走完整条主线.md) | 用一个完整案例把整条主线走通 | 想把抽象概念全部落地的人 |
+| [52-实战-如何正确修改-artifacts.md](52-实战-如何正确修改-artifacts.md) | artifact 修改指南 | 想知道 artifacts 该怎么改、怎么验证的人 |
+| [53-实战-从零开始设计一个较复杂系统.md](53-实战-从零开始设计一个较复杂系统.md) | 看 greenfield 复杂系统怎样建立第一版正式基线 | 想理解从零构建时 OpenSpec 怎么切系统的人 |
+| [54-实战-用-openspec-管理-devops-部署与验证.md](54-实战-用-openspec-管理-devops-部署与验证.md) | 把部署、验证、回滚纳入 change 闭环 | 想让 OpenSpec 和 CI/CD、监控、发布流程配合的人 |
+| [55-实战-多人协作与Git工作流.md](55-实战-多人协作与Git工作流.md) | 多人团队使用 OpenSpec + Git 的最佳实践 | 团队协作、并行开发、冲突处理 |
 | [90-附录-给机器看的-agent-协议.md](90-附录-给机器看的-agent-协议.md) | 看机器执行机制 | 想研究底层 protocol 的人 |
 | [99-FAQ-常见问题.md](99-FAQ-常见问题.md) | 新手常见问题速查（按主题分类） | 遇到具体疑问时翻一翻 |
 
@@ -334,9 +347,9 @@ graph LR
 | 层 | 篇 | 只回答 | 海拔上限 |
 |---|---|---|---|
 | 初级 | 01 | "怎么用"——5 分钟跑通主流程 | 不展开机制 / 字段；宿主入口差异只作最小提示 |
-| 中级 | 02 | "在管什么"——建立心智模型 | 讲机制但停在用户视角 |
-| 高级 | 03–09 | "为什么这么设计 + 字段级怎么运作" | 必须观点化、讲设计动机 |
-| 实战 | 10–15 | "下一步敲哪条命令、改哪个文件、踩哪个坑" | 必须案例驱动、重可复制样例 |
+| 中级 | 10 | "在管什么"——建立心智模型 | 讲机制但停在用户视角 |
+| 高级 | 20–29 | "为什么这么设计 + 字段级怎么运作" | 必须观点化、讲设计动机 |
+| 实战 | 50–59 | "下一步敲哪条命令、改哪个文件、踩哪个坑" | 必须案例驱动、重可复制样例 |
 | 附录 | 90 | "机器怎么消费 OpenSpec"（给集成开发者） | 不该先读；运行时命令 + JSON 字段 |
 | FAQ | 99 | "新手速查" | 一问一答，简洁明确 |
 
@@ -360,7 +373,9 @@ graph LR
 
 ### ③ 轻量型高级章（特例）
 
-当某主题在 `_digested/` 已有源码级专题时，handbook 对应章可做轻——只守上面 4 条硬约定 + 六件套任选 ≥3 件（**必含「字段级方案」或「判断锚点」之一**）+ 不与专题重复、只给判断锚点与最低守住动作。**09（`spec-driven-capability` 已深挖）即此类样板**，目标 ~150–180 行。
+当某主题在 `_digested/` 已有源码级专题时，handbook 对应章可做轻——只守上面 4 条硬约定 + 六件套任选 ≥3 件（**必含「字段级方案」或「判断锚点」之一**）+ 不与专题重复、只给判断锚点与最低守住动作；目标 ~150–180 行。
+
+> **26 在 v1.13 前是这类样板，v1.13 起不再是。** 它现在承载了「治理边界」这条全手册分析轴与 agent 上下文的字段级内容，篇幅按常规高级章处理。需要轻量写法时，按本节规则自行控制篇幅，不要再以 26 作参照。
 
 ### ④ 风格（信息基调）
 
@@ -371,15 +386,15 @@ graph LR
 - **版本耦合写进开篇定位句**（`(v1.4.0)` / `适用 openspec ≥ 1.4`），不散落正文；不把版本编码进文件名。
 - **收尾速查统一命名**："压缩结论"或"最该带走的 N 句话"，**不另造**"黄金法则 / 速查卡"等同义词。
 - **术语铁律：OpenSpec 核心概念在中文行文中必须保持英文原词**——`spec`/`specs`（非"规格"）、`change`（非"变更"，当指 OpenSpec 的 change 对象时）、`artifact`（非"工件"）、`capability`（非"能力"，当指 `specs/<capability>/` 组织单位时）、`requirement`（非"要求"，当指 `### Requirement:` 标题时）、`scenario`（非"场景"，当指 `#### Scenario:` 时）、`delta spec`（非"增量规格"）。**判断标准**：问自己"这个中文词在这里是不是某个 OpenSpec 术语的替身"——是，则用英文；只是中文叙述中的一般描述，可保留中文。**架构概念标签**（如"项目事实层""入口层"）和**方法论概念**（如"弱约束""行为合同"）在首次定义时标注英文对应，形成 `中文（English）` 双语模式，确保读者跨语言查阅时能准确对应。
-- **三层递进梯度**：装修这类生活比喻是帮没概念的读者建立直觉的"拐杖"，随读者爬升平滑淡出，不一直赖着——**初级浓**（生活类比建立直觉、概念最少、图多）、**中级淡**（仅在核心概念处短锚点呼应、不大段铺陈；概念精选讲透、不面面俱到吓走读者；图多）、**高级不铺垫装修**（读者已建立软件开发心智模型，用纯概念/设计动机论述；但允许装修作**精炼对照锚点**，如 03 用"勘测/方案/施工/验收"对照串四动词 `explore→propose→apply→archive`），按需用 graph/gantt/架构图。各篇装修浓度据此定位，不各写各的。
+- **三层递进梯度**：装修这类生活比喻是帮没概念的读者建立直觉的"拐杖"，随读者爬升平滑淡出，不一直赖着——**初级浓**（生活类比建立直觉、概念最少、图多）、**中级淡**（仅在核心概念处短锚点呼应、不大段铺陈；概念精选讲透、不面面俱到吓走读者；图多）、**高级不铺垫装修**（读者已建立软件开发心智模型，用纯概念/设计动机论述；但允许装修作**精炼对照锚点**，如 20 用"勘测/方案/施工/验收"对照串四动词 `explore→propose→apply→archive`），按需用 graph/gantt/架构图。各篇装修浓度据此定位，不各写各的。
 - **例子空间统一**：跨篇、长篇案例统一使用建筑/装修/工程项目管理系统 BuildFlow，让读者沿同一条线理解 OpenSpec；同一案例不得混入订单、支付等无关业务域。短命令或结构示例可用中性的 `add-dark-mode`、`<name>`，无需硬套业务故事。长篇例子用 `>` blockquote 包裹，开头优先用"以 BuildFlow 为例——"或"以建筑工程管理系统为例——"；与观点引用通过开头句式区分。推荐渲染时给例子 blockquote 加浅蓝（`#e3f2fd`）左边框作为视觉锚点。
 
 ### ⑤ 元信息卫生
 
 - **单一事实源 = `00-index.md`**：版本、目录、术语、命令与详细文件地图以它为准；`README.md` 是默认外部入口，维护高层阅读路线并链接回本页。其他明确承担入口职责的 Markdown 也可维护其专题范围内的路线，但不复制可执行命令、详细文件地图或整套全局跳转规则。
 - **不硬编码会过时的数字**（如"36 问"）。
-- **freshness 二分必须可判定**：版本敏感页在开篇定位句标明适用版本，概念页不标；概念页 = 01–06、08、09。概念页只在不写会误导操作的边界处作一次简短版本说明。
-- **新增篇章落入既有编号区间**（01–02 / 03–09 / 10–15 / 90 / 99），不新增混合层级；文件名含难度层级词。
+- **freshness 二分必须可判定**：版本敏感页在开篇定位句标明适用版本，概念页不标；概念页 = 01、10、20–23、25、26。概念页只在不写会误导操作的边界处作一次简短版本说明。
+- **新增篇章落入既有编号区间**（00–09 / 10–19 / 20–29 / 50–59 / 90 / 99），不新增混合层级；文件名含难度层级词。
 
 ---
 

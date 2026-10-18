@@ -92,7 +92,7 @@ openspec show <candidate-path> --type spec --json --requirement <n>
 | 纯重构、换实现、工具/文档工作 | `.openspec.yaml` 的 `skip_specs: true`，且移除所有 delta spec 文件 |
 | 要拆分、合并或移动 capability path | 停止把它当普通 artifact 编辑；做受控 rebaseline，先处理 active changes |
 
-目录层次不提供继承或自动 retrieval；catalog 只能帮助你找到 path，main spec 才是行为真相。完整规划方法见 [09](09-高级-能力身份与specs漂移维护.md)。
+目录层次不提供继承或自动 retrieval；catalog 只能帮助你找到 path，main spec 才是行为真相。完整规划方法见 [09](26-高级-治理边界与漂移维护.md)。
 
 ---
 

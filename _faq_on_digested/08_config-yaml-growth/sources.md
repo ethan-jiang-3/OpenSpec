@@ -48,6 +48,6 @@
 
 | 来源 | 用到的结论 |
 |---|---|
-| [`../../_openspec_handbook/04-高级-config-schema-与项目边界.md`](../../_openspec_handbook/04-高级-config-schema-与项目边界.md) | config（提示层）vs schema（结构层）的边界 |
-| [`../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md) | 三层模型：config（项目全局）/ specs（当前能力）/ changes（本次变更） |
-| [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md) | 怎么写好：强规则公式、4 类规则、6 bad smell、4 种项目 sample、context 三特质 |
+| [`../../_openspec_handbook/21-高级-config-schema-与项目边界.md`](../../_openspec_handbook/21-高级-config-schema-与项目边界.md) | config（提示层）vs schema（结构层）的边界 |
+| [`../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md) | 三层模型：config（项目全局）/ specs（当前能力）/ changes（本次变更） |
+| [`../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md) | 怎么写好：强规则公式、4 类规则、6 bad smell、4 种项目 sample、context 三特质 |

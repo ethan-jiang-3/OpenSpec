@@ -132,7 +132,7 @@ operations:
 | 如何命名 path、先查 catalog、何时可迁移 | `AGENTS.md` | 项目中的 agent 与 reviewer | 不替代 schema/validator |
 | 跨全部 change 的短原则 | `config.yaml` 的 `context` / artifact `rules` | artifact 生成；operation guidance 另给 Apply/Archive | 不放全量 capability 列表 |
 
-一个团队真正需要写进 config 的不是“我们的所有 capabilities 是 A、B、C”，而是类似“capability path 遵循 AGENTS 中的约定；main spec 是行为真相，catalog 只用于导航；结构迁移必须单独 rebaseline”这样的稳定原则。有关 catalog 的最小格式和 discovery 流程，看 [09](09-高级-能力身份与specs漂移维护.md)。
+一个团队真正需要写进 config 的不是“我们的所有 capabilities 是 A、B、C”，而是类似“capability path 遵循 AGENTS 中的约定；main spec 是行为真相，catalog 只用于导航；结构迁移必须单独 rebaseline”这样的稳定原则。有关 catalog 的最小格式和 discovery 流程，看 [09](26-高级-治理边界与漂移维护.md)。
 
 ### 写一条配置前，先说出“谁会消费它”
 
@@ -219,7 +219,7 @@ schema 不是数据库 schema，也不只是 template。
 - 谁依赖谁
 - apply 追踪哪份文件
 
-默认的 **`spec-driven`** schema 看起来像这样。它就是 `config.yaml` 里 `schema: spec-driven` 指向的那个——定义 artifact DAG、delta 操作、以及 proposal↔specs 的能力契约，是背后的 driver。capability 身份是 `specs/` 下的相对 path（可嵌套），见 [`09-高级-能力身份与specs漂移维护`](09-高级-能力身份与specs漂移维护.md)：
+默认的 **`spec-driven`** schema 看起来像这样。它就是 `config.yaml` 里 `schema: spec-driven` 指向的那个——定义 artifact DAG、delta 操作、以及 proposal↔specs 的能力契约，是背后的 driver。capability 身份是 `specs/` 下的相对 path（可嵌套），见 [`26-高级-治理边界与漂移维护`](26-高级-治理边界与漂移维护.md)：
 
 ```yaml
 artifacts:
@@ -415,7 +415,7 @@ schema 管的是：
 - 项目希望以 `references:` 声明这个跨 repo 的只读引用
 - 你需要确认 root/store 解析到哪里，而不是把外部 spec 复制进本地 `context`
 
-这时才需要看 store。它不创建系统级 planning home、不会管理跨 repo change，也不是本地 specs 变多后的默认答案；后者先看 [09](09-高级-能力身份与specs漂移维护.md)。
+这时才需要看 store。它不创建系统级 planning home、不会管理跨 repo change，也不是本地 specs 变多后的默认答案；后者先看 [09](26-高级-治理边界与漂移维护.md)。
 
 ---
 
@@ -427,7 +427,7 @@ schema 管的是：
 - `openspec/config.yaml` 的 `references:` 声明依赖
 - `openspec context` 查看 working set（默认纯查询；只有显式传 `--code-workspace` 才写 workspace 文件）
 
-store 不创建新的 schema、不改变 change 生命周期。所有 change 仍在具体 repo 下，使用 `spec-driven`。跨仓库场景参考 [07](07-高级-store-跨仓库协同.md)。
+store 不创建新的 schema、不改变 change 生命周期。所有 change 仍在具体 repo 下，使用 `spec-driven`。跨仓库场景参考 [07](24-高级-store-跨仓库协同.md)。
 
 ---
 

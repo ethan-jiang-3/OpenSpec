@@ -68,7 +68,7 @@
 
 ### 2026-07-29 — handbook、案例校正与 YAML 复核完成
 
-- 已完成 handbook README、索引、01–09、11–15、99 的当前行为复核：入口按宿主区分，nested path 是 namespace 而非 retrieval，config 的 operation guidance 与 artifact rules 分工正确，archive/store/view 的结论以 v1.7.0 为准。
+- 已完成 handbook README、索引、01、10、20–26、50–55、99 的当前行为复核：入口按宿主区分，nested path 是 namespace 而非 retrieval，config 的 operation guidance 与 artifact rules 分工正确，archive/store/view 的结论以 v1.7.0 为准。
 - 已复核 FAQ 13 三份项目案例；“Apply 不重收 config”的旧缩写全部明确为“不重收 artifact rules”，并补足 Apply/Archive 的 context 与 operation-guidance 边界。
 - 已修复所有本轮发现的 `operations.*.guidance` YAML 示例：它们现在都是 schema 所要求的字符串数组；FAQ 初学者范本中误落在 archive 下的两条 `rules` 也已归回 `rules` 块。
 - 已更新 `0004-v1.6.0-to-v1.7.0.md` 的处理状态，避免它再称三组资料“尚待逐篇重写”。

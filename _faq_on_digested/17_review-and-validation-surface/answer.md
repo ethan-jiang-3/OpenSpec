@@ -179,4 +179,4 @@ validate <change>            # 结构 + merge 预检 + unapplied 文本 WARNING
 - 命令面：[`../../_digested/spec_cli/01-human-facing-cli.md`](../../_digested/spec_cli/01-human-facing-cli.md)、[`02-machine-facing-cli.md`](../../_digested/spec_cli/02-machine-facing-cli.md)
 - 失真治理：[`../../_digested/specs_truth/00-map.md`](../../_digested/specs_truth/00-map.md)
 - 源码：`src/utils/requirement-diff.ts`、`src/core/validation/purpose-placeholder.ts`、`src/core/validation/constants.ts`（`MAX_REQUIREMENT_TEXT_LENGTH`）、`src/core/parsers/requirement-blocks.ts`、`src/core/specs-apply.ts`、`src/commands/validate.ts`、`src/utils/change-metadata.ts`（未知键白名单）、`src/core/templates/workflows/verify-change.ts`（status 契约）
-- 手册：[`../../_openspec_handbook/12-实战-如何正确修改-artifacts.md`](../../_openspec_handbook/12-实战-如何正确修改-artifacts.md)、[`90-附录-给机器看的-agent-协议.md`](../../_openspec_handbook/90-附录-给机器看的-agent-协议.md)
+- 手册：[`../../_openspec_handbook/52-实战-如何正确修改-artifacts.md`](../../_openspec_handbook/52-实战-如何正确修改-artifacts.md)、[`90-附录-给机器看的-agent-协议.md`](../../_openspec_handbook/90-附录-给机器看的-agent-协议.md)

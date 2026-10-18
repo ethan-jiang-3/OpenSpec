@@ -39,8 +39,8 @@
 |---|---|
 | [`../08_config-yaml-growth/answer.md`](../08_config-yaml-growth/answer.md) | 已有 FAQ 的总入口。 |
 | [`../08_config-yaml-growth/answer-expert.md`](../08_config-yaml-growth/answer-expert.md) | context/rules 的强规则、schema 术语和维护节奏。 |
-| [`../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md) | config/specs/changes 的基本归位模型。 |
-| [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md) | 高杠杆、可判断、长期稳定的 rule 写法。 |
+| [`../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md) | config/specs/changes 的基本归位模型。 |
+| [`../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md) | 高杠杆、可判断、长期稳定的 rule 写法。 |
 
 ## 用户提供的项目特定样例
 

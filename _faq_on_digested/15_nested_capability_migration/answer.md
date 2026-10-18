@@ -462,9 +462,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - [`../../_digested/mechanisms/03-spec-model.md`](../../_digested/mechanisms/03-spec-model.md) — parser/schema/validator 分工、recursive discovery
 
 ### Handbook
-- [`../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md`](../../_openspec_handbook/09-高级-能力身份与specs漂移维护.md) — capability 身份、catalog、rebaseline
-- [`../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/05-高级-项目级全局约束到底放哪.md) — config/specs/changes 三层分工
-- [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md) — config 字段路由、强规则写法
+- [`../../_openspec_handbook/26-高级-治理边界与漂移维护.md`](../../_openspec_handbook/26-高级-治理边界与漂移维护.md) — capability 身份、catalog、rebaseline
+- [`../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md) — config/specs/changes 三层分工
+- [`../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md) — config 字段路由、强规则写法
 
 ### 上游
 - [Issue #1459](https://github.com/Fission-AI/OpenSpec/issues/1459) — nested path 的 agent-facing guidance 仍为 open

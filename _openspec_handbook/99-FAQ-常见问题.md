@@ -136,7 +136,7 @@ delta 里"归档不会带走"的文本现在会告警（v1.14.2 起）：第一�
 2. **有 blocking content**：main spec 仍有 `## Notes`、orphan paragraph/section 等内容时，CLI 列出 blocking lines；加 marker 也不会放行。先把有价值内容移入 `## Purpose`/canonical requirement，或经 review 删除，再重跑。
 3. **marker cannot be honored**：值类型错误、metadata/schema 无效或授权在运行中变化时，CLI 报具体原因并保持文件不变。
 
-完整反例和三步修复见 [12 实战·如何正确修改 artifacts](12-实战-如何正确修改-artifacts.md#capability-退役marker-不是万能绕过开关)。
+完整反例和三步修复见 [12 实战·如何正确修改 artifacts](52-实战-如何正确修改-artifacts.md#capability-退役marker-不是万能绕过开关)。
 
 v1.8.0 以来还有一个非交互边界：agent/CI 里 stdin closed 时，archive 会指出缺哪个 flag 并给**携带原 flags 的可重跑命令**（如 `openspec archive <name> --skip-specs --yes`）——直接粘贴重跑即可，不必凭空猜参数；不带 change 名时它现在会以 exit 1 明确请求 change 名，而不是静默吞错。v1.9.0 起非 TTY 不再往捕获日志里写 ANSI；无 change 名时要求先传入名字，不画菜单。
 
@@ -155,7 +155,7 @@ v1.8.0 以来还有一个非交互边界：agent/CI 里 stdin closed 时，archi
 - `operations.apply/archive.guidance`：Apply/Archive 的项目级短稳定步骤（与 context 一起进入对应 operation）
 - **schema**：change 的结构骨架（有哪些 artifact、依赖关系）
 
-两者各自该装什么、边界在哪，详见 [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)。
+两者各自该装什么、边界在哪，详见 [04 高级·config-schema-与项目边界](21-高级-config-schema-与项目边界.md)。
 
 如果“我明明写了 config，agent 却没遵守”，别先追加更多文字。按这个顺序排：生效 root → `config.yaml` 是否覆盖 `.yml` → 当前 change 的 `.openspec.yaml` schema → 目标 consumer → `openspec instructions ... --json` 的实际输出。`rules.<artifact>` 只给该 artifact；Apply/Archive 要用各自 `operations.*.guidance`；必须强制的约束要交给 schema、test、checker 或 CI。
 
@@ -164,13 +164,13 @@ v1.8.0 以来还有一个非交互边界：agent/CI 里 stdin closed 时，archi
 - **profile**：你能用哪些命令（core/custom）
 - **schema**：每个 change 长什么样（默认是 spec-driven）
 
-profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schema-与项目边界](04-高级-config-schema-与项目边界.md)。
+profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schema-与项目边界](21-高级-config-schema-与项目边界.md)。
 
 ### Q20: `.openspec.yaml` 是什么？
 **A**: change 目录里的配置文件，记录这次 change 用哪套 schema。大多数情况下自动生成，不需要手动改。
 
 ### Q20a: 怎样让新项目用中文或其他语言写 artifacts？
-**A**: 新项目用 `openspec init --language "简体中文"`；它会在新 config 的 `context` 写语言提示。已有 config 时该命令会失败且不覆盖，请手工合并 context。artifact prose 可本地化，但 `## ADDED Requirements`、`### Requirement:`、`#### Scenario:` 与 `SHALL`/`MUST` 保持英文。完整 YAML 和判断表见 [01](01-初级-先把-openspec-用起来.md#新项目想让-artifacts-使用中文或其他语言) 与 [06](06-高级-config-yaml-怎么写到真正好用.md#多语言greenfield-用-flagbrownfield-手改-context)。
+**A**: 新项目用 `openspec init --language "简体中文"`；它会在新 config 的 `context` 写语言提示。已有 config 时该命令会失败且不覆盖，请手工合并 context。artifact prose 可本地化，但 `## ADDED Requirements`、`### Requirement:`、`#### Scenario:` 与 `SHALL`/`MUST` 保持英文。完整 YAML 和判断表见 [01](01-初级-先把-openspec-用起来.md#新项目想让-artifacts-使用中文或其他语言) 与 [06](23-高级-config-yaml-怎么写到真正好用.md#多语言greenfield-用-flagbrownfield-手改-context)。
 
 ### Q20b: 我能在 `.openspec.yaml` 里放自己的元数据吗？
 **A**: 可以。**顶层**、以**小写 `x-`** 开头、前缀后至少一个非空白字符的键属于使用者（如 `x-tracker: SB-5497`、`x-jiraKey: ABC-1`）。值可以是任意 YAML，OpenSpec 不读也不校验它，它不改变任何行为；这类键**永远不算未知键**，所以带它们的 change 过得了 `openspec validate --strict`。`initiative:` 内部仍然严格——那里放 `x-` 键照样报错。archive 时文件连同扩展键一起搬走，不做改动。
@@ -190,7 +190,7 @@ profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schem
 3. 创建一个新 change，用 REMOVED/MODIFIED 反向操作
 4. archive 新 change
 
-（一个 change 的完整正向生命周期见 [11 实战·从真实 change 走完整条主线](11-实战-从一个真实-change-走完整条主线.md)；回滚本质是用 delta 反向操作。）
+（一个 change 的完整正向生命周期见 [11 实战·从真实 change 走完整条主线](51-实战-从一个真实-change-走完整条主线.md)；回滚本质是用 delta 反向操作。）
 
 ### Q23: 怎么处理 breaking change？
 **A**: 
@@ -199,7 +199,7 @@ profile 和 schema 各自怎么选、怎么改，详见 [04 高级·config-schem
 3. 在 design 里说明迁移方案
 4. 考虑分阶段发布（先废弃，再删除）
 
-（proposal/specs/design 这些 artifact 具体怎么改，见 [12 实战·如何正确修改 artifacts](12-实战-如何正确修改-artifacts.md)。）
+（proposal/specs/design 这些 artifact 具体怎么改，见 [12 实战·如何正确修改 artifacts](52-实战-如何正确修改-artifacts.md)。）
 
 ### Q24: specs/ 的目录结构怎么组织？
 **A**: 推荐按**行为合同**组织，而不是按 models/services/controllers、页面或数据库表组织。大多数增长型项目可从“一层 domain + 一层 capability”开始：
@@ -214,7 +214,7 @@ specs/
 
 一个 path 值得独立，通常因为它有自己的可观察行为、scenarios 和演进节奏；若两组 requirements 总是一起改变、一起验证，就别为了“层次感”硬拆。domain 只是导航 namespace，不是父 spec、继承关系或自动聚合。
 
-**关键**：每个 capability 的身份是它在 `specs/` 下的完整相对 path。proposal、delta 和 archive 都依靠同一 path 寻址。不要随便搬改 path：requirement 改名还有 `RENAMED`，capability path 没有独立 rename 操作，改了会让 active delta 悬空。nested path 也不会自动 retrieval；spec 多时维护薄 catalog（path、Purpose、关键词、边界）并按需读取。详见 [09-高级-能力身份与specs漂移维护](09-高级-能力身份与specs漂移维护.md)。
+**关键**：每个 capability 的身份是它在 `specs/` 下的完整相对 path。proposal、delta 和 archive 都依靠同一 path 寻址。不要随便搬改 path：requirement 改名还有 `RENAMED`，capability path 没有独立 rename 操作，改了会让 active delta 悬空。nested path 也不会自动 retrieval；spec 多时维护薄 catalog（path、Purpose、关键词、边界）并按需读取。详见 [26-高级-治理边界与漂移维护](26-高级-治理边界与漂移维护.md)。
 
 ### Q25: 一个功能涉及多个域怎么办？
 **A**: 先别把所有 specs 全读一遍。先用 catalog 或 `openspec list --specs --json` 找候选，再在 proposal/design 留一张小 impact matrix：
@@ -229,7 +229,7 @@ specs/
 
 真正变化的 path 各写自己的 delta；仅验证的 path 不伪造 delta；明确排除的 path 留理由。身份、权限、兼容性或事件语义跨 domain 时必须扩大阅读范围，不能把全局影响伪装成局部 change。
 
-切片、catalog 和 rebaseline 的完整判断见 [09](09-高级-能力身份与specs漂移维护.md)；真正修改 proposal/specs/design/tasks 时看 [12](12-实战-如何正确修改-artifacts.md)。
+切片、catalog 和 rebaseline 的完整判断见 [09](26-高级-治理边界与漂移维护.md)；真正修改 proposal/specs/design/tasks 时看 [12](52-实战-如何正确修改-artifacts.md)。
 
 ---
 

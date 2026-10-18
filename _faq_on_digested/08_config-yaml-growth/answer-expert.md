@@ -42,7 +42,7 @@ openspec init                → 不动 config（schema: spec-driven 一行够�
 
 `context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:248`（`MAX_CONTEXT_SIZE`，超限 warn 并丢弃在 :350-353））。实践上控制在半屏以内。
 
-写得好不好，套 handbook 06 的三个特质（见 [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md)）：**高杠杆**（一条影响很多 change）、**可判断**（有对象和方向）、**长期稳定**（不是一次性的）。6 个 bad smell（太 PRD / 太口号 / 太一次性 / 太像能力清单 / 太像 schema 定义 / 又长又稀）也都在那。
+写得好不好，套 handbook 23 的三个特质（见 [`../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md)）：**高杠杆**（一条影响很多 change）、**可判断**（有对象和方向）、**长期稳定**（不是一次性的）。6 个 bad smell（太 PRD / 太口号 / 太一次性 / 太像能力清单 / 太像 schema 定义 / 又长又稀）也都在那。
 
 范例：这个 repo 自己的 [`../../openspec/config.yaml`](../../openspec/config.yaml)——context 分两块（产品语言 + 跨平台要求），每行都密。
 

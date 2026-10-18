@@ -54,7 +54,7 @@ Explore 谈清楚"该改什么"之后，落地写进 config 就是这几步（�
 
 ## 补 `schema`
 
-一行：默认就是 `spec-driven`，绝大多数项目不用动。只有当你 fork/建了自定义 schema 才需要改（那走 `openspec schema` 那条路，见 [`../../_openspec_handbook/04-高级-config-schema-与项目边界.md`](../../_openspec_handbook/04-高级-config-schema-与项目边界.md)）。
+一行：默认就是 `spec-driven`，绝大多数项目不用动。只有当你 fork/建了自定义 schema 才需要改（那走 `openspec schema` 那条路，见 [`../../_openspec_handbook/21-高级-config-schema-与项目边界.md`](../../_openspec_handbook/21-高级-config-schema-与项目边界.md)）。
 
 ## 补 `context`（项目背景）
 
@@ -112,7 +112,7 @@ reactive 比 proactive 靠谱——因为它是真实使用反馈沉淀的，不
               ↑ 没对象、没约束方向，agent 本来就会做，白占每个 artifact 的 token。
 ```
 
-**按 artifact 角色给方向**（让 agent 知道每个 artifact 该约束什么，细节见 [`../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/06-高级-config-yaml-怎么写到真正好用.md)）：
+**按 artifact 角色给方向**（让 agent 知道每个 artifact 该约束什么，细节见 [`../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md)）：
 
 | artifact | 该约束什么 | 强规则示例 |
 |---|---|---|
