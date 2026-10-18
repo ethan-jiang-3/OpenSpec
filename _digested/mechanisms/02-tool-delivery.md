@@ -127,7 +127,7 @@ profile 决定安装哪些 workflow，delivery 决定以什么形态投递。两
 - 这套 OpenSpec 要给 agent 哪些动作？
 - 这些动作在当前工具里以什么入口出现？
 
-workspace update 是例外：当前只生成 skills，即使 global delivery 是 `both` 或 `commands`，也会给出 skills-only notice。这是 workspace 作为本机协调视图的限制，不应误读成所有投递路径都支持 workspace command。
+**没有 `openspec workspace` 命令**，也没有 "workspace update"。`workspace` 在 CLI 里唯一的存在形式是 `openspec context --code-workspace [file]`——它只是把 root + referenced stores 的 spec 索引写成一个 `.code-workspace` 文件（本机协调视图），**不投递任何 command 或 skill**。`src/core/update.ts` 里 `workspace` 出现 0 次，所以 `update` 不区分 workspace 场景；投递形态始终由 global `delivery`（`both`/`skills`/`commands`）决定。
 
 ## init/update 的系统职责
 

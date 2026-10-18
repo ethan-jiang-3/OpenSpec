@@ -126,7 +126,7 @@ CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在�
 - welcome screen。
 - searchable selection。
 
-它们不定义 OpenSpec 业务状态，但影响 init、workspace setup、interactive validate/show 等命令的人类路径。对一个 CLI 工具来说，prompt 质量会直接影响用户是否能正确建立配置。
+它们不定义 OpenSpec 业务状态，但影响 init、store setup、interactive validate/show 等命令的人类路径。对一个 CLI 工具来说，prompt 质量会直接影响用户是否能正确建立配置。
 
 ## utils：辅助层里也可能藏行为
 

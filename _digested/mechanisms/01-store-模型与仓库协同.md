@@ -15,16 +15,16 @@ agent 通过 `openspec context` 拿到一个 working set（root + referenced sto
 
 | 对象 | 位置 | 本质 |
 |------|------|------|
-| store registry | `~/.openspec/stores/registry.yaml` | 全局仓库登记表：id → backend(local_path, remote, branch) |
+| store registry | `<globalDataDir>/stores/registry.yaml` | 全局仓库登记表：id → backend(local_path, remote, branch) |
 | store metadata | `<checkout>/.openspec-store/store.yaml` | 单个 store 的身份（id, remote） |
 | reference | `openspec/config.yaml` 的 `references:` 字段 | 项目声明的 store 依赖列表 |
 | working set | `openspec context` 输出 | root + referenced stores 的 spec 索引（纯查询） |
-| workset | `~/.openspec/worksets/worksets.yaml` | 个人本地的多仓库打开视图（不共享） |
+| workset | `<globalDataDir>/worksets/worksets.yaml` | 个人本地的多仓库打开视图（不共享） |
 
 ## store registry 的工作方式
 
 ```yaml
-# ~/.openspec/stores/registry.yaml
+# <globalDataDir>/stores/registry.yaml  (macOS: ~/.local/share/openspec/stores/registry.yaml)
 version: 1
 stores:
   platform-api:
