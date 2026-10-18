@@ -213,7 +213,7 @@ explore 结束时没有强制要求。可能的出路：
 
 | | explore | propose | apply | archive |
 |------|------|------|------|------|
-| **有状态流转** | 否 | 是（artifact 从 blocked→ready→done） | 是（tasks 从未完成→完成） | 是（change 从活跃→archive） |
+| **有状态流转** | 否（capture 时走 ready→done/skipped） | 是（artifact 从 blocked→ready→done） | 是（tasks 从未完成→完成） | 是（change 从活跃→archive） |
 | **修改文件系统** | 默认否；确认后可捕捉 artifact（v1.13.1：用户明确要求 capture 即确认） | 是（创建 artifact 文件） | 是（改代码+更新 checkbox） | 是（合并 spec+移动目录） |
 | **有"完成"概念** | 否 | 是（applyRequires 全部 done） | 是（所有 checkbox 标记） | 是（archive完成） |
 | **schema 管控** | 极弱（只读 status） | 极强（控制整个创建流程） | 中（apply phase 定义） | 强（控制合并规则） |
@@ -222,13 +222,16 @@ explore 结束时没有强制要求。可能的出路：
 
 ## 8. Guardrails
 
-来自 `explore.ts` 的 8 条护栏：
+来自 `explore.ts:386-394` 的 9 条护栏（6 条 "Don't" + 3 条 "Do"）：
 
 1. **Don't implement** — 不写代码。创建 artifact 可以，写应用代码不行。
 2. **Don't fake understanding** — 不清楚就承认，深挖。
 3. **Don't rush** — 探索是思考时间，不是任务时间。
 4. **Don't force structure** — 让模式自然浮现。
 5. **Don't auto-capture** — 提议捕捉，但不由 agent 自己决定。
-6. **Do visualize** — 用 ASCII 图。一张好图顶好几段话。
-7. **Do explore the codebase** — 基于真实代码讨论，不要飘在空中。
-8. **Do question assumptions** — 包括用户的和你自己的。
+6. **Don't manually scaffold changes** — 绝不手建 `openspec/changes/<name>/` 目录，一律走 `openspec new change` 生成 `.openspec.yaml` 等必需 metadata。
+7. **Do visualize** — 用 ASCII 图。一张好图顶好几段话。
+8. **Do explore the codebase** — 基于真实代码讨论，不要飘在空中。
+9. **Do question assumptions** — 包括用户的和你自己的。
+
+另外表格里把 explore 的「有状态流转」标成「否」是就默认姿态而言；一旦进入 capture 分支，它会沿 `status` 的 `ready`→`done`/`skipped` 走一遍（见第 5 节），所以准确说法是「**否（默认）；capture 时是**」。
