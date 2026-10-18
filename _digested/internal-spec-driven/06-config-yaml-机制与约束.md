@@ -45,8 +45,14 @@ const ProjectConfigSchema = z.object({
     archive: z.object({ guidance: z.array(z.string()).optional() }).optional(),
   }).optional(),
   store: z.string().optional(),
+  githubCopilot: z
+    .object({ cloudAgent: z.boolean().optional() })
+    .optional()
+    .describe('GitHub Copilot integration preferences'),
 });
 ```
+
+其中 `githubCopilot` 目前只识别 `cloudAgent` 一个布尔子字段（`project-config.ts:82-87`、解析在 `:427-443`）：`cloudAgent` 是 boolean 才收下，给了非 boolean 会 warn `Invalid 'githubCopilot.cloudAgent' field in config (must be a boolean)`；`githubCopilot` 本身不是对象则 warn `Invalid 'githubCopilot' field in config (must be an object)`；其他子字段静默丢弃。
 
 > **注意**：Zod schema 中 `context` 字段**只有 `z.string().optional()`，没有 `.max(...)` 约束**。50KB 的长度上限是**在 `readProjectConfig()` 运行时手动检查**的（`project-config.ts:350-357`，用 `Buffer.byteLength` 比对 `MAX_CONTEXT_SIZE`），不在 Zod 类型定义里。Zod schema 在这里主要起"类型推导 + 文档"作用；真正的逐字段容错解析逻辑写在 `readProjectConfig()` 函数体中，而非依赖 `ProjectConfigSchema.safeParse()` 整体校验。
 
@@ -61,7 +67,7 @@ const ProjectConfigSchema = z.object({
 | `store` | 否 | `string` | config-only root 的 store fallback；不是 operation prompt | 无 |
 | `references` | 否 | string 或 `{id, remote}` 数组 | 由 `readProjectConfig()` 专门解析；为 artifact/Apply 提供索引 | 无 |
 
-当前项目级 `openspec/config.yaml` 的已消费顶层字段是 `schema`、`context`、`rules`、`operations`、`store` 与 `references`。其中 `rules` 只属于 artifact prompt 注入层；`context` 同时进入 artifact 与 operation input；`operations` 只为 Apply/Archive 提供 advisory guidance；`schema` 属于 workflow schema 选择层；`store` / `references` 处理 root 与跨 store 上下文。
+当前项目级 `openspec/config.yaml` 的已消费顶层字段是 `schema`、`context`、`rules`、`operations`、`store`、`references` 与 `githubCopilot`（**七个**）。其中 `rules` 只属于 artifact prompt 注入层；`context` 同时进入 artifact 与 operation input；`operations` 只为 Apply/Archive 提供 advisory guidance；`schema` 属于 workflow schema 选择层；`store` / `references` 处理 root 与跨 store 上下文；`githubCopilot` 目前只有 `cloudAgent` 一个开关生效。
 
 如果 YAML 顶层额外写了其他 key，例如 `team:`、`metadata:`、`owner:`，当前实现会被 YAML parser 读到，但不会成为 OpenSpec 的运行时配置。结果就是：**静默忽略，不报错，也不生效**；不要把自定义 metadata 与上述已消费字段混在一起期待它被 workflow 使用。
 
