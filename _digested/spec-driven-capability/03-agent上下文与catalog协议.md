@@ -88,7 +88,9 @@ catalog 是收缩局部上下文的工具，不是掩盖全局影响面的借口
 
 ## 上游能力与当前项目纪律的边界
 
-现有 CLI 的 list --specs JSON 只提供 ID 与 requirement count，不提供一个完整本地语义 catalog。上游关于 catalog discovery、按需 fetch 与预算控制的讨论仍不是已发布 runtime 能力。
+现有 CLI 的 `list --specs --json` 只给 `{id, requirementCount}`（`list.ts:273-290`），不提供一个完整的**本地**语义 catalog。上游关于本地 catalog discovery、语义相关性排序的讨论仍不是已发布能力。
+
+但要区分开：**external store 的 `references:` 已经把 index-then-fetch 做出来了**——一跳、只读、50KB 预算，超了会发 `reference_index_truncated` warning（`src/core/references.ts:514`，预算常量与 `config.context` 共用 `MAX_CONTEXT_SIZE = 50 * 1024`）。所以"按需 fetch + 预算控制"在跨 store 场景是已实现能力，缺的是本地 main spec 的那一层。
 
 所以本文的 protocol 是今天项目可以采用的治理层，而不是声称 OpenSpec 已经自动保证它。详细的上游研究、外部 reference 的 index-then-fetch 模型及其限制见 [FAQ 14](../../_faq_on_digested/14_main_specs_context_scaling/answer.md)。
 
