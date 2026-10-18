@@ -215,13 +215,13 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 
 ### 内部处理
 
-它主要做六件事：
+它主要做七件事：
 
 1. 读取 schema 的 apply 配置，以及 operation 层的 `context` / `operations.apply.guidance`。
 2. 确认 apply 前置要求需要哪些 artifacts。
 3. 检查这些 prerequisite artifacts 是否已经产生输出。
 4. 收集所有现存 artifact 输出文件作为 context files。
-5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器为 `src/utils/task-progress.ts` 的 `parseTaskLines`，与 `list`/`view`/`validate --archived`/archive 共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。v1.14.0 起，解析出的每个任务项还带 `sourcePath` 与 1-based `line`（`LocatedTask`/`parseLocatedTasks`，不改任务解析本身），apply workflow 据此直接定位到 tracking file 的该行勾选。
+5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器为 `src/utils/task-progress.ts` 的 `parseTaskLines`，与 `list`/`view`/`validate --archived`/archive 共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。v1.14.0 起，解析出的每个任务项还带 `sourcePath` 与 1-based `line`——但注意 `LocatedTask`/`parseLocatedTasks` **不在** `task-progress.ts` 里，而是 apply instruction 构造器的本地实现（`src/commands/workflow/instructions.ts:354`/`:360`），它内部仍调用 `parseTaskLines`，不改任务解析本身；apply workflow 据此直接定位到 tracking file 的该行勾选。
 6. v1.13.0 起，change 无任何 spec delta 时在结果中附带警告（写 specs 或 `skip_specs: true`），text 与 `--json` 均有。
 7. 归纳当前 apply state，并给出 instruction。
 
