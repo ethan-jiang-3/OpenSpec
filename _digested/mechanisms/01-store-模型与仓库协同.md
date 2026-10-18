@@ -54,14 +54,19 @@ openspec store unregister platform-api # 注销
 4. 如果 checkout 存在且健康，提取其 spec 列表（id + 标题摘要）
 5. 组装成 working set
 
-不可解析的 store 会报告 warning（"not available — run: git clone ..."），不会让整个命令失败。
+不可解析的 store 会报告 warning 并附一条**可直接粘贴的修复命令**（`src/core/references.ts:63-76` 的 `registerFix()`）：
+
+- 有 remote 且 shell 安全时 → `git clone -- <remote> '<~>/openspec/<id>' && openspec store register '<~>/openspec/<id>' --id <id>`（Windows 用双引号；home 路径写成绝对路径，因为 `~` 在非 shell 环境不展开）
+- 否则 → `Get a checkout from a teammate and run: openspec store register <path> --id <id>`
+
+这些只是 warn，不会让整个命令失败。
 
 ## 源码入口
 
 | 主题 | 入口 |
 |------|------|
 | store 基础类型与路径 | `src/core/store/foundation.ts` |
-| store CRUD（1196 行） | `src/core/store/operations.ts` |
+| store CRUD | `src/core/store/operations.ts` |
 | store registry | `src/core/store/registry.ts` |
 | git backend | `src/core/store/git.ts` |
 | references 索引 | `src/core/references.ts` |
