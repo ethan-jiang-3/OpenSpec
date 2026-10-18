@@ -88,8 +88,19 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 - **升级目标**：全局 CLI 升到 v1.14.0 后逐项目 `openspec update`，新的工具目标与 workflow 模板（apply 任务源定位、archive sync 阻塞语义、verify 重写）才会投递到项目里。
 - **新增工具目标速览**（`--tools` id / 目录 / 形态）：`dsh` → `.dsh/skills/`（DeepSeek Harness，skills-only：无 adapter、无命令文件，`.dsh/skills/` 是其最高优先级 skill root，`SKILL.md` 进 catalog 后可 `/openspec-*` 直呼）；`codestudio` → `.codestudio`（skills + `.prompt.md` 命令）；`gigacode` → `.gigacode`（`opsx-<id>.md`）；`atomcode` → `.atomcode`（`/opsx-<id>`，按 workflow 是否读输入声明 `args`）；`easycode` → `.easycode`（TOML 命令 `/opsx:<id>`，新共享模块 `command-generation/toml.ts`）；`gsd` 与 `amp` 与 Codex/Zed/Antigravity/`agents` 共享 `.agents` root（detection 分别靠 `.gsd`/`.amp`）；`grok` → `.grok`、`veai` → `.veai`（skills-only）；`warp` → `.warp`（skills，`/openspec-*`，进入 skills-invocable 调用面）。另外 IBM Bob 显示名改为 "IBM Bob"（tool id `bob` 与 `.bob` 路径不变）；Kilo Code 命令目录修正为 `.kilo/command/`，update 的 legacy cleanup 会按已知文件名清走旧位置的文件。
 - **v1.13.2 对升级用户的实际意义**：CRLF 保持——写回文件时 `matchLineEnding(rebuilt, previous)` 保持原行尾，只有新文件才写 LF，Windows/编辑器 CRLF 仓库升级后 update/archive 不再产生全文件行尾 diff；Windows archive 的 EPERM/EXDEV 复制回退（watcher 占住目录时也能归档）；artifact 输出 glob 认 brace expansion 与 extglob（自定义 outputs 配置的生效面变宽）。
-- **升级后可用的新命令面**：`openspec version [--json] [--check]` 自查版本/安装方式/是否有更新；`openspec list --archived` / `--all` 浏览归档 change；`view` 显示 active change 的 workflow status 与末尾归档分区。
-- **`.openspec.yaml` 卫生**：v1.14.0 起未知顶层键在 status/validate/archive 都会告警，`validate --strict` 直接失败——升级前把旧项目 metadata 里的实验性键清掉或改名（已知键：`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）。
+- **升级后可用的新命令面**：`openspec version [--json] [--check]` 自查版本/安装方式/是否有更新；`openspec list --archived` / `--all` 浏览归档 change；`view` 显示 active change 的 workflow status（v1.14.3 起不再有末尾的归档分区）。
+- **`.openspec.yaml` 卫生（v1.14.0 口径，已被 0012 扩展）**：v1.14.0 起未知顶层键在 status/validate/archive 都会告警，`validate --strict` 直接失败——升级前把旧项目 metadata 里的实验性键清掉或改名（已知键：`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）。
+
+## v1.14.1–v1.14.3 的具体提醒（来自同步记录 0012）
+
+- **升级目标**：全局 CLI 升到 v1.14.3 后逐项目 `openspec update`。这一轮的 workflow 模板改动（glob 工件的补完协议、输出路径先定后写、`all_done` 改为"归档前先复核"、verify 的工件发现与 REMOVED 基线读取）都只在 update 之后才投递到项目里。
+- **升级后 view 会"变少"**：v1.14.3 移除了 v1.14.0 加的 "Archived Changes" 分区（#2031 撤回），dashboard 只显示 active changes 与 specs。要看归档用 `openspec list --archived` / `--all`——这不是数据丢了。
+- **`--strict` 的失败面变宽**（v1.14.1/v1.14.2）：requirement 正文 >500 字从 INFO 升 WARNING；change 里的 **ADDED** requirement 也受同一限制；delta 里"归档不会带走"的文本（首个 `##` 前正文、首个 requirement 前散文、`## Notes` 之类的额外段）也报 WARNING。已有 CI 跑 `validate --all --strict` 的项目，升级后可能新红——先跑一遍看清单，把该拆的拆、该挪的挪，别急着加 `--no-…` 绕过。
+- **`.openspec.yaml` 卫生（更新）**：未知顶层键仍会告警并让 `--strict` 失败，但**小写 `x-` 开头的键现在合法**（`x-jiraKey`、`x-trackerID`）。升级前不必再为了塞自定义元数据而去改已知键。注意 `X-Tracker`、裸 `x-`、`x- tracker` 仍报未知；`initiative:` 内部仍严格。
+- **symlink 布局现在被支持**：`openspec/`、`changes/`、`specs/` 本身，以及单条 `spec.md`，都可以是指向项目内其他位置的相对 symlink（典型：`openspec/` 指向共享文档仓库）。`archive/` 仍不允许是链接。之前为绕开限制而做的复制/软链 workaround 可以撤掉了。
+- **归档确认的默认值是 Yes**：`Proceed with spec updates? (Y/n)`，回车即继续，拒绝要显式输入 `n`。脚本里依赖"回车等于跳过"的习惯要改——非交互场景请显式 `--yes` 或 `--skip-specs`。
+- **启动更快**：`--version`/`--help` 加载 24 个模块（原 485），Tab 补全加载 48 个（原 344）且不再触发遥测请求。pre-commit 里跑 `validate --all` 的，零宽 TTY（lefthook 之类的 pty）不再让命令挂死。
+- **`.npmrc`/依赖审计**：`fast-glob` 被移除（连带 `braces` 传递依赖），想审计下游包的项目会看到差异。
 
 ## v1.12.0–v1.13.1 的具体提醒（来自同步记录 0009）
 

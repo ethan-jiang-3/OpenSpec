@@ -56,3 +56,17 @@
 |------|------|------|
 | `cli-artifact-workflow` | 新增 requirement `Active Change Workflow Status`，移除 `Experimental Isolation` | 对应 view 在 active change 下显示 workflow status（逐 artifact 标 done/ready/blocked/skipped）；被移除的实验隔离 requirement 不再描述当前实现 |
 | `ai-tool-paths`、`artifact-graph`、`cli-config`、`cli-init`、`cli-update`、`cli-view`、`legacy-cleanup`、`openspec-conventions`、`opsx-archive-skill`、`opsx-verify-skill` | scenario/正文级修订，无 requirement header 增删 | 其中 `opsx-verify-skill`（+109 行）与 `opsx-archive-skill` 对应 verify 模板按 status 契约重写与 archive sync 阻塞语义；`ai-tool-paths` 对应 10 个新工具目标的路径声明 |
+
+## v1.14.1→v1.14.3 变更的 specs
+
+`git diff v1.14.0 v1.14.3 -- openspec/specs/` 涉及 5 个既有 spec，无新增 capability 目录。requirement header 层面增删一处：
+
+| spec | 变化 | 说明 |
+|------|------|------|
+| `artifact-graph` | **新增 requirement `Glob Nesting Limit`** | `generates` / `apply.tracks` 的 brace 或括号嵌套 >16 层时，在任何 glob 匹配之前报错并指名上限（#2061） |
+| `cli-archive` | requirement 正文修订 | spec 更新确认提示的默认值从 "No" 改为 **"Yes"**（`Proceed with spec updates? (Y/n)`，回车即继续）；对应 `eb315c9d`（#2065）"文档跟代码不一致"三处修正之一 |
+| `schema-resolution` | requirement 正文修订 | schema 解析顺序修正为 **CLI flag → change metadata → project config → planning-home default → 硬编码默认**——config 的 `schema` 现在优先于 planning-home 默认（原 spec 写反了）（#2065） |
+| `opsx-verify-skill` | scenario 扩写 | REMOVED requirement 分支改为"先读主 spec 基线，必要时翻文件历史，基线只是标题重述视同缺失，拿不到就标 not verified 并跳过搜索"（#2083） |
+| `telemetry` | 文案修订 | 首次提示增加 `or openspec config set telemetry.enabled false`（#2065） |
+
+> 注意 `cli-archive` 与 `schema-resolution` 这两条属于**spec 追认既有代码**，不是本轮的行为变更——它们修正的是 spec 本身写错的地方。资料若按旧 spec 描述过"默认 No"或"config 优先于 flag"，需要改。

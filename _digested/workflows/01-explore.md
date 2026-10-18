@@ -95,6 +95,20 @@ template 里硬编码了五种典型入口的示例对话：
 
 > **v1.8.0**：捕捉成**新 change** 时必须先 `openspec new change "<name>"` scaffold（保住 `.openspec.yaml` metadata），再按 `status`/`instructions` 建 artifact；capture 后不需用户再跑额外命令。详见 `../internal-spec-driven/01-explore-探索模式.md` 第五节。
 
+## 捕获表是默认 schema 的
+
+explore 的内置「捕获到哪里」表（New requirement → `specs/<capability-path>/spec.md`、Design decision → `design.md`、New work → `tasks.md`……）与示例 offer（"That's a design decision. Capture it in design.md?"）都是**默认 spec-driven schema** 的产物。换用自定义 schema 时，表里那些文件可能根本不存在（#2086）。
+
+模板现在的规定是：
+
+| 情形 | 行为 |
+|---|---|
+| 默认 schema | 按表与示例 offer 直接用 |
+| 其他 schema | 从 `artifactPaths` 里选**该 schema 定义了**、且适合这条洞察的工件，并在 offer 里点名它 |
+| 兜底 | 绝不创建 schema 未定义的文件（例如没有 `design` 工件时，不去建 `design.md`） |
+
+工作流结束时的示例措辞也一并改掉：`"Updated design.md with these decisions"` → `"Updated the design with these decisions"`——同一个句子里不再假设文件名。
+
 ## Guardrails
 
 template 里写了 8 条 guardrail：
@@ -126,11 +140,16 @@ FAQ `03_explore-to-propose-change/` 是从 "Explore 怎么判断是否 propose" 
 
 ## 源码锚点
 
-| 内容 | 行号范围（explore.ts） |
+| 内容 | 行号范围（explore.ts，v1.14.3） |
 |---|---|
-| SkillTemplate 定义 | L10-L296 |
-| CommandTemplate 定义 | L298-L472 |
+| SkillTemplate 定义 | L76-L399 |
+| CommandTemplate 定义 | L401-L612 |
+| 捕获表（skill 版 L222-L228 / command 版 L558-L564）+ 默认 schema 限定（L220 / L556） | skill 与 command 各一份 |
+| capture 的输出路径选择（步骤 3） | skill 版 L198；command 版 L534 |
 | STORE_SELECTION_GUIDANCE 注入 | L19, L310 |
 | OpenSpec Awareness 段 | L82-L136, L379-L433 |
 | 五个 entry point 示例 | L149-L249 |
 | Guardrails | L282-L291, L461-L470 |
+
+- **捕获表限定默认 schema（v1.14.2，`9cb5ba8c` #2086）**：捕获表与示例 offer 标注为默认 spec-driven schema；换 schema 时按 `artifactPaths` 选该 schema 定义的工件并点名，绝不创建 schema 未定义的文件。
+- **输出路径先定后写（v1.14.3，`276d0150` #2104）**：capture 步骤 3 与 propose/ff/continue 同口径——先定并校验 `changeRoot` 内的具体路径，再创建。

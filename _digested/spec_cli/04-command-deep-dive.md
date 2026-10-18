@@ -46,7 +46,8 @@
 
 - 角色：交互式仪表盘；v1.7.0 按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
 - 核心对象：聚合浏览。
-- v1.14.0：active change 行下有 `└─ [schemaName]` workflow status 行，逐 artifact 标 done/ready/blocked/skipped（workflow 加载不出时保留任务进度）；末尾有灰色 "Archived Changes" 分区（upstream main 的 #2031 已移除该分区，下个版本会变）。
+- active change 行下有 `└─ [schemaName]` workflow status 行，逐 artifact 标 done/ready/blocked/skipped（workflow 加载不出时保留任务进度）。
+- v1.14.0 曾在末尾加过灰色的 "Archived Changes" 分区；**v1.14.3 起已移除**（#2031），dashboard 只显示 active changes 与 specs。看归档用 `list --archived`/`--all`。
 - 更偏人类，不偏自动化。
 
 ### `show`
@@ -67,7 +68,7 @@
 - 输出语义：是否合法、有哪些 issues、下一步修复建议。
 - 典型边界：它不管代码是否编译，不管测试是否通过，它主要管 OpenSpec 文档结构。`--archived` 不重验已应用的 delta。bulk 标志（`--all/--changes/--specs`）在项目外非零退出。
 - v1.12.0 新增 `--report findings`：配合 bulk scope 只输出 findings 列表（错误/警告/信息），保留完整统计与退出码。同版起（#1710）validate 将 delta 内 merge-conflict 标记报告为 informational findings（不改退出码），并区分文件系统读取错误与 spec 缺失。
-- v1.14.0：`.openspec.yaml` 未知键（白名单 `schema/created/goal/affected_areas/initiative/skip_specs/retire_capabilities` 之外）以 WARNING 报告（status/archive 同样告警）；`--strict` 下该 WARNING 升级为失败。
+- v1.14.0：`.openspec.yaml` 未知键（白名单 `schema/created/goal/affected_areas/initiative/skip_specs/retire_capabilities` 之外）以 WARNING 报告（status/archive 同样告警）；`--strict` 下该 WARNING 升级为失败。v1.14.2 起顶层小写 `x-` 开头的键属于使用者，不算未知键（`X-`、裸 `x-`、含空白仍报；`initiative:` 内仍严格）。
 
 ### `archive`
 
@@ -221,3 +222,24 @@
 - `store` / `context` / `workset` 负责跨仓库上下文引用系统。
 
 这才是 OpenSpec CLI 的整体结构。
+
+## CLI 入口的分层（v1.14.1 #2025）
+
+早期 `src/cli/index.ts` 是一个巨型文件：所有命令的注册、选项、帮助文本和**实现**都在同一份模块图里，于是 `openspec --help` 也要把 archive、init、update、workflow 的全部实现加载一遍。v1.14.1 把它拆成三层：
+
+| 层 | 位置 | 职责 |
+|---|---|---|
+| program 装配 | `src/cli/index.ts` | 建 program、公共 flag、错误出口、退出码 |
+| 命令注册 | `src/cli/commands/{config,context,doctor,schema,spec,store,workset}.ts` | 名字、选项、help 文本；action 里 `await import()` |
+| 命令实现 | `src/commands/*.ts` | 真正的逻辑，只在执行该命令时加载 |
+
+两处细节值得记：
+
+- **默认 schema 要能被 help 显示，但不能拖进实现**：抽成单独模块 `src/commands/workflow/default-schema.ts`，只导出 `DEFAULT_SCHEMA`。
+- **barrel 是隐形拖累**：`completion-provider.ts` 的 `listSchemas` 改为直接 import `artifact-graph/resolver.js`，绕过那个会把 `tinyglobby` 一并拉进来的 barrel；`failWithError` 的 ora 与 `shared-output` 也延后到真正需要时。
+
+对使用者的意义：`--version`/`--help` 从 485 个模块降到 **24** 个；`config list`、`store list`、`doctor` 只加载自己用到的。**输出、帮助文本、补全结果、退出码、遥测行为全部不变**——这是纯加载时机重构。
+
+配套的 v1.14.2（#2064）另有一处：Tab 补全走的 `__complete` 路径除跳过补全提示外，现在**也完全跳过遥测**。补全 changes/specs 时的模块数从 344 降到 **48**，且一次按键不再等遥测请求，也不会在没人看得见的地方消耗掉首次运行的遥测提示。
+
+回归防线是 `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs`：记录并断言启动时加载的模块集合，按需加载被无意退回会直接红。

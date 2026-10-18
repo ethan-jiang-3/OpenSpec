@@ -68,7 +68,8 @@ sequenceDiagram
             TS-->>MD: dependencies, template, instruction,<br/>context, rules, resolvedOutputPath
             MD->>FS: 从磁盘重读依赖文件<br/>（不用内存中的旧版本——<br/>用户可能已编辑过）
             MD->>MD: 按 template 组织 + instruction 约束<br/>context/rules 不写入文件！
-            MD->>FS: 写 artifact 到 resolvedOutputPath
+            MD->>MD: 先定输出路径：glob 时选一个<br/>changeRoot 内、resolve symlink 后仍在<br/>changeRoot 内的具体路径
+            MD->>FS: 写 artifact 到该输出路径
             MD->>TS: openspec status --change X --json
             TS-->>MD: 更新后的 done/ready/blocked
         end
@@ -109,6 +110,19 @@ These guide what you write, but should never appear in the output
 - 规划前加载所选项目/store root 的 `context`（遵守 config 优先级与验证上限）；无 root 时不写任何文件就停止并建议初始化，不再隐式创建 root。
 - spec-driven 的 propose/specs 指令里，「研究现有能力」与「delta 路径匹配现有 spec」两步带 `--store "<id>"`；capability 读取用 `openspec show "<spec-id>" --type spec --json --no-scenarios`，resolve 到与 list 相同的 root。
 
+## 先定输出路径，再创建（#2104）
+
+artifact 循环里 `resolvedOutputPath` 有两副面孔：**具体路径**，或**glob 模式**（如 `specs/**/*.md`）。glob 模式下它不是可以直接写入的目标，模板因此把「选路径」提升成创建的前置步骤：
+
+| 步骤 | 规则 |
+|---|---|
+| 1. 定路径 | `resolvedOutputPath` 是 glob 时，按 `instruction` 选一个落在 `changeRoot` 内、**且匹配该 glob** 的具体路径；它不是 glob 时，输出路径就是它本身 |
+| 2. 校验 | 解析 symlink（父目录，以及已存在的文件本身）之后仍须在 `changeRoot` 内；不在就停下告知用户，**不写** |
+| 3. 委托 | `instruction` 把创建委托给某个 skill/command 时，只有它**能写到这个输出路径**才调用，否则停下告知用户 |
+| 4. 写 + 验 | 写到该输出路径，然后确认文件确实在那里 |
+
+这条规则在 propose、ff、continue 三套模板里是同一句（#2104 之前只把 `resolvedOutputPath` 当作写入目标，glob 工件会落成字面文件名或逃出 change 目录）。它和 update 的 glob 例外（[`12-update.md`](./12-update.md#v1142-起例外写在两处2083)）是一对：一边是**新建**工件时选路径，一边是**修订**已有 change 时补缺失文件，两者的包含检查口径一致。
+
 ## Guardrails
 
 | Guardrail | 含义 |
@@ -118,6 +132,7 @@ These guide what you write, but should never appear in the output
 | context 不清时问用户 | 但优先保持 momentum |
 | change 同名时问用户 | 避免覆盖 |
 | 写完后验证文件存在 | 不假称完成 |
+| 先定并校验输出路径，再创建任何东西 | glob 工件必须有具体且落在 `changeRoot` 内的路径 |
 
 ## 和 FAQ 的衔接
 
@@ -125,21 +140,22 @@ FAQ `04_propose-to-apply-ready/` 从工程视角分析了 propose 的 artifact D
 
 ## 源码锚点
 
-| 内容 | 行号范围（propose.ts） |
+| 内容 | 行号范围（propose.ts，v1.14.3） |
 |---|---|
 | SkillTemplate 定义 | L33-L194 |
-| CommandTemplate 定义 | L196-L356 |
-| Step 1: 询问输入/澄清歧义 | L61-L70 |
-| Step 2: 加载 context | L72-L80 |
-| Step 3: schema 选择 | L82-L90 |
-| Step 4: new change | L92-L105 |
-| Step 5: status DAG | L107-L114 |
-| Step 6: artifact 循环 | L116-L157 |
-| Step 7: final status | L159-L162 |
-| context/rules 警告 | L179-L181 |
+| CommandTemplate 定义 | L197-L357 |
+| Step 1: 询问输入/澄清歧义 | L63-L72 |
+| Step 2: 加载 context | L74-L82 |
+| Step 3: schema 选择 | L84-L92 |
+| Step 4: new change | L94-L107 |
+| Step 5: status DAG | L109-L116 |
+| Step 6: artifact 循环（含输出路径选择 L140-L142） | L118-L159 |
+| Step 7: final status | L161-L164 |
+| context/rules 警告 | L181-L183 |
 
 ## v1.12.0–v1.13.1 行为更新
 
 - **context-first（v1.13.0，`6d2dbe62`）**：propose 在做任何规划决策前先从选定项目/store root 加载 project context；目录无 OpenSpec root 时停止并提示 init，不再静默创建。
 - **code-grounded（v1.12.0，`98bf53e5`）**：起草 artifact 前先检查相关代码、测试和文档，proposal 建立在仓库现实之上。
 - ff（fast-forward）与 propose 共享同一套 code-grounded 指令。
+- **输出路径先定后写（v1.14.3，`276d0150` #2104）**：glob `resolvedOutputPath` 必须先选成 `changeRoot` 内的具体路径并做 symlink 后包含检查；委托给 skill/command 时只有它能写到该路径才调用。

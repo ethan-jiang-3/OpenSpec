@@ -199,6 +199,33 @@ archive 流程里最坏的一种结局不是失败，而是"半途"：main specs
 
 写回 main spec 时，CLI 会保持文件原有行尾（CRLF 文件写回仍是 CRLF，只有新文件才写 LF）。在此之前，一次只改几行的小 delta 在 Windows 仓库可能表现为"整个文件被重写成 LF"的 diff——噪声淹没真实改动，review 与 blame 都被污染，还容易被误读成"specs 被大面积重写"的失真信号。现在行尾不再漂移，diff 只反映真实的内容变化。
 
+### 写进 delta 的散文不会进主 spec（v1.14.2 起会告警）
+
+delta spec 里有些文本 archive **永远不会带走**：第一个 `## ` 之前的正文、`## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文、以及 Purpose 与四类 delta 段之外的任何 `## ` 段（比如你自己加的 `## Notes`、`## Migration`）。
+
+以前它们静默消失，作者以为"我写在 spec 里了"。现在 `validate` 报 WARNING、`archive` 也 `warn()`，文案直说：`... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.`
+
+看到这条不要靠 `--strict` 之外的办法压掉它，而是判断这段内容属于谁：
+
+| 内容性质 | 该去哪 |
+|---|---|
+| 对行为的约束、边界、例外 | 写进 requirement（必要时新建一个） |
+| 为什么这么改、取舍、被否掉的方案 | proposal 或 design |
+| 一次性说明、给 reviewer 的备注 | 删掉（它本来就该是 PR 描述） |
+
+HTML 注释、`# ` 标题、Purpose 段、REMOVED/RENAMED 的正文都不告警——这些位置的内容本来就有明确归属。
+
+### spec 文件可以是项目内的 symlink（v1.14.3 起）
+
+`openspec/specs/<capability-path>/spec.md` 可以是一个指向**项目内**其他位置的相对 symlink。典型场景：你已经有产品文档站，希望 spec 和它住在一起，而不是复制一份。
+
+| 允许 | 不允许 |
+|---|---|
+| `openspec/`、`changes/`、`specs/` 本身是项目内 symlink | `archive/` 是链接（它必须真的在所在 changes 目录里） |
+| 单条 `spec.md` 指向项目内文件（含多级父目录链接） | 链接指向项目外、或链接是悬空的 |
+
+对有漂移治理含义的地方在于：**它让"有人直接编辑了 spec 文件"变得更可能**——链接指向的文件谁都能改，而 OpenSpec 依然没有 hash、没有变更记录。约束没变：改主 spec 走 change + archive，不要直接改链接目标。写侧至少保证了 archive 不会因链接被换向而写到未校验的文件（canonical path 在写入前后各查一次）。
+
 ## 真要拆分、合并或改 path：把它当成 rebaseline，不是普通 archive
 
 requirement 有 `RENAMED` 操作，capability 没有。把 `auth` 改为 `identity/login`、将一个大 spec 拆成两个 path、或合并两个 path，都会改变 capability ID；archive 只会看到旧 ID 和新 ID，不会自动迁移 active delta、catalog、文档或调用方约定。

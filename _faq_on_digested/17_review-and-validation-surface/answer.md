@@ -122,17 +122,57 @@ verify 不再自己解析 checkbox。它改用 `status --json` 的顶层 `tasks`
 
 ### `.openspec.yaml` 未知键告警
 
-`CHANGE_METADATA_KNOWN_KEYS` 白名单（`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）之外的顶层键，status/validate/archive 都会告警"未知键被忽略、无效果"，`validate --strict` 下直接失败。拼写漂移（如把 `skip_specs` 写成 `skipSpecs`）从静默 no-op 变成可见信号。注意：`--strict` 对**超长 requirement** 直接失败是 upstream main 的未发版行为，不属于 v1.14.0。
+`CHANGE_METADATA_KNOWN_KEYS` 白名单（`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）之外的顶层键，status/validate/archive 都会告警"未知键被忽略、无效果"，`validate --strict` 下直接失败。拼写漂移（如把 `skip_specs` 写成 `skipSpecs`）从静默 no-op 变成可见信号。
+
+**v1.14.2 起小写 `x-` 开头的顶层键是例外**：它们属于使用者，OpenSpec 不读不写不校验，`--strict` 照常通过（`X-Tracker`、裸 `x-`、`x- tracker` 仍报未知；`initiative:` 内部仍严格）。注意 `ChangeMetadataSchema` 会 strip 未知键**包括 `x-*`**，任何重写 `.openspec.yaml` 的调用方必须从原始 YAML 合并回来。
+
+`--strict` 对**超长 requirement** 直接失败：v1.14.1 起 requirement 正文 >500 字从 INFO 升为 WARNING（`--strict` 即失败），且同一限制前移到 change 的 ADDED requirement（MODIFIED 不受限）。
 
 ### requirements 500 字符引导口径
 
-500 字符上限（`MAX_REQUIREMENT_TEXT_LENGTH`）早就存在，v1.14.0 把"怎么写短"写进了 specs instruction 与 validate 提示：新 requirement 一条只写一个行为，示例和边界情况移进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` 块；validate 对超长 requirement 的 flag 是 informational（写入 main spec 后才 flag），不是 error；MODIFIED 下保持既有 requirement block 完整，**不为凑长度拆写、裁剪或重写已有文本**。
+500 字符上限（`MAX_REQUIREMENT_TEXT_LENGTH`）早就存在，v1.14.0 把"怎么写短"写进了 specs instruction 与 validate 提示：新 requirement 一条只写一个行为，示例和边界情况移进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` 块；validate 对超长 requirement 的 flag 现在是 **WARNING**（v1.14.1 起，此前 INFO；`--strict` 会失败），仍不是 error；同一限制也作用于 change 里的 ADDED requirement，所以超长在 authoring 阶段就暴露。MODIFIED 不受此检查（避免逼人拆动既有正文），且保持既有 requirement block 完整，**不为凑长度拆写、裁剪或重写已有文本**；确需拆分时按 specs instruction：保留 header 与全部 scenario，正文收敛到一个行为，被移除的行为各自作为新的 ADDED requirement。
+
+## 七、v1.14.1–v1.14.3 补充：归档前能看见的失真又多了两类
+
+### delta 里"归档不会带走"的文本（v1.14.2 #2054）
+
+归档按 delta 段合并，delta 里有三类文本**永远不会进主 spec**：
+
+| 位置 | 例子 |
+|---|---|
+| 第一个 `## ` 之前的正文 | 文件开头的说明、作者备注 |
+| `## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文 | "这组改动是因为……" |
+| Purpose 与四类 delta 段之外的任何 `## ` 段 | `## Notes`、`## Migration` |
+
+以前它们静默消失。现在 `parseDeltaSpec` 返回 `unappliedContent`（`{section, line}[]`），`validate` 报 WARNING、`archive` 在重建主 spec 时 `warn()`，文案直接给出出路：挪进 requirement，或挪进 proposal/design。HTML 注释、`# ` 标题、Purpose 段、REMOVED/RENAMED 正文都不告警。
+
+**搬运行为不变**——这条只让丢失可见，不改变结果。
+
+### 退役备份清理失败有独立错误码（v1.14.1 #1792）
+
+`archive` 删掉某 capability 最后一个 requirement 之后要清理备份。它失败时以前报通用 `archive_error`，且文案断言"每个列出的备份都被保留"——部分成功时这句话是假的。现在：错误码 `archive_retirement_cleanup_failed`，文案拆成两件事——**change 已归档**（retry 回不去）、**清理未完成**（要按诊断里所有 recovery path 逐个检查）。
+
+### verify 的两条口径修正
+
+- **按输出路径发现工件**（#2028/#2083）：spec 工件 = `artifactPaths.<id>.outputPath` 在 `specs/` 之下者；design 工件 = id 为 `design` **或** outputPath 命中 `design.md` 者。自定义 schema 下不再因为 id 起得不一样而漏检。
+- **REMOVED 必须先读基线**（#2083）：先从 `openspec/specs/<capability-path>/spec.md` 按归一化名字读该 requirement；读不到就翻文件历史（`git log -p -- <path>` / `show <commit>^:./<path>`）。基线只是标题重述（没有 scenario）视同缺失；两者都没有就把 Spec Coverage 记 not verified 并**跳过搜索**，而不是空手去代码里猜。只有行为确实仍在时才判 CRITICAL。
+
+### 归档前的最小审阅动作（更新版）
+
+```text
+validate <change>            # 结构 + merge 预检 + unapplied 文本 WARNING
+  → show <change> --diff     # 差异是否符合预期
+  → 超长 requirement / 超长 ADDED：按 specs instruction 拆分
+  → archive                  # 确认提示默认是 Yes（回车即继续）
+```
+
+`archive` 的 spec 更新确认提示默认值是 **Yes**（`Proceed with spec updates? (Y/n)`，回车即继续；拒绝要显式输入 `n`）。这是 v1.14.1 起被 spec 追认的既有行为——旧 spec 写的是默认 No。
 
 ---
 
 ## 参考来源
 
-- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)
+- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)、[`0012-v1.14.0-to-v1.14.3.md`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)
 - 机制：[`../../_digested/mechanisms/03-spec-model.md`](../../_digested/mechanisms/03-spec-model.md)（parser/validator 分工、Purpose 占位符、advisory preflight）
 - 命令面：[`../../_digested/spec_cli/01-human-facing-cli.md`](../../_digested/spec_cli/01-human-facing-cli.md)、[`02-machine-facing-cli.md`](../../_digested/spec_cli/02-machine-facing-cli.md)
 - 失真治理：[`../../_digested/specs_truth/00-map.md`](../../_digested/specs_truth/00-map.md)

@@ -11,13 +11,13 @@
 | 项 | 值 |
 |----|----|
 | **手册版本** | **v1.11** |
-| **对齐 OpenSpec** | 1.14.0 |
+| **对齐 OpenSpec** | 1.14.3 |
 | **本版日期** | 2026-09 |
 
 **两个版本维度（别混）**：
 
 - **手册版本**（v1.11）：本手册自身的版次。理解加深、内容大修时升版。
-- **对齐 OpenSpec**（1.14.0）：本手册当前对应的 OpenSpec 上游版本。
+- **对齐 OpenSpec**（1.14.3）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
 
@@ -37,6 +37,7 @@
 | v1.5 | 2026-07 | 1.7.0 | 系统性勘误与打磨：修正 Pi/Kiro 版本归属（v1.2.0）、core/custom profile 命令数（6/12）、`apply.tracks` 约束措辞（从硬编码改强烈推荐）；CLI 命令表补全（status/instructions/view/schema/store setup 等）；`.openspec.yaml` 补完整字段表；schema 约束表补 `description`；FAQ 工具列表更新到 v1.7.0；`validate` 描述准确化；删各章尾部 `## 下一步` 跳转；宪章润色。 |
 | v1.6 | 2026-08 | 1.8.0 | 对齐 v1.8：工具投递新增 vendor-neutral `agents` 目标（`.agents/skills/`，与 Codex 共享根、ownership marker）；GitHub Copilot 一等支持（本地 skill + opt-in cloud coding-agent 文件）；Codex skills 迁到 `.agents`；archive 新增 `retire_capabilities`（删除已空 capability 的 main spec）、重复 canonical 名拒绝、note-loss 提示与无法交互时的可重跑命令；`status` 新增 `isPlanningComplete`；validate 的 SHALL/MUST 在 normal 模式降为 guidance、前置检测 MODIFIED scenario-loss；telemetry.enabled 全局配置。 |
 | v1.7 | 2026-08 | 1.9.0 | 对齐 v1.9：Command Code（`.commandcode/skills/` + `/opsx-*` commands）；`validate --archived`（CI 检查 archive 未勾完 tasks）；bulk `list`/`validate --all`/`schemas` 在项目外非零退出；scenario-loss 认所有 `####` 子标题；apply 超出 spec 必须停下来报；archive 非 TTY 无 ANSI、重建 spec 保留空白行；`schema fork` 保 YAML 格式；遗留 Codex 升级不抢 `.agents`。 |
+| v1.12 | 2026-10 | 1.14.3 | 对齐 v1.14.1–v1.14.3：artifact 创建前先定并校验输出路径（glob 工件必须落在 change 目录内，propose/ff/continue/explore 统一）；glob 工件「done 但文件不全」的补完协议；`all_done` 只报跟踪任务完成、归档前需复核/验证；verify 改按输出路径发现工件，REMOVED requirement 必须先读主 spec 基线；archive 的退役清理失败有独立错误码 `archive_retirement_cleanup_failed`；`openspec/`、`changes/`、`specs/` 与 spec 文件可以是项目内 symlink（`archive/` 不行）；delta 里「归档不会带走」的文本与超长 requirement 升为 WARNING；`.openspec.yaml` 顶层 `x-` 扩展键；glob 引擎由 fast-glob 换到 tinyglobby（brace 嵌套 ≤16、展开 ≤1024）；CLI 按需加载与 Tab 补全跳过遥测；零宽 TTY 不再挂死；view 移除归档分区。 |
 | v1.11 | 2026-09 | 1.14.0 | 对齐 v1.13.2/v1.14.0：10 个新 `--tools` 目标（dsh/codestudio/gigacode/atomcode/easycode/gsd/amp/grok/warp/veai），`.agents` 共享根扩为 Codex/Zed/Antigravity/Amp/GSD + vendor-neutral，IBM Bob 更名；`list --archived/--all`、`openspec version`、view 的 workflow status 与归档分区；`show --json` requirement/scenario 带 `name`；`status --json` `allowedEditRoots` 纳入声明 store 的当前项目；archive 阻塞语义（sync 失败不归档、sync 后结构验证、retired capability 主 spec 删除）；写回文件行尾保持（CRLF 不再整文件 diff）；`.openspec.yaml` 未知键告警；store-only 仓库可在 root 跑 `init` 装集成。 |
 | v1.10 | 2026-08 | 1.13.1 | 对齐 v1.13：`validate --report findings` 与 archive 拒收预报；SourceCraft（codeassistant）；v1.13.0 delta parser 大修（CommonMark 全标记、多 section 全应用、fence 内空行保留、大小写冲突拒绝）；propose context-first + code-grounded；explore spec inventory、capture 即确认；`/opsx:update` 先起草确认后写入；`status` 给 `Next:` 行；安全加固（指令注入/挂起/`.npmrc` 劫持）；pnpm@10 升级。 |
 | v1.9 | 2026-08 | 1.11.0 | 对齐 v1.11：`show --diff`（彩色 unified diff per requirement）；`status --all`（单进程全部 active change，故障不阻塞）；Explore 写入前确认（命名 artifacts、ask yes/no、单独等待）；Antigravity `.agent → .agents` 迁移，`resolveSharedSkillWriters()` 通用共享根仲裁；`validate` Purpose 占位符 warning（archive 遗留 TBD）；archive rename 保序（不移到 spec 尾部）；`schema init --default` 写入正确键、失败回滚；Fish completion 不再回退文件名；Explore 图例纯 ASCII。 |

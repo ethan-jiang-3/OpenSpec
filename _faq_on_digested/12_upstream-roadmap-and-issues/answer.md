@@ -1,6 +1,6 @@
 # 答案：OpenSpec 上游 Roadmap、主要问题与社区状况
 
-> **当前基线**：运行时行为以 [`_digested/README.md`](../_digested/README.md) 声明的「当前源码基线」为准。下方 roadmap/issue 大量是历史快照，不能覆盖当前基线的实际行为；版本演进见 [`_change_log/`](../_digested/_change_log/README.md)。
+> **当前基线**：运行时行为以 [`_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」为准。下方 roadmap/issue 大量是历史快照，不能覆盖当前基线的实际行为；版本演进见 [`_change_log/`](../../_digested/_change_log/README.md)。
 >
 > **v1.10.0 对本 FAQ 的追加**：`init --language`；Zed Agent 与 `.agents/skills/` 三方 ownership；store-aware `planningHome.root` main-spec instruction；每 task verification；no-spec schema 自动 `skip_specs`；retirement blocked-content 三分支；custom archive profile 自动补 sync；OpenCode `$ARGUMENTS`；删除 npm postinstall 并改为首次 CLI stderr completion tip；telemetry notice 写 stderr；update 只在 IDE-resident surface 变化时提示 restart；feedback 长正文保持完整。后七项不都出现在简短 release notes，因此以完整 commit range、源码和测试为准。
 >
@@ -18,7 +18,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v1.14.0）
+### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v1.14.3）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -37,6 +37,9 @@
 | v1.13.1 | 安全加固（config 值注入、恶意文件挂起、`.npmrc` 注册表劫持、`DO_NOT_TRACK` 口径、completion 路径引用、git probe 限额）；task checkbox 认所有列表标记且未识别标记算未完成；archive/parser 拒收（仅大小写不同的 requirement 名、畸形 RENAMED、无正文 scenario、section 外 requirement、merge path 读不到的 delta）；`status` 给 `Next:` 行；explore「capture 即确认」并点名 propose/apply；`/opsx:update` 先起草（step 4）确认后写入（step 5）；workflow 不擅自 `init` 项目、skills 只提 profile 内 workflow；artifact 模板带顶层标题；store / `EDITOR` 带参 / bash completion 逐字节还原等修复 | v1.13.1 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
 | v1.13.2 | 正确性收尾（patch）：CRLF 保持（写回文件行尾不再被重写成全文件 diff）、Windows archive 的 EPERM/EXDEV 复制回退（fingerprint + snapshots 回滚）、Kilo Code 命令目录修正（`.kilo/command/`）、artifact 输出认 brace expansion/extglob、归档工作流认 schema-aware 任务进度、Continue 命令开头改「直接跟随 workflow」、fast-forward/onboarding 确认口径统一 | v1.13.2 依据（见 [`0011`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)） |
 | v1.14.0 | 工具生态大扩张 + 可观测性（minor）：10 个新 `--tools` 目标（`dsh`/`codestudio`/`gigacode`/`atomcode`/`easycode`/`gsd`/`amp`/`grok`/`warp`/`veai`，`.agents` 共享 root 变六方）、`list --archived/--all`、view 显示 workflow status 与归档分区、`openspec version --check --json`、apply 任务源定位（`sourcePath`/`line`）、archive workflow 的 sync 阻塞语义与 sync 后结构验证、verify 模板按 status 契约重写（Not applicable 语义）、`.openspec.yaml` 未知键告警、IBM Bob 改名 | v1.14.0 依据（见 [`0011`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)） |
+| v1.14.1 | 补丁：requirement / ADDED 正文 >500 字从 INFO 升 WARNING；退役清理失败改用独立错误码 `archive_retirement_cleanup_failed`（文案分清"已归档"与"清理未完成"）；glob 工件「done 但文件不全」的补完协议（`PARTIAL_ARTIFACT_CHECK`）；apply `all_done` 不再暗示可归档 + tasks 模板新增 `## Workflow Follow-up`；verify 按输出路径发现工件；CLI 按需加载（`--help` 485→24 模块） | v1.14.1 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
+| v1.14.2 | 补丁：delta 里「归档不会带走」的文本（首个 `##` 前正文 / 首个 requirement 前散文 / 额外 `##` 段）报 WARNING；`.openspec.yaml` 接受顶层 `x-` 扩展键；`openspec/`、`changes/`、`specs/` 与 spec 文件可为项目内 symlink（`archive/` 不行）；explore 捕获表与 update 的 glob 例外口径修正；`__complete` 跳过遥测（344→48 模块） | v1.14.2 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
+| v1.14.3 | 补丁：artifact 创建前先定并校验输出路径（propose/ff/continue/explore 统一，glob 工件必须落在 change 目录内）；glob 引擎由 `fast-glob` 换到 `tinyglobby`（brace 嵌套 ≤16、展开 ≤1024，移走 `braces` 传递依赖）；零宽 TTY 下 spinner 不再挂死；移走 view 的归档分区（撤回 v1.14.0 的 #2031 分区）；website 预览改零依赖脚本 | v1.14.3 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
@@ -107,6 +110,8 @@
 这不是 bug，而是**刻意的轻量化设计取舍**。代价是：workflow 的"完成"信号不可靠，依赖人工 review。
 
 > **v1.13.2–v1.14.0 的部分补强**：归档工作流改用 schema-aware 任务进度（自定义任务文件不再误报未完成）、verify 模板按 status 契约重写（Not applicable/advisory 语义）、OPSX archive 模板的 sync 失败立即停止归档并做 sync 后结构验证。结构错误与"假完成"类失真被进一步前移，但 spec↔代码漂移仍无对账。
+
+> **v1.14.1–v1.14.3 的部分补强**：apply 的 `all_done` 不再暗示"可以归档"（改成"跟踪任务已完成，归档前请复核或验证"），只有归档后才能做的步骤移进 tasks.md 的 `## Workflow Follow-up`（纯项目符号，不计入进度）；verify 改为按输出路径发现工件，并规定 REMOVED requirement 必须先读主 spec 基线、拿不到可用基线就标 not verified 而不是空手去代码里猜；delta 里"归档不会带走"的文本与超长 requirement 都升级成 WARNING，可被 `--strict` 拦住。**"假完成"的两个口子（`all_done` 等于可归档、delta 散文静默丢失）被收掉了**，但 spec↔代码漂移仍无自动对账。
 
 #### C. 工具集成模型有根本性摩擦
 

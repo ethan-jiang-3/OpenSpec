@@ -125,6 +125,10 @@ openspec/changes/add-dark-mode/
 
 它会围绕任务清单逐项推进，做完的任务会被打勾。
 
+任务全部勾完时它会告诉你 **"All tracked tasks are complete. Review or verify the change as appropriate before archiving."**——注意这是"跟踪的任务做完了"，不是"可以归档了"。归档前值得花两分钟看一眼 diff 或跑一次 verify。
+
+顺带一个写 `tasks.md` 的小习惯：**只有归档之后才能做的事**（部署验证、清理临时开关、回填指标之类）不要写成 checkbox，把它们列在 `tasks.md` 末尾的 `## Workflow follow-up` 段里——那一节是纯项目符号，不计入进度，所以不会让"任务全完成"永远差一步。
+
 你可以把它理解成：
 
 - 现在不是"讨论要做什么"
@@ -140,6 +144,11 @@ openspec/changes/add-dark-mode/
 2. 把这次 change 挪到 `changes/archive/`，保留历史
 
 所以 archive 不是"删掉"，而是"结案归档"。
+
+两个新手常困惑的点：
+
+- **它会问你 `Proceed with spec updates? (Y/n)`，默认是 Yes**——直接回车就继续。不想更新 specs（比如只是归档一个纯探索的 change）就显式输入 `n`，或用 `--skip-specs`。
+- **delta spec 里的散文不会进主 spec**。你写在 `## Notes` 之类段落里的说明，archive 是不会搬过去的；现在它会 WARNING 提醒你（`... is not carried into the main spec by archive`）。看到这条，把该保留的内容挪进 requirement，或挪进 proposal/design。
 
 ### 别把三个动作误解成三条终端命令
 

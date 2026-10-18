@@ -24,10 +24,12 @@ _change_log/
 ├── 0009-v1.11.0-to-v1.13.1.md  # 完全同步 v1.13.1（validate --report findings、SourceCraft、delta parser 大修、安全加固、status Next、update draft-then-write）
 ├── 0010-doc-alignment-v1.11-to-v1.13.md # 资料对齐（非新同步）：回填 0008–0009 状态、补三套资料缺口、新增 FAQ 17 审阅/校验工具面、版本号 SSOT 重构
 ├── 0011-v1.13.1-to-v1.14.0.md  # 完全同步 v1.14.0（10 个新工具目标含 dsh、list --archived、version --check、apply 任务源定位、archive sync 阻塞语义、verify 模板重写、CRLF 保持）
+├── 0012-v1.14.0-to-v1.14.3.md  # 完全同步 v1.14.3（glob 输出路径边界与引擎替换、symlink 包含、unappliedContent、500 字符升 WARNING、x- 扩展键、archive 清理错误码、CLI 按需加载、view 移除归档分区）
 ├── _plan-4-v1.7.0-current-docs.md # v1.7.0 当前资料同步计划（覆盖三个资料目录）
 ├── _plan-7-v1.9.0-sync-audit.md   # v1.9.0 当前资料同步审计
 ├── _plan-8-v1.10.0-full-sync.md   # v1.10.0 源码与三套资料的可恢复完全同步计划
 ├── _plan-9-v1.14.0-full-sync.md   # v1.14.0 源码与三套资料的可恢复完全同步计划
+├── _plan-10-v1.14.x-full-sync.md  # v1.14.3 源码与三套资料的可恢复完全同步计划
 └── ...
 ```
 

@@ -117,6 +117,20 @@ a glob artifact whose existingOutputPaths is non-empty.
 
 即**不推进 build frontier**：`existingOutputPaths` 为空且状态 `ready`/`blocked` 的 artifact 一律交给 continue；`skipped` 的不动。唯一的建新文件口子是：某个 glob artifact 已有部分文件、一致性检查发现确缺一个文件时，可以先起草 → 用户确认 → 在 `changeRoot` 内选一个不存在的具体路径创建（创建前刷新 status/instructions 复核，仍不得用 glob `resolvedOutputPath` 当目标）。**continue 推进 build frontier（创建新 artifact），update 只在已有 frontier 内修订**——外加这个狭窄的、需确认的补口。
 
+### v1.14.2 起：例外写在两处（#2083）
+
+这条 blanket 规则原本只在 step 4 里开例外，而 step 2 仍写着"只编辑 `existingOutputPaths` 里的具体文件"。step 4 要创建的那个文件**按定义**不在 `existingOutputPaths` 里，于是照字面执行 step 2 的 agent 会拒绝掉流程本身要求做的操作——一条规则把它自己推翻。
+
+现在两处（step 2 与 guardrails）口径一致：
+
+```text
+Edit only the concrete files in `existingOutputPaths`, plus any confirmed
+concrete path allowed under a partly populated glob artifact (step 4);
+never write to a glob `resolvedOutputPath`.
+```
+
+创建那个文件时的路径校验也写死在 step 4 的第 2 步里：路径必须匹配 `artifactPaths.<id>.outputPath`、不得已存在、且**在解析 symlinked 父目录后**仍在 `changeRoot` 内。
+
 ## 和 `05_iterate-to-apply-ready` 的关系
 
 我们 `_faq_on_digested/05_iterate-to-apply-ready/` 描述的迭代循环：
@@ -147,24 +161,24 @@ update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。�
 |---|---|
 | Planning artifacts only — NEVER edit code | 如果修订暗示代码变更，停止并指向 `/opsx:apply` |
 | Use artifact ids from `openspec status`, never hardcode | schema-agnostic |
-| Edit only `existingOutputPaths`, not `resolvedOutputPath` | glob artifact 的 resolvedOutputPath 还是 pattern |
+| Edit `existingOutputPaths` + step 4 允许的已确认具体路径，绝不用 `resolvedOutputPath` | glob artifact 的 resolvedOutputPath 还是 pattern；两处规则口径一致，别只读其中一处 |
 | Do not advance build frontier | 不创建新 artifact；唯一例外是部分填充 glob 下经用户确认补一个具体路径文件 |
 | Confirm every edit with user before writing | 每次修改都要确认 |
 | If request changes intent → recommend `/opsx:new` | "Update vs. Start Fresh" 判断 |
 
 ## 源码锚点
 
-| 内容 | 行号范围（update-change.ts） |
+| 内容 | 行号范围（update-change.ts，v1.14.3） |
 |---|---|
 | continue/apply/archive/new 的 optionalWorkflow handoff 常量 | L18-L74 |
-| SkillTemplate 定义 | L76-L172 |
-| CommandTemplate 定义 | L174-L269 |
-| Step 2: 获取 artifacts | L108-L120 |
-| Step 3: 理解请求 | L122-L124 |
-| Step 4: 读 + 修订 + 一致性（含 glob 补文件协议） | L126-L137 |
-| Step 5: 确认 + 写入 | L139-L146 |
-| Step 6: 建议下一步 | L148-L151 |
-| Guardrails | L161-L167 |
+| SkillTemplate 定义 | L76-L171 |
+| CommandTemplate 定义 | L174-L268 |
+| Step 2: 获取 artifacts（含 glob 新文件例外） | L106-L124 |
+| Step 3: 理解请求 | L126-L128 |
+| Step 4: 读 + 修订 + 一致性（含 glob 补文件协议 L131-L135） | L130-L142 |
+| Step 5: 确认 + 写入 | L144-L150 |
+| Step 6: 建议下一步 | L152-L155 |
+| Guardrails（例外在两处一致） | L163-L170 |
 
 ## v1.13.1 行为更新
 

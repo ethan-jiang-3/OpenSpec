@@ -82,3 +82,22 @@
 | `test/apply-docs-claims.test.ts`、`test/init-store-docs-claims.test.ts`、`test/setup-docs-claims.test.ts`、`test/skills-docs-claims.test.ts` | 用户 docs 中命令/行为声明的一致性校验 | docs-lab 文档面，digest 未单列 |
 
 既有测试文件的大幅扩展（非新增，不单列行）：`test/core/archive.test.ts`（Windows EPERM/EXDEV 复制回退与快照回滚，+499 行）、`test/core/version-check.test.ts`（install info / update check，+211 行）、`test/core/list.test.ts`、`test/core/view.test.ts`（archived 分区与 workflow status）、`test/core/init.test.ts`、`test/core/update.test.ts`（新工具目标注册）、`test/core/command-generation/adapters.test.ts`（4 个新 adapter + TOML）、`test/commands/apply-instructions-tasks.test.ts`（`sourcePath`/`line`）。
+
+## v1.14.1→v1.14.3 新增测试（0012 同步）
+
+| 新测试 | 覆盖主题 | 对应 digest |
+|--------|----------|-------------|
+| `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs` | 启动时加载模块数的回归闸：`--version`/`--help` 24 个、补全 changes/specs 48 个（防止按需加载被无意退回） | `../mechanisms/05-cli-infra.md` |
+| `test/utils/interactive.test.ts` | `canRenderSpinner`：零宽 TTY（`columns === 0`）拒绝 spinner、非 TTY 允许；`OPEN_SPEC_INTERACTIVE=0`/`CI` 关 spinner | `../mechanisms/05-cli-infra.md` |
+| `test/utils/spec-path-containment.test.ts`、`test/cli-e2e/spec-symlink-into-project.test.ts` | `spec.md` 指向项目内 symlink 的包含规则、规划根识别（`<X>/openspec` + `specs|changes`）、悬空链接拒绝、写侧 canonical path 钉定 | `../specs_truth/06-源码锚点与缺口.md` |
+| `test/core/specs-apply.project-linked-spec.test.ts` | 项目内链接 spec 的写入与回滚 | `../internal-spec-driven/04-archive-归档合并.md` |
+| `test/core/parsers/unapplied-content.test.ts` | delta 里"归档不会带走"的文本：首个 `## ` 前正文、首个 requirement 前散文、额外 `##` 段；注释/围栏/`# ` 标题/Purpose/REMOVED-RENAMED 不报 | `../specs_truth/06-源码锚点与缺口.md`、`../workflows/09-archive.md` |
+| `test/core/templates/glob-path-bounding.test.ts` | propose/ff/continue 的 glob 工件路径必须落在 change 目录内（含 symlink 后检查） | `../workflows/02-propose.md`、`../workflows/04-continue.md` |
+| `test/core/artifact-graph/outputs.test.ts`（大改） | brace 嵌套 >16 层拒绝、展开 >1024 拒绝、`{draft}` 字面量保留、绝对模式不被重基、`**/../` 提前限制 | `../mechanisms/05-cli-infra.md`、`../schema/02-内置-spec-driven-详解.md` |
+| `test/core/validation.unknown-metadata-keys.test.ts`（扩展） | `x-*` 扩展键不报未知、`X-Tracker`/裸 `x-`/`x- tracker` 仍报、`initiative` 内仍严格 | `../specs_truth/06-源码锚点与缺口.md` |
+| `test/utils/change-metadata.test.ts`（+108 行） | 扩展键在重写时保持（schema strip 后合并回来） | `../specs_truth/06-源码锚点与缺口.md` |
+| `test/core/validation.test.ts`（+83 行） | requirement >500 字从 INFO 升 WARNING、ADDED 也检查、MODIFIED 不受限 | `../specs_truth/06-源码锚点与缺口.md` |
+| `test/core/archive.test.ts`（+472 行）、`test/core/validation.archive-preflight.test.ts` | `archive_retirement_cleanup_failed` 诊断码、symlink 允许/`archive/` 拒绝、canonical change dir 的相对路径 | `../internal-spec-driven/04-archive-归档合并.md` |
+| `test/core/view.test.ts`（+99 行） | view 不再列出/计数归档 change（#2031 回退 v1.14.0 的归档分区） | `../spec_cli/01-human-facing-cli.md` |
+| `test/website-preview.test.ts` | `website/scripts/preview.mjs` 的静态导出路由解析 | `../mechanisms/05-cli-infra.md` |
+| `test/pnpm-workspace-config.test.ts`（+18 行） | workspace override 口径（`brace-expansion`/`shell-quote` 钉版） | `../mechanisms/05-cli-infra.md` |

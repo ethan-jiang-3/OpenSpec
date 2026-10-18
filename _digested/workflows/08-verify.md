@@ -111,12 +111,38 @@ verify 模板已按 status/apply 契约重写：任务完成度不再由 agent �
 
 模板明确：`instructions apply` 的 `state` 与 `instruction` 是**上下文输入**，不是验证结论。verify 是 advisory 的——验证过程中不得实施任务或归档 change；`Not verified` 描述的是本报告的边界，不是新的归档前置条件（archive 保留自己的检查与用户确认行为）。
 
+## 工件按输出路径发现，不认死的 artifact id
+
+verify 原先用 `contextFiles.specs` / `contextFiles.design` 取证据，等于假设 artifact id 就叫 `specs` 和 `design`。自定义 schema 里 id 换了名字，验证就会读不到证据（#2028）。现在按 `artifactPaths.<id>.outputPath` 判定：
+
+| 角色 | 判定规则 |
+|---|---|
+| spec 工件 | `artifactPaths.<id>.outputPath` 位于 `specs/` 之下者（可能不止一个），文件从 `contextFiles.<id>` 取 |
+| design 工件 | id 为 `design`，**或** `outputPath` 为/以 `design.md` 结尾者 |
+| 无 spec 工件 | 没有任何 outputPath 在 `specs/` 下的 artifact → spec 类检查 Not applicable（与 `skip_specs: true` 同等待遇） |
+| 无 design 工件 | 既无 id `design`、也无 outputPath 命中 `design.md` → Design Adherence Not applicable |
+
+## REMOVED requirement 必须先读基线，再搜索
+
+REMOVED 块的语义是「这个行为应当消失」，所以预期结果是搜不到。但 delta 里的 REMOVED 块只带 requirement 名字加 `**Reason**` / `**Migration**`——**不含行为本身的描述**。按名字搜代码，等于用一个可能与实现用词不同的标题去搜，而"搜不到"又是通过结果：一个用不同词汇写成的实现会被读成干净的移除，报告显示的是静默通过（#2083）。
+
+现在 REMOVED 分支按四步走：
+
+1. **先读主 spec 里的基线**：`<planningHome.root>/openspec/specs/<capability-path>/spec.md`，能力路径与 delta spec 一致。按**归一化名字**扫描该文件的 requirement 标题匹配，不做 delta 标题的字面字符串匹配。基线的正文与 scenarios 才是"应当消失的行为"的证据。
+2. **主 spec 里没有时，去该文件的历史里找**：在**规划仓库**而不是当前目录执行 `git -C "<planningHome.root>" log -p -- openspec/specs/<capability-path>/spec.md`；定位到执行移除的那个 commit 后可用 `git -C "<planningHome.root>" show <commit>^:./openspec/specs/<capability-path>/spec.md`。注意 `git log` 对匹配不到的 pathspec 也返回成功，空输出意味着"路径没对上"，不是"没有基线"，所以先复核路径。
+3. **基线是否可用**：只有标题重述、没有正文也没有 scenario 的基线，与缺失同级——不可用。
+4. **两处都拿不到可用基线**：该条 Spec Coverage 标 **not verified** 并写明原因，然后**停止**——不搜索，绝不把"没搜过的移除"算成通过。
+
+拿到可用基线之后才开始搜索，判定规则不变：仍在交付该行为的代码路径（包括与 ADDED requirement 共享的那条）报 CRITICAL；`openspec/` artifacts、文档、只服务于 Migration 注释或某个 ADDED requirement 的代码不算证据。
+
+RENAMED 分支原有的行为（FROM 名下没有时才按 TO 名读）不变；removal-only change 的 Correctness 两检查仍标 Not applicable，但其中已在 Spec Coverage 标 not verified 的条目保持 not verified。
+
 ## Not applicable 与 Not verified 的分界
 
 | 标记 | 何时用 |
 |---|---|
 | **Not applicable** | schema 未定义的检查（无 design artifact 的 Design Adherence、无任务追踪的 Task Completion、无 spec artifact 的 spec 类检查）；status 报告为 intentional skip 的 artifact（`skip_specs: true`）；只删除/改名 requirement 的 change 的 Correctness 两检查 |
-| **Not verified** | 适用检查的证据缺失或不可用：读不到 artifacts、无可用的 requirement/scenario/design 决策、只有任务证据时的其余适用检查（含 Code Pattern Consistency）、不可读的追踪文件、找不到 RENAMED 的 baseline requirement |
+| **Not verified** | 适用检查的证据缺失或不可用：读不到 artifacts、无可用的 requirement/scenario/design 决策、只有任务证据时的其余适用检查（含 Code Pattern Consistency）、不可读的追踪文件、找不到 RENAMED 的 baseline requirement、REMOVED requirement 找不到可用基线（主 spec 与历史都没有，或基线只是标题重述） |
 
 被跳过的检查既不算通过也不算失败：报告里每个 skipped 检查都要点名并给原因；只要存在 skipped 检查且无 CRITICAL，**不得宣称 ready for archive**——改说 "No critical issues found in the checks that ran. <check(s)> not verified: <reason>."
 
@@ -144,14 +170,14 @@ verify 模板已按 status/apply 契约重写：任务完成度不再由 agent �
 
 ## 源码锚点
 
-| 内容 | 行号范围（verify-change.ts，skill 与 command 共享同一份步骤文本） |
+| 内容 | 行号范围（verify-change.ts，v1.14.3；skill 与 command 共享同一份步骤文本） |
 |---|---|
-| SkillTemplate 定义 | L11-L218 |
-| CommandTemplate 定义 | L220-L425 |
+| SkillTemplate 定义 | L11-L220 |
+| CommandTemplate 定义 | L223-L430 |
 | Step 1: 选择 change（含 no-tasks 列表） | L25-L36 |
-| Step 3: 读取 apply 契约（tasks/progress/taskTrackingConfigured） | L47-L55 |
-| Step 4: 报告初始化 + Not applicable 规则 | L57-L72 |
-| Step 5: Completeness（任务 + spec 覆盖，含 REMOVED/RENAMED 语义） | L74-L111 |
-| Step 6: Correctness（removal-only → Not applicable） | L113-L133 |
-| Step 7: Coherence | L135-L153 |
-| Step 8: 生成报告（skipped 检查的计分与最终判定） | L155-L196 |
+| Step 3: 读取 apply 契约（tasks/progress/taskTrackingConfigured） | L40-L58 |
+| Step 4: 报告初始化 + Not applicable 规则 | L60-L72 |
+| Step 5: Completeness（Task Completion L76；Spec Coverage 按 outputPath 发现 + REMOVED 基线） | L74-L114 |
+| Step 6: Correctness（removal-only → Not applicable） | L116-L136 |
+| Step 7: Coherence（Design Adherence 按 outputPath 发现） | L138-L158 |
+| Step 8: 生成报告（skipped 检查的计分与最终判定） | L160-L201 |

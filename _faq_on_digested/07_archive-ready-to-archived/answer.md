@@ -474,3 +474,32 @@ openspec instructions archive --change "<name>" --json
 - **CRLF 保持**（`1d35e908`）：新模块 `src/utils/line-endings.ts`，specs-apply 写回时 `matchLineEnding(rebuilt, previous)`——已有文件保持其行尾，只有新文件才写 LF。Windows 仓库升级后 archive 不再产生全文件行尾 diff。
 - **归档工作流的任务进度改 schema-aware**（`fb1b876`）：workflow 模板读 schema `apply.tracks` 的进度（含自定义任务文件/glob），不再误报"未完成"。
 - **OPSX 模板的 sync 阻塞语义与 sync 后结构验证**（v1.14.0，`0ff63dba`）：见 Step 14 的 v1.14.0 追加——sync 失败立即停止归档、不移 `changeRoot`，可修复后重跑。
+
+## v1.14.1–v1.14.3 补充：三类"归档看起来成功"的现实
+
+### 1. 归档成功、清理失败（v1.14.1，#1792）
+
+退役某 capability 之后要清理备份，这一步在**目录已移走之后**执行。它失败时以前报通用 `archive_error`，且文案说"每个列出的备份都被保留"——部分成功时这句话不成立。现在错误码是 `archive_retirement_cleanup_failed`，文案把两件事分开：
+
+| 事实 | 含义 |
+|---|---|
+| The change **was** archived | changeRoot 已经移走，重跑 archive 不会回到从前 |
+| retirement cleanup did not complete | 备份可能只删了一部分，要按诊断里列出的**所有** recovery path 逐个检查 |
+
+所以看到这个错误码不要"再 archive 一次"，去 `openspec/changes/archive/` 确认结果，再按 recovery path 处理残留。
+
+### 2. 文本被 delta 合并丢掉（v1.14.2，#2054）
+
+`openspec archive` 的 programmatic merge 只搬 delta 段里的 requirement。三类文本永远进不了主 spec：第一个 `## ` 之前的正文、`## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文、Purpose 与四类 delta 段之外的任何 `##` 段（`## Notes` 之类）。现在它们会触发 WARNING（`... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.`），正常归档通过、`--strict` 失败。
+
+**搬运结果没变**，只是丢失不再无声。真想让内容留下：挪进 requirement，或挪进 proposal/design。
+
+### 3. 归档时的 symlink 边界（v1.14.2，#2052）
+
+`openspec/`、`changes/`、`specs/` **本身**可以是项目内 symlink（典型：整个 `openspec/` 指向共享文档仓库），但 `archive/` 不允许是链接——它必须真的在所在 changes 目录里，否则归档会写到项目外。单条 spec 文件也可以是项目内链接（v1.14.3 起由 `spec-path-containment.ts` 统一判定）。
+
+配套修正：归档后校验 delta 时，相对路径基准从 changeDir 改为它的 canonical 形式——因为 `changes/` 自身可能是链接，旧算法会算出错误相对路径、报出"归档后内容比对失败"的假警报。
+
+### 顺带一条口径修正
+
+`archive` 的 spec 更新确认提示默认值是 **Yes**（`Proceed with spec updates? (Y/n)`，回车即继续；拒绝需显式输入 `n`）。v1.14.1 之前 spec 里写的是默认 No——那是 spec 落后于代码，不是行为变更。

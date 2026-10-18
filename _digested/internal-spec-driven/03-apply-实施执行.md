@@ -33,7 +33,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 4. **计算进度**：total / complete / remaining（对每个解析出的 checkbox 计数，与 `openspec list`、archive 同一口径）
 5. **判断状态**：
    - `blocked`：缺少必需 artifact、缺少 tracks 文件，或 tracks 文件存在但没有任何 checkbox task
-   - `all_done`：所有 checkbox 已标记
+   - `all_done`：所有 checkbox 已标记。此时 `instruction` 是 `All tracked tasks are complete.\nReview or verify the change as appropriate before archiving.`——**只说明跟踪任务完成，不宣称可以归档**（v1.14.1 #1791）
    - `ready`：tasks.md 存在且有未完成任务
 
 ### 2.3 返回的 JSON 结构
@@ -155,7 +155,7 @@ openspec instructions apply --change "<name>" --json
 | state | agent 行为 |
 |-------|----------|
 | `"blocked"` | 显示阻塞原因；缺 artifact、缺 tracks 文件或 tasks.md 没有 checkbox 时，建议用 `openspec-continue-change` / `/opsx:continue` 补全或修复 planning artifact |
-| `"all_done"` | 祝贺，建议 `/opsx:archive` |
+| `"all_done"` | 报「跟踪任务已完成」，建议归档前先复核或 verify；不直接建议 archive |
 | `"ready"` | 继续到 Step 4 |
 
 ### Step 4：读 context files

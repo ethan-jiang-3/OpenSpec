@@ -152,13 +152,13 @@
 
 - 交互式 dashboard。
 - v1.14.0 起，每个 active change 行下新增 `└─ [schemaName]` workflow status 行，逐 artifact 标注状态（done 加 ✓、ready 加 →、blocked 置灰、skipped 标 `(skipped)`）；某个 change 的 workflow 加载不出来时保留任务进度并给出警告。
-- dashboard 末尾新增灰色的 "Archived Changes" 分区，列出归档 change。
+- **v1.14.3 起不再有 "Archived Changes" 分区**：dashboard 只显示 active changes 与 specs。v1.14.0 引入的归档分区（以及它带来的"归档 change 也算进计数/排序"问题）被 #2031 整体撤回——要看归档记录用 `openspec list --archived`。
 
 影响：
 
 - 更适合人工浏览，不适合作为机器协议端点。
 - 它不能假定总是读取当前 cwd 下最近的 `openspec/`；v1.7.0 会按 root selection 读取被选中的 root。
-- 预告：upstream main 合入的 #2031 已把 view 的 "Archived Changes" 分区移除，下一个版本仪表盘将不再显示归档 change；本节描述的是 v1.14.0 行为。
+- 想看归档 change：`openspec list --archived` 或 `--all`（文本模式分两组、JSON 带 `archived` 标记），不要找 view。
 
 ## 3. 查看某个具体对象
 

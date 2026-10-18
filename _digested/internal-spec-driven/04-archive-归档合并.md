@@ -370,6 +370,35 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 | spec 重建保空白 | `specs-apply.ts` | 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF，避免 Markdown whitespace 检查失败 |
 | scenario-loss 认所有 `####` | `requirement-text.ts` `SCENARIO_HEADER` | requirement 下任何非 fence 的 `#### ` 子标题都算 scenario；比较时剥可选 `Scenario:` 前缀 |
 
+### 归档成功但清理失败（v1.14.1 #1792）
+
+退役能力的备份收尾是**归档之后**的动作（`finalizeRetirementBackups`）。它失败时语义在 v1.14.1 被改对了——之前是与归档失败共用一个错误码、且文案断言了一个可能不成立的事实：
+
+| | 旧 | 现在 |
+|---|---|---|
+| 异常类 | `RetirementBackupsRetainedError` | `RetirementCleanupError` |
+| 诊断码 | 通用 `archive_error` | **`archive_retirement_cleanup_failed`** |
+| 文案 | "The change remains archived and each listed backup was retained for recovery." | "The change **was** archived, but retirement cleanup did not complete. Inspect all reported recovery paths before recovery or cleanup." |
+| 逐条 | "Could not remove the committed retirement backup at …" | "Could not **finalize** the retirement backup at …" |
+| fix | 无 | "Inspect the archived change and all recovery paths in this diagnostic; preserve any needed content before cleanup." |
+
+关键区别：**change 已归档**（目录已移动，retry 不会回到从前），**清理未完成**（备份可能只删了一部分）。旧文案说"每个列出的备份都被保留"，部分成功时并不成立。
+
+### 包含检查：三个目录可以是 symlink，archive/ 不行（v1.14.2 #2052）
+
+archive 前置的路径检查从单一的 `assertPathWithin` 拆成按目录区分的四组：
+
+| 受管目录 | 允许边界 | 叶子可以是链接？ |
+|---|---|---|
+| `openspec/` | 项目根 | ✅ |
+| `changes/` | `openspec/` | ✅ |
+| `archive/` | `changes/` | ❌ 必须留在所在 changes 目录内 |
+| `specs/` | `openspec/` | ✅ |
+
+即"项目自有 symlink"是允许的（典型场景：`openspec/` 或 `specs/` 指向一个共享文档仓库），但 `archive/` 必须真的在 changes 里——否则归档会写到项目外。`assertPathWithinAllowingLinkedLeaf` 要求链接 resolve 到已存在的路径（悬空链接报错）。
+
+配套修正：归档后校验 delta 时，相对路径基准从 `changeDir` 改为 `canonicalChangeDir = canonicalizeExistingPath(changeDir)`。因为 `update.source` 是 canonical 的，而 `changes/` 自身可能是链接——旧算法会算出错误的相对路径，导致"归档后内容比对失败"的假警报。
+
 ### retirement 的三分支
 
 | 重建后状态 | archive 的诊断 | 正确处理 |
@@ -389,6 +418,9 @@ archive 操作没有"unarchive"。一旦 change 移入 `archive/`，它就从活
 | 全 CommonMark 标记 | `requirement-blocks.ts` | REMOVED/RENAMED 接受 `[-*+]`；此前 `*`/`+` 写的 delta 静默不生效 |
 | 换行 scenario bullet | `specs-apply.ts` / retirement | 包裹换行的 bullet 读成一条，`+` 标记也识别 |
 | fence 内空行保真 | `specs-apply.ts` `collapseBlankRunsOutsideFences` | 只折叠 fence 外空行；YAML block scalar / Python / expected-output 样例不再被整理 |
+| unapplied 文本告警（v1.14.2 #2054） | `requirement-blocks.ts` `findUnappliedContent` / `describeUnappliedContent` | `DeltaPlan` 新增 `unappliedContent: {section, line}[]`；archive 在 `buildUpdatedSpec` 时 `warn()`，validate 报 WARNING。**搬运行为不变** |
+| retirement 清理错误码（v1.14.1 #1792） | `archive.ts` `toArchiveDiagnostic` | `RetirementCleanupError` → `archive_retirement_cleanup_failed`，独立 fix 文案 |
+| 三个目录允许 symlink（v1.14.2 #2052） | `archive.ts` 前置检查 + `file-system.ts` | `openspec/`、`changes/`、`specs/` 可链接；`archive/` 不可 |
 
 安全输出也有硬边界：blocking content 最多展示 3 行，每行按 Unicode code point 截到 200，超出加省略号并汇总剩余行数；NUL–US、DEL 等控制字符替换为 `?`。marker 无法 honor 的 reason 同样清理控制字符，避免伪造终端行或重绘屏幕。
 

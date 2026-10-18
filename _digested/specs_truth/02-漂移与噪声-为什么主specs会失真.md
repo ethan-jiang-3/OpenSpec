@@ -138,3 +138,9 @@ v1.13.0 的 parser 大修消除了几个「写了但没生效、还报成功」�
 - **写入侧行尾噪声（v1.13.2，`1d35e908`）→ 已修复**：CRLF spec（Windows `core.autocrlf=true` 的默认检出）上应用一个 requirement 的 delta，曾把整个文件重写成 LF，一个需求改动变成触碰每一行的 diff——审阅者再也看不出"真实变化"是什么。archive 现在按文件既有主导行尾写回（`src/utils/line-endings.ts` 的 `matchLineEnding`），只有新建 spec 才写 LF。这不是 spec 内容漂移，而是"噪声淹没信号"级别的审阅失真，已消除。
 
 本文描述的失真机理中，凡引用这些 bug 作为实例的段落应视为历史案例；失真的**人为源头**（标题手改不走 RENAMED、requirement 大小写漂移等）仍然存在——且 v1.13.0 起仅大小写不同的 requirement 名会被 archive 显式拒绝，这类漂移从「静默」变为「显式报错」。
+
+## v1.14.x 后的失真源变化
+
+- **delta 里"不会被带走"的文本现在可见**（v1.14.2，#2054）：第一类静默丢失——作者把背景、理由、取舍写进 delta spec 的散文里，archive 按 delta 段合并时这些文本根本不会进主 spec——从「无声消失」变成 WARNING。告警面覆盖三处（首个 `## ` 前的正文、首个 requirement 前的散文、Purpose 与四类 delta 段之外的 `##` 段），措辞明确指向出路：挪进 requirement，或挪进 proposal/design。**搬运行为本身没变**，变的只是它不再悄悄发生。
+- **超长 requirement 从 hint 升级为可拦截**（v1.14.1，#2020）：requirement 正文 >500 字从 INFO 变 WARNING，`--strict` 会失败；同一限制前移到 change 的 ADDED requirement，所以"一条 requirement 塞三个行为"这种**语义稀释型失真**在 authoring 阶段就能被 CI 拦住（MODIFIED 不受限，避免逼人拆动既有正文）。配套的 specs instruction 给出了拆分既有长 requirement 的正确做法：保留 header 与全部 scenario，正文收敛到一个行为，被移除的行为各自作为新的 ADDED requirement 进来。
+- **spec 文件可以是项目内 symlink**（v1.14.2 #2052 / v1.14.3 #2101）：漂移治理因此多了一个真实场景——spec 文件住在产品文档旁边、由团队协作者直接编辑，OpenSpec 只通过链接读写。代价是"手改检测"这个本就缺失的能力更显眼：链接指向的文件谁都能编辑，OpenSpec 既无 hash 也无变更记录（见 `06` 的诚实声明）。写侧的 canonical path 钉定（`writeUpdatedSpec`）至少保证 archive 不会因链接被换向而写到未校验的文件。

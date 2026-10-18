@@ -490,3 +490,17 @@ v1.11.0 要求写入前「命名 artifacts + 直接问 + 单独等确认」。v1
 propose 的 proposal artifact instruction 与模板（`e70dcc7`）新增命名引导：每个 capability 以**耐久的系统行为**命名（如 `user-auth`），而不是本次 change 的工作（如 `add-login-endpoint`）；边界要选能随系统演化持续容纳相关 requirements 的内聚范围，避免 broad catch-all。kebab-case 与沿用项目既有 spec 组织的规则不变。
 
 这直接服务本文的「propose 一个 / propose 多个」分流：change name 可以是任务式的（`add-oauth-login`），但 capability path 描述的是行为基线的归属，两者不是一回事。Explore 阶段判断"specs 主要落在哪个 capability"时，应按行为边界想，而不是按本次工作项想。
+
+## v1.14.2–v1.14.3 补充：capture 表认的是 schema，不是固定文件名
+
+explore 的「捕获到哪里」表（New requirement → `specs/<capability-path>/spec.md`、Design decision → `design.md`、New work → `tasks.md`……）和示例 offer（"That's a design decision. Capture it in design.md?"）都是**默认 spec-driven schema** 的产物。v1.14.2（#2086）把这一点写明，并给了换 schema 时的规则：
+
+| 情形 | 行为 |
+|---|---|
+| 默认 schema | 按表与示例 offer 直接用 |
+| 自定义 schema | 从 `artifactPaths` 里选该 schema **定义了**、且适合这条洞察的工件，并在 offer 里点名它 |
+| 兜底 | 绝不创建 schema 未定义的文件——没有 `design` 工件时就不去建 `design.md` |
+
+工作流收尾的示例措辞也改成 `"Updated the design with these decisions"`，同一个句子里不再假设文件名。对本文的意义：**capture 的目标由 change 绑定的 schema 决定，不由 explore 内置的表决定**；表只是默认 schema 下的具体化。
+
+同时 v1.14.3（#2104）统一了 capture 的写入顺序：先定输出路径（glob 工件要选一个落在 change 目录内、resolve symlink 后仍在其中的具体路径，不合格就停下告知用户），再创建；instruction 把创建委托给某个 skill/command 时，只有它能写到该路径才调用，写完确认文件确实在那里。

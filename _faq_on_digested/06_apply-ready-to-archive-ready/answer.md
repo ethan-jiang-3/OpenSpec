@@ -305,3 +305,24 @@ Completed this session:
 
 - **apply 任务源定位**（`e7a951d`）：`instructions apply --json` 的每个 task 带 `sourcePath` + 1-based `line`（内部 `LocatedTask`/`parseLocatedTasks`，不改任务解析本身）。apply workflow 据此在确切位置勾选 → 标记完成 → 重查进度，不再靠文本匹配找 checkbox。
 - **归档前的任务进度改 schema-aware**（`fb1b876`，归档工作流侧）：archive workflow 读取进度时认 schema 的 `apply.tracks` 配置（含自定义任务文件/glob），不再硬编码 `tasks.md`——自定义 tracking 文件不会因 CLI 找不到默认文件而误报"未完成"。CLI `openspec archive` 自身的 checkbox 统计行为不变。
+
+## v1.14.1 补充：`all_done` 只说明跟踪任务完成，不说明可以归档
+
+`instructions apply` 的 `all_done` 状态以前配的那句祝贺暗示"实施完了就该归档"。v1.14.1（#1791）把它改成分离的两件事：
+
+```text
+All tracked tasks are complete.
+Review or verify the change as appropriate before archiving.
+```
+
+配套的是 tasks.md 模板末尾新增的 `## Workflow follow-up` 段：**只有归档之后才能做的步骤**（部署验证、清理临时开关、回填指标之类）应该写成一串纯项目符号放在这里——它们不是 checkbox，因此不计入 `progress`，也就不会让 `all_done` 永远差一步。
+
+对「apply-ready → archive-ready」这条主线的意义：
+
+| 阶段 | 该看什么 |
+|---|---|
+| 实施中 | `progress.completed/remaining` + 每个 task 的 `sourcePath`/`line` |
+| 实施完（`all_done`） | 先复核或跑 verify，再看 follow-up 项是否需要在归档前处理 |
+| 归档 | `openspec archive` 自己的检查（任务、validate、spec 更新确认）——不因为 `all_done` 就跳过 |
+
+换句话说：**`all_done` 是 apply 的终点，不是 archive 的入口条件**。被放在 `## Workflow follow-up` 里的内容本来就不该拦住归档，而被误勾掉的 task 也不该因为 `all_done` 而免检。

@@ -102,7 +102,7 @@ apply:
 | 字段 | 值 | 含义 |
 |------|---|------|
 | `id` | `specs` | 标识 |
-| `generates` | `specs/**/*.md` | 支持 glob，可生成多个 spec 文件 |
+| `generates` | `specs/**/*.md` | 支持 glob，可生成多个 spec 文件（brace 展开有预算，见本节末尾） |
 | `requires` | `[proposal]` | 依赖 proposal 先完成 |
 
 **instruction 核心内容**：
@@ -114,7 +114,27 @@ apply:
 - `skip_specs: true` 时不要创建 delta spec；instructions/status 会将 specs 标为 skipped。
 - instruction 明确要求先从 `openspec instructions ... --json` 读取 `planningHome.root`：MODIFIED step 1 必须读 `<planningHome.root>/openspec/specs/<capability-path>/spec.md`；直接修改既有 main spec 的 Purpose 也使用同一 resolved root。这里修的是 agent instruction 的 store-aware 路径，不是 archive/sync 新增了 store 能力，也不代表 CLI 会自动检索 referenced store 的 spec 正文。
 - prose 可以按 `config.context` 中的语言要求本地化；结构标题（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、`### Requirement:`、`#### Scenario:`）保持英文。规范性文字仍推荐 `SHALL`/`MUST`：normal 模式缺关键字是 warning，strict 模式会把 warning 计为失败。
-- **requirement 500 字符口径（v1.14.0，`1872982`）**：schema instruction 明确写出——`### Requirement:` 到首个 scenario 之间的描述文本控制在 500 字符内，`openspec validate` 会对达到主 spec 后的超长描述给出 informational 提示（不是错误）。写新 requirement 时一个 requirement 只陈述一个行为：示例与边界情况移入 scenario；覆盖多个行为的 requirement 拆成多个 block。MODIFIED 下保持既有 requirement block 完整，不得为凑长度而拆分、删减或改写既有文本。
+- **requirement 500 字符口径（v1.14.0，`1872982`）**：schema instruction 明确写出——`### Requirement:` 到首个 scenario 之间的描述文本控制在 500 字符内，`openspec validate` 会对超长描述报警（v1.14.1 起是 **WARNING**，此前 INFO；`--strict` 会失败，且 change 里的 **ADDED requirement 也受同一限制**，MODIFIED 不受限）。写新 requirement 时一个 requirement 只陈述一个行为：示例与边界情况移入 scenario；覆盖多个行为的 requirement 拆成多个 block。MODIFIED 下保持既有 requirement block 完整，不得为凑长度而拆分、删减或改写既有文本。
+
+**specs 的写入方式（v1.14.1 #2037）**：instruction 的原文是 `Write the spec files one at a time`，具体四条：
+
+1. 写之前先比对 proposal 列出的 capability 与磁盘上已有的 `specs/<capability-path>/spec.md`，**从第一个没有文件的那个开始**；除非用户要求，不重写已有文件；
+2. 每个文件之前，用一行说明正在写哪个 capability；
+3. 草稿完成就立即落盘，**不要先把所有文件规划完再写第一个**；
+4. proposal 列出的每个 capability 都有文件了就停。
+
+理由是部分失败可恢复：被打断时已写的文件仍然有效，continue 的补完协议（见 [`../workflows/04-continue.md`](../workflows/04-continue.md)）能接着把缺的补上——而 glob 工件只要有一个匹配文件就被读作 `done`，所以"N 个里写好 1 个"这个状态必须被显式处理。
+
+**glob 的预算与边界（v1.14.3 #2103）**：`generates` / `apply.tracks` 这类字段接受 glob，但不是无限自由：
+
+| 限制 | 值 | 行为 |
+|---|---|---|
+| brace 嵌套深度 | **16 层** | 超过即在任何文件匹配之前报错，诊断里指名上限 |
+| brace 展开总数 | **1024 个模式** | `{a,b}` 重复十余次、`file-{1..5000}.md` 这类被拒绝 |
+| 静态前缀 | — | 先做包含检查，`../` 不能把匹配带到 change 目录外 |
+| 绝对模式 | — | 保持绝对，不会被重基进 change 目录 |
+
+嵌套深度单独不够：`{a,b}` 重复 20 次只有一层深，却展开 1,048,576 个模式。展开在**每个顶层组**上单独进行——`{a,{a,{a,b}}}` 这类 16 层模式如果交给递归一次性展开，会在超时前跑不完。写自定义 schema 时，宁可用清晰的几条 glob，也不要堆嵌套或范围展开。
 
 ### design（技术设计）
 

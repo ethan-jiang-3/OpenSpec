@@ -81,7 +81,7 @@ sequenceDiagram
             Note over MD,FS: Step 7 · 完成
             MD->>TS: openspec instructions apply --change X --json
             TS-->>MD: state: "all_done"
-            MD-->>User: "Implementation Complete<br/>建议 /opsx:archive"
+            MD-->>User: "跟踪任务已完成<br/>复核/验证后再 /opsx:archive"
         end
     end
 ```
@@ -94,7 +94,7 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 |---|---|---|
 | `blocked` | 缺 required artifact、缺 tracking file、或无 checkbox | 停止，建议 `/opsx:continue` |
 | `ready` | 一切就绪，有 pending tasks | 读 contextFiles → 开始 task loop |
-| `all_done` | 全部 checkbox 已勾 | 祝贺，建议 archive |
+| `all_done` | 全部 checkbox 已勾 | 报「跟踪任务已完成」，建议归档前先复核或 verify |
 
 ## 任务源定位：sourcePath + line
 
@@ -139,6 +139,32 @@ apply template 明确写了它不是 phase lock：
 
 这意味着 agent 在 apply 中发现 design 问题时，可以直接建议更新 artifacts，然后继续 apply——不需要先 archive 再新建 change。
 
+## 任务完成 ≠ 可以归档
+
+`all_done` 说的是**跟踪任务都勾完了**，不是"这个 change 可以归档"。CLI 的 `instruction` 字段与模板三处输出都按这个口径改写（#1791）：
+
+```text
+All tracked tasks are complete.
+Review or verify the change as appropriate before archiving.
+```
+
+| 位置 | 旧口径 | 现在 |
+|---|---|---|
+| `instructions apply --json` 的 `instruction` | `All tasks are complete! This change is ready to be archived.` | `All tracked tasks are complete.` + 先复核/验证的提示 |
+| 模板 state 分支 | "congratulate, suggest archive" | 报跟踪任务已完成，视情况建议复核或 verify |
+| 模板完成输出块 | `All tasks complete!` + archive handoff | `All tracked tasks are complete...` + archive handoff |
+
+原因在 tasks instruction 的配套改动：只能发生在归档**之后**的步骤（归档、验证归档结果）不再写成跟踪任务。它们写成纯项目符号放在 tasks.md 末尾可选的 `## Workflow follow-up` 段里。这样"什么算完成"与"归档前还要做什么"解耦——否则归档步骤本身会把任务完成度永远卡在 N-1。
+
+```markdown
+## Workflow follow-up
+
+- Archive the change after the project's review requirements are satisfied.
+- Verify the archived result.
+```
+
+这些 bullets 不参与跟踪进度：`list`、`view`、`instructions apply`、`archive` 都只数 checkbox。
+
 ## 三种输出格式
 
 template 硬编码了三种输出格式：
@@ -173,16 +199,22 @@ FAQ `06_apply-ready-to-archive-ready/` 从工程视角分析了 task loop、chec
 
 ## 源码锚点
 
-| 内容 | 行号范围（apply-change.ts） |
+| 内容 | 行号范围（apply-change.ts，v1.14.3） |
 |---|---|
-| 共享指令正文 `getApplyInstructions()`（skill 与 command 共用同一份文本） | L39-L224 |
-| SkillTemplate 定义 | L226-L235 |
-| CommandTemplate 定义 | L237-L245 |
-| Step 3: apply instructions + state 处理 | L68-L103 |
-| Step 6: task loop（sourcePath/line 勾选 + pause 条件） | L123-L139 |
-| Guardrails | L200-L216 |
-| Fluid Workflow | L218-L223 |
+| 共享指令正文 `getApplyInstructions()`（skill 与 command 共用同一份文本） | L39-L225 |
+| SkillTemplate 定义 | L227-L236 |
+| CommandTemplate 定义 | L238-L246（文件 246 行） |
+| Step 3: apply instructions + state 处理（含 `all_done` 语义） | L67-L105 |
+| Step 6: task loop（sourcePath/line 勾选 + pause 条件） | L123-L141 |
+| Guardrails | L201-L218 |
+| Fluid Workflow | L219-L225 |
 
 ## v1.13.0 行为更新
 
 **无 delta spec 的 change 会被 apply 警告**（`8ba4ac1b`）：之前只要 tasks 存在，apply 就报 ready，哪怕完全没有 spec delta（这正是 validate 拒绝的状态）。现在 text 和 `--json` 都警告，并给出两条出路：补写 specs，或显式声明 `skip_specs: true`。
+
+## v1.14.x 行为更新
+
+- **完成语义**（`7056a580`，#1791）：`all_done` 不再等同"可归档"；新增 `## Workflow follow-up` 约定，归档之后的步骤用纯项目符号表达，不进 checkbox 进度。
+- **glob 路径边界**（`276d0150`，#2104）：propose/ff/continue 与 apply 的 `instruction` 委托都要求「先定输出路径、再做任何创建」，且路径在 resolve symlink 后必须仍在 `changeRoot` 内；代理的 skill/command 写不到该校验过的路径时停下告知用户，而不是换个地方写。
+- **任务源定位不受影响**：`sourcePath`/`line` 契约（v1.14.0 引入）在本轮没有变化。

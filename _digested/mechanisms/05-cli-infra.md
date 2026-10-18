@@ -148,7 +148,8 @@ CLI 用 `execFileSync('gh', [...args])`，避免 shell injection。gh 不存在�
 | telemetry | `src/telemetry/` |
 | feedback | `src/commands/feedback.ts`、`src/core/templates/workflows/feedback.ts` |
 | interactive prompts | `src/prompts/`、`src/ui/` |
-| utility modules | `src/utils/`（v1.13.2 新增 `line-endings.ts`） |
+| utility modules | `src/utils/`（v1.13.2 `line-endings.ts`；v1.14.3 新增 `spec-path-containment.ts`） |
+| command registration（按需加载） | `src/cli/index.ts` + `src/cli/commands/*.ts`（v1.14.1 起） |
 | version / update check | `src/core/version-check.ts`、`version` 命令注册于 `src/cli/index.ts` |
 | converter | `src/core/converters/json-converter.ts` |
 
@@ -211,6 +212,80 @@ Windows 上 staging rename 遇 EPERM/EXDEV 不再直接失败：
 
 ### 依赖钉版
 
-root workspace 的 `pnpm-workspace.yaml` 早有 `brace-expansion` override（v1.13.1 前的 audit 修复）；website 侧针对新一批 advisory 把 `brace-expansion` 与 `fast-uri` 的 override 进一步抬高（#2019，`3a34ea30`）。注意该提交落在 v1.14.0 tag 之后的 main 上，不属于本版发布内容。
+root workspace 的 `pnpm-workspace.yaml` 早有 `brace-expansion` override（v1.13.1 前的 audit 修复）；website 侧针对新一批 advisory 把 `brace-expansion` 与 `fast-uri` 的 override 进一步抬高（#2019，`3a34ea30`，v1.14.3 起包含在发布内）。
 
-> 注：CLI 按需加载（#2025）同样是 upstream main 的未发版提交，不属于 v1.14.0 行为，不要写进本版资料。
+**v1.14.3 之后这两条 website 钉版被删掉了**——不是因为 advisory 修好了，而是因为整条依赖链消失了：`serve` 被 `website/scripts/preview.mjs`（零依赖静态服务器）取代（#2110）。
+
+## v1.14.1–v1.14.3 更新
+
+这一轮 CLI 基建的主题是**启动成本**与**输入边界的可预测性**。
+
+### 按需加载：命令定义与实现分离（v1.14.1 #2025）
+
+`src/cli/index.ts` 只保留**命令定义**（名字、选项、help 文本），每个命令的实现都在 action 里 `await import()`：
+
+| 位置 | 职责 |
+|---|---|
+| `src/cli/index.ts` | 薄壳：program 装配、公共 flag、错误出口 |
+| `src/cli/commands/{config,context,doctor,schema,spec,store,workset}.ts` | 各命令的注册（定义层），实现延迟加载 |
+| `src/commands/*.ts` | 真正的实现 |
+| `src/commands/workflow/default-schema.ts` | 单独模块——让 help 文本能显示默认 schema 而不加载 workflow 实现 |
+
+同一手法还用在三处 barrel 上：`completion-tip.ts` 的 `CompletionFactory` 改为在**真需要判定是否已安装**时才 import；`completion-provider.ts` 的 `listSchemas` 改为直接 import `artifact-graph/resolver.js`（绕过会把 `tinyglobby` 一起拉进来的 barrel）；`failWithError` 的 ora 与 `shared-output` 也延后。
+
+效果：`--version` / `--help` 加载 **24** 个模块（原 485）；`config list`、`store list`、`doctor` 只加载自己用到的。输出、帮助文本、补全、退出码、遥测全部不变。
+
+### Tab 补全不再付遥测的账（v1.14.2 #2064）
+
+`isCompletionRun` 之外新增 `__complete` 的单独判定：Tab 每次按都会跑的解析器**完全跳过遥测与补全提示**。补全 changes/specs 时加载 **48** 个模块（原 344），且一次按键不会等 telemetry 请求，也不会在没人看得见的地方消耗掉首次运行的遥测提示。
+
+### 零宽 TTY：spinner 会挂死（v1.14.3 #2108）
+
+新函数 `canRenderSpinner(stream)`：
+
+```ts
+// 非 TTY：ora 自身禁用，只打一行 plain 输出 → 允许
+// TTY 但 columns === 0 → 拒绝，调用方回退 plain 输出
+return !stream.isTTY ? true : (stream.columns ?? 0) > 0;
+```
+
+根因值得记下来：ora 用 `ceil(width / stream.columns)` 决定擦几行，`columns === 0` 时该值是 `Infinity`，`clear()` 永不结束——命令烧满一个核并写出上百 MB 光标转义，`openspec validate --all` 从不返回。零宽 TTY 真实存在：pre-commit runner（如 lefthook）继承的 pty、`script -qec` 包一层都会这样。
+
+消费点目前是 `validate --all` 与 `validate --archived`：spinner 条件改为 `!json && isInteractive(opts) && canRenderSpinner()`。顺带的口径统一：`OPEN_SPEC_INTERACTIVE=0` 与 `CI` 现在也像 `--no-interactive` 一样关掉 spinner（`isInteractive(opts)` 取代了裸 `!opts.noInteractive`）。
+
+### glob 引擎更换（v1.14.3 #2103 / v1.14.2 #2061）
+
+`src/core/artifact-graph/outputs.ts` 从 `fast-glob` 迁到 `tinyglobby` + `brace-expansion` + `picomatch`：
+
+| 目的 | 做法 |
+|---|---|
+| 不再经由本包把未修补的 `braces` 带给下游 | 移除 `fast-glob`（它的传递链里有 `braces`），GHSA-vfj7-8cjw-p6xm 不再出现 |
+| 严格 brace 预算 | `assertBraceNesting`：镜像 braces 解析器（`[...]` 与引号内为字面量，`(` 与 `{` 同计深，关闭符只闭合同类最内层），> 16 层直接报错 |
+| 防展开爆炸 | `MAX_BRACE_EXPANSIONS = 1024`：`{a,b}` 重复十余次、`file-{1..5000}.md` 这类展开被拒绝。嵌套深度单独不够——`{a,b}` 重复 20 次只有一层深却展开 1,048,576 个模式，足以打爆堆 |
+| 逐顶层组展开 | 不交给 brace-expansion 一次性递归：`{a,{a,{a,b}}}` 这类 16 层模式在超时前跑不完。同时绕开 brace-expansion 5 在 `{draft}` 在前时把后续范围当字面量的行为；字面量 `{...}` 用 NUL 前缀哨兵承载（`resolveArtifactOutputPath` 的 `path.join` 会先拒绝 NUL 字节，故无法被 `generates` 值伪造） |
+| 保留 `../` 防护 | `globBase()` 取代 fast-glob 的 `generateTasks().base`，静态目录前缀仍先做 `assertPathWithin(changeDir, …)`；**绝对模式保持绝对**，否则 `path.resolve(changeDir, '/etc/*')` 会被重基进 change 目录而绕过检查 |
+| 目录遍历收紧 | `assertGlobDirectoryTraversal` 从 `fg.sync` 改为 `listDirectoryMatches()`（`readdirSync` + `picomatch` 单段匹配），显式处理 `.`/`..`——`**/../` 在 glob 跑之前就被限制 |
+
+`ARTIFACT_GLOB_OPTIONS`：`braceExpansion: false`（先自行展开，留下的 `{draft}` 仍作字面量）、`expandDirectories: false`（迁移对齐：目录模式不再长尾巴 `/**`）、`followSymbolicLinks: true`、`onlyFiles: true`。
+
+### 依赖与 npm 审计
+
+| 项 | 变化 |
+|---|---|
+| 移除 | `fast-glob` |
+| 新增 | `tinyglobby@^0.2.17`、`brace-expansion@^5.0.12`、`picomatch@^4.0.4`（+ dev `@types/picomatch`） |
+| root override | `brace-expansion@<5.0.12: '>=5.0.12 <6'`（GHSA-6j4f-fj2g-mc7p / GHSA-qhr7-859c-m2p7 / GHSA-q2hr-2g5m-vwhr）；新增 `shell-quote@>=1.8.4 <1.11.0: '>=1.11.0 <2'`（仅 dev，经 `@changesets/cli > launch-editor`） |
+| website | `serve` 移除 → `scripts/preview.mjs`；随之删掉 `brace-expansion`/`fast-uri` 两条 website 钉版 |
+
+### website 预览（v1.14.3 #2110）
+
+`pnpm start` 在 `website/` 下改为 `node scripts/preview.mjs`：零依赖静态服务器，按 Next 静态导出的路由解析（**不应用 `out/_redirects`**）。连带升了整组 website 依赖（next 16.3.8、react 19.3.0、fumadocs 16.16.x 等）。
+
+## 测试锚点补充（v1.14.1–v1.14.3）
+
+- `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs`：记录并断言启动时加载的模块数（防止按需加载被无意退回）
+- `test/utils/interactive.test.ts`：零宽 TTY 下 spinner 被拒绝
+- `test/utils/spec-path-containment.test.ts`、`test/cli-e2e/spec-symlink-into-project.test.ts`：symlink 包含边界
+- `test/core/templates/glob-path-bounding.test.ts`：propose/ff/continue 的 glob 路径边界
+- `test/core/artifact-graph/outputs.test.ts`：brace 嵌套/展开预算
+- `test/website-preview.test.ts`：预览服务器的路由解析

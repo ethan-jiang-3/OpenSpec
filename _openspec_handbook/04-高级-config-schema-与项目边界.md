@@ -290,6 +290,14 @@ schema 决定：
 | `affected_areas` | 否 | 涉及的代码区域列表 |
 | `initiative` | 否 | 关联的 initiative（`{store, id}`） |
 | `skip_specs` | 否 | 声明本次无 spec 级行为变更（纯重构/工具/文档），设为 `true` 时 validator 接受零 delta |
+| `retire_capabilities` | 否 | 允许 `true` 时，REMOVED 拿掉某 capability 最后一个 requirement 会删除整个主 spec |
+| `x-*` | 否 | **你自己的扩展键**：小写 `x-` 开头（`x-jiraKey`、`x-trackerID`），值任意 YAML。OpenSpec 不读、不写、不校验、不报未知，`validate --strict` 照常通过 |
+
+### 扩展键的边界
+
+`x-` 前缀必须**小写**（`X-Tracker` 仍会被当作未知键告警），前缀后至少一个字符且不能含空白（裸 `x-`、`x- tracker` 都不合法）。扩展键只在**顶层**受豁免——`initiative:` 内部仍是严格 schema，多一个键就报错。
+
+一个容易踩的坑：任何重写既有 `.openspec.yaml` 的调用方（含 OpenSpec 自己的写入路径）必须先从原始 YAML 把扩展键合并回来，否则 `ChangeMetadataSchema` 会把它当作未知键 strip 掉，静默删除你的元数据。
 
 其中最核心的是 `schema`：
 
@@ -297,6 +305,18 @@ schema 决定：
 - 项目默认可以在 `config.yaml` 里写 `schema: spec-driven`，但某个特殊 change 可以用另一套
 
 所以 change 的实际解析顺序，通常会优先看 change 自己，再回退到项目默认。
+
+完整的解析优先级是：
+
+```text
+CLI flag（--schema）
+  → change 的 .openspec.yaml
+  → 项目 config.yaml 的 schema
+  → planning home 的默认 schema
+  → 硬编码默认（spec-driven）
+```
+
+注意第三、四步的顺序：**项目 config 优先于 planning home 默认**，即使 planning home 自己声明过默认 schema。两者都没有时才落到内置的 `spec-driven`。
 
 还会在**当前 schema 根本不产生 specs artifact**时，由 `openspec new change` 自动写入：
 

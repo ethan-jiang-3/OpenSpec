@@ -163,6 +163,33 @@ template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然�
 
 CLI 最多安全展示 3 条 blocking line、每条 200 code points，控制字符转为 `?`；这属于 CLI 的 content-specific refusal。host archive template 只负责 pre-flight/sync/move，不应被描述为自己实现了这套退役内容分析。
 
+## 归档成功但清理失败（v1.14.1 #1792）
+
+退役能力的备份收尾（`finalizeRetirementBackups`）是归档**之后**的动作。它失败时的语义在 v1.14.1 被改对了：
+
+| | 旧口径 | 现在 |
+|---|---|---|
+| 错误码 | 通用 `archive_error` | **`archive_retirement_cleanup_failed`** |
+| 文案 | "The change remains archived and each listed backup was retained for recovery." | "The change **was** archived, but retirement cleanup did not complete. Inspect all reported recovery paths before recovery or cleanup." |
+| 逐条原因 | "Could not remove the committed retirement backup at …" | "Could not **finalize** the retirement backup at …" |
+
+为什么重要：旧文案断言"每个列出的备份都被保留"，但只有部分备份失败时这句话并不成立。现在的措辞让 agent 和用户分清两件事——**change 已经归档**（不可回退地用 retry 假装没发生），**清理没做完**（要按诊断里列出的所有 recovery path 逐个检查）。
+
+## 归档会丢的文本现在会告警（v1.14.2 #2054）
+
+`openspec archive` 走 CLI 的 programmatic merge 时，delta 里有些文本**不会被搬进主 spec**：第一个 `## ` 之前的正文、`## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文、以及除 Purpose 与四类 delta 段之外的任何 `## ` 段（如 `## Notes`）。现在这些会触发 WARNING：
+
+```text
+... is not carried into the main spec by archive. Move it into a requirement,
+or into proposal.md or design.md.
+```
+
+- 与其他警告同级：正常 validate/archive 通过，`validate --strict` 失败；
+- **归档实际搬运的内容不变**——这只是提示你把该保留的内容挪到会被带走的地方；
+- HTML 注释、`# ` 标题、Purpose 段、REMOVED/RENAMED 的正文都不告警（判定边界见 [`../specs_truth/06-源码锚点与缺口.md`](../specs_truth/06-源码锚点与缺口.md)）。
+
+agent-driven 的 OPSX archive template 自己做 sync，不受这条告警约束；但它在做 sync assessment 时应当用同样的三处边界检查自己是否漏读了内容。
+
 ## 和 FAQ 的衔接
 
 FAQ `07_archive-ready-to-archived/` 从 CLI 主线视角分析了 programmatic merge 算法。本文件从 OPSX template 视角分析了 agent 层的 pre-flight checks。
@@ -173,14 +200,15 @@ FAQ `07_archive-ready-to-archived/` 从 CLI 主线视角分析了 programmatic m
 
 | 内容 | 行号范围（archive-change.ts） |
 |---|---|
-| SkillTemplate 定义 | L31-L239 |
-| CommandTemplate 定义 | L241-L495 |
+| SkillTemplate 定义 | L31-L238 |
+| CommandTemplate 定义 | L241-L494 |
 | Step 1: 选择 change + archive inputs | L47-L84 |
 | Step 2: artifact 检查 | L86-L98 |
 | Step 3: task 检查（schema-aware `list --json`） | L100-L122 |
 | Step 4: sync assessment + 阻塞语义 + 结构/内容验证 | L124-L180 |
-| Step 5: 移动目录 | L182-L197 |
-| Guardrails | L221-L234 |
+| Step 5: 移动目录 | L182-L196 |
+| Step 6: 输出摘要 | L197-L220 |
+| Guardrails | L221-L237 |
 
 ## v1.13.0–v1.13.1 正确性大修
 

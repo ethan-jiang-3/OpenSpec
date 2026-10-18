@@ -305,6 +305,17 @@ propose 产出第一版 → explore 发现漏洞 → update 修 proposal + specs
 
 核心判断：**改的是已有 artifact 的内容 → update；要创建还不存在的 artifact → continue**。
 
+### 两个 glob 相关的细节
+
+`specs` 这类 artifact 的输出是一个 pattern（`specs/**/*.md`），不是单个文件。这带来两处容易踩的边界，update 的模板对它们都有明确规则：
+
+| 情形 | 规则 |
+|---|---|
+| 改已有文件 | 只编辑 `artifactPaths.<id>.existingOutputPaths` 里列出的**具体文件**；glob 的 `resolvedOutputPath` 还是 pattern，绝不能当写入目标 |
+| 某个 capability 确实少了 spec 文件 | 这是一条**明确的例外**：先起草 → 问用户确认 → 在 change 目录内选一个不存在的具体路径（要匹配 `outputPath`、且解析 symlink 后仍在 change 目录内）创建。这也是 update 唯一允许建新文件的口子，其余"还没有文件"的 artifact 交给 `/opsx:continue` |
+
+顺带说明为什么这个例外要写两遍：step 2 原本只说"只编辑 `existingOutputPaths`"，而例外要建的文件按定义不在其中——照字面执行会把流程自己要求做的事否掉。所以现在 step 2 与 guardrails 两处口径一致。
+
 ### 一句话
 
 `/opsx:update` 是"迭代打磨 planning"的正式入口。它把"改 proposal → 改 design → 改 tasks"这个容易三步各写各的流程，锁成一次自洽操作。

@@ -65,7 +65,7 @@ _faq_on_digested/
 - [`14_main_specs_context_scaling/`](14_main_specs_context_scaling/question.md) — archive 后主 specs 不断增长时，OpenSpec 现有的 capability 分片、按需读取与 external reference index 到底覆盖了什么；本仓库没有的 local spec discovery / retrieval 如何用 catalog、全局 context 内核与显式选择协议补上。
 - [`15_nested_capability_migration/`](15_nested_capability_migration/question.md) — 项目 capability 太多（几十个 flat capability），如何从 flat 迁移到嵌套二级目录结构？完整操作指南：taxonomy 设计、受控 rebaseline 流程、active delta 处理、config.yaml 更新、catalog 建设、验证清单、迁移后纪律。
 - [`16_upgrade-openspec-cli-and-projects/`](16_upgrade-openspec-cli-and-projects/question.md) — OpenSpec 整体怎么升级？升级完全局 CLI 之后，每个项目里还要做什么（`openspec update` 重投递 skills/commands、迁移 `.codex`→`.agents`、清理 legacy）？各安装方式的升级命令分别是什么？
-- [`17_review-and-validation-surface/`](17_review-and-validation-surface/question.md) — v1.11.0–v1.14.0 的审阅/校验工具面（`show --diff`、`status --all`、`validate --report findings`、advisory merge preflight、Purpose 占位符检测、parser 三修复、verify status 契约重写、`.openspec.yaml` 未知键告警）各自解决什么？合起来能在 archive 前发现哪些 specs 失真，又没补上哪些？
+- [`17_review-and-validation-surface/`](17_review-and-validation-surface/question.md) — v1.11.0–v1.14.3 的审阅/校验工具面（`show --diff`、`status --all`、`validate --report findings`、advisory merge preflight、Purpose 占位符检测、parser 三修复、verify status 契约重写、verify 按输出路径发现工件 + REMOVED 读基线、`.openspec.yaml` 未知键与 `x-` 扩展键、delta unapplied 文本与超长 requirement 的 WARNING）各自解决什么？合起来能在 archive 前发现哪些 specs 失真，又没补上哪些？
 
 ## 引用规范
 
