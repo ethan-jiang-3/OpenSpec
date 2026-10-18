@@ -388,13 +388,19 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 
 多条新命令各有独立职责：
 
+`store` 的全部子命令是 `setup` / `register` / `unregister` / `remove` / `list`（别名 `ls`）/ `doctor`——**没有 `info`**。
+
 ### `openspec store register <path> --id <id>`
 
-将一个本地 repo checkout 注册为全局 store。可选 `--remote` 和 `--branch`。
+把一个**已存在的**本地 repo checkout 注册为全局 store。选项只有 `--id`（缺省取 store 元数据或文件夹名）、`--yes`（确认给一个健康的 OpenSpec root 写入 store identity 元数据）、`--json`。**`register` 上既没有 `--remote` 也没有 `--branch`**——`--remote <url>` 属于 `store setup`（它才是"新建并注册"），用来把规范 clone 源记进 `store.yaml`。
 
-### `openspec store list` / `unregister` / `info`
+### `openspec store setup <id> --path <path> [--remote <url>]`
 
-列出、注销、查看已注册的 store。
+新建一个 store 并注册。另有 `--init-git` / `--no-init-git` 控制是否初始化 Git 仓库并提交。
+
+### `openspec store list` / `unregister` / `remove` / `doctor`
+
+列出、注销（保留文件）、注销**并删除**本地文件夹（`remove`）、检查注册与元数据健康（`doctor`）。
 
 ### `openspec context`
 
