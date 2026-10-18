@@ -39,7 +39,7 @@
 | `instructions archive` | agent workflow + 高级用户 | change、project context、`operations.archive.guidance` | archive operation input | 为 archive skill 提供只读指引 | 否 |
 | `templates` | 高级用户/工具 | schema 解析路径、artifact templates | 模板路径与来源 | 帮助调试模板覆盖与解析 | 否 |
 | `schemas` | 高级用户/工具 | project/user/package schemas（canonical root；可 `--store`） | schema 列表与来源 | 帮助发现可用 workflow 模型 | 否 |
-| `store register` | 人类 | 本地路径、store id、remote（可选） | `~/.openspec/stores/registry.yaml`、`.openspec-store/store.yaml` | 全局注册仓库 checkout | 是 |
+| `store register` | 人类 | 本地路径、store id、remote（可选） | `<globalDataDir>/stores/registry.yaml`、`.openspec-store/store.yaml` | 全局注册仓库 checkout | 是 |
 | `store list` | 人类 + 机器 | registry | store 列表及 backend | 发现已注册的 store | 否 |
 | `store unregister` | 人类 | store id | 从 registry 删除条目 | 注销不再需要的 store | 是 |
 | `context` | 人类 + 机器 | root + references | working set（human/JSON/.code-workspace） | 查看当前上下文引用的仓库 | 否 |

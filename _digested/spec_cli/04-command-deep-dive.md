@@ -147,7 +147,7 @@
 
 - 角色：全局注册一个仓库 checkout。
 - 核心对象：store id、backend（git type + local_path + remote + branch）。
-- 产出：在 `~/.openspec/stores/registry.yaml` 中写入条目，在 checkout 下创建 `.openspec-store/store.yaml`。
+- 产出：在 `<globalDataDir>/stores/registry.yaml` 中写入条目，在 checkout 下创建 `.openspec-store/store.yaml`。
 - 边界：只记录已有目录，不 clone、不 init。
 
 ### `store list` / `unregister` / `info`
@@ -166,7 +166,7 @@
 
 - 角色：个人本地多仓库视图管理。
 - 核心对象：workset（name + members + optional tool）。
-- 产出：`~/.openspec/worksets/worksets.yaml` + `.code-workspace` 文件。
+- 产出：`<globalDataDir>/worksets/worksets.yaml` + `.code-workspace` 文件。
 - 边界：纯本地，不共享，不提交。
 
 ### `doctor`

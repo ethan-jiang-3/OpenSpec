@@ -99,7 +99,7 @@ Store operator 关心的是：
 
 store 引入了跨仓库的上下文引用（不创建规划状态，只做索引）：
 
-- `~/.openspec/stores/registry.yaml` — 全局 store 注册表
+- `<globalDataDir>/stores/registry.yaml` — 全局 store 注册表
 - `<checkout>/.openspec-store/store.yaml` — store 身份 metadata
 - `openspec/config.yaml` 的 `references:` — 项目声明的 store 依赖
 - `openspec context` — working set 查询

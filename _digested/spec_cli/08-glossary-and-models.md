@@ -186,9 +186,19 @@ skill 和 command 通常表达的是同一 workflow 语义，只是外壳不同�
 
 这些状态不是人工标记，而是 CLI 根据 schema 和文件系统推导出的运行时语义。
 
+## globalDataDir
+
+本页多处出现的 `<globalDataDir>` 由 `getGlobalDataDir()`（`src/core/global-config.ts:99-123`）解析，**不是 `~/.openspec`**：
+
+| 平台 | 路径 |
+|---|---|
+| 任意平台，若设了 `XDG_DATA_HOME` | `$XDG_DATA_HOME/openspec` |
+| macOS / Linux 默认 | `~/.local/share/openspec` |
+| Windows（有 `LOCALAPPDATA`） | `%LOCALAPPDATA%\openspec` |
+
 ## store
 
-store 是全局注册的仓库 checkout。数据保存在 `~/.openspec/stores/registry.yaml`。每个 store 有一个 id（kebab-case）、一个 git backend（local_path + optional remote/branch），以及 checkout 下的 `.openspec-store/store.yaml` 身份文件。
+store 是全局注册的仓库 checkout。数据保存在 `<globalDataDir>/stores/registry.yaml`。每个 store 有一个 id（kebab-case）、一个 git backend（local_path + optional remote/branch），以及 checkout 下的 `.openspec-store/store.yaml` 身份文件。
 
 ## reference
 
@@ -200,7 +210,7 @@ store 是全局注册的仓库 checkout。数据保存在 `~/.openspec/stores/re
 
 ## workset
 
-个人本地的多仓库打开视图。保存在 `~/.openspec/worksets/worksets.yaml`。不共享、不提交、不写入 member 目录。
+个人本地的多仓库打开视图。保存在 `<globalDataDir>/worksets/worksets.yaml`。不共享、不提交、不写入 member 目录。
 
 ## PlanningHome
 
