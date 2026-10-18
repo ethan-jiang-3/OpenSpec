@@ -88,15 +88,15 @@
 
 本补充阶段将直接改正文和案例，重点不是重复专题细节：
 
-- [x] `00-index`、01、02：把 capability 定义、nested taxonomy、`skip_specs` 判断和 host workflow/CLI 的最小闭环纳入初学者主线。
-- [x] 04、05、06、07、08：明确 catalog/AGENTS/config 的分层、workflow × consumer 路由、Change Context Card、operation guidance 与 schema gate 的边界，以及 store/root 只提供按需读取入口而非自动 main-spec retrieval。
-- [x] 09：从“路径脆弱性提示”扩展为 handbook 的 capability 工作章，给出切分信号、命名/目录约定、catalog discovery、rebaseline 与日常维护节奏。
+- [x] `00-index`、01、10：把 capability 定义、nested taxonomy、`skip_specs` 判断和 host workflow/CLI 的最小闭环纳入初学者主线。
+- [x] 21、22、23、24、25：明确 catalog/AGENTS/config 的分层、workflow × consumer 路由、Change Context Card、operation guidance 与 schema gate 的边界，以及 store/root 只提供按需读取入口而非自动 main-spec retrieval。
+- [x] 26：从“路径脆弱性提示”扩展为 handbook 的 capability 工作章，给出切分信号、命名/目录约定、catalog discovery、rebaseline 与日常维护节奏。
 - [x] 11、13、15、99：把 brownfield、greenfield、多人协作和 FAQ 案例改为完整 capability path、Purpose、选择证据、同 path 并发和结构迁移的可执行做法。
 - [x] handbook 完成后复核与 `spec-driven-capability` 的链接、示例路径、术语和“不自动 retrieval”边界；运行 diff、Markdown 链接检查与定向测试，并提交独立补充 commit。
 
 ### 2026-07-29 — handbook capability 回灌与 Store 收敛完成
 
-- 已将 capability 专题的完整主线回灌 handbook：行为合同切分、浅 taxonomy、相对 path identity、catalog discovery、同路径 delta/archive、rebaseline 和并发治理均有用户可执行的落点；09 是本地 main specs 扩张的主章。
+- 已将 capability 专题的完整主线回灌 handbook：行为合同切分、浅 taxonomy、相对 path identity、catalog discovery、同路径 delta/archive、rebaseline 和并发治理均有用户可执行的落点；26 是本地 main specs 扩张的主章。
 - FAQ 13 的 config 路由已回灌：`context`、artifact `rules` 与 Apply/Archive operation guidance 各自的消费者、Change Context Card、条件化知识的落点和 schema/AGENTS/CI 的升级边界均已进入相关章节。
 - 07 已从“跨仓库协同方案”收敛为可选的跨仓库 OpenSpec 引用。它明确不是本地 spec scaling、自动 retrieval 或多 repo change 协调；v1.7.0 命令以 `context` 的工作集和 `show --store` 的按需读取为准，workset 也改为实际的 `create --member` 接口。
 - 已通过 `git diff --check`、变更 Markdown 的本地链接检查，以及 `pnpm test -- test/utils/spec-discovery.test.ts test/commands/artifact-workflow.test.ts`（83 tests）；在最终 diff 后复跑格式与链接检查也通过。
@@ -128,7 +128,7 @@
 
 - [x] 更新 README、索引、能力身份章节和机器协议到 handbook v1.3 / OpenSpec v1.7.0。
 - [x] 更新入门、概念、生命周期和 FAQ 总入口：host-specific invocation、`skip_specs` 与 capability path 的用户心智模型。
-- [x] 更新 config 章节（04/05/06）和 artifacts 实战：四个 artifact 的 rules 与 Apply/Archive operation guidance 的边界，附最小正确 YAML。
+- [x] 更新 config 章节（21/22/23）和 artifacts 实战：四个 artifact 的 rules 与 Apply/Archive operation guidance 的边界，附最小正确 YAML。
 - [x] 更新 archive、多人协作和实战案例：新 capability Purpose、inline sync 后验证、幂等 early-sync，以及 nested path 的使用边界。
 - [x] 更新 store/custom-schema 章节：default store fallback、`view` 按 resolved root、schema `instruction` 的权威性；仅在当前结论处写 v1.7.0。
 - [x] 复查所有通用表格与 Q&A：不把 Claude 语法扩展到 Codex，也不把路径 namespace 说成 hierarchy/retrieval。

@@ -86,9 +86,9 @@
 
 - [x] D1 00-index 版本表
 - [x] D2 01 初级：unappliedContent 告警、500 字符
-- [x] D3 04/06：`x-*` 扩展键
-- [x] D4 09/12：symlink、artifacts 路径边界
-- [x] D5 13/90/99 等按需
+- [x] D3 21/23：`x-*` 扩展键
+- [x] D4 26/52：symlink、artifacts 路径边界
+- [x] D5 53/90/99 等按需
 - [x] D6 checkpoint：全局 grep 无 v1.14.0 活口径残留
 
 ### Phase E：验收与收尾
@@ -112,7 +112,7 @@
 - 已建 `/tmp/openspec-v1143` worktree（detach 于 `c794978f`）作为源码锚点参照，行号引用以该快照为准。
 - Phase B 完成：`specs_truth/02`+`06`、`workflows/{00,01,02,03,04,05,06,08,09,12}`、`mechanisms/05-cli-infra`、`internal-spec-driven/{03,04}`、`spec_cli/{01,04}`、`schema/02`、`system/06`、`_coverage/{tests,specs}`、`_digested/README.md`（基线 `c794978f`）。
 - Phase C 完成：FAQ 16（v1.14.1–3 升级提醒）、12（版本表三行 + 部分补强段）、06（`all_done` 与 `## Workflow follow-up`）、07（三类"归档看起来成功"）、03（capture 表限 schema + 输出路径）、17（unapplied 文本 / 清理错误码 / verify 两条口径）、README 条目描述。
-- Phase D 完成：handbook 00-index（1.14.3 + v1.12 行）、01（`all_done` 口径、`## Workflow follow-up`、archive 确认默认 Yes 与散文告警）、04（`x-*` 扩展键 + 五步 schema 解析顺序）、09（unapplied 文本归属表 + spec symlink）、12（update 的两条 glob 边界）。
+- Phase D 完成：handbook 00-index（1.14.3 + v1.12 行）、01（`all_done` 口径、`## Workflow follow-up`、archive 确认默认 Yes 与散文告警）、21（`x-*` 扩展键 + 五步 schema 解析顺序）、26（unapplied 文本归属表 + spec symlink）、52（update 的两条 glob 边界）。
 - Phase E：`pnpm run build` OK；`pnpm test` **223 files / 6585 tests 全绿**（v1.14.0 基线 216/6388）；版本一致性 package.json=`1.14.3`、SSOT=`v1.14.3 (c794978f)`、handbook 00-index=`1.14.3`；`grep "upstream main|未发版|tag 后"` 在三套资料中已清零；0012 状态已回填；`_change_log/README.md` 已加 0012 与 `_plan-10` 两行。
 ### Review 轮（提交后补强）
 
@@ -125,8 +125,8 @@
 | `_faq_on_digested/11` | 完全没有"散文不会被带走"——而这正是 specs 失真的隐形来源 | 新增第 4 节 + 参考来源两行 |
 | `_digested/internal-spec-driven/02` | 仍写"informational hint，不是 error" | 改为 WARNING（v1.14.1 起）+ ADDED 受限说明 |
 | `_digested/schema/02` | specs 的 `one at a time`、tasks 的 `## Workflow follow-up` 两条 instruction 变更未记 | 两节各补一段（含原文与理由） |
-| `_openspec_handbook/08` | `generates` 行只说"支持 glob"，没有 brace 预算 | 表格行 + 一条纪律 bullet |
-| `_openspec_handbook/07` | symlink 布局只写了"不支持"，实际上是 store 的替代路径 | 新增「v1.14.x 行为修正」段，含与 store 的分工 |
+| `_openspec_handbook/25` | `generates` 行只说"支持 glob"，没有 brace 预算 | 表格行 + 一条纪律 bullet |
+| `_openspec_handbook/24` | symlink 布局只写了"不支持"，实际上是 store 的替代路径 | 新增「v1.14.x 行为修正」段，含与 store 的分工 |
 | `_faq_on_digested/09`+`10` | fork 的 schema-package 未对齐 v1.14.1 tasks 口径；两篇都没提 500 字符/结构校验落不到自定义 schema | 改 `schema.yaml` tasks instruction；两篇「已知限制」各补一条 |
 | 锚点表 | `03-new`/`07-sync`/`11-onboard` 的模板行号是 v1.13 时代的；`ff`/`verify`/`continue`/`propose` 的结束行各偏 1–2 行 | 全部按 `c794978f` worktree 重新核对 |
 

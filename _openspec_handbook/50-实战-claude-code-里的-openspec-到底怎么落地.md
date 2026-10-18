@@ -1,4 +1,4 @@
-# 10 · 实战：Claude Code 里的 OpenSpec 到底怎么落地
+# 50 · 实战：Claude Code 里的 OpenSpec 到底怎么落地
 
 > 这一篇回答的是"放进 Claude Code 以后，它到底长什么样"。
 

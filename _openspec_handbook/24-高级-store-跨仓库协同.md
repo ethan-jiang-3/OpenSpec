@@ -1,4 +1,4 @@
-# 07 · 高级：Store（可选的跨仓库 OpenSpec 引用）
+# 24 · 高级：Store（可选的跨仓库 OpenSpec 引用）
 
 > **Store 是可选的跨仓库 OpenSpec 引用机制：声明哪些已 checkout 的 OpenSpec root 与当前项目相关，并给人或 agent 一个按需读取它们的入口。** 它不是多仓库协调层，也不是本地 main specs 变大后的默认解法；单仓库项目通常不需要它。
 
@@ -12,7 +12,7 @@
 
 | 你遇到的问题 | 先用什么 | 为什么不是 store |
 |---|---|---|
-| 一个仓库的 main specs 太多，agent 不知道该读哪份 | [09](26-高级-治理边界与漂移维护.md) 的 taxonomy、薄 catalog、候选 path discovery | store 不会替你挑本仓库相关 capability，也不自动注入正文 |
+| 一个仓库的 main specs 太多，agent 不知道该读哪份 | [26](26-高级-治理边界与漂移维护.md) 的 taxonomy、薄 catalog、候选 path discovery | store 不会替你挑本仓库相关 capability，也不自动注入正文 |
 | 一个 change 跨身份、权限、事件等多个本地 domain | proposal/design 的 impact matrix | 这是一个 repo-local change 的范围判断，不是跨仓库规划 home |
 | 想让一条 change 同时修改多个 repo | 各 repo 保持自己的 change，并用明确的跨 repo 协作/PR 纪律 | store 不创建跨 repo change，不管理依赖顺序或 archive |
 

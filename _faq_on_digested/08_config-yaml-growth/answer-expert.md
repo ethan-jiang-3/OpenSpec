@@ -66,7 +66,7 @@ Do not <危险行为> unless <例外>.
 | `design` | 技术决策质量 | `Design decisions must note the rejected alternative and why.` |
 | `tasks` | 可追踪性 | `Each task group must reference the spec requirement it implements.` |
 
-砍掉一切口号（`clean` / `proper` / `best practice`）——它们没判断力，白占每个 artifact 的 token。4 类规则（结构 / artifact / 测试 / 风险）的完整展开见 handbook 06。
+砍掉一切口号（`clean` / `proper` / `best practice`）——它们没判断力，白占每个 artifact 的 token。4 类规则（结构 / artifact / 测试 / 风险）的完整展开见 handbook 23。
 
 **key 必须合法**。写成 `all` / `general` → 每次生成指令 warning 且规则永不注入（`src/core/project-config.ts:469-486` 的 `validateConfigRules`，由 `instruction-loader.ts:381-385` 用**所有已安装 schema 的 artifact ID 并集**校对）。
 

@@ -1,6 +1,6 @@
-# 08 · 高级：自定义 Schema——创建自己的工作流
+# 25 · 高级：自定义 Schema——创建自己的工作流
 
-> 这一篇默认你已经理解了 config.yaml（[06](23-高级-config-yaml-怎么写到真正好用.md)）和 schema 的基本概念（[04](21-高级-config-schema-与项目边界.md)）。如果还没有，先回去读那两篇。
+> 这一篇默认你已经理解了 config.yaml（[23](23-高级-config-yaml-怎么写到真正好用.md)）和 schema 的基本概念（[21](21-高级-config-schema-与项目边界.md)）。如果还没有，先回去读那两篇。
 
 ---
 

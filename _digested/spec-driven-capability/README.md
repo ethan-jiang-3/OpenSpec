@@ -40,7 +40,7 @@
 - [specs_truth](../specs_truth/00-map.md) 说明 main specs 如何成为事实层、为什么会漂移、怎样修复；本专题负责更早一步的能力边界与长期组织。
 - [internal-spec-driven](../internal-spec-driven/README.md) 深挖 workflow 的实现；本专题只保留会改变 capability 规划决策的源码机制。
 - [schema](../schema/00-map.md) 解释 artifact DAG 与 schema 自定义；本专题只聚焦 spec-driven 的 capability 契约。
-- [handbook 第 09 章](../../_openspec_handbook/26-高级-治理边界与漂移维护.md) 是面向使用者的压缩实践版；这里是它的规划和源码级上游。
+- [handbook 第 26 章](../../_openspec_handbook/26-高级-治理边界与漂移维护.md) 是面向使用者的压缩实践版；这里是它的规划和源码级上游。
 - [FAQ 14](../../_faq_on_digested/14_main_specs_context_scaling/answer.md) 深入研究 main-spec context scaling 与上游缺口；这里将其转为可操作的 catalog 协议。
 
 capability 身份与 discovery 模型自 v1.7.0 起未变（v1.11.0–v1.13.0 的 `show --diff`、`status --all`、`validate --report findings` 只是审阅手段，不改变 capability 规划语义）；当前基线见 [`../README.md`](../README.md)。本专题不改变 OpenSpec runtime、默认 schema 或本仓库现有 main specs 的布局。

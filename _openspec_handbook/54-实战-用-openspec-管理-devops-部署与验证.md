@@ -1,4 +1,4 @@
-# 14 · 实战：用 OpenSpec 管理 DevOps 部署与验证
+# 54 · 实战：用 OpenSpec 管理 DevOps 部署与验证
 
 > 这一篇讲的是：实现已经写出来以后，怎么把部署、验证、回滚也纳入 OpenSpec 的 change 闭环。
 > OpenSpec 不是 CI/CD 系统，但它很适合把部署这件事讲清楚、做有序、验有据。

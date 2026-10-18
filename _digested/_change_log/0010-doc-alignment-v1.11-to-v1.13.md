@@ -41,11 +41,11 @@
 
 - **版本戳**：01/02/03/06/07/09/11/12/13/14/15/90 的"当前模型"定位句由 v1.11.0 升到 1.13.0；`00-index.md` L279 标题由"v1.10.0 工具与环境速查"改为"工具与环境速查（v1.10.0 起，含 v1.12.0/v1.13.0）"。
 - **12 章**新增整节"改完怎么审：delta 保真与审阅工具（1.11.0–1.13.0）"：四类静默失效、`show --diff`/`status --all`/`validate --report findings`、advisory preflight、Purpose 占位符、判断锚点。
-- **09 章**补 `show --diff`、`status --all`、`validate --report findings` 与 rename 保序。
-- **11 章**补 apply 无 spec 警告与 `missingPrerequisites`。
+- **26 章**补 `show --diff`、`status --all`、`validate --report findings` 与 rename 保序。
+- **51 章**补 apply 无 spec 警告与 `missingPrerequisites`。
 - **90 章**补 `instructions apply --json`（`missingPrerequisites`/`warning`）与 `validate --report findings`/`show --diff`/`status --all` 的 JSON 形状；工具投递补 Antigravity、SourceCraft、`resolveSharedSkillWriters()`。
 - **99 FAQ** 新增 Q7a（审阅/校验命令）、Q16 补 advisory preflight、Q26 补 v1.10–v1.12 新工具、Q27a 补 Antigravity 与通用仲裁。
-- **02/01** 补 Antigravity 共享 `.agents/` 与通用仲裁。
+- **10/01** 补 Antigravity 共享 `.agents/` 与通用仲裁。
 
 ### 四、新增内容：`_faq_on_digested/17_review-and-validation-surface/`
 
@@ -65,7 +65,7 @@
 
 已执行的清理：
 
-1. **每文件版本身份**：FAQ 各 `answer*.md` 的"以 vX 为当前基线/核验于 vX"脚注、`当前边界（vX）`标签、14/15 的基线声明；handbook 各章首版本戳、07/90 的适用版本戳；`_digested` 的 `spec_cli/00-map`、`internal-spec-driven/04`（§8 标题）、`internal-spec-driven/07`、`spec-driven-capability/README` 的基线声明——均改为指向入口 SSOT。
+1. **每文件版本身份**：FAQ 各 `answer*.md` 的"以 vX 为当前基线/核验于 vX"脚注、`当前边界（vX）`标签、14/15 的基线声明；handbook 各章首版本戳、24/90 的适用版本戳；`_digested` 的 `spec_cli/00-map`、`internal-spec-driven/04`（§8 标题）、`internal-spec-driven/07`、`spec-driven-capability/README` 的基线声明——均改为指向入口 SSOT。
 2. **结构性去版本**：正文标题前缀（`### v1.10.0→v1.11.0：X` → `### X`）、尾部括号注记（`（v1.12.0）`）、时间状语（`vX 起，`→删、`vX 之前`→"此前"）统一清理；保留章节号、缩进与代码示例。
 3. **内联历史溯源剔除**：`vX 的 <对象>` / `vX 起…` / `vX 新增…` / `vX 修复…` 等改写为现在时或去版本，使正文只描述当前行为。豁免范围仅上述"不得不"项。
 4. **版本史文档豁免**：`_change_log/`、`_coverage/`、FAQ `12`（roadmap）、`16`（升级指南）、`_research-*` 快照、`00-index` 变更记录、各 README 基线。
@@ -88,6 +88,6 @@ node -p "require('./package.json').version"   # 1.13.0（未变）
 资料侧核对：
 
 - 三套资料内 `defaultSchema` 不再被描述为"当前仍静默无效"。
-- `09`/`10` 不再把已删除的内置 schema 当作现役内置。
+- `26`/`50` 不再把已删除的内置 schema 当作现役内置。
 - handbook 各章"当前模型"定位句为 1.13.0，`00-index` 标题不再误标 v1.10.0。
 - 新增 `17_review-and-validation-surface/` 已登记进 FAQ README。

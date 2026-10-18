@@ -172,7 +172,7 @@ schema: spec-driven
 ```text
 1. config.yaml 是项目全局层：定义 context（所有 artifact 共享，也给 Apply/Archive）+ rules（按 artifact）+ operations guidance（仅 Apply/Archive）。
 2. 新项目可用 init --language 种入语言 context；一般 context/rules 仍缺少向导（config 陷阱 / agent 没引导）。
-3. 最省力的路：别从零写，抄一个有经验的人的 config.yaml（dogfood 范本 / 同事的 / handbook 06 的 sample），改改技术栈和领域先用着。
+3. 最省力的路：别从零写，抄一个有经验的人的 config.yaml（dogfood 范本 / 同事的 / handbook 23 的 sample），改改技术栈和领域先用着。
 4. config 基本为空也能跑；撞墙了（要精确控制 / agent 老犯同类错）再升级 intermediate（agent 帮你建）或 expert（自己写）。
 5. 怎么从产品源头补这个缺口（给 skill 加引导 / 加 CLI 命令）是 contributor 级的事，见 answer-expert.md。
 ```

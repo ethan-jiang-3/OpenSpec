@@ -42,7 +42,7 @@
 | v1.10 | 2026-08 | 1.13.1 | 对齐 v1.13：`validate --report findings` 与 archive 拒收预报；SourceCraft（codeassistant）；v1.13.0 delta parser 大修（CommonMark 全标记、多 section 全应用、fence 内空行保留、大小写冲突拒绝）；propose context-first + code-grounded；explore spec inventory、capture 即确认；`/opsx:update` 先起草确认后写入；`status` 给 `Next:` 行；安全加固（指令注入/挂起/`.npmrc` 劫持）；pnpm@10 升级。 |
 | v1.11 | 2026-09 | 1.14.0 | 对齐 v1.13.2/v1.14.0：10 个新 `--tools` 目标（dsh/codestudio/gigacode/atomcode/easycode/gsd/amp/grok/warp/veai），`.agents` 共享根扩为 Codex/Zed/Antigravity/Amp/GSD + vendor-neutral，IBM Bob 更名；`list --archived/--all`、`openspec version`、view 的 workflow status 与归档分区；`show --json` requirement/scenario 带 `name`；`status --json` `allowedEditRoots` 纳入声明 store 的当前项目；archive 阻塞语义（sync 失败不归档、sync 后结构验证、retired capability 主 spec 删除）；写回文件行尾保持（CRLF 不再整文件 diff）；`.openspec.yaml` 未知键告警；store-only 仓库可在 root 跑 `init` 装集成。 |
 | v1.12 | 2026-10 | 1.14.3 | 对齐 v1.14.1–v1.14.3：artifact 创建前先定并校验输出路径（glob 工件必须落在 change 目录内，propose/ff/continue/explore 统一）；glob 工件「done 但文件不全」的补完协议；`all_done` 只报跟踪任务完成、归档前需复核/验证；verify 改按输出路径发现工件，REMOVED requirement 必须先读主 spec 基线；archive 的退役清理失败有独立错误码 `archive_retirement_cleanup_failed`；`openspec/`、`changes/`、`specs/` 与 spec 文件可以是项目内 symlink（`archive/` 不行）；delta 里「归档不会带走」的文本与超长 requirement 升为 WARNING；`.openspec.yaml` 顶层 `x-` 扩展键；glob 引擎由 fast-glob 换到 tinyglobby（brace 嵌套 ≤16、展开 ≤1024）；CLI 按需加载与 Tab 补全跳过遥测；零宽 TTY 不再挂死；view 移除归档分区。 |
-| v1.13 | 2026-10 | 1.14.3 | **两件事：① 09 章扩写改名 ② 全手册重编号。** ① 原 `09-高级-能力身份与specs漂移维护` 扩写并改名为 `26-高级-治理边界与漂移维护`，新增全手册分析轴「**硬能力 vs 软能力**」（代码判定 vs prompt 文字，违反后果不同）；agent 上下文的字段级事实（`instructions` 注入哪些字段、`contextFiles` 只给路径不给正文、注入体不随 specs 规模增长）；三级过滤读与 50 KB `context` 预算（超限整段丢弃）、`rules` 按 artifact id 分流、artifact DAG 门控与「`status` 是文件存在性不是新鲜度」；归档五道机器闸门（validate 规则集分级 / scenario 丢失双闸 / 干跑合并预检 / 全或无写入 / `retire_capabilities`）；跨 change 缺口（依赖与重叠零检测、近似重复 capability 零检测、三个静默 no-op、无陈旧废弃墓碑）；用自定义 schema 给「方向」建硬前置及其边界（门控**存在**而非**一致**）；新增「判断锚点三问」。保留原 capability 身份、两层 name-as-identity、catalog discovery、rebaseline 与维护节奏主体。素材来源：`_faq_on_digested/18_context-rot-and-direction-drift/`。② **全手册按难度层级重编号**：初级 `0N`、中级 `1N`、高级 `2N`、实战 `5N`（`00`/`90`/`99` 不变）。映射 `02→10`；`03→20`、`04→21`、`05→22`、`06→23`、`07→24`、`08→25`、`09→26`；`10→50`、`11→51`、`12→52`、`13→53`、`14→54`、`15→55`。三套文档（`_digested`/`_faq_on_digested`/`_openspec_handbook`）的章节引用、链接与锚点同步更新；宪章区间改为 `00–09 / 10–19 / 20–29 / 50–59 / 90 / 99`；本表历史行一并改用新号，不保留旧号换算。 |
+| v1.13 | 2026-10 | 1.14.3 | **两件事：① 09 章扩写改名 ② 全手册重编号。** ① 原 `09-高级-能力身份与specs漂移维护` 扩写并改名为 `26-高级-治理边界与漂移维护`，新增全手册分析轴「**硬能力 vs 软能力**」（代码判定 vs prompt 文字，违反后果不同）；agent 上下文的字段级事实（`instructions` 注入哪些字段、`contextFiles` 只给路径不给正文、注入体不随 specs 规模增长）；三级过滤读与 50 KB `context` 预算（超限整段丢弃）、`rules` 按 artifact id 分流、artifact DAG 门控与「`status` 是文件存在性不是新鲜度」；归档五道机器闸门（validate 规则集分级 / scenario 丢失双闸 / 干跑合并预检 / 全或无写入 / `retire_capabilities`）；跨 change 缺口（依赖与重叠零检测、近似重复 capability 零检测、三个静默 no-op、无陈旧废弃墓碑）；用自定义 schema 给「方向」建硬前置及其边界（门控**存在**而非**一致**）；新增「判断锚点三问」。保留原 capability 身份、两层 name-as-identity、catalog discovery、rebaseline 与维护节奏主体。素材来源：`_faq_on_digested/18_context-rot-and-direction-drift/`。② **全手册按难度层级重编号**：初级 `0N`、中级 `1N`、高级 `2N`、实战 `5N`（`00`/`90`/`99` 不变）。映射 `02→10`；`03→20`、`04→21`、`05→22`、`06→23`、`07→24`、`08→25`、`09→26`；`10→50`、`11→51`、`12→52`、`13→53`、`14→54`、`15→55`。三套文档（`_digested`/`_faq_on_digested`/`_openspec_handbook`）的章节引用、链接与锚点同步更新；宪章区间改为 `00–26 / 50–19 / 20–29 / 50–59 / 90 / 99`；本表历史行一并改用新号，不保留旧号换算。 |
 
 ---
 
@@ -193,23 +193,23 @@ graph LR
 ```mermaid
 graph LR
     A[10-中级<br/>specs 与 delta] --> B[26-高级<br/>capability 身份与治理边界]
-    B --> C[11 / 53-实战<br/>brownfield / greenfield]
+    B --> C[51 / 53-实战<br/>brownfield / greenfield]
     C --> D[专题<br/>spec-driven-capability]
 ```
 
-先在 09 建立“行为合同切片、稳定 path、catalog 只导航、**机器挡什么与不挡什么**”的判断，再按需要深入 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md) 与 [`_faq_on_digested/18_context-rot-and-direction-drift/`](../_faq_on_digested/18_context-rot-and-direction-drift/answer.md)。嵌套目录可被 v1.9.0 完整处理（v1.7.0 起），但它不会替 agent 自动挑选相关 specs。
+先在 26 建立“行为合同切片、稳定 path、catalog 只导航、**机器挡什么与不挡什么**”的判断，再按需要深入 [`_digested/spec-driven-capability/`](../_digested/spec-driven-capability/README.md) 与 [`_faq_on_digested/18_context-rot-and-direction-drift/`](../_faq_on_digested/18_context-rot-and-direction-drift/answer.md)。嵌套目录可被 v1.9.0 完整处理（v1.7.0 起），但它不会替 agent 自动挑选相关 specs。
 
 ### 路径 8：我想知道它到底强制什么、agent 每次又看到多少
 
 ```mermaid
 graph LR
-    A[10-中级<br/>心智模型] --> B[05 / 23-高级<br/>约束放哪 / config 怎么写]
+    A[10-中级<br/>心智模型] --> B[22 / 23-高级<br/>约束放哪 / config 怎么写]
     B --> C[26-高级<br/>治理边界与漂移]
     C --> D[25-高级<br/>自定义 schema]
     C --> E[专题<br/>_faq_on_digested 18]
 ```
 
-这条路径回答的是一个常被默认错的问题：**"我写错了，工具会拦住我吗？"** 09 把能力分成**硬**（代码判定：`validate` 规则集、scenario 丢失双闸、合并硬拒绝、50 KB 预算、DAG 门控）与**软**（prompt 文字：instruction、workflow 模板）两层，并给出 agent 上下文的字段级事实——注入的是导航简报而非 spec 正文，main specs 靠 `list --specs` → `--no-scenarios` → 全文三级按需读。读完能自己判断"哪些纪律要另加外部检查"。机制级细节见 [`_faq_on_digested/18_context-rot-and-direction-drift/`](../_faq_on_digested/18_context-rot-and-direction-drift/answer.md)。
+这条路径回答的是一个常被默认错的问题：**"我写错了，工具会拦住我吗？"** 26 把能力分成**硬**（代码判定：`validate` 规则集、scenario 丢失双闸、合并硬拒绝、50 KB 预算、DAG 门控）与**软**（prompt 文字：instruction、workflow 模板）两层，并给出 agent 上下文的字段级事实——注入的是导航简报而非 spec 正文，main specs 靠 `list --specs` → `--no-scenarios` → 全文三级按需读。读完能自己判断"哪些纪律要另加外部检查"。机制级细节见 [`_faq_on_digested/18_context-rot-and-direction-drift/`](../_faq_on_digested/18_context-rot-and-direction-drift/answer.md)。
 
 ---
 
@@ -221,7 +221,7 @@ graph LR
 | **artifact** | change 内部的文档产物类型 | proposal.md、specs/*.md、design.md、tasks.md |
 | **delta spec** | 描述"这次改了哪里"的增量 spec | `## ADDED Requirements` / `## MODIFIED Requirements` |
 | **specs/** | 项目当前正式 spec 基线 | `openspec/specs/auth/spec.md` |
-| **capability / 能力** | 可独立解释、独立改变、独立验证的行为合同切片；身份 = `specs/` 下的相对路径 | `auth`、`identity/session`；domain 只用于导航，不是父合同（详见 [09](26-高级-治理边界与漂移维护.md)） |
+| **capability / 能力** | 可独立解释、独立改变、独立验证的行为合同切片；身份 = `specs/` 下的相对路径 | `auth`、`identity/session`；domain 只用于导航，不是父合同（详见 [26](26-高级-治理边界与漂移维护.md)） |
 | **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
 | **profile** | 选择安装哪些工作流命令 | core（v1.2.0 引入 4 个，v1.4.0 起 5 个，v1.6.0 起 6 个）vs custom（自选命令） |
@@ -285,7 +285,7 @@ graph LR
 | `openspec view` | 在终端中浏览 working set（支持 `--store <id>`） |
 | `openspec workset create/open/list/remove` | 创建/打开/列出/移除个人本地目录视图；不从 `references:` 推导 |
 | `openspec doctor` | 检查 root 和 store reference 健康状态 |
-| `openspec schema fork/init/validate/which` | 自定义工作流 schema（详见 [08](25-高级-自定义-schema-创建自己的工作流.md)） |
+| `openspec schema fork/init/validate/which` | 自定义工作流 schema（详见 [25](25-高级-自定义-schema-创建自己的工作流.md)） |
 | `openspec schemas` | 列出可用 schema |
 | `openspec templates` | 列出/查看 artifact 模板 |
 | `openspec completion` | 生成/安装/卸载 shell 自动补全 |
@@ -394,7 +394,7 @@ graph LR
 - **单一事实源 = `00-index.md`**：版本、目录、术语、命令与详细文件地图以它为准；`README.md` 是默认外部入口，维护高层阅读路线并链接回本页。其他明确承担入口职责的 Markdown 也可维护其专题范围内的路线，但不复制可执行命令、详细文件地图或整套全局跳转规则。
 - **不硬编码会过时的数字**（如"36 问"）。
 - **freshness 二分必须可判定**：版本敏感页在开篇定位句标明适用版本，概念页不标；概念页 = 01、10、20–23、25、26。概念页只在不写会误导操作的边界处作一次简短版本说明。
-- **新增篇章落入既有编号区间**（00–09 / 10–19 / 20–29 / 50–59 / 90 / 99），不新增混合层级；文件名含难度层级词。
+- **新增篇章落入既有编号区间**（00–26 / 50–19 / 20–29 / 50–59 / 90 / 99），不新增混合层级；文件名含难度层级词。
 
 ---
 

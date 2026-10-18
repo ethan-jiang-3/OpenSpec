@@ -468,7 +468,7 @@
   - [x] 本地化 prose 与英文结构词边界
   - [x] 合法 YAML 示例
 - [x] `99-FAQ-常见问题.md`
-  - [x] 新增/更新多语言短答并回链 01/06
+  - [x] 新增/更新多语言短答并回链 01/23
 
 ### 6.3 Store 与机器协议
 
@@ -487,7 +487,7 @@
 ### 6.4 Tasks verification 与实战示例
 
 - [x] `20-高级-openspec-的软件开发生命周期思想.md`
-  - [x] tasks 定义增加 verification 脚注并回链 12
+  - [x] tasks 定义增加 verification 脚注并回链 52
 - [x] `25-高级-自定义-schema-创建自己的工作流.md`
   - [x] fork spec-driven 时同步 tasks instruction
 - [x] `51-实战-从一个真实-change-走完整条主线.md`

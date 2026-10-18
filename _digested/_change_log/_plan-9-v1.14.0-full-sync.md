@@ -99,9 +99,9 @@
 ### Phase D：`_openspec_handbook/` 更新
 
 - [x] D1 00-index：版本表、记录行、工具速查表（新工具全量补入，尤其 dsh）
-- [x] D2 各章首版本戳/SSOT 指针核对（02/09/90 三处当前基线戳改 SSOT 指针；其余为历史溯源注记保留）
+- [x] D2 各章首版本戳/SSOT 指针核对（10/26/90 三处当前基线戳改 SSOT 指针；其余为历史溯源注记保留）
 - [x] D3 01 初级：init --tools 工具清单
-- [x] D4 07 store / 09 漂移维护 / 12 artifacts：archive 阻塞与 CRLF 相关表述
+- [x] D4 24 store / 26 漂移维护 / 52 artifacts：archive 阻塞与 CRLF 相关表述
 - [x] D5 99-FAQ / 90-agent 协议：工具列表补全
 - [x] D6 checkpoint（8d67a1b5 报告：11 文件更新、8 章核实未动含依据；工具速查表全量扩容含 dsh/warp/IBM Bob）：grep 全 handbook 无"当前版本=1.13.1"的活口径残留（历史溯源除外）
 
