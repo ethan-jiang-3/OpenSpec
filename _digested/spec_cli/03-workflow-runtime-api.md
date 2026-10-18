@@ -83,13 +83,14 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 
 文本模式下，人看到的是：
 
-- change 名称
-- schema 名称
-- 完成数
-- 每个 artifact 的状态
+- `Change: <name>` / `Schema: <schema>`
+- `Warning: <...>`（每个 status warning 一行，可能 0 到多行）
+- `Change root: <path>`（只在状态对象带 `changeRoot` 时打印）
+- `Progress: n/m artifacts complete`（有 skipped 时附 ` (k skipped)`）
+- 每个 artifact 的状态行
 - 哪些 artifact 被哪些依赖阻塞
 
-文本模式结尾（v1.13.1 起）还有一行 **`Next: <command>`**——把「下一步该跑哪条命令」直接写出来，恢复搁置的 change 不再需要背工作流。该行仅存在于 text 输出，`--json` 的 envelope 不变。
+文本模式结尾（v1.13.1 起）在条件满足时多一行 **`Next: <command>`**——把「下一步该跑哪条命令」直接写出来，恢复搁置的 change 不再需要背工作流。**注意它不是无条件出现**：只有存在 `nextStep`（有 `ready` 的 artifact）时才打印；若全部 planning artifact 已完成，则先打印 `All planning artifacts complete!`。该行仅存在于 text 输出，`--json` 的 envelope 不变。
 
 JSON 模式下，本质上输出的是一个结构化 `ChangeStatus`。v1.8.0 起，`ChangeStatus` 同时携带 **`isPlanningComplete`**（所有非 skipped planning artifact 都存在；skipped artifact 视为已满足而不必写出）与兼容别名 **`isComplete`**；状态文案也不再在 change 实现前就暗示"已完成"。语义见 `src/core/artifact-graph/instruction-loader.ts` 的 `ChangeStatus` 类型。
 
