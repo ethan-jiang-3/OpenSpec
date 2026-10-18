@@ -400,9 +400,9 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 
 查看当前 working set：root + `config.yaml` 中 `references:` 声明的 store 的 spec 索引。输出可选 human JSON 或 `.code-workspace`。
 
-### `openspec workset save` / `open` / `list`
+### `openspec workset create` / `open` / `list` / `remove`
 
-保存、打开、列出个人本地的多仓库视图。纯本地，不共享。
+保存（`create`）、打开、列出、删除个人本地的多仓库视图。纯本地，不共享。**没有 `save` 子命令**——保存动作叫 `create`。
 
 ### `openspec doctor`
 

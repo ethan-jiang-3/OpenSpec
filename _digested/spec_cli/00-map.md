@@ -73,7 +73,7 @@ Store operator 关心的是：
 
 - `store register` / `store list`
 - `context`（human/JSON/.code-workspace）
-- `workset save` / `workset open` / `workset list`
+- `workset create` / `workset open` / `workset list` / `workset remove`
 - `doctor`
 
 ## 四层结构

@@ -162,7 +162,7 @@
 - 产出：human listing、JSON brief、或 `--code-workspace` 文件。
 - 边界：纯查询，不 clone、不 sync、不写任何 repo。
 
-### `workset save` / `open` / `list`
+### `workset create` / `open` / `list` / `remove`
 
 - 角色：个人本地多仓库视图管理。
 - 核心对象：workset（name + members + optional tool）。
