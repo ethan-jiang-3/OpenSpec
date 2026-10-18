@@ -17,7 +17,7 @@
 ## 现在已经有的窄读取能力
 
 - `openspec list --specs --json` 的当前输出只有 `id` 与 `requirementCount`，不是带 Purpose/overview 的本地 spec catalog。[`list.ts` L190-L208](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/list.ts#L190-L208)
-- 已经选定 ID 后，`spec show` 的 JSON 可以去掉 scenarios，或按 1-based requirement 取一条，因此可以按需读取，而非整库加载。[`spec.ts` L39-L58](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/commands/spec.ts#L39-L58)；[`spec.ts` L104-L122](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/commands/spec.ts#L104-L122)。
+- 已经选定 ID 后，`show` 的 JSON 可以去掉 scenarios，或按 1-based requirement 取一条，因此可以按需读取，而非整库加载。**用动词优先的 `openspec show <id> --type spec ...`；不要用已弃用的 `openspec spec show`**——后者仍能用，但会在 stderr 打 `Warning: The "openspec spec ..." commands are deprecated. Prefer verb-first commands`。[`spec.ts` L39-L58](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/commands/spec.ts#L39-L58)；[`spec.ts` L104-L122](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/commands/spec.ts#L104-L122)。
 - v1.7.0 已能按相对路径发现/合并嵌套 spec；本 FAQ 即以这个正式发布版为准。[`specs-apply.ts` L52-L58](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/core/specs-apply.ts#L52-L58)
 
 ## 上游提案不是现有能力
@@ -36,7 +36,7 @@
 
 1. 不要把“source of truth”理解成“每次都读全库”。先根据改动描述和代码位置列候选 capability，再读候选及明确的跨域依赖。
 2. 将每个 capability 的 `## Purpose` 保持短、可区分；在 `openspec/specs/` 旁维护一份很小的 capability map（ID、Purpose、一两条关键词、owner/边界）。它只是导航索引，不是第二份事实源。
-3. 在 proposal 前执行两段式检索：先 `openspec list --specs --json` + `rg` 搜索 capability 名、Purpose 和领域词；再对候选调用 `openspec spec show <id> --json --requirements`，必要时用 `-r` 只取某条 requirement。把最后选中的 IDs 和理由写进 proposal/design，方便 review。
+3. 在 proposal 前执行两段式检索：先 `openspec list --specs --json` + `rg` 搜索 capability 名、Purpose 和领域词；再对候选调用 `openspec show <id> --type spec --json --requirements`，必要时用 `-r` 只取某条 requirement。把最后选中的 IDs 和理由写进 proposal/design，方便 review。
 4. 工具支持子 agent 时，可让一个短生命周期子 agent 只做候选发现，主 agent 只接收“相关 ID + 理由”，然后再按需读取原文。这是可立即采用的工作法，非 OpenSpec 内建 workflow。
 5. 不要把全部 specs 塞进 `config.context` 或任何全局 prompt。那只是把检索问题变成固定的上下文税，并且更容易过期。
 

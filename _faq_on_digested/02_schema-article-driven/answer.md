@@ -13,10 +13,25 @@
 ## 核心设计：7 个 artifact 的 DAG
 
 ```text
-brief ──→ outline ──→ tasks ──↴
-  │          │                    ├──→ apply（写稿执行）
-  └──→ research ──→ draft ──→ edit ──→ publish
+                ┌──→ outline ──┐
+brief ──────────┤              ├──→ tasks ──┐
+                └──→ research ─┘            ├──→ apply（写稿执行）
+                                  └──→ draft ──→ edit ──→ publish
 ```
+
+依赖是**收敛再分叉**，不是一条链（`schema-package/schema.yaml` 实测）：
+
+| artifact | `requires` |
+|----------|-----------|
+| `brief` | —（根） |
+| `outline` | `brief` |
+| `research` | `brief` |
+| `tasks` | `outline`, `research` |
+| `draft` | `outline`, `research` |
+| `edit` | `draft` |
+| `publish` | `edit` |
+
+要点：`outline` 与 `research` 是**兄弟**（都只依赖 `brief`）；`tasks` 与 `draft` 也是**兄弟**（都依赖 `outline`+`research`）——所以 `tasks` 并不是 `draft` 的前置，`draft` 也不是 `tasks` 的下游。`apply` 的门槛同时要 `tasks` 和 `draft` 两个（`apply.requires: [tasks, draft]`），`tracks: tasks.md`。
 
 每个 artifact 的职责和它对应代码工作流中的哪个角色：
 

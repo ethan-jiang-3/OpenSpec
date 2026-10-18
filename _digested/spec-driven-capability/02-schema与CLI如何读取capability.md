@@ -57,6 +57,16 @@ openspec/specs/identity/session/spec.md
 
 这种处理不是装饰性兼容。它避免 archive/apply 在遇到不可读目录时静默漏掉一个 capability，并保证各平台都以 slash-separated ID 交流。
 
+> **上表限定的是 `discoverSpecFiles()` 这一个函数，别推广成"目录 symlink 完全不可用"。** v1.14.3 实测把三者分开：
+>
+> | 操作 | 目录 symlink（`specs/linkcap -> ../../docs/x`） |
+> |------|------------------------------------------|
+> | `list --specs`（走本表这个发现器） | 不列出 `linkcap`，只列真实目录 |
+> | `show linkcap --type spec` / `validate linkcap --type spec` | 正常，按 ID 拼接 `specsDir/<id>/spec.md`，不经过发现器 |
+> | `archive` 写入该 capability | 穿透写入真实文件，并保留 symlink 本身 |
+>
+> 即：**枚举不跟进，按 ID 的读写会穿透**。所以"它没出现在 `list --specs` 里"不代表那个 capability 读不到。
+
 ## 哪些 CLI 路径消费这个 identity
 
 | 操作 | 如何使用 capability path | 对规划的含义 |

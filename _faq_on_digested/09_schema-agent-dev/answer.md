@@ -56,7 +56,7 @@ openspec new change build-my-agent --schema agent-dev-driven
 ## 已知限制
 
 - OpenSpec 没有模型 eval——evals 只能断言产物形状（grep、文件存在），不能判断 agent 输出质量。
-- `openspec change list --long` 的进度计数走 `apply.tracks` → artifact `generates` 映射（`task-progress.ts:106-112`），**不认死文件名**；但 `apply.tracks` 必须与某个 `generates` 字符串完全相等，写成 glob/目录会退回按 `tasks.md` 计数并 warning。
+- `openspec change list --long`（**已弃用的名词优先别名**；`--long` 只存在于这个别名上，推荐路径 `openspec list` 没有它，支持 `--sort`）的进度计数走 `apply.tracks` → artifact `generates` 映射（`task-progress.ts:106-112`），**不认死文件名**；但 `apply.tracks` 必须与某个 `generates` 字符串完全相等，写成 glob/目录会退回按 `tasks.md` 计数并 warning。
 - **fork 不会自动继承上游 instruction 更新。** 本示例已手工对齐：每条 checkbox task 自带 verification，MODIFIED 主 spec 从 `planningHome.root` 解析，parser 接受全部 CommonMark 列表标记，tasks instruction 采用 v1.14.1 的「跟踪任务 / `## Workflow follow-up`」口径（归档之后才能做的步骤不再是 checkbox，否则完成度永远卡在 N-1）。以后升级 OpenSpec 仍需把内置 `schemas/spec-driven/schema.yaml` 与这个 fork 做语义 diff；`openspec update` 不会重写项目 schema。
 - **它从来不是 OpenSpec 内置 schema。** 内置 `schemas/` 从 v1.6.0 到 v1.14.3 只有 `spec-driven`（`git ls-tree <tag>:schemas` 可验），本目录的 [`schema-package/`](schema-package/) 是唯一维护源；安装后它是项目级自定义 schema，与上游解耦。
 

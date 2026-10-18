@@ -364,4 +364,4 @@ openspec/changes/<name>/
 
 - **context-first（`6d2dbe62`）**：propose 在任何规划决策前先从选定项目/store root 加载 project context；无 OpenSpec root 的目录里 propose 直接停止并提示 init，不静默创建 `openspec/`。
 - **code-grounded（`98bf53e5`，propose 与 ff 共享）**：起草 artifact 前先检查相关代码、测试与文档，让计划落在既有实现上，而不是把基本 discovery 推迟到 implementation tasks。
-- **顶层标题（`3312af47`）**：四个模板（proposal/spec/design/tasks）均以 `# <Artifact>` 顶层标题开头；`show --json`/`change list --json` 对以裸 `# Proposal` 开头的 proposal 仍按 change id 命名。
+- **顶层标题（`3312af47`）**：四个模板（proposal/spec/design/tasks）均以 `# <Artifact>` 顶层标题开头；`show --json`/`change list --json`（**已弃用别名**，其 JSON 是裸数组、字段为 `id`/`title`/`deltaCount`/`taskStatus`，与推荐的 `list --json` 信封形状不同——见 [`02-machine-facing-cli.md`](../spec_cli/02-machine-facing-cli.md) 的对照）对以裸 `# Proposal` 开头的 proposal 仍按 change id 命名。

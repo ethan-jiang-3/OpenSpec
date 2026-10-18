@@ -36,6 +36,18 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - 它并不理解 artifact 依赖。
 - 它不能替代 `status`。
 
+> **别和已弃用的 `openspec change list --json` 混用——两者 JSON 结构完全不同。** 名词优先的 `change ...` / `spec ...` 命令仍有实现，但会往 stderr 打 `Warning: The "openspec change ..." commands are deprecated. Prefer verb-first commands`（`src/cli/index.ts:495` 的 `preAction` 钩子，退出码不受影响），而且返回的是**另一种形状**：
+>
+> | | `openspec list --json`（推荐） | `openspec change list --json`（已弃用） |
+> |---|---|---|
+> | 顶层 | 信封对象 `{ changes, warnings?, root? }` | **裸数组** `[ ... ]` |
+> | 条目标识 | `name` | `id` + `title` |
+> | 任务计数 | 扁平 `completedTasks` / `totalTasks` | 嵌套 `taskStatus: { total, completed }` |
+> | 其它字段 | `lastModified`、`status`、`archived?`、`nested?` | `deltaCount` |
+> | 排序 | 默认按 mtime（`--sort name` 可切） | 按 id |
+>
+> 依据：`src/core/list.ts:198-220`（推荐形状，含 `status` 三态 `no-tasks`/`complete`/`in-progress`）与 `src/commands/change.ts:423` 注释「JSON: array of `{ id, title, deltaCount, taskStatus }`, sorted by id」。**照 `change list` 的字段写解析器，换成 `list` 会全部读不到。**
+
 ### `openspec status --change <name> --json`
 
 作用：
@@ -259,7 +271,7 @@ v1.4.0 的 workspace guardrail（`actionContext.mode = "workspace-planning"` 阻
 
 - `validate --report findings`（bulk scope 专用）：JSON 标识 report 与 scope，仅含 error/warning/information 条目；完整统计与退出码不变。默认全量报告不受影响。
 - `show --json --diff`：MODIFIED delta 增补 `diff` 与 `warning` 字段（v1.11.0，见 `04`）。
-- artifact 模板以顶层标题开头（v1.13.1）：`show --json` 与 `change list --json` 对以模板裸标题 `# Proposal` 开头的 proposal 仍按 change id 命名，不受影响。
+- artifact 模板以顶层标题开头（v1.13.1）：`show --json` 与 `change list --json`（已弃用别名，形状见上面 `list --json` 小节的对照）对以模板裸标题 `# Proposal` 开头的 proposal 仍按 change id 命名，不受影响。
 
 ## v1.14.0 机器面增量
 

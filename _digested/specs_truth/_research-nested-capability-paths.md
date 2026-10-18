@@ -6,10 +6,22 @@
 
 > **v1.14.3 复核（本轮同步）**：nested 语义仍未变——目录是命名空间、无继承/聚合/自动 retrieval，`identity` 与 `identity/session` 是两个独立 capability。下面三条历史约束逐条复核结果：
 > - 跳过隐藏目录 —— **仍成立**（`spec-discovery.ts:40`、`:100` `entry.name.startsWith('.')`）
-> - 不追踪**目录** symlink —— **仍成立**（`spec-discovery.ts:48`）
+> - 不追踪**目录** symlink —— **仅对"递归发现"成立，措辞需要收紧**（见下）
 > - 根目录直放的 `openspec/specs/spec.md` 被忽略 —— **仍成立**
 >
-> **但有一条新增**：v1.14.2（#2052）/ v1.14.3（#2101）起，**`spec.md` 文件本身可以是 symlink**，会被解析（`spec-discovery.ts:19` 注释：`A symlinked \`spec.md\` IS resolved`）。这与"不追踪目录 symlink"不冲突：目录链不跟进，末端的 spec.md 允许是链接。本文其余结论不受影响。
+> **但有一条新增**：v1.14.2（#2052）/ v1.14.3（#2101）起，**`spec.md` 文件本身可以是 symlink**，会被解析（`spec-discovery.ts:19` 注释：`A symlinked \`spec.md\` IS resolved`）。本文其余结论不受影响。
+>
+> ### 更正：目录 symlink 不是"完全不支持"，而是"枚举看不见、按 ID 能访问"
+>
+> 原文只写"不追踪目录 symlink"，容易被读成"符号链接的 capability 目录不可用"。**三轮实测（v1.14.3）显示要分成三件事**：
+>
+> | 操作 | 目录 symlink（`openspec/specs/linkcap -> ../../docs/x`） | 证据 |
+> |------|------------------------------------------------|------|
+> | `openspec list --specs`（递归枚举） | **不列出** `linkcap`，只列真实目录 | 实测输出只有 `realcap requirements 1` |
+> | `openspec show linkcap --type spec` / `validate linkcap --type spec` | **正常工作**，读出 `requirementCount: 1`、报 `Specification 'linkcap' is valid` | 按 ID 走 `path.join(specsDir, id, 'spec.md')`，不经过枚举 |
+> | `openspec archive <change>` 写入该 capability | **穿透写入**真实目标文件，且**保留 symlink 本身** | 归档后 `docs/x/spec.md` 的 requirement 从 1 条变 2 条，`openspec/specs/linkcap` 仍是 symlink |
+>
+> 所以准确说法是：**枚举层不跟进目录链（所以它不会出现在列表里），但按 ID 的读写路径会穿透链接**。想让一个 symlink 目录出现在 `list --specs` 里，目前做不到；想读写它，只要知道 ID 就行。
 
 ## 结论
 
@@ -30,7 +42,7 @@ openspec/specs/identity/session/spec.md
 
 它不是“一个大 spec 内的章节层级”，也不是有继承、聚合或自动依赖推导的 domain model：目录只是路径命名空间；工具把每个 `spec.md` 当成一个独立 capability。父目录也可以同时有自己的 `spec.md`，此时 `identity` 和 `identity/session` 是两个独立 ID；代码没有赋予它们额外的父子语义。
 
-约束也很具体：根目录直接放的 `openspec/specs/spec.md` 被忽略；隐藏目录跳过；目录 symlink 不追踪。[helper L11-L25、L37-L55](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/utils/spec-discovery.ts#L11-L25)。官方测试覆盖 flat、nested、正斜杠 ID、root-file exclusion 和 symlink 行为。[`spec-discovery.test.ts`](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/test/utils/spec-discovery.test.ts#L22-L165)。
+约束也很具体：根目录直接放的 `openspec/specs/spec.md` 被忽略；隐藏目录跳过；**递归发现不跟进目录 symlink**（但按 ID 的读写会穿透，见上方更正块）。[helper L11-L25、L37-L55](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/utils/spec-discovery.ts#L11-L25)。官方测试覆盖 flat、nested、正斜杠 ID、root-file exclusion 和 symlink 行为。[`spec-discovery.test.ts`](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/test/utils/spec-discovery.test.ts#L22-L165)。
 
 ## 生命周期是否完整
 
