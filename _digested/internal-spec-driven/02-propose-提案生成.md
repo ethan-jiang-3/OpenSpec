@@ -19,8 +19,9 @@ User: "add user authentication"  →  change name: "add-user-auth"
 ```
 
 **name 验证规则**（`validateChangeName()` in `src/utils/change-utils.ts`）：
-- 正则：`/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/`
-- 拒绝：大写字母、空格、下划线、首尾连字符、连续连字符、数字开头
+- 正则：`KEBAB_ID_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u`（`src/core/id.ts`，store id / change id 共用同一套文法；`validateChangeName()` 只是额外加了「非空」和「≤200 字符」）
+- 拒绝：大写字母、空格、下划线、首尾连字符、连续连字符、`[a-z0-9-]` 之外的字符
+- **不拒绝数字开头**——`123-abc` 是合法 change 名（这一点常被误记，早期文档也写错过）
 
 ### Step 2：创建 change 目录
 
@@ -184,7 +185,7 @@ TO: ### Requirement: <new-name>
 
 **instruction 中的关键约束**：
 
-1. **Scenario 必须用 4 个 hashtag**（`#### `）。用 3 个或 bullet 会**静默失败** —— 解析器不识别。约定写法是 `#### Scenario:`；validate/archive 的 scenario-loss 把 requirement 下任何非 fence 的 `#### ` 子标题都算作 scenario（`#### Edge case` 也会被计数，省略它会在 authoring 阶段失败）。
+1. **Scenario 必须用 4 个 hashtag**（`#### `）。用 3 个或 bullet 会被 `openspec validate` **明确报 ERROR**（`ADDED "<name>" must include at least one scenario`）——`SCENARIO_HEADER = /^####\s+/` 不匹配，`countScenarios` 返回 0。schema instruction 里的 `will fail silently` 说的是**不跑 validate 的人**。约定写法是 `#### Scenario:`；validate/archive 的 scenario-loss 把 requirement 下任何非 fence 的 `#### ` 子标题都算作 scenario（`#### Edge case` 也会被计数，省略它会在 authoring 阶段失败）。
 2. **每个 requirement 至少要有一个 scenario**。
 3. **MODIFIED 必须复制完整的 requirement block**（包括所有 scenario）—— "Common pitfall: Using MODIFIED with partial content loses detail at archive time."
 4. **用 SHALL/MUST** 写规范性需求，避免 should/may。normal 模式下这条只是 guidance（缺失给 WARNING，非英语 spec 也能过），只有 `validate --strict` 才强制；写作建议不变。
@@ -197,7 +198,7 @@ TO: ### Requirement: <new-name>
 
 **specs 在 DAG 中的位置**：`requires: [proposal]`。和 design 并行。完成后（与 design 一起）解锁 tasks。
 
-**generates 的特殊性**：`specs/**/*.md` 是 glob 模式。`detectCompleted()` 用 `fast-glob` 检查 —— 只要 `specs/` 下存在至少一个 `.md` 文件就算完成。这意味着 specs 可以是一个文件（`specs/data-export/spec.md`）也可以是多个；每个 capability 的身份是 `specs/` 下的相对 path，而不是仅仅末级目录名。change delta 必须用同一相对 path，根级 `changes/<change>/specs/spec.md` 不构成 capability，会被 validate/archive 拒绝。
+**generates 的特殊性**：`specs/**/*.md` 是 glob 模式。`detectCompleted()` 用 `tinyglobby`（`ARTIFACT_GLOB_OPTIONS`）检查 —— 只要 `specs/` 下存在至少一个 `.md` 文件就算完成。这意味着 specs 可以是一个文件（`specs/data-export/spec.md`）也可以是多个；每个 capability 的身份是 `specs/` 下的相对 path，而不是仅仅末级目录名。change delta 必须用同一相对 path，根级 `changes/<change>/specs/spec.md` 不构成 capability，会被 validate/archive 拒绝。
 
 ### 2.3 design（依赖 proposal，`requires: [proposal]`）
 
