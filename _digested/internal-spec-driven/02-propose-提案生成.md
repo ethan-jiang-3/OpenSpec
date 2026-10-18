@@ -44,7 +44,7 @@ openspec new change "<name>"
 
 ### Step 2.5（隐含）：schema 解析
 
-`new change` 内部解析 schema 的优先级 (`change-utils.ts:132-147`)：
+`new change` 内部解析 schema 的优先级（`createChange()`，`change-utils.ts:142-157`）：
 
 1. 显式 `--schema` flag
 2. `openspec/config.yaml` 中的 `schema` 字段

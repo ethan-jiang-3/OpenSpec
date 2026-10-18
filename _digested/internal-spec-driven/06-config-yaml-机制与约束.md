@@ -384,8 +384,8 @@ rules:
 
 `readProjectConfig()` (`project-config.ts`) 的设计是 **逐字段 fail-open**（field-by-field resilient parsing），而非用 `ProjectConfigSchema.safeParse()` 做整体校验：
 
-1. 文件不存在 → 返回 `null`（`project-config.ts:72`）
-2. YAML 解析失败 → warn 并返回 `null`（catch 块，`:157-160`）
+1. 文件不存在（`resolveConfigFilePath` 返回 `null`）→ 返回 `null`（`project-config.ts:319-320`）
+2. YAML 解析失败 → warn 并返回 `null`（`:327-329` 顶层不是对象；`:447-451` 解析抛异常的两条路径）
 3. `schema` 字段缺失或无效 → warn，返回的 config 中**不含 `schema` 字段**。**默认值 `'spec-driven'` 的回退发生在消费端** `resolveSchemaForChange`（`change-metadata.ts`），不在 `readProjectConfig` 内部
 4. `context` 超过 50KB → 忽略 `context` 字段并 warning（其他字段不受影响）
 5. `context` 不是 string → 忽略
