@@ -308,8 +308,8 @@ openspec schema which --all
 ### 查看 AI 实际收到的指令
 
 ```bash
-# 看某个 artifact 的完整 prompt
-openspec instructions proposal --json | jq '.'
+# 看某个 artifact 的完整 prompt（--change 必填，不会自动推断）
+openspec instructions proposal --change my-feature --json | jq '.'
 ```
 
 ---

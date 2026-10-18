@@ -278,34 +278,33 @@ rm proposal.md spec.md design.md tasks.md
 openspec schema validate writing-pipeline
 ```
 
-期望输出：
+期望输出就一行（`commands/schema.ts:727`）：
 ```
-✔ writing-pipeline is valid
-  - YAML syntax: OK
-  - Schema structure: OK
-  - Templates: 4/4 files exist
-  - Dependency graph: no cycles
+✓ Schema 'writing-pipeline' is valid
 ```
 
-如果有错误，根据提示修复。
+有问题时会在下面逐条列出 `  <level>: <message>`（`error` 或 `warning`），例如缺 `description` 会报 `error: Invalid schema: artifacts.0.description: Invalid input: expected string, received undefined`。
+
+`--verbose` 额外打印逐步过程（`Checking schema.yaml exists...` / `Parsing YAML...` / `Validating schema structure...`）；`--json` 返回 `{ name, path, valid, issues: [] }`，适合脚本判断。
 
 ---
 
 ## 第 6 步：设为项目默认
 
-```bash
-# 方法 1：用 CLI
-openspec config set schema writing-pipeline
+项目默认 schema 只存在**项目的** `openspec/config.yaml` 里，**不是** `openspec config set` 管的全局配置：
 
-# 方法 2：直接编辑 config.yaml
+```bash
+# 方法 1：直接编辑 openspec/config.yaml
 # schema: writing-pipeline
+
+# 方法 2：建 schema 时就带上 --default（会写进项目 config.yaml）
+openspec schema init writing-pipeline --default
 ```
 
-或者如果 init 时忘了设默认：
-```bash
-openspec schema init writing-pipeline --default   # 如果已存在会报错
-# 改 config.yaml 更直接
-```
+> **不要写 `openspec config set schema <name>`** —— `config set` 操作的是*全局*配置（`<globalDataDir>/config.yaml`），顶层没有 `schema` 这个 key，会直接报错：
+> `Error: Invalid configuration key "schema". Unknown top-level key "schema".`（`openspec config list` 里只有 `featureFlags` / `profile` / `delivery` / `telemetry` / `workflows` 等。）
+
+如果 schema 已存在还想改默认，编辑 `openspec/config.yaml` 最直接（`schema init` 同名会报 `Schema '<name>' already exists`，要覆盖得加 `--force`）。
 
 ---
 
@@ -331,8 +330,10 @@ cat openspec/changes/intro-to-rust-async/.openspec.yaml
 
 ```bash
 # 看 research artifact 的完整 prompt
-openspec instructions research --json | jq '.'
+openspec instructions research --change intro-to-rust-async --json | jq '.'
 ```
+
+> `--change` 是**必填**的，即使仓库里只有一个 change 也不会自动推断——不传会得到 `Missing required option --change. Available changes:\n  <列出所有 change>`。
 
 输出会包含：
 - `context`（来自 config.yaml 的 project context）
