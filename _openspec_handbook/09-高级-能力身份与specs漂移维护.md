@@ -217,11 +217,11 @@ HTML 注释、`# ` 标题、Purpose 段、REMOVED/RENAMED 的正文都不告警�
 
 ### spec 文件可以是项目内的 symlink（v1.14.3 起）
 
-`openspec/specs/<capability-path>/spec.md` 可以是一个指向**项目内**其他位置的相对 symlink。典型场景：你已经有产品文档站，希望 spec 和它住在一起，而不是复制一份。
+`openspec/specs/<capability-path>/spec.md` 可以是一个指向**项目内**其他位置的相对 symlink（这一类**必须**在项目内；上表第一行说的目录级链接不受此限）。典型场景：你已经有产品文档站，希望 spec 和它住在一起，而不是复制一份。
 
 | 允许 | 不允许 |
 |---|---|
-| `openspec/`、`changes/`、`specs/` 本身是项目内 symlink | `archive/` 是链接（它必须真的在所在 changes 目录里） |
+| `openspec/`、`changes/`、`specs/` 本身是 symlink（目标可在项目外，父目录须合法、目标须存在） | `archive/` 是链接（它必须真的在所在 changes 目录里） |
 | 单条 `spec.md` 指向项目内文件（含多级父目录链接） | 链接指向项目外、或链接是悬空的 |
 
 对有漂移治理含义的地方在于：**它让"有人直接编辑了 spec 文件"变得更可能**——链接指向的文件谁都能改，而 OpenSpec 依然没有 hash、没有变更记录。约束没变：改主 spec 走 change + archive，不要直接改链接目标。写侧至少保证了 archive 不会因链接被换向而写到未校验的文件（canonical path 在写入前后各查一次）。

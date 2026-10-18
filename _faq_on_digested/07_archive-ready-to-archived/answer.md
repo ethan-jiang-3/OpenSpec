@@ -496,7 +496,7 @@ openspec instructions archive --change "<name>" --json
 
 ### 3. 归档时的 symlink 边界（v1.14.2，#2052）
 
-`openspec/`、`changes/`、`specs/` **本身**可以是项目内 symlink（典型：整个 `openspec/` 指向共享文档仓库），但 `archive/` 不允许是链接——它必须真的在所在 changes 目录里，否则归档会写到项目外。单条 spec 文件也可以是项目内链接（v1.14.3 起由 `spec-path-containment.ts` 统一判定）。
+`openspec/`、`changes/`、`specs/` **本身**可以是 symlink（典型：整个 `openspec/` 指向共享文档仓库——注意它**不要求**目标在项目内，只要求链接的父目录合法、且目标真实存在；悬空链接报错），但 `archive/` 不允许是链接——它必须真的在所在 changes 目录里，否则归档会写到项目外。单条 spec 文件也可以是项目内链接（v1.14.3 起由 `spec-path-containment.ts` 统一判定）。
 
 配套修正：归档后校验 delta 时，相对路径基准从 changeDir 改为它的 canonical 形式——因为 `changes/` 自身可能是链接，旧算法会算出错误相对路径、报出"归档后内容比对失败"的假警报。
 
