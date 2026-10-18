@@ -34,7 +34,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 5. **判断状态**：
    - `blocked`：缺少必需 artifact、缺少 tracks 文件，或 tracks 文件存在但没有任何 checkbox task
    - `all_done`：所有 checkbox 已标记。此时 `instruction` 是 `All tracked tasks are complete.\nReview or verify the change as appropriate before archiving.`——**只说明跟踪任务完成，不宣称可以归档**（v1.14.1 #1791）
-   - `ready`：tasks.md 存在且有未完成任务
+   - `ready`：两种来源——① tasks.md 存在且有未完成任务；② **schema 根本没配置任务追踪文件**（`!tracksFile`，此时 `instruction` 是 schema 自己的 apply instruction 或 `All required artifacts complete. Proceed with implementation.`）。第二种很容易被误读成 all_done，区别是它从不数 checkbox
 
 ### 2.3 返回的 JSON 结构
 

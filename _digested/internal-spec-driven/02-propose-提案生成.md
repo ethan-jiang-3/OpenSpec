@@ -35,7 +35,8 @@ openspec new change "<name>"
 2. 创建 `.openspec.yaml` 元数据文件：
    ```yaml
    schema: spec-driven        # 解析后的 schema 名
-   created: "2026-06-14"      # 创建日期
+   created: 2026-06-14        # 创建日期（yaml.stringify 输出，不加引号）
+   skip_specs: true           # 仅当所选 schema 不产生 specs artifact 时自动写入
    ```
 3. **仅当 `--description` 提供时**才创建 `README.md`（内容为 `# <name>\n\n<description>`）
 
@@ -194,7 +195,7 @@ TO: ### Requirement: <new-name>
    > 1. 从 instructions JSON 读取 `planningHome.root`，在 `<planningHome.root>/openspec/specs/<capability-path>/spec.md` 中找到已有 requirement
    > 2. 复制完整的 requirement block（从 `### Requirement:` 到所有 scenario）
    > 3. 粘贴到 `## MODIFIED Requirements` 下，编辑以反映新行为
-   > 4. 确保 header 文本完全匹配（对空白不敏感）
+   > 4. 确保 header 文本完全匹配（逐字一致，只做「剥收尾 `#` run + trim」的规范化；大小写和内部空白都不会被忽略）
 
 **specs 在 DAG 中的位置**：`requires: [proposal]`。和 design 并行。完成后（与 design 一起）解锁 tasks。
 
