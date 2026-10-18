@@ -655,8 +655,10 @@ openspec/changes/<change-name>/proposal.md
 `proposal.md` 是**change proposal**，回答：
 - **Why**：为什么要做这个 change？
 - **What Changes**：要改什么？
-- **Out of Scope**：明确不做什么？
-- **Approach**（可选）：大致怎么做？
+- **Capabilities**：新增/修改哪些 capability（决定要几个 spec 文件）
+- **Impact**：影响面
+- **Out of Scope**（可选，自加）：明确不做什么？
+- **Approach**（可选，自加）：大致怎么做？
 
 **关键特点**：
 - 是整个 change 的**起点**
@@ -672,9 +674,17 @@ openspec/changes/<change-name>/proposal.md
 ## What Changes
 <要改什么>
 
-## Out of Scope
-<明确不做什么>
+## Capabilities
+### New Capabilities
+<新增能力>
+### Modified Capabilities
+<修改既有能力>
+
+## Impact
+<影响面>
 ```
+
+**`## Capabilities` 不能省**：它决定这个 change 需要几个 specs 文件——proposal 里列的每个 capability 对应一个 `specs/<capability-path>/spec.md`。模板与 schema instruction 里没有 `## Out of Scope`，需要时自行加一节即可（它不是必须保留的结构）。
 
 **注意**：标题（`## Why` 等）必须保留，但内容可以自由修改。v1.13.1 起生成的 artifact 文件以顶层 `# Proposal`/`# Spec Delta`/`# Design`/`# Tasks` 标题开头（markdownlint MD041 友好）——编辑时保留这个顶层标题即可。
 
@@ -987,7 +997,7 @@ rm -rf openspec/changes/add-task-csv-export/
 | `specs/<capability>/spec.md` | 小步编辑 delta spec，保留 `ADDED/MODIFIED/REMOVED/RENAMED` 结构和 scenarios | 把 delta spec 写成全量重写；REMOVED 最后一个 requirement 时，先清理未归属内容，再用合法 `retire_capabilities: true` 明确授权删除 |
 | `design.md` | 实现发现方案变化时及时回头修改，说明原因和风险 | 只改代码不改设计，后人看不到真实取舍 |
 | `tasks.md` | apply 过程中同步更新 checkbox，必要时拆细任务 | 任务状态和实现状态脱节；**v1.8.0 起缩进的子任务也计入进度**（`  - [ ] 1.1.1` 会阻止 "✓ Complete"），别只盯顶层 checkbox |
-| `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析（`retire_capabilities` 与 `schema:` 并存，见上）；**未知键会告警**——只认白名单键 `schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`，写错的键在 status/validate/archive 都会提示，`validate --strict` 直接失败 |
+| `.openspec.yaml` | 一般不手动改；只在明确要改 schema 绑定或元数据时改 | 改错 schema 会影响后续 status/instructions 解析（`retire_capabilities` 与 `schema:` 并存，见上）；**未知键会告警**——白名单键是 `schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`，**外加 v1.14.2 起豁免的小写 `x-*` 扩展键**（`x-tracker: PROJ-12` 不告警、`--strict` 也通过；大写的 `X-Tracker`、裸 `x-`、`x- tracker` 仍算未知键），写错的键在 status/validate/archive 都会提示，`validate --strict` 直接失败 |
 
 一条实用判断准则：
 

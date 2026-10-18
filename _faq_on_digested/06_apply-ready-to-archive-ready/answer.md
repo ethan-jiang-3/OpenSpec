@@ -26,7 +26,7 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、�
 | APP-01 | select change | 根据用户输入、对话上下文、唯一 active change 或用户选择确定 change。 |
 | APP-02 | status check | 运行 `openspec status --change "<name>" --json`，读取 schema、planningHome、changeRoot、actionContext。 |
 | APP-03 | apply instructions | 运行 `openspec instructions apply --change "<name>" --json`，获取 apply runtime 包（含 context 与 operation guidance）。 |
-| APP-04 | state branch | 根据 `state` 分支：`blocked` 停止修 planning，`all_done` 建议 archive，`ready` 继续实施。 |
+| APP-04 | state branch | 根据 `state` 分支：`blocked` 停止修 planning，`all_done` 提示**复核/验证**该 change（v1.14.1 #1791 起**不再**直接建议 archive），`ready` 继续实施。 |
 | APP-05 | read contextFiles | 读取 `contextFiles` 中所有 artifact 文件，不能凭记忆写代码。 |
 | APP-06 | show progress | 展示 schema、progress、remaining tasks 和 CLI 返回的 instruction。 |
 | APP-07 | pick pending task | 从 `tasks` 中选择下一个未完成 task。 |
