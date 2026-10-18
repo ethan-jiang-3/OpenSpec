@@ -78,7 +78,7 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 - **`state`**：三种状态 —— agent 必须根据状态走不同分支
 - **`contextFiles`**：artifact ID → 文件路径数组。**agent 必须在开始实施前读完所有这些文件**。这个列表是 schema 驱动的，不是硬编码的 —— 不同 schema 可能包含不同的 artifact
 - **`progress`**：total/complete/remaining 计数
-- **`tasks`**：解析后的 checkbox 列表，每项带 `id`、`description`、`done`，以及 v1.14.0 起的来源定位 **`sourcePath` + 1-based `line`**（`e7a951d`；实现在 `src/commands/workflow/instructions.ts` 的 `LocatedTask`/`parseLocatedTasks`——只在共享 parser 结果上补位置，不改任务解析本身）。无描述文本的 checkbox 不进列表但仍计入 progress，所以列表可比 total 短
+- **`tasks`**：解析后的 checkbox 列表，每项带 `id`、`description`、`done`，以及 v1.14.0 起的来源定位 **`sourcePath` + 1-based `line`**（`e7a9512d`；实现在 `src/commands/workflow/instructions.ts` 的 `LocatedTask`/`parseLocatedTasks`——只在共享 parser 结果上补位置，不改任务解析本身）。无描述文本的 checkbox 不进列表但仍计入 progress，所以列表可比 total 短
 - **`taskTrackingConfigured`** / **`unavailableTrackingFiles`**：schema 是否配置了任务追踪；追踪文件存在但读不到时逐个列出 path 与原因（verify 用它判 "not verified"，不在 verify 语境下对 apply 只是信息）
 - **`missingArtifacts`**（仅缺少 required artifact 时）：哪些 artifact 还没创建。注意：tracks 文件缺失或 tasks.md 没有 checkbox 也会 `blocked`，但不一定有 `missingArtifacts`
 
@@ -183,7 +183,7 @@ for each pending task:
     继续下一个
 ```
 
-v1.14.0 起（`e7a951d`）这个循环是围绕 `sourcePath`/`line` 设计的：在该位置勾选 → 标记完成 → 重查进度。行号是 `instructions apply --json` 返回时刻的快照，所以模板要求"编辑前确认该处 checkbox 仍是这条任务"，防止编辑过程中 tasks.md 变动导致勾错行。
+v1.14.0 起（`e7a9512d`）这个循环是围绕 `sourcePath`/`line` 设计的：在该位置勾选 → 标记完成 → 重查进度。行号是 `instructions apply --json` 返回时刻的快照，所以模板要求"编辑前确认该处 checkbox 仍是这条任务"，防止编辑过程中 tasks.md 变动导致勾错行。
 
 **暂停条件**（任一触发即停）：
 - task 描述不清楚 → 请求澄清

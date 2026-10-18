@@ -251,7 +251,7 @@ CLI 会先对所有 `SpecUpdate` 调用 `buildUpdatedSpec()`，把 rebuilt 内�
 
 **快照与回滚细节**（`archive.ts` 的 `captureSpecSnapshots()` / `restoreSpecSnapshots()`，v1.13.2 起为 Windows 复制回退配套）：写入/退役前对每个 mutation target 捕获快照——已存在的普通文件记录原始内容与 mode；symlink 记录 `readlink` 结果（outcome 为 write 时再尽力读取其指向的当前内容，作为"原本是否存在内容"的依据）；不存在的 target 记录 `pruneBoundary`（从 target 目录向上找到的、`mainSpecsDir` 下最深的已存在祖先目录）。回滚按逆序执行，且恢复前先复核：当前内容仍等于快照内容、或等于 archive 刚写入的 rebuilt 内容、或 symlink 指向未变——检测到并发修改就拒绝覆盖并报错，而不是清掉别人的改动。
 
-**新建 spec 的回滚剪裁**（`f2812f62`）：`existed: false` 的 target 回滚时只删这次写入创建的文件，并只向上清空**本次写入自己创建的 capability 目录**（prune 以 `pruneBoundary` 为边界）；用户本就存在的目录——哪怕为空——不会被移除，mode 也原样保留。
+**新建 spec 的回滚剪裁**（`f2812f6d`）：`existed: false` 的 target 回滚时只删这次写入创建的文件，并只向上清空**本次写入自己创建的 capability 目录**（prune 以 `pruneBoundary` 为边界）；用户本就存在的目录——哪怕为空——不会被移除，mode 也原样保留。
 
 ### 3.8 已 early-sync 的 delta 不再一律失败
 

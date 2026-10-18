@@ -223,6 +223,6 @@ v1.13.0 修掉了一批「写了但没生效、还报成功」的 archive/delta 
 | fence 内保留空行（`aedf4d0c`） | 代码样例的连续空行每次 archive 被重写 |
 | 拒绝仅大小写不同的 requirement 名（`767d63c9`） | 静默接受 |
 | archive 拒绝 merge path 读不到的 delta 文件（`e01ed070`） | 静默漏应用 |
-| 拒绝无正文的 scenario header（`db560a63`） | — |
+| 拒绝无正文的 scenario header（`db560ae3`） | — |
 
 另外 v1.13.1：bulk-archive 移动 changeRoot 前先检查目标（`e67ac47f`）。
