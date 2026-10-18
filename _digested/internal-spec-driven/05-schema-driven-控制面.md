@@ -163,7 +163,7 @@ apply:
 “正常生成路径”与“硬保证”必须分开：
 
 - 正常路径中，`tasks` 只有在 specs/design done 后才 ready，所以通常四个 artifact 都已存在。
-- Apply 实现本身只检查 `tasks`，不会计算其传递依赖闭包。若有人手工创建了含 checkbox 的 `tasks.md`，缺少 proposal/specs/design 不一定使 Apply blocked，`contextFiles` 也只包含实际存在的文件。
+- Apply 的**阻塞门**只看 `apply.requires`（即 `missingArtifacts`，v1.14.3 里就是 `tasks`）。但它**同时也算了一份传递闭包** `missingPrerequisites`（按 `getBuildOrder()` 展开，`instructions.ts:583-588`），并写进 JSON（`:714`）与人类可读提示（`:637-638`）——那份闭包只用于**诊断提示**，不参与 blocked 判定。若有人手工创建了含 checkbox 的 `tasks.md`，缺少 proposal/specs/design 不一定使 Apply blocked，`contextFiles` 也只包含实际存在的文件。
 - `apply.requires` 是可用性 gate，不是 artifact 语义 validator，也不证明实现正确。
 
 因此，不应把“`apply.requires: [tasks]`”表述成无条件保证四个 artifact 都完整。更准确的说法是：DAG 的正常 authoring 路径要求先完成上游，而 Apply 当前直接以 `tasks` 和 tracking file 作为准入检查。
