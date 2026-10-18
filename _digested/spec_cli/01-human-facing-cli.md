@@ -137,6 +137,7 @@
 - `list` 是概览，不是 workflow 决策引擎。
 - v1.9.0 起，项目外跑 `list`（没有 OpenSpec root、也没有遗留 `openspec/project.md`）会失败并非零退出，不再假装空项目通过。`--json` 失败时带共享诊断而不是空数组。
 - `--archived` 与 `--all` 只对 change 列表有意义：`list --specs` 模式下带这两个 flag 会直接报错。
+- **排序可切换**：`--sort <order>` 接受 `recent`（默认，按上面说的 mtime）或 `name`（按 change 名字母序）。默认口径见上；要按名字扫一遍用 `openspec list --sort name`。
 
 ### `openspec view`
 

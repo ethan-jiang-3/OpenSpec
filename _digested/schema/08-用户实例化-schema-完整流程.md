@@ -299,6 +299,9 @@ openspec schema validate writing-pipeline
 
 # 方法 2：建 schema 时就带上 --default（会写进项目 config.yaml）
 openspec schema init writing-pipeline --default
+
+# 反过来：不想被问"要不要设为项目默认"，用 --no-default 明确跳过
+openspec schema init writing-pipeline --no-default
 ```
 
 > **不要写 `openspec config set schema <name>`** —— `config set` 操作的是*全局*配置（`~/.config/openspec/config.json`，见下），顶层没有 `schema` 这个 key，会直接报错：
@@ -315,6 +318,8 @@ openspec schema init writing-pipeline --default
 > 两者目录名相同（都叫 `openspec`）但父目录不同；配置是 **JSON**（`config.json`），项目级才是 **YAML**（`openspec/config.yaml`）。用 `openspec config path` 可直接打印真实路径，不要靠猜。
 
 如果 schema 已存在还想改默认，编辑 `openspec/config.yaml` 最直接（`schema init` 同名会报 `Schema '<name>' already exists`，要覆盖得加 `--force`）。
+
+> 三个相关选项别混：`--default` 直接设为项目默认；`--no-default` 明确"不要设、也别问"；**不带任何一个时是交互式询问**。实测在非 TTY（`< /dev/null`）下这个询问会被直接跳过：命令照常成功（exit 0）、schema 建出来，但**项目默认不会被改**——所以脚本里想让结果确定，就显式给 `--default` 或 `--no-default`。
 
 ---
 

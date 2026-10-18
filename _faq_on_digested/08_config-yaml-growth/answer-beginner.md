@@ -148,6 +148,21 @@ schema: spec-driven
 
 不行。`openspec config` 只管全局 JSON，对项目 yaml 是硬编码拒绝（`src/cli/commands/config.ts:16`）。这个名字是最大的误导。
 
+既然是全局的，顺手把它的**完整命令面**列清楚——资料里通常只出现 `set`/`list`/`profile`/`edit`，但实际还有 4 个子命令和 2 个选项：
+
+| 命令 | 作用 | 备注 |
+|------|------|------|
+| `openspec config path` | 打印全局配置文件真实路径 | 别猜路径，直接问它（形如 `~/.config/openspec/config.json`） |
+| `openspec config list` | 列出当前全部 key/value | |
+| `openspec config get <key>` | 读单个 key | key 不存在时**退出码 1 且无输出**，不是打印空串 |
+| `openspec config set <key> <value>` | 写单个 key | `--string` 强制按字符串存（绕开类型推断）；`--allow-unknown` 允许未知 key（原型污染检查仍生效） |
+| `openspec config unset <key>` | 删单个 key | 未设置时报 `Key "<key>" was not set`，退出码 0 |
+| `openspec config reset --all [-y]` | 重置为默认值 | `--all` 是**必填**的，光 `reset` 不算 |
+| `openspec config edit` | 用 `$EDITOR` 打开 | 没配编辑器时报 `No editor configured` |
+| `openspec config profile [preset]` | 看/切 profile | 无参时需要交互式终端，非 TTY 下报错并提示用 `openspec config profile core` |
+
+顶层还有两个跟观感有关的开关：`--no-color`（关彩色输出）和 `openspec init --no-animation`（用静态欢迎屏代替动画）。
+
 ### 误区 2：以为 `openspec init` 会交互式引导你填完整 config
 
 不会。`--language` 只是 greenfield language context 快捷入口，不会收集一般项目背景或 rules；已有 config 时还会拒绝覆盖。

@@ -24,6 +24,13 @@ workflow 命令不是围绕“文本文件操作”设计的，而是围绕“ch
 
 ## 1. `openspec new change`
 
+> **两个容易漏的输入**：`--schema <name>` 决定用哪个 schema（并把它写进该 change 的 `.openspec.yaml` 钉住）；`--goal <text>` 把一句目标写进 `.openspec.yaml` 的 `goal` 字段——也就是 [`.openspec.yaml` 字段表](../../_openspec_handbook/04-高级-config-schema-与项目边界.md) 里那个 `goal` 的 CLI 入口，不必手改文件：
+>
+> ```bash
+> openspec new change add-csv-export --goal "让用户能导出订单 CSV"
+> # → .openspec.yaml: schema: spec-driven / created: <date> / goal: 让用户能导出订单 CSV
+> ```
+
 ### 本质想干什么
 
 把一个抽象的“我要开始做这件变更”转成一个具体的 change 实例目录。
