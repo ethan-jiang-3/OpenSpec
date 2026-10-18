@@ -23,7 +23,13 @@ explore 的核心约束只有一个：**不许写代码**（可以创建 OpenSpe
 
 ## 2. CLI 调用链
 
-explore 主要用到两个 CLI 命令，第二个是可选的；v1.13.0 起（`3915db76`）生成指令还会引导列出 **spec inventory**——用 `openspec list --specs --json` 并以 store-aware 命令读 capability（`<planningHome.root>` 定位），不再把 in-flight changes 误当 specs：
+explore 的模板直接教了三条只读命令（`explore.ts:167-185` 的 "Check for context" 段）：
+
+1. `openspec list --json` —— **change 列表**（"work in flight"）
+2. `openspec list --specs`（可加 `--json` 取 id 与 requirement 计数）—— **durable capability 清单**。模板特意点明：「change 列表不包含项目长期沉淀的能力，所以还要列一次 specs」，避免把 in-flight changes 误当成 specs
+3. 对相关 spec 再**完整读一遍**——模板说 `--json` 的过滤读只是 overview，判断「是否已覆盖」之前必须读全文
+
+`--store "<id>"` 只在读已注册的 standalone store 时才追加。v1.13.0 起（`3915db76`）这套 store-aware 定位才成立。
 
 ### 启动时：`openspec list --json`
 
