@@ -114,7 +114,8 @@ Aborted. No files were changed.
 
 注意几点：
 
-- 精确名找不到时只报一行 `... - not found`。**但如果主 spec 里有只差大小写或内部空白的近似名，报错会指名那个真实 header**（`... not found, but "### Requirement: <真实名>" exists; fix the header to match it exactly`）——这是 v1.14.x 在 identity 诊断上唯一的增强，比纯粹的 `not found` 好查多了。
+- 精确名找不到时报 `... - not found`。**近似名提示只在两个操作上有**：`REMOVED`（`specs-apply.ts:521`）和 `RENAMED`（`:465`），文案是 `... not found, but "### Requirement: <真实名>" exists; fix the header to match it exactly`。
+- **`MODIFIED` 没有这个提示**——`specs-apply.ts:540` 只抛裸的 `MODIFIED failed for header "### Requirement: <名>" - not found`。所以上面那次 `cli-init MODIFIED failed ... - not found` 就是全部信息，得自己去主 spec 里比对标题的大小写/空白。碰到 MODIFIED 找不到目标时，先用 grep 把主 spec 的 `### Requirement:` 全列出来人工比对，或者改用 RENAMED 让工具替你定位近似名。
 - 因为是原子的，连本来能成功创建的 `profiles`/`propose-workflow` 也一并没动。一个 delta 坏，整批不落地。
 - 这种"找不到"几乎都来自身份脆弱性：主 spec 的标题被改过、被别的 archive 重写过、或 delta 本身就指向一个从没存在过的名字。
 
