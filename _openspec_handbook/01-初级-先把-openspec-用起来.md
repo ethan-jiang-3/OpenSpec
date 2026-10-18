@@ -377,6 +377,61 @@ openspec init --tools dsh
 
 ---
 
+## 两个提效命令，知道就行
+
+这两个命令跟 change 生命周期无关，但能减少你日常敲命令的摩擦。先用起来，知道有它们就行。
+
+### `openspec completion`：让 shell 帮你补全
+
+```bash
+openspec completion install          # 自动检测 shell 并安装补全
+openspec completion generate         # 只生成脚本，输出到 stdout
+openspec completion uninstall        # 移除补全
+```
+
+安装后，在终端里敲 `openspec ` 然后按 Tab，shell 会自动补全：
+
+- **子命令**——`init`、`list`、`show`、`validate`、`archive`……
+- **change 名**——所有活跃 change 的 ID
+- **spec 名**——所有 capability path
+- **schema 名**——所有可用 schema
+- **归档名**——已归档 change 的 ID
+
+支持 zsh、bash、fish、powershell。为什么值得装？OpenSpec 的命令行参数经常要填 change 名或 spec 路径，靠记忆或 `ls` 去找远不如敲两三个字母按 Tab 快。
+
+v1.10.0 不再通过 npm `postinstall` 打提示；registry 安装没有 install lifecycle script。首次**可读、且 action 到达 root `postAction`**的交互式 CLI 运行会在 stderr 一次性显示：
+
+```text
+Tip: Run 'openspec completion install' for shell completions
+```
+
+JSON、非 TTY、`openspec completion ...` 会 defer 而不消费这次提示；CI、已安装 completions、不可支持的 shell 或 `OPENSPEC_NO_COMPLETIONS=1` 会抑制或静默消费 completion 提示。失败 action 若只设置 `process.exitCode` 仍会进入 hook；直接调用 `process.exit(1)` 则跳过 hook且不消费提示。记录 one-shot 状态时只增量写 raw global config，不会顺手把默认 profile/delivery 固化进去。通过 git/directory 安装包时 package manager 仍可能运行 `prepare`，这与已移除的 registry `postinstall` 不是一回事。
+
+首次 telemetry disclosure 同样写 stderr；`--json` 会 defer，因此机器消费 stdout 时不会混入提示文本。两种 notice 都不是 command 的业务输出。
+
+### `openspec feedback`：从终端直接反馈
+
+```bash
+openspec feedback "archive 报了一个看不懂的错" --body "在 archive add-dark-mode 时出现的，日志如下：..."
+```
+
+这条命令会用 `gh` CLI 把反馈作为 GitHub issue 提交到 `Fission-AI/OpenSpec` 仓库。如果没装 `gh` 或没登录，它会给你一个预填好的 GitHub issue URL，复制到浏览器里就能提交。
+
+长消息会把折叠空白后的摘要截成最多 72 code points 的 issue title，但 `## Summary` 中保留原始完整 message（包括换行和空白）；可选 `--body` 仍完整放入 `## Details`。所以 title 变短不代表反馈正文丢失。
+
+它自动在 issue body 末尾附带元数据：
+
+```text
+Submitted via OpenSpec CLI
+- Version: 1.7.0
+- Platform: darwin
+- Timestamp: 2026-07-29T...
+```
+
+为什么要用它而不是手动开 issue？**结构化反馈附带版本和环境信息**，维护者不用来回追问"你用的哪个版本"——这对开源工具的迭代速度很重要。而且不用离开终端，不会打断工作流。
+
+---
+
 ## 初级阶段先别纠结什么
 
 先别急着纠结这些词：

@@ -22,7 +22,7 @@
 **freshness 约定**：
 
 - **版本敏感页**（如 store 篇等与特定版本特性深度绑定的页面）在内容中注明适用版本，不要求在文件名标版本号。
-- **概念页**（01、10、20–23、25、26 等）通用、不标版本；随对齐 OpenSpec 升级时复审。
+- **概念页**（01、10、11、20–23、25、26 等）通用、不标版本；随对齐 OpenSpec 升级时复审。
 - 每次大修 / 对齐新版本，在下面 changelog 记一行。
 
 **变更记录**：
@@ -42,7 +42,7 @@
 | v1.10 | 2026-08 | 1.13.1 | 对齐 v1.13：`validate --report findings` 与 archive 拒收预报；SourceCraft（codeassistant）；v1.13.0 delta parser 大修（CommonMark 全标记、多 section 全应用、fence 内空行保留、大小写冲突拒绝）；propose context-first + code-grounded；explore spec inventory、capture 即确认；`/opsx:update` 先起草确认后写入；`status` 给 `Next:` 行；安全加固（指令注入/挂起/`.npmrc` 劫持）；pnpm@10 升级。 |
 | v1.11 | 2026-09 | 1.14.0 | 对齐 v1.13.2/v1.14.0：10 个新 `--tools` 目标（dsh/codestudio/gigacode/atomcode/easycode/gsd/amp/grok/warp/veai），`.agents` 共享根扩为 Codex/Zed/Antigravity/Amp/GSD + vendor-neutral，IBM Bob 更名；`list --archived/--all`、`openspec version`、view 的 workflow status 与归档分区；`show --json` requirement/scenario 带 `name`；`status --json` `allowedEditRoots` 纳入声明 store 的当前项目；archive 阻塞语义（sync 失败不归档、sync 后结构验证、retired capability 主 spec 删除）；写回文件行尾保持（CRLF 不再整文件 diff）；`.openspec.yaml` 未知键告警；store-only 仓库可在 root 跑 `init` 装集成。 |
 | v1.12 | 2026-10 | 1.14.3 | 对齐 v1.14.1–v1.14.3：artifact 创建前先定并校验输出路径（glob 工件必须落在 change 目录内，propose/ff/continue/explore 统一）；glob 工件「done 但文件不全」的补完协议；`all_done` 只报跟踪任务完成、归档前需复核/验证；verify 改按输出路径发现工件，REMOVED requirement 必须先读主 spec 基线；archive 的退役清理失败有独立错误码 `archive_retirement_cleanup_failed`；`openspec/`、`changes/`、`specs/` 与 spec 文件可以是项目内 symlink（`archive/` 不行）；delta 里「归档不会带走」的文本与超长 requirement 升为 WARNING；`.openspec.yaml` 顶层 `x-` 扩展键；glob 引擎由 fast-glob 换到 tinyglobby（brace 嵌套 ≤16、展开 ≤1024）；CLI 按需加载与 Tab 补全跳过遥测；零宽 TTY 不再挂死；view 移除归档分区。 |
-| v1.13 | 2026-10 | 1.14.3 | **两件事：① 26 章扩写改名 ② 全手册重编号。** ① 原 `09-高级-能力身份与specs漂移维护` 扩写并改名为 `26-高级-治理边界与漂移维护`，新增全手册分析轴「**硬能力 vs 软能力**」（代码判定 vs prompt 文字，违反后果不同）；agent 上下文的字段级事实（`instructions` 注入哪些字段、`contextFiles` 只给路径不给正文、注入体不随 specs 规模增长）；三级过滤读与 50 KB `context` 预算（超限整段丢弃）、`rules` 按 artifact id 分流、artifact DAG 门控与「`status` 是文件存在性不是新鲜度」；归档五道机器闸门（validate 规则集分级 / scenario 丢失双闸 / 干跑合并预检 / 全或无写入 / `retire_capabilities`）；跨 change 缺口（依赖与重叠零检测、近似重复 capability 零检测、三个静默 no-op、无陈旧废弃墓碑）；用自定义 schema 给「方向」建硬前置及其边界（门控**存在**而非**一致**）；新增「判断锚点三问」。保留原 capability 身份、两层 name-as-identity、catalog discovery、rebaseline 与维护节奏主体。素材来源：`_faq_on_digested/18_context-rot-and-direction-drift/`。② **全手册按难度层级重编号**：初级 `0N`、中级 `1N`、高级 `2N`、实战 `5N`（`00`/`90`/`99` 不变）。映射 `02→10`；`03→20`、`04→21`、`05→22`、`06→23`、`07→24`、`08→25`、`09→26`；`10→50`、`11→51`、`12→52`、`13→53`、`14→54`、`15→55`。三套文档（`_digested`/`_faq_on_digested`/`_openspec_handbook`）的章节引用、链接与锚点同步更新；宪章区间改为 `00–26 / 50–19 / 20–29 / 50–59 / 90 / 99`；本表历史行一并改用新号，不保留旧号换算。 |
+| v1.13 | 2026-10 | 1.14.3 | **两件事：① 26 章扩写改名 ② 全手册重编号。** ① 原 `09-高级-能力身份与specs漂移维护` 扩写并改名为 `26-高级-治理边界与漂移维护`，新增全手册分析轴「**硬能力 vs 软能力**」（代码判定 vs prompt 文字，违反后果不同）；agent 上下文的字段级事实（`instructions` 注入哪些字段、`contextFiles` 只给路径不给正文、注入体不随 specs 规模增长）；三级过滤读与 50 KB `context` 预算（超限整段丢弃）、`rules` 按 artifact id 分流、artifact DAG 门控与「`status` 是文件存在性不是新鲜度」；归档五道机器闸门（validate 规则集分级 / scenario 丢失双闸 / 干跑合并预检 / 全或无写入 / `retire_capabilities`）；跨 change 缺口（依赖与重叠零检测、近似重复 capability 零检测、三个静默 no-op、无陈旧废弃墓碑）；用自定义 schema 给「方向」建硬前置及其边界（门控**存在**而非**一致**）；新增「判断锚点三问」。保留原 capability 身份、两层 name-as-identity、catalog discovery、rebaseline 与维护节奏主体。素材来源：`_faq_on_digested/18_context-rot-and-direction-drift/`。② **全手册按难度层级重编号**：初级 `0N`、中级 `1N`、高级 `2N`、实战 `5N`（`00`/`90`/`99` 不变）。映射 `02→10`；`03→20`、`04→21`、`05→22`、`06→23`、`07→24`、`08→25`、`09→26`；`10→50`、`11→51`、`12→52`、`13→53`、`14→54`、`15→55`。三套文档（`_digested`/`_faq_on_digested`/`_openspec_handbook`）的章节引用、链接与锚点同步更新；宪章区间改为 `00–26 / 50–19 / 20–29 / 50–59 / 90 / 99`；本表历史行一并改用新号，不保留旧号换算。③ **中级段由 1 篇拆为 2 篇**：`10` 承载三层模型（补上原先缺失的 `config.yaml` 概念层）、artifact 与 delta spec；新增 `11-中级-定位节奏与边界` 承载 brownfield-first、Actions-not-phases 与四组边界；原 10 章里自述"跟项目模型无关"的 `completion`/`feedback` 段移入 01 初级。 |
 
 ---
 
@@ -144,7 +144,8 @@ graph LR
 
 ```mermaid
 graph LR
-    A[01-初级] --> B[10-中级] --> C[20-高级<br/>SDLC思想]
+    A[01-初级] --> B[10-中级<br/>在管什么] --> B2[11-中级<br/>定位与边界]
+    B2 --> C[20-高级<br/>SDLC思想]
     C --> D[21-高级<br/>config/schema] --> E[22-高级<br/>全局约束]
     E --> F[23-高级<br/>config写法]
     F --> H[26-高级<br/>治理边界与漂移]
@@ -319,7 +320,8 @@ graph LR
 | 文件 | 角色 | 适合谁 |
 |------|------|--------|
 | [01-初级-先把-openspec-用起来.md](01-初级-先把-openspec-用起来.md) | 先会用 | 第一次接触 OpenSpec 的人 |
-| [10-中级-把核心概念真正串起来.md](10-中级-把核心概念真正串起来.md) | 建立正确心智模型 | 已经知道命令，但理解还发散的人 |
+| [10-中级-把核心概念真正串起来.md](10-中级-把核心概念真正串起来.md) | 三层模型（`config.yaml` / `specs/` / `changes/`）、artifact、delta spec | 已经知道命令，但理解还发散的人 |
+| [11-中级-定位节奏与边界.md](11-中级-定位节奏与边界.md) | brownfield-first 定位、Actions-not-phases 节奏、四组边界 | 想弄清"它为什么这样设计、我能改到什么程度"的人 |
 | [20-高级-openspec-的软件开发生命周期思想.md](20-高级-openspec-的软件开发生命周期思想.md) | 理解 OpenSpec 怎样看待软件开发生命周期 | 想真正吃透这套方法论的人 |
 | [21-高级-config-schema-与项目边界.md](21-高级-config-schema-与项目边界.md) | 看清配置和结构边界 | 想定制或深入理解的人 |
 | [22-高级-项目级全局约束到底放哪.md](22-高级-项目级全局约束到底放哪.md) | 判断目录/TDD/style/regression 等全局约束该落在哪层 | 想把项目级原则和 capability spec 彻底分开的人 |
@@ -347,7 +349,7 @@ graph LR
 | 层 | 篇 | 只回答 | 海拔上限 |
 |---|---|---|---|
 | 初级 | 01 | "怎么用"——5 分钟跑通主流程 | 不展开机制 / 字段；宿主入口差异只作最小提示 |
-| 中级 | 10 | "在管什么"——建立心智模型 | 讲机制但停在用户视角 |
+| 中级 | 10–11 | "在管什么"——建立心智模型 | 讲机制但停在用户视角 |
 | 高级 | 20–29 | "为什么这么设计 + 字段级怎么运作" | 必须观点化、讲设计动机 |
 | 实战 | 50–59 | "下一步敲哪条命令、改哪个文件、踩哪个坑" | 必须案例驱动、重可复制样例 |
 | 附录 | 90 | "机器怎么消费 OpenSpec"（给集成开发者） | 不该先读；运行时命令 + JSON 字段 |
@@ -365,7 +367,7 @@ graph LR
 **各层骨架：**
 
 - **初级**：工作流图 + 3 命令分节 + 一个贯穿全章的最小例子 + 误区表 + "先别纠结什么"。
-- **中级**：关系图 + "新手最常问…"节奏锚点 + artifact 四件套 + delta 正反对照 + N 组边界。
+- **中级**：关系图 + "新手最常问…"节奏锚点 + artifact 四件套 + delta 正反对照 + N 组边界。v1.13 起分两篇承载：`10` 讲模型与对象（三层 + artifact + delta spec），`11` 讲定位、节奏与边界。
 - **高级（六件套，缺则补）**：主轴句 → 关系/状态图 → 对比表 → **反例/后果先行** → 字段级方案（yaml/命令/字段表）→ **判断锚点**（问答 H3 / 决策树 / 分级递进 三选一）→ **压缩结论**。
 - **实战**：开篇点明场景 + 真实问题 → "先把边界/误区说透" → 案例叙事型用编号步骤 + "踩坑表" + "带走 N 句话"。
 - **附录 90**：每个结构化示例（JSON）后跟"字段说明"；结尾给一段"给人的三句话翻译"。
@@ -393,7 +395,7 @@ graph LR
 
 - **单一事实源 = `00-index.md`**：版本、目录、术语、命令与详细文件地图以它为准；`README.md` 是默认外部入口，维护高层阅读路线并链接回本页。其他明确承担入口职责的 Markdown 也可维护其专题范围内的路线，但不复制可执行命令、详细文件地图或整套全局跳转规则。
 - **不硬编码会过时的数字**（如"36 问"）。
-- **freshness 二分必须可判定**：版本敏感页在开篇定位句标明适用版本，概念页不标；概念页 = 01、10、20–23、25、26。概念页只在不写会误导操作的边界处作一次简短版本说明。
+- **freshness 二分必须可判定**：版本敏感页在开篇定位句标明适用版本，概念页不标；概念页 = 01、10、11、20–23、25、26。概念页只在不写会误导操作的边界处作一次简短版本说明。
 - **新增篇章落入既有编号区间**（00–26 / 50–19 / 20–29 / 50–59 / 90 / 99），不新增混合层级；文件名含难度层级词。
 
 ---
