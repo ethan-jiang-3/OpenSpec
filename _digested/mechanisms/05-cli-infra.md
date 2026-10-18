@@ -30,10 +30,10 @@ COMMAND_REGISTRY
 另有 hidden command：
 
 ```text
-openspec completion __complete <type>
+openspec __complete <type>          # 顶层命令，不是 completion 的子命令
 ```
 
-给 shell script 动态获取 change/spec/schema 等候选。
+给 shell script 动态获取 change/spec/schema 等候选。注意 `openspec completion __complete changes` 会报 `error: unknown command '__complete'`——`__complete` 直接挂在 program 下（`src/cli/index.ts:123` 的 `commandPath === '__complete'`）。
 
 `src/core/completions/command-registry.ts` 手写维护 command name、description、positional 参数、flags、subcommands、flag value candidates。风险也在这里：CLI 新增/改名时，如果 registry 不同步，completion 会漂移。
 
