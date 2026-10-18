@@ -78,14 +78,20 @@ openspec new change my-feature
 ```bash
 openspec schema which spec-driven
 # 如果项目里 openspec/schemas/spec-driven/ 存在：
-# spec-driven resolves from: project
-#   Source: /path/to/project/openspec/schemas/spec-driven
-#   Shadows: package (/usr/local/lib/.../schemas/spec-driven)
+# Schema: spec-driven
+# Source: project
+# Path: /path/to/project/openspec/schemas/spec-driven
+#
+# Shadows:
+#   package: /usr/local/lib/node_modules/@fission-ai/openspec/schemas/spec-driven
 
 # 如果项目里没有：
-# spec-driven resolves from: package
-#   Source: /usr/local/lib/node_modules/@fission-ai/openspec/schemas/spec-driven
+# Schema: spec-driven
+# Source: package
+# Path: /usr/local/lib/node_modules/@fission-ai/openspec/schemas/spec-driven
 ```
+
+（真实输出是 `Schema:` / `Source:` / `Path:` 三段，只有存在影子时才多出 `Shadows:` 段——`schema.ts:592-601`。）
 
 ---
 
