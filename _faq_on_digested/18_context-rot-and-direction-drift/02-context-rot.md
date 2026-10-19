@@ -124,9 +124,21 @@ config.yaml 的 context: 超限
 
 `context`（847 B）**每个 artifact 都注入**；`rules` 只注入相关的。
 
-还有防"配错静默失效"的校验【代码】（`validateConfigRules`，`src/core/project-config.ts:459-486`）：规则键拿去跟**所有可用 schema 的 artifact id** 对账，对不上则 **warning 并列出合法 id**——不是静默丢弃。
+**`rules:` 的键不限于内置 artifact**——你自己 schema 里的 artifact id 同样能挂规则【实测】。建一个 `direction` artifact 并写 `rules.direction`，`instructions direction --json` 就能拿到那几条。这是 `config.yaml` 里被低估的一个杠杆：**方向 artifact 也可以带自己的约束**。详见 §[06.2](06-remedies-within-budget.md)。
 
-> 这解决了一个很实际的问题：项目约束沉淀进 `config.yaml` 后**按需下发**，而不是每次在 chat 里重讲、也不是一股脑灌进每个请求。
+还有防"配错静默失效"的校验【代码】（`validateConfigRules`，`src/core/project-config.ts:469-486`）：规则键拿去跟**所有可用 schema 的 artifact id** 对账，对不上则 **warning 并列出合法 id**。
+
+> ⚠️ **但这道校验很弱，本节初稿低估了它的边界**（本次复核修正）：`validateConfigRules` 的唯一调用点是 `src/core/artifact-graph/instruction-loader.ts:385`，所以——
+>
+> ```text
+> ✓ warning 会出现在 `openspec instructions` 的 stderr
+> ✗ 不进 stdout（--json 里没有）
+> ✗ `openspec validate --all` 完全不报【实测】
+> ```
+>
+> **只跑 `validate --all` 的 CI 永远发现不了 `rules:` 写错**，规则会静默失效。这是"分层注入"最实际的坑。
+
+> 这解决了一个很实际的问题：项目约束沉淀进 `config.yaml` 后**按需下发**，而不是每次在 chat 里重讲、也不是一股脑灌进每个请求。但请注意：**`rules` 全部是软能力**，违反什么都不发生。
 
 ---
 
@@ -156,8 +168,9 @@ apply     requires: [tasks]   tracks: tasks.md
 | **无「新鲜度」失效机制** | `status` 是**文件存在性**不是新旧。`src/core/templates/workflows/propose.ts:149` 原话：*"`status` is file-existence only, so an `applyRequires` artifact reading `done` does NOT mean its dependencies exist - writing `tasks.md` early marks `tasks` done while `specs` was never written. Use each artifact's `requires` edges, not its `status`"*【文档】；同见 `docs/agent-contract.md:61`【文档】 |
 | **glob artifact 假 done** | `specs/**/*.md` 只要匹配到一个文件就 `done`，中断后仍读 `done` 而文件不全【文档：`continue-change.ts` 的 `PARTIAL_ARTIFACT_CHECK`，issue #2034】 |
 | **改了上游 artifact 不会让下游失效** | 无任何机制把 `tasks.md` 标记为"因 `proposal.md` 变更而陈旧"【代码：不存在】 |
-| **specs 无陈旧信号** | `src/core/list.ts:275-285`：changes 模式算 `lastModified`，**specs 模式完全忽略 mtime**【代码】 |
+| **specs 无陈旧信号** | `src/core/list.ts:275-285`：changes 模式算 `lastModified`，**specs 模式完全忽略 mtime**【代码】。另实测：把 `direction.md` 的 mtime 回退到 2020 年，`openspec list --changes` 仍显示 `just now`、`status` 仍显示下游 `[x]`【实测】——**连 change 级的 mtime 也不用于陈旧判定** |
 | `archive --no-validate` 跳过重建校验 | `src/core/archive.ts:126-131` —— 校验整个不跑，空 `## Requirements` 也能写进去【代码】 |
+| `rules:` 写错静默失效 | 错键 warning 只走 stderr 且只由 `instructions` 触发；`validate --all` 不报（见 §A4）【实测】 |
 
 > **实操含义**：`status` 告诉你"文件在不在"，**不告诉你"还算不算数"**。方向变了之后，你必须自己判断哪些下游 artifact 已陈旧——工具不会提醒你。
 

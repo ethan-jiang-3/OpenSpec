@@ -57,7 +57,9 @@ schema 明确要求"摘要看完必须读全文再决定改什么"——但那�
 
 50 KB 是上限不是目标——它**每一次请求都注入**。稳定约束放这里，别每次在 chat 里重讲；一次性的东西别塞。
 
-规则同理：`rules:` 按 artifact 分流就是为这个设计的；键写错会 warning 并列出合法 id（不会静默失效）。
+规则同理：`rules:` 按 artifact 分流就是为这个设计的。键写错会 warning 并列出合法 id——但**只有 `instructions` 会报，`validate --all` 不报**，所以 CI 里查不出来（§[02 A4](02-context-rot.md)）。
+
+`config.yaml` 的三个面全部是**软能力**，怎么用才不白配，见 §[06](06-remedies-within-budget.md)。
 
 ---
 
@@ -126,7 +128,32 @@ openspec update              # 重新投递
 
 ---
 
-## 10 · 用自定义 schema 给「方向」建硬前置 `[硬]` ★本次新发现
+## 10 · 用 `operations.guidance` 把纪律投递到 apply / archive `[软]`
+
+`config.yaml` 还有一个前五章没提的面——它是**唯一**能进 apply/archive 运行时的配置字段：
+
+```yaml
+operations:
+  apply:
+    guidance:
+      - Re-read direction.md before starting; if it contradicts tasks.md, stop and ask.
+  archive:
+    guidance:
+      - Name any direction change this change made, and its successor.
+```
+
+`openspec instructions apply|archive --json` 会返回 `operationGuidance` 数组【实测】。
+
+**必须知道的边界**：
+- 只支持 `apply` / `archive` 两个 id；写别的会 warning 并列出合法值
+- 它和 `rules:` 分工不同：`rules` 约束**产物内容**，`guidance` 约束**做事方式**
+- **归档时 CLI 不读它**（`src/core/archive.ts` 里 `readProjectConfig` 调用数为 0）【代码】——**挡不住任何归档**，纯 prompt 投递
+
+详见 §[06.2](06-remedies-within-budget.md)。
+
+---
+
+## 11 · 用自定义 schema 给「方向」建硬前置 `[硬]` ★本次新发现
 
 如果你受够了"方向在脑子里、产物在文件里、两者逐渐脱节"，**自带能力里有一条真路**：
 
@@ -150,7 +177,7 @@ artifacts:
 
 ---
 
-## 11 · 跨 change 重叠必须自己查 —— 这是能力之外的活
+## 12 · 跨 change 重叠必须自己查 —— 这是能力之外的活
 
 自带能力对"8 个 change 抢同一个 capability"**完全沉默**。进 change 前自己做个能力矩阵：
 
@@ -165,6 +192,22 @@ for d in */; do d=${d%/}; [ "$d" = archive ] && continue; \
 特别盯**同一个 requirement 名的并发 MODIFIED**——那是唯一会在 archive 时炸的地方（见 §[03 B5](03-direction-drift.md)）。
 
 > 说明白：这不是"补它的能力"，这是它能力之外的工作。已有提案 `add-change-stacking-awareness` 想解决，但**未落地**。
+
+---
+
+## 13 · 想要硬闸门，只有两条路 `[外置]`
+
+前 12 条里标 `[硬]` 的，全部来自**代码**（50 KB 预算、校验器、DAG）或**CLI 的 JSON 结构**（分级读）。`config.yaml` 里的三个面**一条都不硬**。
+
+如果空 `direction.md` 能过门、或者"改了方向下游没跟上"这两件事让你难受，唯一能补成硬的办法是**消费 `status --json` 的脚本**：
+
+```text
+openspec status --change <name> --json → artifactPaths.<id>.resolvedOutputPath
+                                        → 比对 mtime + 检查内容行数
+                                        → exit 1 进 CI
+```
+
+完整脚本与实测见 §[06.4](06-remedies-within-budget.md)。**这是外置补丁，不是 OpenSpec 能力。**
 
 ---
 

@@ -244,12 +244,16 @@ unlocks: ["tasks"]
 **实测确认它没落地**【实测】：
 
 ```text
-dependsOn / provides / requires / touches / parent 在 src/ 中 0 命中
+dependsOn     在 src/ 中 0 命中
+provides/touches  各有 2 处命中，但全是注释里的英文散文（"the caller provides…"），非元数据字段
+parent        87 处命中，全是路径/文件系统语义（parent directory），非 change 元数据
 openspec change --help → 只有 show / list / validate，无 graph
 该 change 自身卡在 3/4 artifacts（缺 design）
 ```
 
-### 本仓实测：29 个活跃 change 抢 34 个 capability
+> ⚠️ 初版这里写成"五个字段全部 0 命中"，**不准确**——`parent` 是个常见英文词，命中很多但与 change 元数据无关。正确说法是：**这些字段作为 change 元数据一个都没落地**。
+
+### 本仓实测：30 个活跃 change 抢 34 个 capability
 
 ```text
 cli-init           被 8 个 change 同时改   ← 8 路争用

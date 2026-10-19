@@ -41,9 +41,12 @@ Specs 越堆越多之后，喂给 agent 的上下文会**腐化**（无关/陈�
 | [01 · 什么算自带能力，以及硬 vs 软](01-scope-and-framework.md) | 三条排除线、证据分级（实测/代码/文档）、硬软分界 |
 | [02 · 线 A：上下文腐化](02-context-rot.md) | 五项硬机制 + 六项缺口 |
 | [03 · 线 B：方向漂移](03-direction-drift.md) | 归档五道闸门 + 自定义 schema 门控 + 跨 change 缺口 |
-| [04 · 使用要点](04-usage.md) | profile 到手面 + 11 条可操作要点 |
+| [04 · 使用要点](04-usage.md) | profile 到手面 + 12 条可操作要点 |
 | [05 · 可复跑验证](05-verification.md) | 每条结论对应的命令与实测输出 |
+| [06 · 自带能力之外的补法](06-remedies-within-budget.md) | `config.yaml` 三面全软、schema 门控的三种绕过、新鲜度硬闸门脚本、外部参照系 |
 | [附录 A · CLI 命令面](appendix-a-cli-surface.md) | 完整命令 dump 与排除清单 |
+
+> 第 6 章口径与前五章不同：前五章只认「装了就有」的能力，第 6 章回答「缺口怎么补」，其内容明确标注为 `[外置]`（不属于 OpenSpec）。
 
 ## 探究过程中的两次转向（值得记下来）
 

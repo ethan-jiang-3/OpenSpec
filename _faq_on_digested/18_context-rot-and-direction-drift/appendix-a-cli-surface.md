@@ -54,23 +54,36 @@ expanded（可选）   + new  continue  ff  verify  bulk-archive  onboard
 ## A.3 配置面
 
 ```text
-openspec/config.yaml
-  schema     默认 workflow schema
-  context    每个 artifact 都注入；50 KB 上限，超限【整个字段丢弃】
-  rules      按 artifact id 分流注入；键对不上所有 schema 的 artifact id 时 warning
+openspec/config.yaml                              【三个面全部是软能力】
+  schema     默认 workflow schema（解析顺序第 3 位）
+  context    每个 artifact + apply + archive 都注入；50 KB 上限，超限【整个字段丢弃】
+  rules      按 artifact id 分流注入；键可以是自定义 schema 里的任意 id【实测】
+             ⚠ 错键 warning 只走 stderr，只有 instructions 触发；
+               validate --all 不报（instruction-loader.ts:385 是唯一调用点）【实测】
+  operations 唯一进 apply/archive 运行时的配置面【实测】
+    apply.guidance      → instructions apply   --json 的 operationGuidance
+    archive.guidance    → instructions archive --json 的 operationGuidance
+    ⚠ 只支持 apply|archive 两个 id；archive.ts 不读它（readProjectConfig 调用数 0）
+    ⚠ 与 rules 分工：rules 管产物内容，guidance 管做事方式
+  references 跨仓索引，50 KB 二分截断
+  store      仅 config-only 根时用作回退
+  githubCopilot.cloudAgent  Copilot 云代理文件生成的开关
 
 <change>/.openspec.yaml          （zod strict）
   schema              必填
   created             YYYY-MM-DD
-  goal                可选目标
-  affected_areas      可选
+  goal                可选目标（仅存储，无校验用途）
+  affected_areas      可选；status 的 requiresAffectedAreaSelection 恒为 false【代码】
   skip_specs          声明无 spec 级行为变化；与 specs/ 下文件冲突则硬 ERROR
   retire_capabilities 声明可能退役 capability；删除的唯一通道
   initiative          legacy 键仍在 schema 里，但 CLI 已拒绝设置（--initiative 报错）
+  x-*                 扩展键：不算 unknown，OpenSpec 忽略【代码】
 
 openspec/schemas/<name>/
   schema.yaml         artifact DAG：requires / generates / instruction / template
                       apply.requires / apply.tracks
+                      ⚠ generates 是存在性契约：同一文件可被多个 artifact 复用，
+                        复用会让后置 artifact 白拿一个 done【实测】
   templates/*.md      各 artifact 模板
 ```
 

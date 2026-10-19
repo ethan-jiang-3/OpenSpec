@@ -160,11 +160,20 @@ grep -n 'file-existence only' src/core/templates/workflows/propose.ts         # 
 ```bash
 for k in dependsOn provides touches parent; do
   printf "%-10s in src: %s\n" "$k" "$(grep -rn "\b$k\b" src/ --include=*.ts | wc -l)"; done
-# → 全部 0
+# → dependsOn  0
+# → provides   2   （全是注释散文，非字段）
+# → touches    2   （全是注释散文，非字段）
+# → parent    87   （全是路径/文件系统语义，非 change 元数据）
+
+# 想确认它们不是元数据字段，直接看命中的形态：
+grep -rn "\bprovides\b" src/ --include=*.ts   # → "the caller provides…" 之类
+grep -rn "\bparent\b" src/ --include=*.ts | head -3  # → const parent = path.dirname(candidate); 之类
 
 node bin/openspec.js change --help
 # → Commands: show / list (DEPRECATED) / validate 　——没有 graph
 ```
+
+> ⚠️ 初版这里写的是"全部 0"，**是错的**（`parent` 87 处）。但它们**没有一个**是 `add-change-stacking-awareness` 提案里的 change 元数据字段——`dependsOn` 才是该提案的核心，它是真 0。
 
 本仓 8 路争用实测：
 
@@ -225,7 +234,84 @@ cat openspec/changes/test-dir/.openspec.yaml
 
 ---
 
-## 5.10 图的重建
+## 5.10 配置面与门控绕过（第 6 章的证据）
+
+> ⚠️ 会写临时目录。在 `/tmp` 下跑。
+
+### `operations.guidance` 真的进了两个面
+
+```bash
+# 在 config.yaml 里加 operations.apply.guidance / operations.archive.guidance
+node bin/openspec.js instructions apply   --change <name> --json \
+  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).operationGuidance))"
+node bin/openspec.js instructions archive --change <name> --json \
+  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).operationGuidance))"
+# → 两个面都返回数组；说明它是唯一进 apply/archive 的配置通道
+```
+
+**归档不读它**：
+
+```bash
+grep -c "readProjectConfig" src/core/archive.ts     # → 0
+```
+
+### `rules:` 的键可以是自定义 artifact id
+
+```bash
+# schema 里有 direction artifact，config.yaml 写 rules.direction
+node bin/openspec.js instructions direction --change <name> --json \
+  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).rules))"
+# → 注入成功
+```
+
+### `rules:` 写错：只有 stderr，`validate` 不报
+
+```bash
+# 把 rules.direction 拼成 rules.dirrection
+node bin/openspec.js instructions proposal --change <name> 2>&1 >/dev/null | grep "Unknown artifact"
+# → Unknown artifact ID in rules: "dirrection". … Known artifact IDs: design, direction, …
+node bin/openspec.js instructions proposal --change <name> 2>/dev/null | grep -c "Unknown artifact"
+# → 0（stdout 里没有）
+node bin/openspec.js validate --all 2>&1 | grep -c "Unknown artifact"
+# → 0（validate 完全不报）
+
+grep -rn "validateConfigRules" src/ --include=*.ts
+# → 唯一调用点：src/core/artifact-graph/instruction-loader.ts:385
+```
+
+### 门控绕过路径
+
+```bash
+# ① 空壳文件即通过
+printf '# Direction\n' > openspec/changes/probe/direction.md
+node bin/openspec.js status --change probe | grep -E "direction|proposal"
+# → [x] direction
+#   [ ] proposal          ← 一行标题就解锁
+
+# ② generates 复用同一文件 → 白拿 done
+#    把某个后置 artifact 的 generates 指向 direction.md
+node bin/openspec.js status --change probe | grep freshness
+# → [x] freshness          ← 没做任何检查
+
+# ③ 手写下游文件可绕过引导
+printf '# Proposal\n' > openspec/changes/probe/proposal.md
+node bin/openspec.js status --change probe | grep proposal
+# → [x] proposal           ← status 只是建议，不是强制
+```
+
+### 新鲜度不被追踪
+
+```bash
+touch -t 202001010000 openspec/changes/probe/direction.md   # 回退到 2020
+node bin/openspec.js list --changes          # → 仍显示 "just now"
+node bin/openspec.js status --change probe   # → 下游仍 [x]
+```
+
+新鲜度闸门脚本的四种状态（空壳 / 通过 / 陈旧 / 通过）已在 §[06.4](06-remedies-within-budget.md) 实测记录。
+
+---
+
+## 5.11 图的重建
 
 图是手写 SVG（`figures/*.svg`），无构建依赖。要出位图预览：
 
