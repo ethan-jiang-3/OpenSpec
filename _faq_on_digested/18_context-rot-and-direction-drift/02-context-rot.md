@@ -124,7 +124,9 @@ config.yaml 的 context: 超限
 
 `context`（847 B）**每个 artifact 都注入**；`rules` 只注入相关的。
 
-**`rules:` 的键不限于内置 artifact**——你自己 schema 里的 artifact id 同样能挂规则【实测】。建一个 `direction` artifact 并写 `rules.direction`，`instructions direction --json` 就能拿到那几条。这是 `config.yaml` 里被低估的一个杠杆：**方向 artifact 也可以带自己的约束**。详见 §[06.2](06-remedies-within-budget.md)。
+**`rules:` 的键就是 artifact id**。用内置 `spec-driven` 时只有四个合法值：`proposal` / `specs` / `design` / `tasks`——**够用了，不需要为了配规则去 fork schema**。【实测】自定义 schema 里的 artifact id 同样能挂，但那意味着你得自己维护 schema（见 §[06](06-remedies-within-budget.md) 开头的取舍）。
+
+> ⚠️ **一个容易踩的坑**：`rules:` 是 YAML **列表**，单条写错会让**该 artifact 的整组规则失效**。最常见的诱因是行首的 `##` 被 YAML 当注释、整条变 `null`。规则里出现 `##` 或 `": "` 时，**整条加引号**【实测】。
 
 还有防"配错静默失效"的校验【代码】（`validateConfigRules`，`src/core/project-config.ts:469-486`）：规则键拿去跟**所有可用 schema 的 artifact id** 对账，对不上则 **warning 并列出合法 id**。
 

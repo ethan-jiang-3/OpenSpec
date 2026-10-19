@@ -149,11 +149,11 @@ operations:
 - 它和 `rules:` 分工不同：`rules` 约束**产物内容**，`guidance` 约束**做事方式**
 - **归档时 CLI 不读它**（`src/core/archive.ts` 里 `readProjectConfig` 调用数为 0）【代码】——**挡不住任何归档**，纯 prompt 投递
 
-详见 §[06.2](06-remedies-within-budget.md)。
+详见 §[06.3](06-remedies-within-budget.md)。
 
 ---
 
-## 11 · 用自定义 schema 给「方向」建硬前置 `[硬]` ★本次新发现
+## 11 · 用自定义 schema 给「方向」建硬前置 `[硬]` —— 但先算维护成本
 
 如果你受够了"方向在脑子里、产物在文件里、两者逐渐脱节"，**自带能力里有一条真路**：
 
@@ -174,6 +174,10 @@ artifacts:
 效果【实测】：`proposal` 在 `direction.md` 存在之前**根本写不出来**（`status` 显示 `blocked by: direction`），`instructions` 会把方向作为依赖注入，`nextSteps` 也会先指向它。schema 落在 `openspec/schemas/<name>/`，**随 git 提交、团队共享**。
 
 **但必须清楚它的边界**（§[03 B4](03-direction-drift.md)）：门控的是**存在**，不是**一致**。空的 `direction.md` 照样让 validate 通过。**它强迫你先写下方向，不保证方向与提案不矛盾。**
+
+> ⚠️ **先算这笔账**：`schema fork` 之后，**这份 schema 是你自己的文件了**。OpenSpec 升级不会更新它——上游改 schema 语义、改 artifact 解析、改 DAG 规则时，你得自己核对、自己追。**这是"方向是一等 artifact"的代价。**
+>
+> **不想付这笔账**：内置 schema 其实够用——方向本来就活在 `proposal.md` 的 `## Why` / `## What Changes` 里，只缺一个内容检查。用 `rules.proposal` + 一个读 `status --json` 的脚本就能补上，且**升级零成本**。见 §[06](06-remedies-within-budget.md)。
 
 ---
 
@@ -207,7 +211,7 @@ openspec status --change <name> --json → artifactPaths.<id>.resolvedOutputPath
                                         → exit 1 进 CI
 ```
 
-完整脚本与实测见 §[06.4](06-remedies-within-budget.md)。**这是外置补丁，不是 OpenSpec 能力。**
+完整脚本与实测见 §[06.5](06-remedies-within-budget.md)。**这是外置补丁，不是 OpenSpec 能力。**
 
 ---
 

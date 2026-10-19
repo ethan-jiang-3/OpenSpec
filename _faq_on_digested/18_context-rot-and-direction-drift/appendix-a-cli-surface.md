@@ -57,9 +57,11 @@ expanded（可选）   + new  continue  ff  verify  bulk-archive  onboard
 openspec/config.yaml                              【三个面全部是软能力】
   schema     默认 workflow schema（解析顺序第 3 位）
   context    每个 artifact + apply + archive 都注入；50 KB 上限，超限【整个字段丢弃】
-  rules      按 artifact id 分流注入；键可以是自定义 schema 里的任意 id【实测】
+  rules      按 artifact id 分流注入；内置 id 为 proposal/specs/design/tasks【实测】
              ⚠ 错键 warning 只走 stderr，只有 instructions 触发；
                validate --all 不报（instruction-loader.ts:385 是唯一调用点）【实测】
+             ⚠ 单条写错（如行首未加引号的 ## 被 YAML 当注释）会让该 artifact
+               的整组 rules 失效并回落到「忽略」【实测】
   operations 唯一进 apply/archive 运行时的配置面【实测】
     apply.guidance      → instructions apply   --json 的 operationGuidance
     archive.guidance    → instructions archive --json 的 operationGuidance
@@ -79,7 +81,17 @@ openspec/config.yaml                              【三个面全部是软能力
   initiative          legacy 键仍在 schema 里，但 CLI 已拒绝设置（--initiative 报错）
   x-*                 扩展键：不算 unknown，OpenSpec 忽略【代码】
 
-openspec/schemas/<name>/
+内置 spec-driven 的四个 artifact（无需自定义 schema）：
+  proposal  proposal.md      requires: []
+  specs     specs/**/*.md    requires: [proposal]      ← generates 是 glob
+  design    design.md        requires: [proposal]
+  tasks     tasks.md         requires: [specs, design]
+  ⚠ 没有 direction / decision 之类的「意图层」artifact；方向活在
+    proposal.md 的 ## Why + ## What Changes，且内置能力对其内容零检查【实测】
+  ⚠ specs 是 glob：status --json 的 resolvedOutputPath 保留 ** 字面量，
+    真实文件要看 existingOutputPaths【实测】
+
+openspec/schemas/<name>/          （仅在你选择自定义 schema 时才有）
   schema.yaml         artifact DAG：requires / generates / instruction / template
                       apply.requires / apply.tracks
                       ⚠ generates 是存在性契约：同一文件可被多个 artifact 复用，

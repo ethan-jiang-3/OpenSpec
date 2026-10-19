@@ -1,289 +1,348 @@
-# 06 · 自带能力之外的补法：`config.yaml` 能撑到哪一步
+# 06 · 自带能力之外的补法：只用内置 schema
 
 [← 返回索引](answer.md) ｜ 上一篇：[05 · 可复跑验证](05-verification.md)
 
-> ⚠️ **本章口径与前五章不同。** 前五章只认「装了 `@fission-ai/openspec` 就有」的能力。本章回答的是另一个问题：**自带能力补不上的缺口，用项目里本来就公开给用户的 `config.yaml` / `schema.yaml`，以及消费 CLI 的 JSON 的外部脚本，最便宜的补法是什么。**
+> ⚠️ **本章口径与前五章不同。** 前五章只认「装了 `@fission-ai/openspec` 就有」的能力。本章回答的是另一个问题：**自带能力补不上的缺口，用 `config.yaml` 和消费 CLI 的 JSON 的脚本，最便宜的补法是什么。**
+>
+> **另一个约束也变了：本章完全不用自定义 schema。** 只用内置的 `spec-driven`（`proposal` / `specs` / `design` / `tasks`）。理由很实际——**自定义 schema 是你自己维护的文件，OpenSpec 每次升级都可能改 schema 语义、改 artifact 解析、改 DAG 规则，你的 fork 就得跟着追**。内置 schema 随包升级，你不用管。
+>
+> 所以 [03 · §B4](03-direction-drift.md) 讲的「用自定义 schema 给方向建硬前置」在**理论上**成立，但**维护成本高**。本章给的是不需要它也能走的路。
 >
 > 每条都标 `[硬]` / `[软]` / `[外置]`。**`[外置]` 的不属于 OpenSpec**，别混进前五章的清单。
 
 ---
 
-## 6.1 先给结论：`config.yaml` 里**没有一条是硬的**
+## 6.1 先给结论
 
-`openspec/config.yaml` 的全部字段，按它能不能拦住人重新排一遍：
-
-| 字段 | 注入到哪 | 性质 | 违反时发生什么 |
-|---|---|---|---|
-| `schema:` | 解析默认 workflow | **硬**（但只是选择，不是判定） | schema 不存在则报错 |
-| `context:` | **每个** artifact + apply + archive | **软** | 什么都不会发生 |
-| `rules:` | 仅匹配的 artifact id | **软** | 什么都不会发生 |
-| `operations.apply.guidance` | `instructions apply` | **软** | 什么都不会发生 |
-| `operations.archive.guidance` | `instructions archive` | **软** | 什么都不会发生 |
-| `references:` / `store:` / `githubCopilot:` | 根解析 / 索引 / 文件生成 | 与本题无关 | — |
-
-**一句话**：`config.yaml` 是**投递面**，不是**闸门面**。它决定 agent **看到什么**，不决定 agent **被拦住什么**。
-
-> 这条结论直接解释了前五章的不对称：线 A 的闸门在代码里（`MAX_CONTEXT_SIZE`、校验器），线 B 的"纪律"大多落在 `config.yaml` 和 prompt 模板里，所以线 B 看起来有机制、实际拦不住人。
-
-想拿到硬的，只有三条路：
+两句话：
 
 ```text
-① schema.yaml 的 DAG          → 硬，但只门控「存在」
-② 消费 status/show --json 的脚本 → 硬，可门控「新鲜度 / 重叠」
-③ 外部工具（不在本篇范围）      → 例如上游 issue #1387 提到的那类
+config.yaml 里没有一条是硬的 —— 它是投递面，不是闸门面
+内置 schema 也没有「方向」这个 artifact —— 方向就活在 proposal.md 里
 ```
 
-下面 6.2 讲怎么用好三个软面；6.3 讲 ① schema 的硬门控（以及它的三种绕过）；6.4 讲 ② 新鲜度脚本；6.5 讲跨 change 的现状；6.6 是外部参照系。
+第一句解释了为什么线 B 看起来有机制、实际拦不住人：线 B 的"纪律"大多落在 `config.yaml` 和 prompt 模板里。
+
+第二句是本章的关键前提。内置 `spec-driven` 的四个 artifact 是：
+
+```text
+proposal  generates: proposal.md        requires: []
+specs     generates: specs/**/*.md      requires: [proposal]
+design    generates: design.md          requires: [proposal]
+tasks     generates: tasks.md           requires: [specs, design]
+```
+
+**没有 `direction`，没有 `decision`，没有任何"意图层" artifact。** 方向不在任何独立的文件里。
 
 ---
 
-## 6.2 三个软面：分别该放什么
+## 6.2 那么「方向」到底存在哪？——`proposal.md`
 
-### `context:` —— 放**跨 change 恒真的约束**
+答案是：**它已经在 `proposal.md` 里了**，只是没人把它当方向看。
 
-`context` 是唯一**每个 artifact + apply + archive 都会注入**的字段。50 KB 上限，超限**整段丢弃**（见 §[02 A3](02-context-rot.md)）。
+看内置模板（`schemas/spec-driven/templates/proposal.md`）：
 
-适合放：
+```markdown
+## Why
+<!-- Explain the motivation for this change. What problem does this solve? Why now? -->
+
+## What Changes
+<!-- Describe what will change. Be specific about new capabilities, modifications, or removals. -->
+
+## Capabilities
+## Impact
+```
+
+`## Why` + `## What Changes` **就是方向**：为什么要做、要做成什么样。后面的 `specs` / `design` / `tasks` 全是它的展开。
+
+所以不需要新造 artifact。**你需要的只是承认这件事，然后给它加上约束和检查。**
+
+### 关键实测：内置能力对 `## Why` 的内容**零检查**
+
+我建了一个 proposal，`## Why` 和 `## What Changes` 里**只剩模板注释**：
+
+```markdown
+# Proposal
+
+## Why
+
+<!-- Explain the motivation. What problem does this solve? Why now? -->
+
+## What Changes
+
+<!-- Describe what will change. -->
+```
+
+`openspec status` 的判定：
+
+```text
+[x] proposal        ← 有文件就算完成
+[ ] specs
+```
+
+`openspec validate` 唯一的抱怨是"没有 delta"：
+
+```text
+✗ [ERROR] Change must have at least one delta.
+```
+
+**没有任何一条检查 `## Why` 是不是空的。** 模板注释本身就足以让 proposal 读成 `[x]`。
+
+> 这就是"方向漂移"能在工具眼皮底下发生的原因：**方向的位置是有的（proposal.md），但对它的检查是零。**
+
+---
+
+## 6.3 `config.yaml` 三个面：都软，但都用得上
+
+### `context:` —— 放跨 change 恒真的方向纪律
+
+唯一**每个 artifact + apply + archive 都会注入**的字段。50 KB 上限，超限整段丢弃（见 §[02 A3](02-context-rot.md)）。
 
 ```yaml
 context: |
   方向纪律（全项目）：
-  - 任何 change 都先写 direction.md；占位或空壳不等于完成。
-  - 改上游 artifact 后，必须重新核对下游 artifact 是否仍与方向一致。
+  - proposal.md 的 ## Why 与 ## What Changes 是方向本身。
+  - 改方向 = 改 proposal；改完必须回头核对 specs/design/tasks 是否还成立。
   - 实施中发现规格与方向冲突，停下来问，不要静默收窄范围。
 ```
 
-不适合放：本次 change 的一次性细节、能从代码读出来的事实、长文档全文。
+> 注意：**别在这里写"必须写 direction.md"这种话**——内置 schema 里没有这个文件，写了只会让 agent 去找一个不存在的东西。
 
-> **为什么这是"最有效的一招"**：它不占 skill 文件的位置，也不需要每次在 chat 里重讲。但它**永远只是提醒**。
+### `rules:` —— 按内置 artifact 定向提要求
 
-### `rules:` —— 放**按 artifact 定向的要求**（含你自己 schema 里的 artifact）
-
-这是 `config.yaml` 里被低估的一个杠杆：**`rules:` 的键可以是自定义 schema 里任意 artifact id**，不限于 `proposal`/`specs`/`design`/`tasks`。
+`rules:` 的键就是内置的四个 id，不需要自定义 schema：
 
 ```yaml
 rules:
-  direction:
-    - 每个小节都要有实内容；只有标题说明这道门没跑。
-    - 至少写一条被否决的备选方案，并说明它为什么输了。
-    - 如果取代了旧方向，点名被取代的那个 archived change。
-  freshness:
-    - 每个判定都要引用具体的那条方向决策。
-    - 没有列出核对过哪些决策时，不许写"全部一致"。
   proposal:
-    - 说明本提案实现的是哪一条方向决策（点名）。
+    - "## Why 必须写清要解决的问题和为什么是现在，不能只留模板注释。"
+    - "至少写一条被否决的备选方案，写清它为什么输。"
+    - "如果这次换掉了先前方向，点名被取代的那个 archived change。"
+  specs:
+    - 每条 requirement 都能追到 proposal 的某一条 What Changes。
 ```
 
-实测注入正常（详见 §[05](05-verification.md)）：
+实测注入正常：`instructions proposal --json` → `rules: 3 条`。
 
-```text
-$ openspec instructions direction --change <name> --json
-rules: [ "每个小节都要有实内容…", "至少写一条被否决的备选方案…", … ]
-```
+> ⚠️ **一个实测踩到的坑，值得单独记**：上面第一条我最初写成不带引号的
+>
+> ```yaml
+>     - ## Why 必须写清…
+> ```
+>
+> YAML 把行首的 `##` 当**注释**，整条读成 `null`，于是 **整个 `proposal` 的 rules 全部被丢弃**：
+>
+> ```text
+> Rules for 'proposal' must be an array of strings, ignoring this artifact's rules.
+> rules.proposal[0] is null — an unquoted ": " makes YAML read the item as a key/value pair; quote the whole scalar to keep it a string.
+> ```
+>
+> **一条写错，整组失效。** 规则里出现 `##`、`:` 这类字符时，**整条加引号**。同一文件里 `context:` 是块标量所以不受影响，`rules:` 是列表所以受影响——这个不对称很容易踩。
 
-⚠️ **键写错的后果比 FAQ 初版描述的更轻**（这是本次复核的修正）：错键会产生 warning，但**只走 stderr，且只有 `instructions` 触发**。`validateConfigRules` 的唯一调用点在 `src/core/artifact-graph/instruction-loader.ts:385`，**`openspec validate --all` 完全不报**。
+### `operations.*.guidance` —— 唯一进 apply/archive 的通道
 
-```text
-$ openspec validate --all | grep "Unknown artifact"
-（无输出）
-```
-
-**实操后果**：如果你的 CI 只跑 `validate --all`，**`rules:` 写错永远不会被发现**，规则会静默地一条都不生效。只能靠人跑一次 `instructions` 检查。
-
-### `operations.*.guidance` —— 放**执行期的建议**（唯一进 apply/archive 的通道）
-
-FAQ 初版**完全没提这个字段**，而它是唯一能把纪律投递到 apply / archive 运行时的面：
+FAQ 初版没提这个字段。它把纪律投递到**执行期**，而不是写作期：
 
 ```yaml
 operations:
   apply:
     guidance:
-      - 开工前重读 direction.md；若与 tasks.md 冲突，停下来问，不要静默吃掉漂移。
+      - 开工前重读 proposal.md 的 ## Why；若与 tasks.md 冲突，停下来问，不要静默收窄。
   archive:
     guidance:
-      - 如果这次 change 改变了方向，在归档总结里写明，并指出它的继任者。
+      - 如果这次改变了方向，在归档总结里写明，并指出继任者。
 ```
 
-实测两个面都拿到：
+`instructions apply|archive --json` 都返回 `operationGuidance` 数组（实测）。
 
-```text
-$ openspec instructions apply   --json  → operationGuidance: ["开工前重读 direction.md…"]
-$ openspec instructions archive --json  → operationGuidance: ["如果这次 change 改变了方向…"]
-```
+**必须知道的边界**：
 
-⚠️ **性质必须说清**：`src/core/archive.ts` 里 `readProjectConfig` 调用数为 **0**。CLI 归档时**不读**这段 guidance，它只在 skill 执行时作为 prompt 投递。**它挡不住任何归档。**
-
-另外两个边界：
-- 只支持 `apply` / `archive` 两个 operation id，写别的键会 warning 并列出合法值。
-- 它和 `rules:` 是**分开的**：`rules` 约束**产物内容**，`guidance` 约束**做事方式**。别把两者混写。
+- 只支持 `apply` / `archive` 两个 id，写别的会 warning 并列出合法值
+- 和 `rules:` 分工不同：`rules` 管**产物内容**，`guidance` 管**做事方式**
+- **归档时 CLI 不读它**（`src/core/archive.ts` 里 `readProjectConfig` 调用数为 0）——纯 prompt 投递，**挡不住任何归档**
 
 ---
 
-## 6.3 schema 硬门控：能建，但要认清它只门控「存在」
+## 6.4 内置 schema 的门控：能给你什么，不能给你什么
 
-用自定义 schema 把方向做成 proposal 的硬前置，前五章 §[03 B4](03-direction-drift.md) 已讲清。这里只补三条**实测出来的绕过路径**，它们决定这道门到底值多少：
-
-### 绕过路径 ①：空壳文件即通过 ★最重要
+内置 DAG 本身是硬的——`tasks` 在 `specs` 和 `design` 存在前写不出来：
 
 ```text
-$ printf '# Direction\n' > direction.md
-$ openspec status --change probe-guarded
-[x] direction
-[ ] proposal          ← 一行标题就解锁了
+[ ] proposal
+[-] specs   (blocked by: proposal)
+[-] design  (blocked by: proposal)
+[-] tasks   (blocked by: specs, design)
 ```
 
-DAG 只检查文件存在，**不读内容**。所以这道门买到的是"**强制你先停下来说方向**"，不是"方向说清楚了"。
+但**这个门控只覆盖"四件套齐全"，不覆盖"方向一致"**。三个绕过路径都成立：
 
-### 绕过路径 ②：`generates:` 复用同一个文件
+| 绕过 | 做法 | 结果 |
+|---|---|---|
+| 空壳 proposal | `## Why` 只留模板注释 | `[x] proposal` ✅ |
+| 手写下游 | 直接创建 `tasks.md` 绕过 `status` 引导 | `[x] tasks` ✅ |
+| 顺序无约束 | `status` 只是**建议**，不是强制 | 没有任何东西拦你 |
 
-把后置 artifact 的 `generates` 指向**已经存在的文件**，它会直接读成 `done`：
+第一条我实测过（见 §6.2）。`status` 和 `instructions` 会引导顺序，但你手写文件，它们不会拒绝。
 
-```yaml
-# freshness.generates 指向 direction.md 而不是 freshness.md
-- id: freshness
-  generates: direction.md      # ← 已有该文件
-```
-
-实测：
-
-```text
-$ openspec status --change probe-guarded
-[x] freshness            ← 没有任何新鲜度检查，白拿一个 done
-```
-
-**结论**：`generates:` 是存在性契约，**同一文件可被多个 artifact 复用**。设计 schema 时要保证每个门控 artifact 有**独立的输出文件**，否则闸门形同虚设。
-
-### 绕过路径 ③：先写下游，再补上游
-
-```text
-[ ] direction
-[x] proposal       ← 直接手写文件绕过了 status 的引导
-```
-
-`status` 只是**建议**顺序；`instructions` 会 warning 但仍给出指令。没有任何东西阻止你手写下游文件。
-
-> 这三条合起来说明：**schema 门控是"软门控的硬版本"** —— 它比 prompt 硬（有 `[x]/[ ]` 状态可查），但比真正的校验软（不读内容、可被文件复用绕过、可手写绕过）。**它适合用来对齐节奏，不适合用来当质量闸门。**
-
-### 那 `validate` 能不能扩展成内容校验？
-
-不能，且不是配置能解决的。`src/core/validation/validator.ts` 里 `validateSpec` / `validateChange` 只读 **spec 文件**，没有"自定义 artifact 规则"的钩子，`config.yaml` 也没有任何字段指向校验规则。**内容级校验在自带能力里没有入口。**
+> **一句话**：内置 DAG 买到的是**节奏对齐**（四件套齐全、按顺序写），不是**方向一致**。想要后者，得自己加检查。
 
 ---
 
-## 6.4 补「新鲜度」：唯一能做到硬的办法是消费 JSON
+## 6.5 补「方向检查 + 新鲜度」：一个只用内置产物的脚本
 
-前五章 §[02 A6](02-context-rot.md) 指出最大的线 A 缺口是：**没有新鲜度失效，`status` 是文件存在性**。我实测确认：
+前五章 §[02 A6](02-context-rot.md) 指出最大的缺口是：**没有新鲜度失效，`status` 是文件存在性**。我实测确认——把 proposal 的 mtime 回退到 2020 年，`status` 照样 `[x]`、`list` 照样显示 "just now"。
 
-```text
-$ touch -t 202001010000 direction.md     # 把方向文件回退到 2020 年
-$ openspec list --changes
-probe-guarded     No tasks      just now   ← 仍显示"刚刚"
+内置能力不告诉你"还算不算数"。但 `status --json` 暴露了每个 artifact 的实际文件路径，够外部脚本判定。
 
-$ openspec status --change probe-guarded
-[x] proposal                               ← 方向比提案旧，照样 [x]
-```
+### 一个关键细节：`specs` 的路径是 glob
 
-**自带能力确实不告诉你"还算不算数"。** 但 `status --json` 暴露了每个 artifact 的 `resolvedOutputPath`，这就够外部脚本做判定：
+内置 schema 里 `specs` 的 `generates` 是 `specs/**/*.md`，所以：
 
 ```json
-"artifactPaths": {
-  "direction": { "resolvedOutputPath": "…/probe-guarded/direction.md", "existingOutputPaths": [...] },
-  "proposal":  { "resolvedOutputPath": "…/probe-guarded/proposal.md",  "existingOutputPaths": [...] }
+"specs": {
+  "resolvedOutputPath": "…/p1/specs/**/*.md",          ← 保留 ** 字面量，不能当文件用
+  "existingOutputPaths": ["…/p1/specs/cap-a/spec.md"]  ← 真实文件列表
 }
 ```
 
-### 一个能跑的 `freshness-gate.sh`
+**脚本必须用 `existingOutputPaths`**，不能对 `resolvedOutputPath` 做 `-f` 判断。
 
-判据两条：**方向文件有实质内容**（≥3 行非空非标题），且**所有下游产物都比它新**。
+### `direction-gate.sh`（只用内置产物）
+
+判据两条：**proposal 的 `## Why` / `## What Changes` 有实质内容**（不是只剩模板注释），且 **`specs`/`design`/`tasks` 都不严格早于 `proposal.md`**。
 
 ```bash
 #!/usr/bin/env bash
-# 方向新鲜度闸门：direction.md 必须有内容，且每个下游产物都要比它新。
-# 用法: ./freshness-gate.sh <change-name>；通过 exit 0，失败 exit 1。
-set -euo pipefail
+# direction-gate.sh —— 只用内置 spec-driven 产物，把「方向」钉在 proposal.md 上
+# 通过 exit 0；失败 exit 1。用法: ./direction-gate.sh <change-name>
+set -uo pipefail
+change="${1:?usage: direction-gate.sh <change>}"
+info=$(openspec status --change "$change" --json) || { echo "GATE FAIL: 取不到 status"; exit 1; }
+exec python3 - "$info" <<'PY'
+import json, sys, os, re, glob
 
-change="$1"
-info=$(openspec status --change "$change" --json)
-j() { python3 -c "import sys,json;d=json.loads(sys.argv[1])['artifactPaths'];print((d.get(sys.argv[2]) or {}).get('resolvedOutputPath',''))" "$info" "$1"; }
+arts = json.loads(sys.argv[1])['artifactPaths']
 
-dir_path=$(j direction)
-[ -f "$dir_path" ] || { echo "GATE FAIL: direction.md 不存在"; exit 1; }
+def files(aid):
+    """内置 schema 的 specs 是 glob，resolvedOutputPath 会保留 ** 字面量；
+    existingOutputPaths 才是真实文件列表。"""
+    v = arts.get(aid) or {}
+    ex = v.get('existingOutputPaths') or []
+    if ex:
+        return ex
+    r = v.get('resolvedOutputPath')
+    if not r:
+        return []
+    return sorted(glob.glob(r)) if any(c in r for c in '*?') else [r]
 
-# ① 内容闸门：只有标题/空行 = 空壳
-body=$(grep -vcE '^\s*#|^\s*$' "$dir_path" || true)
-[ "$body" -ge 3 ] || { echo "GATE FAIL: direction.md 只有 $body 行实质内容（需 ≥3）"; exit 1; }
+fails = []
 
-# ② 新鲜度闸门：下游不许比方向旧
-drift=0
-for a in proposal specs design tasks; do
-  p=$(j "$a")
-  [ -n "$p" ] && [ -f "$p" ] || continue
-  if [ "$p" -nt "$dir_path" ]; then
-    :
-  else
-    echo "STALE: $a 比 direction.md 旧 —— 方向变了，下游没跟上"; drift=1
-  fi
-done
-[ "$drift" -eq 0 ] && echo "GATE PASS: 所有产物都不旧于 direction.md"
-exit $drift
+prop = next((p for p in files('proposal') if p.endswith('proposal.md')), None)
+if not prop or not os.path.exists(prop):
+    print('GATE FAIL: proposal.md 不存在')
+    sys.exit(1)
+
+text = open(prop, encoding='utf-8').read()
+
+def section(name):
+    m = re.search(rf'^##\s*{name}\s*$(.*?)(?=^##\s|\Z)', text, re.M | re.S | re.I)
+    return m.group(1) if m else ''
+
+def substance(body):
+    """去掉模板注释和空行后还剩几行实内容。"""
+    body = re.sub(r'<!--.*?-->', '', body, flags=re.S)
+    return [l for l in (x.strip() for x in body.splitlines())
+            if l and not l.startswith('#') and not set(l) <= set('-*_ ')]
+
+# ① 方向闸门：Why / What Changes 必须有实质内容，不能只剩模板注释
+for sec in ('Why', 'What Changes'):
+    if len(substance(section(sec))) < 1:
+        fails.append(f'proposal 的 ## {sec} 是空的（只有注释或占位）')
+
+# ② 新鲜度闸门：specs/design/tasks 不许严格早于 proposal
+#    用严格 < 而不是 <=：git clone 后所有文件 mtime 相同，<= 会误报。
+pm = os.path.getmtime(prop)
+for aid in ('specs', 'design', 'tasks'):
+    for p in files(aid):
+        if not os.path.exists(p) or not p.endswith('.md'):
+            continue
+        if os.path.getmtime(p) < pm:
+            fails.append(f'{aid} 比 proposal.md 旧 —— 方向变了，{aid} 没跟上'
+                         f'（{os.path.relpath(p)}）')
+
+for f in fails:
+    print('GATE FAIL:', f)
+if not fails:
+    print('GATE PASS: proposal 有实质方向，且 specs/design/tasks 都不旧于它')
+sys.exit(1 if fails else 0)
+PY
 ```
 
-实测三种状态都对：
+### 四种状态实测
 
 ```text
-# 空壳
-GATE FAIL: direction.md 只有 0 行实质内容（需 ≥3）        exit 1
+A 全新鲜（git clone 后 mtime 相同）
+  GATE PASS: proposal 有实质方向，且 specs/design/tasks 都不旧于它        exit 0
 
-# 有内容、下游都更新
-GATE PASS: 所有产物都不旧于 direction.md                   exit 0
+B ## Why 只剩模板注释
+  GATE FAIL: proposal 的 ## Why 是空的（只有注释或占位）                    exit 1
 
-# 改了方向，提案没跟上
-STALE: proposal 比 direction.md 旧 —— 方向变了，下游没跟上   exit 1
+C 方向早、specs 后跟上（正常迭代顺序）
+  GATE PASS: proposal 有实质方向，且 specs/design/tasks 都不旧于它        exit 0
+
+D 又改了方向，specs 没跟上（真正的漂移）
+  GATE FAIL: specs 比 proposal.md 旧 —— 方向变了，specs 没跟上             exit 1
 ```
 
-### 这个脚本做到了什么、没做到什么
+**对照内置能力看**：B 那种 proposal，`openspec status` 说 `[x] proposal`、`validate` 只抱怨没有 delta。**脚本拦住的是内置能力明确不查的那一项。**
+
+### 这个脚本做到什么、没做到什么
 
 ```text
-✓ 空壳方向文件过不去（补上 6.3 绕过路径①）
-✓ 方向变了而下游没改，会红（补上 A6「改了上游不会让下游失效」）
-✓ 补上 A6「specs 无陈旧信号」（把 specs 也纳进比较）
-✓ 可进 CI：exit 1 即可让流水线失败
+✓ 空壳 proposal 过不去（内置零检查的地方）
+✓ 改了方向而下游没改，会红（补上 A6「改了上游不会让下游失效」）
+✓ 把 specs 也纳进比较（glob 用 existingOutputPaths 正确处理）
+✓ 可进 CI：exit 1 即失败
+✓ 不依赖任何自定义 schema —— OpenSpec 升级不用你追
 
 ✗ 不判断方向内容对不对（那要语义比对）
-✗ 不判断 proposal 与 direction 是否矛盾（同上）
-✗ 跨 change 仍然管不了
-✗ mtime 会被 git checkout / rebase 重置 —— 用 mtime 是权宜，不是精确的溯源
+✗ 不判断 proposal 与 specs 是否"意思一致"（只能判断新旧）
+✗ 跨 change 管不了
+✗ mtime 会被 git checkout / rebase 重置 —— 用 mtime 是权宜，不是精确溯源
+✗ 用 python3（内置能力里没有 jq 依赖，任何脚本都得带个解析器）
 ```
 
-> **诚实边界**：这是 `[外置]` 补丁，不是 OpenSpec 能力。它的价值在于**用不到 30 行把「存在性」升级成「存在性 + 新鲜度」**，而这恰好是自带能力里最明显的洞。
+> **一个必须说清的局限**：mtime 只是"谁后写"的近似。如果团队在**同一次提交里**同时改 proposal 和 specs，两者 mtime 相同，脚本判为通过——这正确。但如果是 rebase 把提交顺序换了，mtime 会乱，可能误报或漏报。**它防的是"改了方向忘了回头"，不防"历史上顺序已经乱了"。**
 
 ---
 
-## 6.5 跨 change：自带能力补不上，只能手工或外置
+## 6.6 跨 change：内置能力补不上
 
-`openspec validate --all` 对"8 个 change 抢同一个 capability"完全沉默（实测命中 `overlap|conflict|stack|depend` 的条数为 **0**）。两条现实路径：
+`openspec validate --all` 对"8 个 change 抢同一个 capability"完全沉默（实测命中 `overlap|conflict|stack|depend` 的条数为 **0**）。这一块**内置 schema 和脚本都帮不上多少**，因为根因是结构性的。
 
-**① 手工能力矩阵**（前五章 §[04 要点 12](04-usage.md) 有脚本）——配合 CI 里 grep 产物即可，成本最低。
+可以做的只有两件：
 
-**② 消费 `show --json` 自己比对**——`openspec show <id> --json --deltas-only` 给出每个 delta 的 `operation` 和 `requirement`，能做出"两个 change 改同一条 requirement"的检测。但要注意：**delta 里没有记录它是从哪个 base 派生的**，所以只能检测**名字撞车**，检测不出「main 已经往前走、我的 MODIFIED 还是旧文本」的**语义漂移**。
+**① 手工能力矩阵**（前五章 §[04 要点 12](04-usage.md) 有脚本）——成本最低，进 CI 前先人工看一眼。
 
-上游对这块的现状（截至本文基线 `v1.14.3`）：
+**② 消费 `show --json` 比对**——`openspec show <id> --json --deltas-only` 给出每个 delta 的 `operation` 和 `requirement`，能检测"两个 change 改同一条 requirement"。但**delta 不记录它派生自哪个 base**，所以只能查名字撞车，查不出语义漂移。
+
+上游现状（基线 `v1.14.3`）：
 
 | 提案 | 状态 | 覆盖 |
 |---|---|---|
-| `openspec/changes/add-change-stacking-awareness/` | **未落地**（卡 3/4） | `dependsOn`/`provides`/`requires`/`touches`/`parent` + `change graph` |
-| [issue #1915](https://github.com/Fission-AI/OpenSpec/issues/1915) | open | `depends_on` 元数据 + list 可见性 + new change 时提案 |
-| [issue #1387](https://github.com/Fission-AI/OpenSpec/issues/1387) | open（`design-review`） | 归档前 drift / overlap 检测，社区附了可用工具 |
+| `openspec/changes/add-change-stacking-awareness/` | **未落地**（卡 3/4） | `dependsOn` 等元数据 + `change graph` |
+| [issue #1915](https://github.com/Fission-AI/OpenSpec/issues/1915) | open | `depends_on` 元数据 + list 可见性 |
+| [issue #1387](https://github.com/Fission-AI/OpenSpec/issues/1387) | open（`design-review`） | 归档前 drift / overlap 检测 |
 
-> #1387 里点出的根因值得记：**delta 只记录 MODIFIED 的新文本，不记录它派生自哪个 base**。这是自带能力做不出语义漂移检测的结构性原因，不是缺个命令。
+> #1387 点出的根因值得记：**delta 只记录 MODIFIED 的新文本，不记录派生自哪个 base**。这是自带能力做不出语义漂移检测的**结构性**原因，不是缺个命令。等上游，或者接受这块管不了。
 
 ---
 
-## 6.6 外部参照系：这两个问题别人怎么分层解（外部来源，非 OpenSpec 能力）
+## 6.7 外部参照系：这两个问题别人怎么分层解（外部来源，非 OpenSpec 能力）
 
 > 本节引用第三方材料，仅用于**说明解法分层**，不代表 OpenSpec 的官方定位。技术事实以 §[05](05-verification.md) 的实测为准。
 
-一篇拆源码的横向对比把三个框架摆在同一条轴上：它们治的是 context rot 的**不同层**——
+一篇拆源码的横向对比把几个框架摆在同一条轴上：它们治的是 context rot 的**不同层**——
 
 | 层 | 症状 | 典型解法 |
 |---|---|---|
@@ -291,17 +350,17 @@ STALE: proposal 比 direction.md 旧 —— 方向变了，下游没跟上   exi
 | **纪律腐烂** | 流程被执行时偷懒（跳过测试、跳过评审） | 自动触发的 skill、硬门禁 |
 | **注意力腐烂** | 上下文本身变长后模型变笨 | fresh-context subagent、跨会话状态文件 |
 
-按这个分层，本篇的两条线可以重新读一遍：
+按这个分层重读本篇两条线：
 
-- **线 A（腐化）** 在 OpenSpec 里主要靠**结构性做法**解决 —— 把状态放到磁盘（`tasks.md` 的 checkbox、`sourcePath`+`line`）、注入导航简报而非正文。这正是"清空上下文再 `apply`"有效的原因。
-- **线 B（漂移）** 在 OpenSpec 里止于**单次归档正确性**。跨 change 的排序与重叠、方向的一致性，属于上表里"它不治"的部分。
+- **线 A（腐化）** 主要靠**结构性做法**解决——把状态放磁盘（`tasks.md` 的 checkbox、`sourcePath`+`line`）、注入导航简报而非正文。"清空上下文再 `apply`"有效正是因为这个。
+- **线 B（漂移）** 止于**单次归档正确性**。方向一致、跨 change 排序，属于上表里 OpenSpec 不治的部分。
 
 对"我使用时该注意什么"的直接含义：
 
 ```text
-如果你的症状是「AI 忘了最初要做什么」   → 前五章的机制已经够用，重点用分级读 + 清上下文
-如果你的症状是「多个 change 打架」       → 需要外置检测（6.5），等上游落地
-如果你的症状是「长会话里模型变钝」       → 这不是 OpenSpec 要解决的问题，靠切会话/subagent
+症状「AI 忘了最初要做什么」   → 前五章机制够用，重点用分级读 + 清上下文
+症状「多个 change 打架」       → 需要外置检测（6.6），等上游落地
+症状「长会话里模型变钝」       → 不是 OpenSpec 要解决的问题，靠切会话 / subagent
 ```
 
 References:
@@ -313,21 +372,25 @@ References:
 
 ---
 
-## 6.7 一张表：缺口 → 最便宜的补法 → 硬度
+## 6.8 一张表：缺口 → 最便宜的补法 → 硬度
 
-| 缺口（来自 §02 A6 / §03 B5-B6） | 最便宜的补法 | 硬度 | 落点 |
+| 缺口（来自 §02 A6 / §03 B5-B6） | 只用内置 schema 的补法 | 硬度 | 落点 |
 |---|---|---|---|
-| 方向没有机器表示 | 自定义 schema 加 `direction` artifact | **硬（存在性）** | `schema.yaml` |
-| 空壳方向文件能过门 | `freshness-gate.sh` 的内容判定（≥3 行） | **硬** | `[外置]` CI |
-| 改了上游，下游不失效 | 上述脚本的 mtime 比较 | **硬（近似）** | `[外置]` CI |
-| specs 无陈旧信号 | 把 `specs` 纳入同一比较 | **硬（近似）** | `[外置]` CI |
-| 方向与提案矛盾 | 无自动解；靠 `update` 双向复核 | 软 | `[软]` prompt |
+| 方向没有独立 artifact | **不需要**——方向在 `proposal.md` 的 `## Why`/`## What Changes` | — | 内置 |
+| `## Why` 空着也能过 | `direction-gate.sh` 内容判定 | **硬** | `[外置]` CI |
+| 改了 proposal，下游不失效 | 同一脚本的 mtime 比较 | **硬（近似）** | `[外置]` CI |
+| specs 无陈旧信号 | 用 `existingOutputPaths` 纳入比较 | **硬（近似）** | `[外置]` CI |
+| 方向与 specs 语义矛盾 | 无自动解；靠 `update` 双向复核 | 软 | `[软]` prompt |
+| `rules:` 写错整组失效 | 整条加引号；CI 里查 `instructions` 的 stderr | 手工 | `[外置]` |
 | 跨 change 重叠 | 手工能力矩阵 / 消费 `show --json` | 手工或 `[外置]` | 脚本 |
 | 跨 change 语义漂移 | **无解**（delta 不记 base） | — | 等上游 #1387 |
-| `rules:` 写错静默失效 | CI 里跑一次 `instructions` 检查 stderr | 手工 | `[外置]` |
 | 规则被模型忽略 | 无解（全是 prompt） | — | — |
 
-**读这张表的方式**：左列是"自带能力承认做不到"的，右列是"你能补的"。**中间那列标 `[外置]` 的，都不是 OpenSpec**。别在评审时说"OpenSpec 能防腐化"——它能防的是**注入体膨胀**，防不了**语义陈旧**。
+**读这张表的方式**：左列是"自带能力做不到"的，中列是"你能补的"。**标 `[外置]` 的都不是 OpenSpec。**
+
+而且整张表**没有一项需要自定义 schema**——这是本章相比初版最重要的修正：**内置 schema 已经够用，代价是需要一个脚本 + 几条 `rules`。**
+
+> 如果你确实想要"方向是一等 artifact"的门控，[03 · §B4](03-direction-drift.md) 那条自定义 schema 的路依然成立。但要有心理准备：**你 fork 的 schema 会成为你的维护负担**，OpenSpec 升级时得核对 artifact 语义有没有变。本章给的是不用付这笔账的做法。
 
 ---
 

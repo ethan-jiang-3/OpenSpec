@@ -234,80 +234,94 @@ cat openspec/changes/test-dir/.openspec.yaml
 
 ---
 
-## 5.10 配置面与门控绕过（第 6 章的证据）
+## 5.10 配置面与内置 schema 的边界（第 6 章的证据）
 
-> ⚠️ 会写临时目录。在 `/tmp` 下跑。
+> ⚠️ 会写临时目录。在 `/tmp` 下跑。**本节全部只用内置 `spec-driven`，不 fork schema。**
 
-### `operations.guidance` 真的进了两个面
+### 内置 schema 的四个 artifact，没有「方向」
 
 ```bash
-# 在 config.yaml 里加 operations.apply.guidance / operations.archive.guidance
-node bin/openspec.js instructions apply   --change <name> --json \
-  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).operationGuidance))"
-node bin/openspec.js instructions archive --change <name> --json \
-  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).operationGuidance))"
-# → 两个面都返回数组；说明它是唯一进 apply/archive 的配置通道
+grep -n "id:\|generates:\|requires:" schemas/spec-driven/schema.yaml | head -20
+# → proposal  → proposal.md     requires: []
+#   specs     → specs/**/*.md   requires: [proposal]
+#   design    → design.md       requires: [proposal]
+#   tasks     → tasks.md        requires: [specs, design]
+# → 没有 direction / decision / rationale 之类
 ```
 
-**归档不读它**：
+### 内置能力对 `## Why` 的内容零检查 ★关键
 
 ```bash
-grep -c "readProjectConfig" src/core/archive.ts     # → 0
+printf '# Proposal\n\n## Why\n\n<!-- Explain the motivation -->\n\n## What Changes\n\n<!-- Describe -->\n' \
+  > openspec/changes/p1/proposal.md
+
+node bin/openspec.js status --change p1
+# → [x] proposal          ← 只剩模板注释也算完成
+
+node bin/openspec.js validate p1 --type change
+# → 唯一的 ERROR 是 "Change must have at least one delta"
+node bin/openspec.js validate p1 --type change 2>&1 | grep -ci "why"
+# → 0                     ← 没有任何一条检查 Why
 ```
 
-### `rules:` 的键可以是自定义 artifact id
+### `specs` 的路径是 glob，脚本要用 `existingOutputPaths`
 
 ```bash
-# schema 里有 direction artifact，config.yaml 写 rules.direction
-node bin/openspec.js instructions direction --change <name> --json \
-  | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).rules))"
-# → 注入成功
+node bin/openspec.js status --change p1 --json | node -e "
+let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
+  const a=JSON.parse(s).artifactPaths.specs;
+  console.log('resolved:',a.resolvedOutputPath);
+  console.log('existing:',a.existingOutputPaths);})"
+# → resolved: …/p1/specs/**/*.md                  ← 保留 ** 字面量，不能当文件
+#   existing: […/p1/specs/cap-a/spec.md]          ← 真实文件，脚本用这个
 ```
 
-### `rules:` 写错：只有 stderr，`validate` 不报
+### `rules:` 单条写错会让整组失效
 
 ```bash
-# 把 rules.direction 拼成 rules.dirrection
-node bin/openspec.js instructions proposal --change <name> 2>&1 >/dev/null | grep "Unknown artifact"
-# → Unknown artifact ID in rules: "dirrection". … Known artifact IDs: design, direction, …
-node bin/openspec.js instructions proposal --change <name> 2>/dev/null | grep -c "Unknown artifact"
-# → 0（stdout 里没有）
-node bin/openspec.js validate --all 2>&1 | grep -c "Unknown artifact"
-# → 0（validate 完全不报）
+# 规则行首的 ## 没加引号 → YAML 当注释 → 该条读成 null
+node bin/openspec.js instructions proposal --change p1 2>&1 >/dev/null | grep -i "must be an array"
+# → Rules for 'proposal' must be an array of strings, ignoring this artifact's rules.
+#   rules.proposal[0] is null — an unquoted ": " makes YAML read the item as a key/value pair
+node bin/openspec.js instructions proposal --change p1 --json | node -e "
+let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log('rules:',(JSON.parse(s).rules||[]).length))"
+# → rules: 0              ← 整组被丢弃
 
-grep -rn "validateConfigRules" src/ --include=*.ts
-# → 唯一调用点：src/core/artifact-graph/instruction-loader.ts:385
+# 整条加引号后恢复正常
+# → rules: 3
 ```
 
-### 门控绕过路径
+### `operations.guidance` 进了两个面，但归档不读
 
 ```bash
-# ① 空壳文件即通过
-printf '# Direction\n' > openspec/changes/probe/direction.md
-node bin/openspec.js status --change probe | grep -E "direction|proposal"
-# → [x] direction
-#   [ ] proposal          ← 一行标题就解锁
+node bin/openspec.js instructions apply   --change p1 --json | node -e "
+let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).operationGuidance))"
+node bin/openspec.js instructions archive --change p1 --json | node -e "
+let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).operationGuidance))"
+# → 两个面都返回数组（唯一进 apply/archive 的配置通道）
 
-# ② generates 复用同一文件 → 白拿 done
-#    把某个后置 artifact 的 generates 指向 direction.md
-node bin/openspec.js status --change probe | grep freshness
-# → [x] freshness          ← 没做任何检查
+grep -c "readProjectConfig" src/core/archive.ts     # → 0   归档时根本不读它
+```
 
-# ③ 手写下游文件可绕过引导
-printf '# Proposal\n' > openspec/changes/probe/proposal.md
-node bin/openspec.js status --change probe | grep proposal
-# → [x] proposal           ← status 只是建议，不是强制
+### 内置 DAG 的绕过路径
+
+```bash
+# ① 空壳 proposal：见上方「零检查」——[x] proposal
+# ② 手写下游文件可绕过 status 的引导
+printf '# Tasks\n\n- [ ] x\n' > openspec/changes/p1/tasks.md
+node bin/openspec.js status --change p1 | grep tasks
+# → [x] tasks            ← status 只是建议，不是强制
 ```
 
 ### 新鲜度不被追踪
 
 ```bash
-touch -t 202001010000 openspec/changes/probe/direction.md   # 回退到 2020
-node bin/openspec.js list --changes          # → 仍显示 "just now"
-node bin/openspec.js status --change probe   # → 下游仍 [x]
+touch -t 202001010000 openspec/changes/p1/proposal.md    # 回退到 2020
+node bin/openspec.js list --changes                      # → 仍显示 "just now"
+node bin/openspec.js status --change p1                  # → 下游仍 [x]
 ```
 
-新鲜度闸门脚本的四种状态（空壳 / 通过 / 陈旧 / 通过）已在 §[06.4](06-remedies-within-budget.md) 实测记录。
+`direction-gate.sh` 的四种状态（全新鲜 / `## Why` 空 / 方向早下游后 / 真漂移）已在 §[06.5](06-remedies-within-budget.md) 实测记录；脚本直接从该章代码块复制即可运行。
 
 ---
 

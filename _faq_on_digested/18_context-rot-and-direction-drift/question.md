@@ -43,10 +43,10 @@ Specs 越堆越多之后，喂给 agent 的上下文会**腐化**（无关/陈�
 | [03 · 线 B：方向漂移](03-direction-drift.md) | 归档五道闸门 + 自定义 schema 门控 + 跨 change 缺口 |
 | [04 · 使用要点](04-usage.md) | profile 到手面 + 12 条可操作要点 |
 | [05 · 可复跑验证](05-verification.md) | 每条结论对应的命令与实测输出 |
-| [06 · 自带能力之外的补法](06-remedies-within-budget.md) | `config.yaml` 三面全软、schema 门控的三种绕过、新鲜度硬闸门脚本、外部参照系 |
+| [06 · 自带能力之外的补法](06-remedies-within-budget.md) | **只用内置 schema、不 fork**：方向就在 `proposal.md` 里、`config.yaml` 三面全软、内置 DAG 的绕过路径、方向 + 新鲜度闸门脚本、外部参照系 |
 | [附录 A · CLI 命令面](appendix-a-cli-surface.md) | 完整命令 dump 与排除清单 |
 
-> 第 6 章口径与前五章不同：前五章只认「装了就有」的能力，第 6 章回答「缺口怎么补」，其内容明确标注为 `[外置]`（不属于 OpenSpec）。
+> 第 6 章口径与前五章不同：前五章只认「装了就有」的能力，第 6 章回答「缺口怎么补」，其内容明确标注为 `[外置]`（不属于 OpenSpec）。**并且第 6 章限定只用内置 schema，不 fork 自定义 schema**——后者要自己跟着 OpenSpec 升级维护。
 
 ## 探究过程中的两次转向（值得记下来）
 

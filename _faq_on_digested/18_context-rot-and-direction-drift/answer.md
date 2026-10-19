@@ -61,7 +61,7 @@ dependencies: [{"id":"direction","done":false,"path":"direction.md", …}]
 3. **`rules:` 写错并不"总会 warning"**：只走 stderr、只由 `instructions` 触发，**`validate --all` 不报**【实测】。原句"不会静默失效"过强，已改。
 4. **活跃 change 是 30 个，不是 29 个**（`ls` 与 `openspec list --changes` 一致）；争用数字（34 目标 / 20 已存在 / 8 路抢 `cli-init`）不变。
 
-新增 [06](06-remedies-within-budget.md) 回答"自带能力补不上的缺口怎么办"：**`config.yaml` 三个面全部是软能力**；schema 门控有**三种绕过路径**；新鲜度可以靠消费 `status --json` 的脚本升级成硬闸门（实测可跑）。
+新增 [06](06-remedies-within-budget.md) 回答"自带能力补不上的缺口怎么办"，且**限定只用内置 schema、不 fork**（自定义 schema 要自己跟着 OpenSpec 升级维护，代价太高）：**方向不需要新 artifact——它就在 `proposal.md` 的 `## Why`/`## What Changes` 里，而内置能力对它零检查**；`config.yaml` 三个面全部是软能力；方向内容 + 新鲜度可以靠消费 `status --json` 的脚本补成硬闸门（实测四种状态可跑，不依赖任何自定义 schema）。
 
 ---
 
@@ -84,7 +84,7 @@ dependencies: [{"id":"direction","done":false,"path":"direction.md", …}]
 | [03 · 线 B：方向漂移](03-direction-drift.md) | 归档五道闸门、update-change、verify、**自定义 schema 门控**、跨 change 缺口 + 本仓实测争用 |
 | [04 · 使用要点](04-usage.md) | profile 到手面 + 12 条可操作要点（每条标注硬/软） |
 | [05 · 可复跑验证](05-verification.md) | 每条结论对应的命令与实际输出 |
-| **[06 · 自带能力之外的补法](06-remedies-within-budget.md)** | **`config.yaml` 三面全软、schema 门控的三种绕过、新鲜度硬闸门脚本、外部参照系** |
+| **[06 · 自带能力之外的补法](06-remedies-within-budget.md)** | **只用内置 schema（不 fork）：方向就在 `proposal.md` 里、`config.yaml` 三面全软、内置 DAG 的绕过路径、方向 + 新鲜度闸门脚本、外部参照系** |
 | [附录 A · CLI 命令面](appendix-a-cli-surface.md) | 完整命令 dump、配置面、排除清单 |
 
 图源在 [`figures/`](figures/)（手写 SVG，无构建依赖）。
