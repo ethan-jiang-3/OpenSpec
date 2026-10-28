@@ -66,6 +66,8 @@ openspec update
 
 `openspec update` 的重启提示是条件性的：Cursor、Cline 等 IDE 驻留 surface 实际生成了新 commands/skills 时才提示；Claude Code、Codex、OpenCode 等 CLI-only 工具通常会立即读文件，不应笼统要求重启所有 AI 工具。
 
+`--dry-run` 和真实 `openspec update` 走同一条写入路径（`UpdateFileOps`：真实用 `realFileOps`，预演用 `UpdatePlanRecorder`），所以计划里的 `add` / `update` / `delete` 就是非交互真跑会做的（交互式运行还会问 `notes` 里的步骤）；它只是不落盘，不是另一套“少写一部分”的逻辑。
+
 ### 本文档的假设
 
 **本文档中的某些示例使用 custom profile 的命令**（如 `/opsx:continue`）。

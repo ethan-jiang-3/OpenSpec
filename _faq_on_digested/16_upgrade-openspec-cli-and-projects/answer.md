@@ -4,7 +4,7 @@
 
 ## 一句话结论
 
-**OpenSpec 没有 `openspec upgrade` 命令。升级是两步：① 用你当初的安装方式升级全局 CLI（npm 全局下 `openspec update` 可以替你升级并重跑；standalone 用 `openspec install`）；② 对每个项目先 `openspec update --dry-run` 预演，再跑 `openspec update`，让新 CLI 用自己的模板重新生成该项目的 skills/commands、迁移旧目录、清理旧托管文件。顺序不能反——先升 CLI，再 update 项目；用旧 CLI 跑 update 只会重新生成旧的投递文件。**
+**OpenSpec 没有 `openspec upgrade` 命令。升级是两步：① 用你当初的安装方式升级全局 CLI（交互式 npm 全局、默认 registry 下 `openspec update` 可以替你升级并重跑；standalone 用 `openspec install`）；② 对每个项目先 `openspec update --dry-run` 预演，再跑 `openspec update`，让新 CLI 用自己的模板重新生成该项目的 skills/commands、迁移旧目录、清理旧托管文件。顺序不能反——先升 CLI，再 update 项目；用旧 CLI 跑 update 只会重新生成旧的投递文件。**
 
 ---
 
@@ -25,7 +25,7 @@
 
 ### 各安装方式的升级命令
 
-CLI 会识别自己是**怎么被装的**（`detectPackageManager()`），然后给对应命令（`GLOBAL_UPGRADE_COMMANDS`）：
+CLI 会识别自己是**怎么被装的**（`getCliInstallInfo()` 的 scope/packageManager；standalone 走 `getStandaloneBinaryPath()`），然后给对应命令（`GLOBAL_UPGRADE_COMMANDS`；standalone 为 `openspec install`）：
 
 | 安装方式 | 升级命令 |
 |---|---|
@@ -104,6 +104,7 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 ## v1.15.0 的具体提醒（来自同步记录 0013）
 
 - **安装形态多了一条**：standalone 单文件（macOS/Linux glibc/musl/Windows，x64/arm64）不需要 Node.js；`openspec install [version]` 可切换，旧包管理器副本不会自动删，只给移除命令。`openspec version` 会标 `(standalone)`。
+- **一次性提示**：全局包管理器安装的用户在 `openspec update` 后可能在 stderr 看到一次 standalone 提示（非 TTY/CI 延迟显示；只提示，不自动切换）。
 - **项目内更新先预演**：`openspec update --dry-run` 只报告计划、不落盘；`--json` 只能与 `--dry-run` 同用。计划含 `add/update/delete`、`notes`、`failures`。
 - **verify 的 REMOVED**：基线按精确规范化名称匹配（`Requirement:` 后文本、trim、有空格/tab 时才去掉结尾 `#`、大小写敏感）；同名近似项不再被当成被删除的那条。基线找不回时该条报 not verified 并跳过搜索，不是"删除通过"。
 - **`new change`**：进度行显示实际解析出的 schema（`--schema` → config → root 默认），不再固定 `spec-driven`。
@@ -142,7 +143,7 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 - `schema init --default` 修复：写入 loader 实际读取的 `schema` 键，失败时回滚两个文件。
 - `openspec validate` 新增 `## Purpose` 占位符 warning：archive 遗留的 `TBD - created by archiving change ...` 会被检测到（默认 warning，`--strict` 才 fail）。
 - archive rename 保序：RENAMED requirement 保持在原位置，不再移到 spec 尾部。
-- 本仓库移除了自己的项目级 schema `openspec/schemas/agent-dev-driven/` 与 `requirement-driven/`（**非上游改动**——内置 `schemas/` 从 v1.6.0 到 v1.14.3 始终只有 `spec-driven`；本地提交 `52acd036` 删除）。
+- 本仓库移除了自己的项目级 schema `openspec/schemas/agent-dev-driven/` 与 `requirement-driven/`（**非上游改动**——内置 `schemas/` 从 v1.6.0 到 v1.15.0 始终只有 `spec-driven`；本地提交 `52acd036` 删除）。
 - Fish completion 不再回退到文件路径建议。
 - Explore 图例改纯 ASCII。
 

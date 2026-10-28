@@ -16,4 +16,4 @@ OpenSpec 的 schema 系统能不能脱离传统软件开发的 `spec-driven`，�
 
 完整 schema-package 和模板在 [`schema-package/`](schema-package/)，设计解释在 [`answer.md`](answer.md)，schema 扩展实操指南在 [`answer-add-schema.md`](answer-add-schema.md)。
 
-> **边界**：`agent-dev-driven` 与 `requirement-driven` **从来不是 OpenSpec 内置 schema**——内置 `schemas/` 从 v1.6.0 到 v1.14.3 只有 `spec-driven`。它们曾是本仓库自己的项目级 schema（`openspec/schemas/` 下），后由本地提交 `52acd036` 移除。本 FAQ 的 [`schema-package/`](schema-package/) 是这两个工作流的**独立项目级副本**，通过 `cp -r` 安装到 `openspec/schemas/<name>/`，与上游是否内置无关；请勿把它当作 OpenSpec 自带 schema。
+> **边界**：`agent-dev-driven` 与 `requirement-driven` **从来不是 OpenSpec 内置 schema**——内置 `schemas/` 从 v1.6.0 到 v1.15.0 只有 `spec-driven`。它们曾是本仓库自己的项目级 schema（`openspec/schemas/` 下），后由本地提交 `52acd036` 移除。本 FAQ 的 [`schema-package/`](schema-package/) 是这两个工作流的**独立项目级副本**，通过 `cp -r` 安装到 `openspec/schemas/<name>/`，与上游是否内置无关；请勿把它当作 OpenSpec 自带 schema。

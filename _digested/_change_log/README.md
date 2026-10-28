@@ -2,20 +2,26 @@
 
 ## 同步方式（长期约定，先读这个）
 
-**永远不要对 upstream 做真正的 `merge` / `rebase`；同步一律 `git merge --squash <tag>`。**
+**从 v1.15.0 起，新增同步只用 `git merge --squash <tag>`：不再新增真正的 `merge` 或 `rebase`。历史里已有的 merge（如 v1.14.3 的 `95b7f247`）保留不改写。**
 
 `ethan` 是阅读消化分支，不是给上游贡献代码的分支。本分支相对目标 tag 只允许两件事：
 
 1. **上游跟踪路径逐字节一致**：`git diff --diff-filter=MD <tag> HEAD`（M=修改，D=删除）必须为空。
 2. **新增内容只放在** `_digested/`、`_faq_on_digested/`、`_openspec_handbook/`，以及根目录的 `CONTEXT.md`（FAQ 术语表，上游没有）。
 
-因为上游从不碰这些路径，同步就只是“把目标 tag 的文件树盖上去”。squash 正好做到：代码树与 tag 一致，但不留下 upstream 血缘。真正的 merge 会多出 merge commit、以后每次都要处理；rebase 会改写 270+ 本地提交的 hash。**都不做。**
+因为上游从不碰这些路径，同步就只是“把目标 tag 的文件树盖上去”。squash 正好做到：代码树与 tag 一致，但不新增 upstream 血缘。再走真正的 merge 会新增 merge commit、以后每次都要处理；rebase 会改写 272 个本地提交的 hash。**都不做。**
 
 每次同步：
 
 1. **定目标**：明确指定 tag（本次 `v1.15.0`）；不跟 `upstream/main` 漂移，tag 后 main 的提交不自动纳入。
 2. `git fetch upstream --tags`
-3. `git log --oneline <tag>..HEAD -- src scripts test bin build.js package.json` → 应为空；有输出说明本地动过源码，先停下来查清。
+3. 先确认本地没动过源码——**用 diff，不要用 log**：
+
+   ```bash
+   git diff --stat <当前基线 tag> HEAD -- src scripts test bin build.js package.json
+   ```
+
+   必须为空。`git log <tag>..HEAD -- src …` 不能当判据：历史 merge 和 squash 提交都不在 tag 的祖先链上，这个 log 永远不空。
 4. `git merge --squash <tag>`
 5. 共享文件冲突一律取上游版本；本地需要的忽略项写 `.git/info/exclude`，不要改受版本控制的文件。
 6. `pnpm install --frozen-lockfile && pnpm build && pnpm test`
@@ -25,10 +31,11 @@
 
 ```bash
 git diff --diff-filter=MD <tag> HEAD -- .   # 必须为空
+git diff --stat <tag> HEAD -- src scripts test bin build.js package.json  # 也应为空
 git diff --stat <tag> HEAD                  # 只应列出 _* 与 CONTEXT.md
 ```
 
-> 这里没有“怎么 merge 上游”的问题。只有“这次钉到哪个 tag，然后 squash 盖上去”。
+> 需要讨论的只剩“这次钉到哪个 tag，然后 squash 盖上去”；历史 merge 不再重开。
 
 这个目录记录每次从 upstream (Fission-AI/OpenSpec) 同步到本地的变更摘要。每条记录包含：
 

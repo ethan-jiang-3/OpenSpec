@@ -2,7 +2,7 @@
 
 [问题与背景 →](question.md)
 
-> 源码基线：OpenSpec `v1.14.3`（`c794978f`）。本篇所有源码锚点在该版本核对；本工作树 `3bb9061c` 的 `src/` 与该版本**逐字节一致**（`git diff --stat upstream/main..ethan -- src/` → 0 文件）。
+> 源码基线：OpenSpec `v1.15.0`（`8e0288df`）。本篇所有源码锚点已按该版本复核；当前 `ethan` 工作树的 `src/` 与该版本**逐字节一致**（`git diff --stat v1.15.0..HEAD -- src/` → 0 文件）。
 > 命令输出、字节数、通过/失败数均为实测；复跑命令见 [05 · 可复跑验证](05-verification.md)。
 
 ---

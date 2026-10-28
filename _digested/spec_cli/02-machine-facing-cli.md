@@ -163,15 +163,15 @@ v1.14.0 新增的自述端点。JSON 契约：
 {
   "schemaVersion": 1,
   "version": "<installed>",
-  "install": { "location": "...", "packageManager": "npm|pnpm|bun|yarn|volta|null", "scope": "global|project|temporary|source|null" },
+  "install": { "location": "...", "packageManager": "npm|pnpm|bun|yarn|volta|null", "scope": "global|project|temporary|source|standalone|null" },
   "update": { "status": "available|current|disabled|offline", "latest": "...|null", "command": "...|null", "canSelfUpgrade": false }
 }
 ```
 
 （上面的 `update` 只是**形状示意**：不带 `--check` 时该键整体不存在；且 `latest` / `command` 都可能为 `null`，`canSelfUpgrade` 也常常是 `false`——别把 `true` 当默认值。）
 
-- `install` 描述当前安装的形态（`getCliInstallInfo`）；`update` 只在 `--check` 时出现——不带 `--check` 完全不发网络请求。
-- `update.command` 仅在 `status: "available"` 且安装归属明确（global + 已识别包管理器）时非空；`canSelfUpgrade` 由 `canSelfUpgrade()` 判定，非默认 registry 等不确定归属会返回 false。
+- `install` 描述当前安装的形态（`getCliInstallInfo`）；standalone 安装时 `packageManager` 为 `null`、`scope` 为 `standalone`。`update` 只在 `--check` 时出现——不带 `--check` 完全不发网络请求。
+- `update.command` 仅在 `status: "available"` 且安装归属明确（global + 已识别包管理器，或 standalone）时非空；standalone 给 `openspec install`（PATH 上第一个副本不同时给带全路径的重装命令）；`canSelfUpgrade` 由 `canSelfUpgrade()` 判定，非默认 registry 等不确定归属会返回 false。
 - `disabled`/`offline` 是显式状态而非错误，agent 应按“无法确认更新”处理而不是重试。
 
 对机器的意义：

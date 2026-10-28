@@ -69,7 +69,7 @@ sequenceDiagram
         MD->>MD: 找到第一个 ready artifact
         MD->>TS: openspec instructions proposal --change X
         TS-->>MD: template + instruction
-        MD-->>User: "Change created. Schema: <实际解析出的 schema>.<br/>First artifact: proposal.md<br/>Template: …<br/>Ready to create? Run /opsx:continue."
+        MD-->>User: "Change created. Schema: 实际解析出的 schema.<br/>First artifact: proposal.md<br/>Template: …<br/>Ready to create? Run /opsx:continue."
     end
 
     Note over MD,FS: ⚠ STOP —— 不生成任何 artifact

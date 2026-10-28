@@ -313,7 +313,7 @@ return !stream.isTTY ? true : (stream.columns ?? 0) > 0;
 
 单文件没有 package 目录，`version-check.getInstallDir()` 不再用 `require.resolve('../../package.json')`（会被 bundler 在构建时把构建机路径烤进去），改为按 `import.meta.url` 解析并在运行时 `fs.existsSync` 判断；standalone 入口另用 `markStandaloneBinary(process.execPath)` 把安装形态标成 `standalone`。schemas 由 `entry.mjs` 解到 global data dir 并通过 `setPackageSchemasDir` 注入。
 
-## 测试锚点补充（v1.14.1–v1.14.3）
+## 测试锚点补充（v1.14.1–v1.15.0）
 
 - `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs`：记录并断言启动时加载的模块数（防止按需加载被无意退回）
 - `test/utils/interactive.test.ts`：零宽 TTY 下 spinner 被拒绝

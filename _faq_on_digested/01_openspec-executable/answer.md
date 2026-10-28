@@ -125,7 +125,7 @@ npm 方式始终需要 Node.js；v1.15.0 起每个 release 另外提供 8 个平
 
 - **安装**：文档里的一行命令（`curl ... install.sh | sh` / `irm ... install.ps1 | iex`），或 `openspec install [version]`。安装器校验 `SHA256SUMS` 后把文件放到 `~/.local/bin/openspec`（Windows：`%LOCALAPPDATA%\Programs\openspec`）。
 - **运行**：单文件直接执行，不需要 Node.js；入口先 `markStandaloneBinary(process.execPath)`，再把内嵌的 schema 解到 `<globalDataDir>/binary-schemas/<hash>` 并交给 `setPackageSchemasDir`。
-- **识别**：`openspec version` 会标 `(standalone)`，`--json` 的 `install.scope` 是 `standalone`。
+- **识别**：`openspec version` 会标 `(standalone)`，`--json` 的 `install.scope` 是 `standalone`；`openspec version --check` 给出的升级命令是 `openspec install`。
 - **升级**：`openspec install` 原地重装（不是 npm/brew），之后再 `openspec update` 刷新工具侧文件。
 - **切换**：`openspec install` 不会自动删旧的包管理器副本，只提示移除命令；切不切由用户决定。
 

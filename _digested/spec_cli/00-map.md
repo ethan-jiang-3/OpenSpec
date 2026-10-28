@@ -29,6 +29,7 @@
 
 - `init`
 - `update`
+- `install`
 - `list`
 - `show`
 - `validate`

@@ -166,7 +166,7 @@ v1.0.0 是迄今为止最大的 breaking change：
 |---|---|
 | Slash commands 不出现怎么办？ | 运行 `openspec update`；仅当输出提示更新了 IDE-resident commands/skills 时重启 IDE。CLI-only 工具更新通常不需重启。再检查目标工具目录，并确认在 AI chat 里输入（不是终端） |
 | Terminal vs AI Chat 的区别？ | `openspec ...` 在终端；agent 入口由宿主决定（Claude `/opsx:*`，Codex `$openspec-*`） |
-| 怎么升级？ | `npm install -g @fission-ai/openspec@latest` 然后每个项目里执行 `openspec update` |
+| 怎么升级？ | `openspec version --check` 看安装形态与升级命令（npm 全局用 `npm install -g @fission-ai/openspec@latest`；standalone 用 `openspec install`），升完在每个项目里先 `openspec update --dry-run` 预演、再 `openspec update` |
 | 怎么自定义？ | `openspec/config.yaml` 的 `context:` / `rules:` / `operations:` / `schema:` 字段；自定义 schema 用 `openspec schema fork spec-driven my-workflow` |
 
 ### 3.3 什么时候用 / 什么时候不用

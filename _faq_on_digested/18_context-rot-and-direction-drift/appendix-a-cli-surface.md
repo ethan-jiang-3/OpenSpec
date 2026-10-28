@@ -45,7 +45,7 @@ expanded（可选）   + new  continue  ff  verify  bulk-archive  onboard
 ```
 
 - 集合定义【实测：`src/core/profiles.ts:14`】：`CORE_WORKFLOWS = ['propose','explore','apply','update','sync','archive']`
-- 默认值【实测：`src/core/global-config.ts:45`】：`profile: 'core'`
+- 默认值【实测：`src/core/global-config.ts:47`】：`profile: 'core'`
 - 启用 expanded：`openspec config profile` → `openspec update`
 - **CLI 命令不受 profile 影响**，始终可用
 

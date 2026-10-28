@@ -276,7 +276,8 @@ graph LR
 | `openspec instructions [artifact] --change <name>` | 输出指定 artifact 的生成指令（agent 可消费的 `--json` 格式）；`--change` 必填 |
 | `openspec archive <name>` | 归档 change |
 | `openspec config profile` | 切换工作流 profile |
-| `openspec update` | 更新 AI 工具的 skills/commands |
+| `openspec update` | 更新 AI 工具的 skills/commands；v1.15.0+ 支持 `--dry-run` / `--json` 预演 |
+| `openspec install [version]` | 安装/切换 standalone 单文件（无需 Node.js）；不自动删旧包管理器副本 |
 | `openspec store register` | 注册一个仓库 checkout 为全局 store |
 | `openspec store setup [id]` | 从零创建并注册一个全局 store（不同于 register 只指向已有目录） |
 | `openspec store list` | 列出已注册的 store |

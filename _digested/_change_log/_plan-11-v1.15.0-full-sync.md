@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- **计划状态**：Phase A–D 完成（源码已同步到 v1.15.0，三套资料已回填）；Phase E 收尾完成
+- **计划状态**：Phase A–D 完成（源码已同步到 v1.15.0，三套资料已回填）；Phase E 收尾完成并已推送 `origin/ethan`（含评审修正提交）
 - **本地分支**：`ethan`
 - **旧基线**：OpenSpec `v1.14.3`，tag/commit `c794978f`
 - **目标基线**：OpenSpec `v1.15.0`，tag/commit `8e0288df`
@@ -40,9 +40,9 @@
 
 ## 一、同步原则（继承 0009–0012，并在本轮固定 squash 约定）
 
-### 1. 合入方式：只有 squash，没有 merge
+### 1. 合入方式：只新增 squash，不再 merge
 
-- 同步一律 `git fetch upstream --tags` + `git merge --squash <tag>`；**永远不对 upstream 做真正的 `merge` 或 `rebase`**。
+- 同步一律 `git fetch upstream --tags` + `git merge --squash <tag>`；**从 v1.15.0 起不再新增真正的 `merge` 或 `rebase`**。历史 merge（如 `95b7f247`）保留，不重写。
 - 判据：`ethan` 相对目标 tag 的差异只能是**新增**。`git diff --diff-filter=MD <tag> HEAD`（M=修改，D=删除）必须为空。
 - 本地允许的新增只有：`_digested/`、`_faq_on_digested/`、`_openspec_handbook/`、`CONTEXT.md`。
 - 共享文件冲突一律取上游版本；本地需要的忽略项写 `.git/info/exclude`，不写受版本控制的 `.gitignore`。
@@ -115,9 +115,9 @@
 - [x] E1 `pnpm run build` + `pnpm test` 全绿（源码未再改动，预期 229/6722）
 - [x] E2 版本一致性：`package.json` / `_digested/README.md` / FAQ 12 版本表 / handbook 00-index
 - [x] E3 回填 0013「当前处理状态」
-- [x] E4 单一 commit 提交资料更新，本计划文件一并提交
+- [x] E4 提交资料更新：`ff602e22`（0013/计划/README 政策）+ `1c31fa2b`（三套资料回填）；本计划最终版随 `1c31fa2b` 提交
 - [x] E5 `_change_log/README.md` 索引加 0013 与 `_plan-11` 两行
-- [~] E6 未推送 `origin/ethan`（由用户决定）；**永不推送 `upstream`**
+- [x] E6 已推送 `origin/ethan`（含评审修正提交）；**永不推送 `upstream`**
 
 ## 阻塞与决策
 
@@ -129,6 +129,7 @@
 
 - **2026-10-28 计划创建**：`git fetch upstream --tags` 发现 `v1.15.0`；确认 npm `latest`=1.15.0、GitHub Release 已发；`upstream/main` 比 tag 多 1 个 website 提交，按“钉 tag”不纳入。
 - **源码同步**：`git merge --squash v1.15.0`，唯一冲突 `.gitignore`；解决后同步提交 `5bc2cc04`。`package.json`=1.15.0。
-- **一致性与验证**：`git diff --diff-filter=MD v1.15.0 HEAD` 为空；`git diff --stat v1.15.0 HEAD` 仅 `_*` + `CONTEXT.md`；`pnpm install --frozen-lockfile` 成功；`pnpm build` 成功；`pnpm test` **229 files / 6722 tests 全绿**（73s）；`node bin/openspec.js --version` = `1.15.0`。
+- **一致性与验证**：`git diff --diff-filter=MD v1.15.0 HEAD` 为空；`git diff --stat v1.15.0 HEAD` 仅 `_*` + `CONTEXT.md`；`pnpm install --frozen-lockfile` 成功；`pnpm build` 成功；`pnpm test` **229 files / 6722 tests 全绿**（73s；复跑约 89s）；`node bin/openspec.js --version` = `1.15.0`。
 - **资料（Phase B–D）**：`_digested` 回填 update dry-run、verify 精确名、new-change schema、install 命令、源码地图、CLI infra、coverage 与基线；`_faq_on_digested` 回填 01/12/16/17 与 README；`_openspec_handbook` 回填 00-index（v1.14 行）、52、99（Q27f）与 README。
 - **验收（Phase E）**：`pnpm build` 成功；`pnpm test` 229 files / 6722 tests 全绿；三套资料相对链接 0 失效；版本一致性 package.json / `_digested/README.md` / handbook 00-index 均为 1.15.0。
+- **推送**：`origin/ethan` 已更新（`1c31fa2b` 及评审修正提交）。

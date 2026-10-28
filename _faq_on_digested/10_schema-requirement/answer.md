@@ -90,7 +90,7 @@ agent 走完 proposal → specs → tasks 的 artifact 生成后，在 apply 阶
 
 ## 已知限制
 
-- **从来不是内置 schema**：OpenSpec 内置 `schemas/` 从 v1.6.0 到 v1.14.3 只有 `spec-driven`，`requirement-driven` 一直是项目级自定义 schema；本目录的 [`schema-package/`](schema-package/) 是唯一维护源，安装后作为项目级自定义 schema 与上游解耦。
+- **从来不是内置 schema**：OpenSpec 内置 `schemas/` 从 v1.6.0 到 v1.15.0 只有 `spec-driven`，`requirement-driven` 一直是项目级自定义 schema；本目录的 [`schema-package/`](schema-package/) 是唯一维护源，安装后作为项目级自定义 schema 与上游解耦。
 - **archive 的 tasks.md 硬编码**：和所有社区 schema 一样的限制。需求场景下 tasks.md 命名自然，不需要改
 - **利益相关者不在线时流程阻塞**：apply 依赖利益相关者反馈。如果利益相关者不回复，agent 只能记录问题、标记 blocked、等下次会话。这是需求工程本身的属性
 - **不替代专业 RE 工具**：适合小团队或早期项目的需求定义，不适合审批流、基线管理、需求矩阵追踪等重型 RE 流程

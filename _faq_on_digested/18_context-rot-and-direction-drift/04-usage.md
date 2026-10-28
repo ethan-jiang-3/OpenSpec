@@ -8,7 +8,7 @@
 
 ## 0 · 先确认你手上有什么：profile 决定到手面
 
-**默认是 `core`**【实测：`openspec config get profile` → `core`；代码 `src/core/global-config.ts:45`】：
+**默认是 `core`**【实测：`openspec config get profile` → `core`；代码 `src/core/global-config.ts:47`】：
 
 ```text
 core（默认）      propose  explore  apply  update  sync  archive
