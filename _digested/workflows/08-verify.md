@@ -128,14 +128,16 @@ REMOVED 块的语义是「这个行为应当消失」，所以预期结果是搜
 
 现在 REMOVED 分支按四步走：
 
-1. **先读主 spec 里的基线**：`<planningHome.root>/openspec/specs/<capability-path>/spec.md`，能力路径与 delta spec 一致。按**归一化名字**扫描该文件的 requirement 标题匹配，不做 delta 标题的字面字符串匹配。基线的正文与 scenarios 才是"应当消失的行为"的证据。
-2. **主 spec 里没有时，去该文件的历史里找**：在**规划仓库**而不是当前目录执行 `git -C "<planningHome.root>" log -p -- openspec/specs/<capability-path>/spec.md`；定位到执行移除的那个 commit 后可用 `git -C "<planningHome.root>" show <commit>^:./openspec/specs/<capability-path>/spec.md`。注意 `git log` 对匹配不到的 pathspec 也返回成功，空输出意味着"路径没对上"，不是"没有基线"，所以先复核路径。
+1. **先读主 spec 里的基线**：`<planningHome.root>/openspec/specs/<capability-path>/spec.md`，能力路径与 delta spec 一致。按**精确规范化名称**扫描该文件的 requirement 标题：取 `Requirement:` 后的标题文本、trim，只在结尾 `#` 串前有空格/tab 时去掉这段 `#`（所以 `C#` 保留自己的 `#`），再按**大小写敏感**比较。相似措辞的标题**不算**匹配；改名属于 RENAMED，不属于 REMOVED。基线的正文与 scenarios 才是"应当消失的行为"的证据。
+2. **主 spec 里没有这个精确名称时，去该文件的历史里找**（例如早先的 sync 已应用了移除，或一个相似命名的 ADDED requirement 取代了它）：在**规划仓库**而不是当前目录执行 `git -C "<planningHome.root>" log -p -- openspec/specs/<capability-path>/spec.md`；定位到执行移除的那个 commit 后可用 `git -C "<planningHome.root>" show <commit>^:./openspec/specs/<capability-path>/spec.md`。注意 `git log` 对匹配不到的 pathspec 也返回成功，空输出意味着"路径没对上"，不是"没有基线"，所以先复核路径。
 3. **基线是否可用**：只有标题重述、没有正文也没有 scenario 的基线，与缺失同级——不可用。
 4. **两处都拿不到可用基线**：该条 Spec Coverage 标 **not verified** 并写明原因，然后**停止**——不搜索，绝不把"没搜过的移除"算成通过。
 
 拿到可用基线之后才开始搜索，判定规则不变：仍在交付该行为的代码路径（包括与 ADDED requirement 共享的那条）报 CRITICAL；`openspec/` artifacts、文档、只服务于 Migration 注释或某个 ADDED requirement 的代码不算证据。
 
 RENAMED 分支原有的行为（FROM 名下没有时才按 TO 名读）不变；removal-only change 的 Correctness 两检查仍标 Not applicable，但其中已在 Spec Coverage 标 not verified 的条目保持 not verified。
+
+v1.15.0 起（#2114），“归一化名字”收紧为上述**精确规范化名称**：这是 OpenSpec 应用 REMOVED 块时的同一条规则。此前按近似名字扫描，会让一个在 sync 后顶替了被移除条目的同名近似 ADDED requirement 被当成基线，从而把“仍然实现”误报成“已移除”。
 
 ## Not applicable 与 Not verified 的分界
 

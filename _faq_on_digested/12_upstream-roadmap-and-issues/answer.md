@@ -18,7 +18,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v1.14.3）
+### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v1.15.0）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -40,6 +40,7 @@
 | v1.14.1 | 补丁：requirement / ADDED 正文 >500 字从 INFO 升 WARNING；退役清理失败改用独立错误码 `archive_retirement_cleanup_failed`（文案分清"已归档"与"清理未完成"）；glob 工件「done 但文件不全」的补完协议（`PARTIAL_ARTIFACT_CHECK`）与 specs 逐文件写入；apply `all_done` 不再暗示可归档 + tasks 模板新增 `## Workflow follow-up`；verify 按输出路径发现工件；CLI 按需加载（`--help` 485→24 模块）；`view` 撤回归档分区；CI 钉 Node 20/22/24 | v1.14.1 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
 | v1.14.2 | 补丁：delta 里「归档不会带走」的文本（首个 `##` 前正文 / 首个 requirement 前散文 / 额外 `##` 段）报 WARNING；`.openspec.yaml` 接受顶层 `x-` 扩展键；`openspec/`、`changes/`、`specs/` 可为项目内 symlink（`archive/` 不行）；explore 捕获表限定默认 schema；update 的 glob 新文件例外写在两处；verify 的 REMOVED 先读主 spec 基线；`__complete` 跳过遥测（344→48 模块） | v1.14.2 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
 | v1.14.3 | 补丁：artifact 创建前先定并校验输出路径（propose/ff/continue/explore 统一，glob 工件必须落在 change 目录内）；单条 `specs/<capability>/spec.md` 可为指向项目内其他位置的 symlink；glob 引擎由 `fast-glob` 换到 `tinyglobby`（brace 嵌套 ≤16、展开 ≤1024，移走 `braces` 传递依赖）；零宽 TTY 下 spinner 不再挂死；website 预览改零依赖脚本 | v1.14.3 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
+| v1.15.0 | 独立安装 + update 预演（minor）：8 平台 standalone 单文件（无需 Node.js）、`openspec install` 切换安装形态、`openspec update --dry-run/--json`、feedback 对齐 bug 表单、`new change` 显示实际 schema、verify 的 REMOVED 按精确规范化名称匹配、`--json` 不加载 ora | v1.15.0 依据（见 [`0013`](../../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 

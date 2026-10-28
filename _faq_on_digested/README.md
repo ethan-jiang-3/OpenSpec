@@ -49,7 +49,7 @@ _faq_on_digested/
 
 ## 已有问题
 
-- [`01_openspec-executable/`](01_openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的。
+- [`01_openspec-executable/`](01_openspec-executable/question.md) — `npm install -g @fission-ai/openspec` 之后，`openspec` 命令是怎么变成系统级可执行文件的；v1.15.0 起的 standalone 单文件（不需要 Node.js）走的是哪条路径。
 - [`02_schema-article-driven/`](02_schema-article-driven/question.md) — OpenSpec 的 schema 系统能不能脱离代码实现，用来管理文章内容生产流水线？概念验证：定义一个 article-driven schema，不改源码。
 - [`03_explore-to-propose-change/`](03_explore-to-propose-change/question.md) — Explore 如何基于用户意图、OpenSpec 状态和真实代码判断是否应该 propose change，以及应该 propose 一个还是多个。
 - [`04_propose-to-apply-ready/`](04_propose-to-apply-ready/question.md) — Propose 动作出现后，OpenSpec 如何创建 change、生成 artifacts，并走到 mechanical apply-ready。
@@ -65,7 +65,7 @@ _faq_on_digested/
 - [`14_main_specs_context_scaling/`](14_main_specs_context_scaling/question.md) — archive 后主 specs 不断增长时，OpenSpec 现有的 capability 分片、按需读取与 external reference index 到底覆盖了什么；本仓库没有的 local spec discovery / retrieval 如何用 catalog、全局 context 内核与显式选择协议补上。
 - [`15_nested_capability_migration/`](15_nested_capability_migration/question.md) — 项目 capability 太多（几十个 flat capability），如何从 flat 迁移到嵌套二级目录结构？完整操作指南：taxonomy 设计、受控 rebaseline 流程、active delta 处理、config.yaml 更新、catalog 建设、验证清单、迁移后纪律。
 - [`16_upgrade-openspec-cli-and-projects/`](16_upgrade-openspec-cli-and-projects/question.md) — OpenSpec 整体怎么升级？升级完全局 CLI 之后，每个项目里还要做什么（`openspec update` 重投递 skills/commands、迁移 `.codex`→`.agents`、清理 legacy）？各安装方式的升级命令分别是什么？
-- [`17_review-and-validation-surface/`](17_review-and-validation-surface/question.md) — v1.11.0–v1.14.3 的审阅/校验工具面（`show --diff`、`status --all`、`validate --report findings`、advisory merge preflight、Purpose 占位符检测、parser 三修复、verify status 契约重写、verify 按输出路径发现工件 + REMOVED 读基线、`.openspec.yaml` 未知键与 `x-` 扩展键、delta unapplied 文本与超长 requirement 的 WARNING）各自解决什么？合起来能在 archive 前发现哪些 specs 失真，又没补上哪些？
+- [`17_review-and-validation-surface/`](17_review-and-validation-surface/question.md) — v1.11.0–v1.15.0 的审阅/校验工具面（`show --diff`、`status --all`、`validate --report findings`、advisory merge preflight、Purpose 占位符检测、parser 三修复、verify status 契约重写、verify 按输出路径发现工件 + REMOVED 读基线并收紧为精确规范化名称、`.openspec.yaml` 未知键与 `x-` 扩展键、delta unapplied 文本与超长 requirement 的 WARNING）各自解决什么？合起来能在 archive 前发现哪些 specs 失真，又没补上哪些？
 - [`18_context-rot-and-direction-drift/`](18_context-rot-and-direction-drift/question.md) — **只认自带能力**的前提下，specs 堆积导致的「上下文腐化」与敏捷迭代导致的「方向漂移」分别有哪些预防机制、边界与缺口？引入硬能力（代码判定）vs 软能力（prompt 文字）的分界与证据分级（实测/代码/文档），排除上游仓库自身的项目管理约定、未落地提案、以及它维护自己源码的内部测试。含 6 张手写 SVG 图；正文拆为索引 + 5 章 + 附录。另加第 6 章（口径不同，标为外置，**且限定只用内置 schema、不 fork**，避免跟着 OpenSpec 升级维护自定义 schema）：方向不需要新 artifact，它就在 `proposal.md` 的 `## Why`/`## What Changes` 里而内置能力对其零检查；`config.yaml` 三个面全部是软能力；并可消费 `status --json` 用一个脚本同时补上「方向内容」与「新鲜度」两道硬闸门。
 
 ## 引用规范

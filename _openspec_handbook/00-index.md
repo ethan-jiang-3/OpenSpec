@@ -10,14 +10,14 @@
 
 | 项 | 值 |
 |----|----|
-| **手册版本** | **v1.13** |
-| **对齐 OpenSpec** | 1.14.3 |
+| **手册版本** | **v1.14** |
+| **对齐 OpenSpec** | 1.15.0 |
 | **本版日期** | 2026-10 |
 
 **两个版本维度（别混）**：
 
-- **手册版本**（v1.12）：本手册自身的版次。理解加深、内容大修时升版。
-- **对齐 OpenSpec**（1.14.3）：本手册当前对应的 OpenSpec 上游版本。
+- **手册版本**（v1.14）：本手册自身的版次。理解加深、内容大修时升版。
+- **对齐 OpenSpec**（1.15.0）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
 
@@ -43,6 +43,7 @@
 | v1.11 | 2026-09 | 1.14.0 | 对齐 v1.13.2/v1.14.0：10 个新 `--tools` 目标（dsh/codestudio/gigacode/atomcode/easycode/gsd/amp/grok/warp/veai），`.agents` 共享根扩为 Codex/Zed/Antigravity/Amp/GSD + vendor-neutral，IBM Bob 更名；`list --archived/--all`、`openspec version`、view 的 workflow status 与归档分区；`show --json` requirement/scenario 带 `name`；`status --json` `allowedEditRoots` 纳入声明 store 的当前项目；archive 阻塞语义（sync 失败不归档、sync 后结构验证、retired capability 主 spec 删除）；写回文件行尾保持（CRLF 不再整文件 diff）；`.openspec.yaml` 未知键告警；store-only 仓库可在 root 跑 `init` 装集成。 |
 | v1.12 | 2026-10 | 1.14.3 | 对齐 v1.14.1–v1.14.3：artifact 创建前先定并校验输出路径（glob 工件必须落在 change 目录内，propose/ff/continue/explore 统一）；glob 工件「done 但文件不全」的补完协议；`all_done` 只报跟踪任务完成、归档前需复核/验证；verify 改按输出路径发现工件，REMOVED requirement 必须先读主 spec 基线；archive 的退役清理失败有独立错误码 `archive_retirement_cleanup_failed`；`openspec/`、`changes/`、`specs/` 与 spec 文件可以是项目内 symlink（`archive/` 不行）；delta 里「归档不会带走」的文本与超长 requirement 升为 WARNING；`.openspec.yaml` 顶层 `x-` 扩展键；glob 引擎由 fast-glob 换到 tinyglobby（brace 嵌套 ≤16、展开 ≤1024）；CLI 按需加载与 Tab 补全跳过遥测；零宽 TTY 不再挂死；view 移除归档分区。 |
 | v1.13 | 2026-10 | 1.14.3 | **两件事：① 26 章扩写改名 ② 全手册重编号。** ① 原 `09-高级-能力身份与specs漂移维护` 扩写并改名为 `26-高级-治理边界与漂移维护`，新增全手册分析轴「**硬能力 vs 软能力**」（代码判定 vs prompt 文字，违反后果不同）；agent 上下文的字段级事实（`instructions` 注入哪些字段、`contextFiles` 只给路径不给正文、注入体不随 specs 规模增长）；三级过滤读与 50 KB `context` 预算（超限整段丢弃）、`rules` 按 artifact id 分流、artifact DAG 门控与「`status` 是文件存在性不是新鲜度」；归档五道机器闸门（validate 规则集分级 / scenario 丢失双闸 / 干跑合并预检 / 全或无写入 / `retire_capabilities`）；跨 change 缺口（依赖与重叠零检测、近似重复 capability 零检测、三个静默 no-op、无陈旧废弃墓碑）；用自定义 schema 给「方向」建硬前置及其边界（门控**存在**而非**一致**）；新增「判断锚点三问」。保留原 capability 身份、两层 name-as-identity、catalog discovery、rebaseline 与维护节奏主体。素材来源：`_faq_on_digested/18_context-rot-and-direction-drift/`。② **全手册按难度层级重编号**：初级 `0N`、中级 `1N`、高级 `2N`、实战 `5N`（`00`/`90`/`99` 不变）。映射 `02→10`；`03→20`、`04→21`、`05→22`、`06→23`、`07→24`、`08→25`、`09→26`；`10→50`、`11→51`、`12→52`、`13→53`、`14→54`、`15→55`。三套文档（`_digested`/`_faq_on_digested`/`_openspec_handbook`）的章节引用、链接与锚点同步更新；宪章区间改为 `00–26 / 50–19 / 20–29 / 50–59 / 90 / 99`；本表历史行一并改用新号，不保留旧号换算。③ **中级段由 1 篇拆为 2 篇**：`10` 承载三层模型（补上原先缺失的 `config.yaml` 概念层）、artifact 与 delta spec；新增 `11-中级-定位节奏与边界` 承载 brownfield-first、Actions-not-phases、四组边界，以及「change 多起来、方向晃过之后」的整体姿势（**收敛 → 打扫 → 治理** + 在途 change 的四种处置）；原 10 章里自述"跟项目模型无关"的 `completion`/`feedback` 段移入 01 初级。 |
+| v1.14 | 2026-10 | 1.15.0 | 对齐 v1.15.0：standalone 单文件安装（8 平台、无需 Node.js）与 `openspec install` 切换；`openspec update --dry-run/--json`（预演与真实更新共用同一条写入路径）；verify 的 REMOVED 基线改为精确规范化名称；`new change` 进度行显示实际 schema；`feedback` 对齐 bug 表单；`--json` 命令不加载 `ora`；99 新增 Q27f（不装 Node.js 能用吗）。依据见 [`0013`](../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)。 |
 
 ---
 

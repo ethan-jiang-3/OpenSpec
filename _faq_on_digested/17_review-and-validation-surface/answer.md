@@ -154,10 +154,11 @@ verify 不再自己解析 checkbox。它改读 **`openspec instructions apply --
 
 `archive` 删掉某 capability 最后一个 requirement 之后要清理备份。它失败时以前报通用 `archive_error`，且文案断言"每个列出的备份都被保留"——部分成功时这句话是假的。现在：错误码 `archive_retirement_cleanup_failed`，文案拆成两件事——**change 已归档**（retry 回不去）、**清理未完成**（要按诊断里所有 recovery path 逐个检查）。
 
-### verify 的两条口径修正
+### verify 的口径修正（v1.14.2–v1.15.0）
 
 - **按输出路径发现工件**（#2028/#2083）：spec 工件 = `artifactPaths.<id>.outputPath` 在 `specs/` 之下者；design 工件 = id 为 `design` **或** outputPath 命中 `design.md` 者。自定义 schema 下不再因为 id 起得不一样而漏检。
-- **REMOVED 必须先读基线**（#2083）：先从 `openspec/specs/<capability-path>/spec.md` 按归一化名字读该 requirement；读不到就翻文件历史（`git log -p -- <path>` / `show <commit>^:./<path>`）。基线只是标题重述（没有 scenario）视同缺失；两者都没有就把 Spec Coverage 记 not verified 并**跳过搜索**，而不是空手去代码里猜。只有行为确实仍在时才判 CRITICAL。
+- **REMOVED 必须先读基线**（#2083）：先从 `openspec/specs/<capability-path>/spec.md` 读该 requirement 的基线；读不到就翻文件历史（`git log -p -- <path>` / `show <commit>^:./<path>`）。基线只是标题重述（没有 scenario）视同缺失；两者都没有就把 Spec Coverage 记 not verified 并**跳过搜索**，而不是空手去代码里猜。只有行为确实仍在时才判 CRITICAL。
+- **精确规范化名称匹配**（#2114，v1.15.0）：匹配规则收紧为 OpenSpec 应用 REMOVED 时的同一条规则——取 `Requirement:` 后的标题文本、trim，只在结尾 `#` 串前有空格/tab 时去掉这段 `#`（所以 `C#` 保留自己的 `#`），大小写敏感比较。相似措辞的标题**不算**匹配；改名属于 RENAMED。此前按近似名字扫描，一个在 sync 后顶替了被移除条目的相似 ADDED requirement 会被当成基线，从而把"仍然实现"误报成"已移除"。
 
 ### 归档前的最小审阅动作（更新版）
 
@@ -174,7 +175,7 @@ validate <change>            # 结构 + merge 预检 + unapplied 文本 WARNING
 
 ## 参考来源
 
-- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)、[`0012-v1.14.0-to-v1.14.3.md`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)
+- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)、[`0012-v1.14.0-to-v1.14.3.md`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)、[`0013-v1.14.3-to-v1.15.0.md`](../../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)
 - 机制：[`../../_digested/mechanisms/03-spec-model.md`](../../_digested/mechanisms/03-spec-model.md)（parser/validator 分工、Purpose 占位符、advisory preflight）
 - 命令面：[`../../_digested/spec_cli/01-human-facing-cli.md`](../../_digested/spec_cli/01-human-facing-cli.md)、[`02-machine-facing-cli.md`](../../_digested/spec_cli/02-machine-facing-cli.md)
 - 失真治理：[`../../_digested/specs_truth/00-map.md`](../../_digested/specs_truth/00-map.md)

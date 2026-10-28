@@ -94,3 +94,14 @@
 | `src/core/command-generation/adapters/easycode.ts` | EasyCode adapter：`.easycode` skills + TOML 命令 `/opsx:<id>` | `test/core/command-generation/adapters.test.ts` |
 | `src/core/command-generation/adapters/gigacode.ts` | GigaCode adapter：`.gigacode` skills + Markdown 命令 `opsx-<id>.md` | `test/core/command-generation/adapters.test.ts` |
 | `src/core/version-check.ts`（扩展） | `openspec version [--json] [--check]` 支撑：install 识别（scope/package manager/ephemeral runner）与 `getCliInstallInfo`/`checkForCliUpdate`/`canSelfUpgrade`/`buildVersionReportLines` | `test/core/version-check.test.ts` |
+
+## v1.15.0 新增模块
+
+| 新源码 | 职责 | 主要测试 |
+|--------|------|----------|
+| `src/core/update-plan.ts` | `openspec update` 的写入接缝：`UpdateFileOps`、`realFileOps`、`UpdatePlanRecorder`、`formatUpdatePlan`；dry-run 复用同一条生成路径 | `test/core/update-dry-run.test.ts`、`test/core/update-dry-run.property.test.ts` |
+| `src/commands/install-standalone.ts` | `openspec install [version]`：解析目标目录、调用官方安装脚本、检查 PATH、给移除旧副本命令 | `test/commands/install-standalone.test.ts` |
+| `src/core/standalone-tip.ts` | 全局包管理器用户的 standalone 一次性提示（update 后、非 TTY/CI 延迟） | `test/core/standalone-tip.test.ts` |
+| `src/utils/executable-path.ts` | `findCopiesOnPath` / `samePath`：PATH 上实际生效的副本判定 | `test/core/version-check.test.ts`、`test/commands/install-standalone.test.ts` |
+| `scripts/binary/` + `.github/workflows/binaries.yml` | standalone 单文件的构建、安装、校验、8 目标验证与 release 资产 | `test/commands/install-standalone.test.ts`、`test/core/standalone-tip.test.ts`（CLI 侧） |
+| `src/core/version-check.ts`（standalone 扩展） | `markStandaloneBinary` / `getStandaloneBinaryPath`；`scope: 'standalone'`；升级命令 `openspec install` | `test/core/version-check.test.ts` |

@@ -254,7 +254,7 @@ specs/
 **A**: 
 1. 在项目里运行 `openspec init`（v1.2.0+ 会自动检测已安装的工具并预选）
 2. 也可以手动指定：`openspec init --tools claude,cursor`
-3. 运行 `openspec update` 确保 skills/commands 是最新的
+3. 运行 `openspec update` 确保 skills/commands 是最新的（v1.15.0+ 可先 `openspec update --dry-run` 看会改哪些文件）
 4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose`，Zed 为 `/openspec-propose`
 
 ### Q27a: Zed 和 Codex 为什么都写 `.agents/skills/`？
@@ -273,6 +273,11 @@ npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction`
 
 ### Q27e: `openspec --help` 为什么变快了？
 **A**: v1.14.1 把命令的**注册**与**实现**拆开了：`src/cli/index.ts` 只装配 program，各命令在 `src/cli/commands/*.ts` 里注册、action 时才 `await import()` 真正的 `src/commands/*`。`--version`/`--help` 从 485 个模块降到 24 个。输出、帮助文本、补全结果、退出码、遥测行为都没变——纯加载时机重构。
+
+### Q27f: 不装 Node.js 能用 OpenSpec 吗？
+**A**: 能（v1.15.0+）。每个 release 提供 8 个平台的 standalone 单文件：macOS 13+、Linux glibc 2.17+、Alpine 3.17+（需先 `apk add libstdc++ libgcc`）、Windows 10+，x64 与 arm64 都有。用文档的一行安装命令，或已经装过任一版本时跑 `openspec install` 切换；安装器校验 `SHA256SUMS`，默认放到 `~/.local/bin/openspec`（Windows：`%LOCALAPPDATA%\Programs\openspec`）。
+
+`openspec version` 会标 `(standalone)`；升级用 `openspec install`（原地重装），之后再 `openspec update` 刷新项目。`npm install -g` 方式仍需要 Node.js 20.19+；`openspec install` 不会自动删旧包管理器副本，只给移除命令。
 
 ### Q28: 为什么有 `.claude/` 和 `openspec/` 两个目录？
 **A**: 

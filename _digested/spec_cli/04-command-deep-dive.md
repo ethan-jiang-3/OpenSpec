@@ -21,6 +21,15 @@
 - 改变工具工作流外壳：会。
 - 主要风险：用户以为不会删除内容，但它会清理被取消选中的 workflow 产物。
 - v1.10.0 的 restart 提示是条件性的：只有本次实际影响了 registry 中标记 `requiresIdeRestart` 的 IDE surface 才显示；仅更新 CLI/即时加载 skills 的工具不提示。
+- v1.15.0 起支持 `--dry-run`（只报告计划）与 `--json`（仅配 dry-run）；预演与真实更新共用同一条 `UpdateFileOps` 写入路径，报告含 `add/update/delete`、`notes`、`failures`。
+
+### `install [version]`
+
+- 角色：安装形态切换器（v1.15.0 新增）。
+- 核心对象：当前安装形态、官方安装脚本、目标目录、PATH 顺序。
+- 改变项目业务内容：不会。
+- 改变本机安装：会——装 standalone 单文件，不自动删旧包管理器副本。
+- 主要风险：以为它会顺带清理旧副本；它只给移除命令。单文件运行不需要 Node.js。
 
 ### `version`
 

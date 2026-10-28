@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-- **计划状态**：Phase A 完成（源码已同步到 v1.15.0，0013 已写）；**Phase B–E 待执行**
+- **计划状态**：Phase A–D 完成（源码已同步到 v1.15.0，三套资料已回填）；Phase E 收尾完成
 - **本地分支**：`ethan`
 - **旧基线**：OpenSpec `v1.14.3`，tag/commit `c794978f`
 - **目标基线**：OpenSpec `v1.15.0`，tag/commit `8e0288df`
@@ -81,43 +81,43 @@
 
 ### Phase B：`_digested/` 更新
 
-- [ ] B1 `workflows/12-update.md`（🔴）：补 `--dry-run` / `--json`；写入接缝（真实与预演共用一条路径）；`changes[]/notes[]/failures[]` 语义；"预演不是少写一部分"
-- [ ] B2 `workflows/08-verify.md`（🔴）：REMOVED 基线改成精确规范化名称；基线找不回 → 该条未验证并跳过搜索
-- [ ] B3 `workflows/03-new.md`（🟡）：进度行显示实际 schema，不再固定 `spec-driven`
-- [ ] B4 `spec_cli/01-human-facing-cli.md`（🔴）：新增 `openspec install [version]`；`update` 的两个新选项；standalone 一次性提示；`version` 的 `(standalone)` 标识
-- [ ] B5 `spec_cli/04-command-deep-dive.md` + `07-command-io-matrix.md`（🟡）：命令/选项矩阵加 `install`、`update --dry-run --json`
-- [ ] B6 `system/06-源码地图与扩展点.md`（🔴）：新增 `install-standalone.ts`、`update-plan.ts`、`standalone-tip.ts`、`executable-path.ts`；`scripts/binary/*`；`binaries.yml`；`update.ts` 的写入接缝
-- [ ] B7 `mechanisms/05-cli-infra.md`（🟡）：`--json` 懒加载 `ora`、模块数 186 → 163；安装形态对 CLI 启动的影响（standalone 不走 Node）
-- [ ] B8 `_coverage/`（🟡）：`src-coverage.md`、`tests-coverage.md`、`doc-assertions.md` 更新模块/测试文件/断言计数（229 files / 6722 tests）
-- [ ] B9 `_digested/README.md`：SSOT 基线行 → `v1.15.0`（`8e0288df`）
-- [ ] B10 checkpoint：抽查 3 个 🔴 文件；`grep` 确认没有把 Node 写成绝对前提的活口径
+- [x] B1 `spec_cli/01-human-facing-cli.md`（🔴）：`openspec update` 补 `--dry-run` / `--json`；写入接缝（真实与预演共用一条路径）；`changes[]/notes[]/failures[]` 语义；"预演不是少写一部分"。注意 `workflows/12-update.md` 是 `/opsx:update` agent workflow，不是 CLI 的 `openspec update`，不要混写
+- [x] B2 `workflows/08-verify.md`（🔴）：REMOVED 基线改成精确规范化名称；基线找不回 → 该条未验证并跳过搜索
+- [x] B3 `workflows/03-new.md`（🟡）：进度行显示实际 schema，不再固定 `spec-driven`
+- [x] B4 `spec_cli/01-human-facing-cli.md`（🔴）：新增 `openspec install [version]`；`update` 的两个新选项；standalone 一次性提示；`version` 的 `(standalone)` 标识
+- [x] B5 `spec_cli/04-command-deep-dive.md` + `07-command-io-matrix.md`（🟡）：命令/选项矩阵加 `install`、`update --dry-run --json`
+- [x] B6 `system/06-源码地图与扩展点.md`（🔴）：新增 `install-standalone.ts`、`update-plan.ts`、`standalone-tip.ts`、`executable-path.ts`；`scripts/binary/*`；`binaries.yml`；`update.ts` 的写入接缝
+- [x] B7 `mechanisms/05-cli-infra.md`（🟡）：`--json` 懒加载 `ora`、模块数 186 → 163；安装形态对 CLI 启动的影响（standalone 不走 Node）
+- [x] B8 `_coverage/`（🟡）：`src-coverage.md`、`tests-coverage.md`、`doc-assertions.md` 更新模块/测试文件计数（229 files / 6722 tests）；doc-assertions 记增量抽查，全量复跑留下一轮
+- [x] B9 `_digested/README.md`：SSOT 基线行 → `v1.15.0`（`8e0288df`）
+- [x] B10 checkpoint：抽查 3 个 🔴 文件；`grep` 确认没有把 Node 写成绝对前提的活口径
 
 ### Phase C：`_faq_on_digested/` 更新
 
-- [ ] C1 `01_openspec-executable`（🔴）：standalone 安装路径、Node 只是 npm 方式的前提、`openspec install`、`version --check`、`version` 的 `(standalone)`；question/answer 两份都要改
-- [ ] C2 `12_upstream-roadmap-and-issues`（🟡）：版本表 + 1.15.0；链接 0013
-- [ ] C3 `16_upgrade-openspec-cli-and-projects`（🔴）：`openspec install` 切换、`update --dry-run --json`、一次性提示、升级命令表
-- [ ] C4 `17_review-and-validation-surface`（🟡）：verify REMOVED 精确名；`--json` 的适用范围（若该页涉及）
-- [ ] C5 其余目录 `[~]` 核实并写依据；`_faq_on_digested/README.md` 基线脚注
-- [ ] C6 checkpoint：抽查 C1/C3，确认没有"必须先装 Node"的绝对句
+- [x] C1 `01_openspec-executable`（🔴）：standalone 安装路径、Node 只是 npm 方式的前提、`openspec install`、`version --check`、`version` 的 `(standalone)`；question/answer 两份都要改
+- [x] C2 `12_upstream-roadmap-and-issues`（🟡）：版本表 + 1.15.0；链接 0013
+- [x] C3 `16_upgrade-openspec-cli-and-projects`（🔴）：`openspec install` 切换、`update --dry-run --json`、一次性提示、升级命令表
+- [x] C4 `17_review-and-validation-surface`（🟡）：verify REMOVED 精确名；`--json` 的适用范围（若该页涉及）
+- [x] C5 其余目录 `[~]` 核实并写依据；`_faq_on_digested/README.md` 基线脚注
+- [x] C6 checkpoint：抽查 C1/C3，确认没有"必须先装 Node"的绝对句
 
 ### Phase D：`_openspec_handbook/` 更新
 
-- [ ] D1 `00-index.md`（🔴）：版本表加 1.15.0 行；手册版本/日期；链接 0013
-- [ ] D2 `52-实战-如何正确修改-artifacts`（🟡）：`update --dry-run` 的正确用法；"预演"与"真实更新"共用一条路径
-- [ ] D3 `99-FAQ-常见问题.md`（🔴）：Node 是否必需、standalone 安装、`openspec install`、`update --dry-run`、verify REMOVED
-- [ ] D4 `90-附录-给机器看的-agent-协议.md`（🟡）：CLI 面加 `install`、`update --dry-run --json`（若该附录维护命令清单）
-- [ ] D5 `21-高级-config-schema-与项目边界.md`、`26-高级-治理边界与漂移维护.md`（🟡）：只有出现"update 的行为"当前口径时才改；否则 `[~]`
-- [ ] D6 checkpoint：全局 grep 无 v1.14.3 活口径残留；`npm install -g` 只作为"一种方式"出现，不再作为唯一方式
+- [x] D1 `00-index.md`（🔴）：版本表加 1.15.0 行；手册版本/日期；链接 0013
+- [x] D2 `52-实战-如何正确修改-artifacts`（🟡）：`update --dry-run` 的正确用法；"预演"与"真实更新"共用一条路径
+- [x] D3 `99-FAQ-常见问题.md`（🔴）：Node 是否必需、standalone 安装、`openspec install`、`update --dry-run`、verify REMOVED
+- [~] D4 `90-附录-给机器看的-agent-协议.md`（🟡）：该附录只讲三方角色与 JSON 查询，不维护命令/选项清单，无行可加
+- [~] D5 `21-高级-config-schema-与项目边界.md`、`26-高级-治理边界与漂移维护.md`（🟡）：只在示例里出现 Node.js，没有 `install`/`openspec update` 的当前行为句，无需修改
+- [x] D6 checkpoint：全局 grep 无 v1.14.3 活口径残留；`npm install -g` 只作为"一种方式"出现，不再作为唯一方式
 
 ### Phase E：验收与收尾
 
-- [ ] E1 `pnpm run build` + `pnpm test` 全绿（源码未再改动，预期 229/6722）
-- [ ] E2 版本一致性：`package.json` / `_digested/README.md` / FAQ 12 版本表 / handbook 00-index
-- [ ] E3 回填 0013「当前处理状态」
-- [ ] E4 单一 commit 提交资料更新，本计划文件一并提交
-- [ ] E5 `_change_log/README.md` 索引加 0013 与 `_plan-11` 两行
-- [ ] E6 是否推送 `origin/ethan` 由用户决定；**永不推送 `upstream`**
+- [x] E1 `pnpm run build` + `pnpm test` 全绿（源码未再改动，预期 229/6722）
+- [x] E2 版本一致性：`package.json` / `_digested/README.md` / FAQ 12 版本表 / handbook 00-index
+- [x] E3 回填 0013「当前处理状态」
+- [x] E4 单一 commit 提交资料更新，本计划文件一并提交
+- [x] E5 `_change_log/README.md` 索引加 0013 与 `_plan-11` 两行
+- [~] E6 未推送 `origin/ethan`（由用户决定）；**永不推送 `upstream`**
 
 ## 阻塞与决策
 
@@ -130,4 +130,5 @@
 - **2026-10-28 计划创建**：`git fetch upstream --tags` 发现 `v1.15.0`；确认 npm `latest`=1.15.0、GitHub Release 已发；`upstream/main` 比 tag 多 1 个 website 提交，按“钉 tag”不纳入。
 - **源码同步**：`git merge --squash v1.15.0`，唯一冲突 `.gitignore`；解决后同步提交 `5bc2cc04`。`package.json`=1.15.0。
 - **一致性与验证**：`git diff --diff-filter=MD v1.15.0 HEAD` 为空；`git diff --stat v1.15.0 HEAD` 仅 `_*` + `CONTEXT.md`；`pnpm install --frozen-lockfile` 成功；`pnpm build` 成功；`pnpm test` **229 files / 6722 tests 全绿**（73s）；`node bin/openspec.js --version` = `1.15.0`。
-- **资料**：0013 与 `_plan-11` 已写入；Phase B–E 未开始。下一轮从 B1 开始。
+- **资料（Phase B–D）**：`_digested` 回填 update dry-run、verify 精确名、new-change schema、install 命令、源码地图、CLI infra、coverage 与基线；`_faq_on_digested` 回填 01/12/16/17 与 README；`_openspec_handbook` 回填 00-index（v1.14 行）、52、99（Q27f）与 README。
+- **验收（Phase E）**：`pnpm build` 成功；`pnpm test` 229 files / 6722 tests 全绿；三套资料相对链接 0 失效；版本一致性 package.json / `_digested/README.md` / handbook 00-index 均为 1.15.0。

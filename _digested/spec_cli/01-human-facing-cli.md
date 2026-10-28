@@ -56,12 +56,14 @@
 - 现有工具配置状态。
 - 当前 OpenSpec 版本。
 - 全局配置中的 profile/delivery/workflows。
+- 可选 `--dry-run` / `--json`；`--json` 只能与 `--dry-run` 同用。
 
 输出：
 
 - 更新后的 skills/commands 文件。
 - 删除不再需要的产物。
 - 控制台上的更新计划与结果。
+- `--dry-run` 时只报告计划：`add` / `update` / `delete`、每个文件归属的 tool、交互式运行会问的步骤（`notes`）、以及会失败的工具（`failures`，不中断其余计划）；不写任何文件。
 
 影响：
 
@@ -77,6 +79,38 @@
 - v1.10.0 起该共享根由 Codex、Zed Agent 与 vendor-neutral `agents` 三方协调；Zed 的 tool id 是 `zed`。`update` 只有实际更新带 `requiresIdeRestart` 的 IDE-resident surface 才提示重启；CLI-only/skills 即时加载工具通常不提示。
 - v1.13.0 起 `update` 会刷新内容已 drift 的生成文件（不只看版本戳，`d9e1a28c`）；v1.13.1 起与 init 共享同一套 IDE restart 提示逻辑，workflow 被移除时也准确提示。
 - v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
+- v1.15.0 起，预演和真实更新走同一条写入路径（`src/core/update-plan.ts` 的 `UpdateFileOps` 接缝：真实运行用 `realFileOps`，预演用 `UpdatePlanRecorder`）；它不是“少写一部分”的另一套逻辑。`--json` 单独使用会报 `--json is only available with --dry-run.`。
+- v1.15.0 起，全局包管理器安装的用户在 update 后可能在 stderr 看到一次 standalone 提示（非 TTY/CI 延迟显示；只提示，不自动切换）。
+
+### `openspec install [version]`
+
+本质目标：
+
+- 把当前 OpenSpec 换成不依赖 Node.js 的 standalone 单文件；默认装最新完整 release，也可钉一个版本。
+
+输入：
+
+- 可选版本号（如 `1.15.0`；省略或 `latest` 表示最新）。
+- 官方安装脚本：`https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.sh`（Windows 为 `install.ps1`），所以代理/证书行为与文档里的一行安装命令一致。
+- 环境变量：`OPENSPEC_INSTALL_DIR` 指定安装目录；`OPENSPEC_DOWNLOAD_URL` / `OPENSPEC_RELEASES_URL` 供镜像或测试；安装器自身还认 `OPENSPEC_VERSION`。
+
+输出：
+
+- 安装/覆盖 `~/.local/bin/openspec`（Windows：`%LOCALAPPDATA%\Programs\openspec\openspec.exe`）。
+- 检查 PATH 上实际生效的是不是刚装的文件；若仍先命中旧副本，会说明先命中谁、要开新终端还是怎么切。
+- 给出去掉旧包管理器副本的命令（npm / pnpm / yarn / bun / volta / brew）；**不会自动删**旧副本，切不切、什么时候切由用户决定。
+
+影响：
+
+- 安装形态从包管理器变成单文件；`openspec version` 会标 `(standalone)`。
+- 不改项目内容与 config；切换后 CLI 自身的升级用 `openspec install` 原地重装，再跑一次 `openspec update` 刷新工具侧文件。
+
+容易误解：
+
+- 它不是“升级项目里的 OpenSpec 工作流文件”——那是 `openspec update`。
+- 它不会替你卸载旧的全局包，只给命令。
+- 它默认装“最新完整 release”，不是 `main` 分支快照；`latest` 也要等 `SHA256SUMS` 已上传才认。
+- 单文件不需要 Node.js；但 `npm install -g` 方式仍需要 Node.js 20.19+。
 
 首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。zsh 的 uninstall 自 v1.14.0 起与 bash 一样逐字节还原：只删 install 加的 separator 行（且仅当 block 在文件顶部），用户自己的空行不动。完整边界见 `../mechanisms/05-cli-infra.md`。
 
@@ -93,7 +127,7 @@
 
 输出：
 
-- 默认人类可读的版本报告（版本、安装位置、包管理器、scope，以及 `--check` 时的更新结论）。
+- 默认人类可读的版本报告（版本、安装位置、包管理器、scope，以及 `--check` 时的更新结论）；standalone 安装的 scope 是 `standalone` 并标 `(standalone)`。
 - `--json` 输出 `{ schemaVersion: 1, version, install, update? }`：`install` 含 `location` / `packageManager` / `scope`；`update` 只在 `--check` 时出现，含 `status`（`available`/`current`/`disabled`/`offline`）、`latest`，以及 `status: "available"` 时的升级 `command` 与 `canSelfUpgrade`。
 
 影响：

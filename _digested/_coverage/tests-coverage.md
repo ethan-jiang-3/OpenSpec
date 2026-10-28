@@ -1,5 +1,7 @@
 # 测试覆盖矩阵
 
+> **v1.15.0 基线**：`pnpm test` = 229 test files / 6722 tests（v1.14.3 基线 223 / 6585）。
+
 ## 已对应专题
 
 | 测试目录 | 对应 digest |
@@ -101,3 +103,8 @@
 | `test/core/view.test.ts`（+99 行） | view 不再列出/计数归档 change（#2031 回退 v1.14.0 的归档分区） | `../spec_cli/01-human-facing-cli.md` |
 | `test/website-preview.test.ts` | `website/scripts/preview.mjs` 的静态导出路由解析 | `../mechanisms/05-cli-infra.md` |
 | `test/pnpm-workspace-config.test.ts`（+18 行） | workspace override 口径（`brace-expansion`/`shell-quote` 钉版） | `../mechanisms/05-cli-infra.md` |
+| `test/core/update-dry-run.test.ts`、`test/core/update-dry-run.property.test.ts` | update 预演：`add/update/delete`、`notes`、`failures`、项目外路径 `~` 折叠；预演与真实更新同一条写入路径 | `../spec_cli/01-human-facing-cli.md`、`../mechanisms/02-tool-delivery.md` |
+| `test/commands/install-standalone.test.ts` | `openspec install` 的目标目录解析、PATH 检查、旧副本移除命令、脚本来源校验 | `../spec_cli/01-human-facing-cli.md`、`../system/06-源码地图与扩展点.md` |
+| `test/core/standalone-tip.test.ts` | 一次性提示的触发面：全局安装、update 后、非 TTY/CI 延迟、只提示不切换 | `../mechanisms/05-cli-infra.md` |
+| `test/core/version-check.test.ts`（+70 行） | standalone：`scope: 'standalone'`、`(standalone)`、`openspec install` 升级命令 | `../spec_cli/01-human-facing-cli.md` |
+| `test/core/templates/verify-change-delta-operations.test.ts`（扩展） | verify 模板的 REMOVED 精确规范化名称匹配（`C#` 保留 `#`、大小写敏感、近似名不算） | `../workflows/08-verify.md` |

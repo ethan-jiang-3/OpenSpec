@@ -2,7 +2,7 @@
 
 ## 一句话
 
-靠的是 **npm 的 `bin` 字段 + `#!/usr/bin/env node` shebang + Node.js ESM 三行入口**。没有自定义安装脚本，没有二进制编译，纯 Node.js 生态的标准机制。
+npm 安装走的是 **npm 的 `bin` 字段 + `#!/usr/bin/env node` shebang + Node.js ESM 入口**；没有自定义安装脚本，也没有为 npm 包编译二进制。v1.15.0 起官方另发 **standalone 单文件**（不依赖 Node.js），是独立于 npm 的第二条路径，见文末。
 
 ## 完整链路
 
@@ -48,7 +48,8 @@ npm install -g @fission-ai/openspec
 ├─6─ dist/cli/index.js 才是真正的 CLI
       commander 构建：
         program.name('openspec')
-        ├── init、update、list、view
+        ├── init、update、install（v1.15.0）
+        ├── list、view
         ├── change (show/list/validate)
         ├── archive
         ├── spec (rename：registerSpecCommand)
@@ -116,13 +117,25 @@ $ file $(which openspec)
 | `tsconfig.json` | TypeScript 配置，rootDir=src → outDir=dist |
 | `src/core/completion-tip.ts` | 首次 eligible `postAction` 中的 completion 提示；只写 stderr，并记录 one-shot 状态 |
 | `src/telemetry/index.ts` | 首次 telemetry notice；写 stderr，避免污染 stdout/JSON |
+| `scripts/binary/entry.mjs`、`build.mjs`、`install.sh` / `install.ps1` | v1.15.0 standalone：编译入口、Bun 构建、官方安装器 |
+
+## v1.15.0 起的第二条路径：standalone 单文件
+
+npm 方式始终需要 Node.js；v1.15.0 起每个 release 另外提供 8 个平台的单文件（macOS / Linux glibc / Linux musl / Windows，x64 与 arm64），由 `scripts/binary/build.mjs` 用 Bun 编译，入口是 `scripts/binary/entry.mjs`。
+
+- **安装**：文档里的一行命令（`curl ... install.sh | sh` / `irm ... install.ps1 | iex`），或 `openspec install [version]`。安装器校验 `SHA256SUMS` 后把文件放到 `~/.local/bin/openspec`（Windows：`%LOCALAPPDATA%\Programs\openspec`）。
+- **运行**：单文件直接执行，不需要 Node.js；入口先 `markStandaloneBinary(process.execPath)`，再把内嵌的 schema 解到 `<globalDataDir>/binary-schemas/<hash>` 并交给 `setPackageSchemasDir`。
+- **识别**：`openspec version` 会标 `(standalone)`，`--json` 的 `install.scope` 是 `standalone`。
+- **升级**：`openspec install` 原地重装（不是 npm/brew），之后再 `openspec update` 刷新工具侧文件。
+- **切换**：`openspec install` 不会自动删旧的包管理器副本，只提示移除命令；切不切由用户决定。
 
 ## 不是什么
 
-- **不是二进制可执行文件** — 没有 Go/Rust 编译，没有 nexe/pkg 打包
+- **npm 安装包不是二进制可执行文件** — npm 包本身没有 Go/Rust 编译，也没有 nexe/pkg 打包；standalone 单文件是另一条分发物，由 Bun 编译
 - **不是 shell 脚本** — 是 Node.js 脚本，靠 shebang 执行
 - **不是 Python** — 虽然 `#!/usr/bin/env` 模式在 Python 脚本里也很常见，但这里是 node
 - **没有现行 postinstall 链路** — registry 安装包没有 install lifecycle script，因此不会再出现 completion postinstall 文案或 allow-scripts 警告；git/directory 安装仍可能因 `prepare` 构建。
+- **standalone 安装器不是 npm 的 postinstall** — 它只由用户显式运行（或 `openspec install` 调用），不会在 npm 安装时静默执行。
 
 ## 为什么全局安装后不再立即提示 completion
 

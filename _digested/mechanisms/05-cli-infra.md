@@ -301,6 +301,18 @@ return !stream.isTTY ? true : (stream.columns ?? 0) > 0;
 
 `pnpm start` 在 `website/` 下改为 `node scripts/preview.mjs`：零依赖静态服务器，按 Next 静态导出的路由解析（**不应用 `out/_redirects`**）。连带升了整组 website 依赖（next 16.3.8、react 19.3.0、fumadocs 16.16.x 等）。
 
+## v1.15.0 更新
+
+### `--json` 不再加载 ora（#2116）
+
+`status`、`instructions`、`new change`、`templates`、`validate`、`schema` 的 action 里，`ora` 改为“只有在要显示 spinner 时”才 `await import()`；`--json` 分支不加载。`openspec status --json` 从 186 个模块降到 163 个（发布说明数字；测试只断言加载集合，不固定计数）。输出、退出码不变。
+
+`--json` 的 dry-run 路径还固定了 agent 契约：stdout 只出现一个 JSON 文档，失败也走 `failWithError` 而不是 `process.exit()`，避免管道未 drain 时截断文档。
+
+### standalone 入口对启动路径的影响
+
+单文件没有 package 目录，`version-check.getInstallDir()` 不再用 `require.resolve('../../package.json')`（会被 bundler 在构建时把构建机路径烤进去），改为按 `import.meta.url` 解析并在运行时 `fs.existsSync` 判断；standalone 入口另用 `markStandaloneBinary(process.execPath)` 把安装形态标成 `standalone`。schemas 由 `entry.mjs` 解到 global data dir 并通过 `setPackageSchemasDir` 注入。
+
 ## 测试锚点补充（v1.14.1–v1.14.3）
 
 - `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs`：记录并断言启动时加载的模块数（防止按需加载被无意退回）
@@ -309,3 +321,6 @@ return !stream.isTTY ? true : (stream.columns ?? 0) > 0;
 - `test/core/templates/glob-path-bounding.test.ts`：propose/ff/continue 的 glob 路径边界
 - `test/core/artifact-graph/outputs.test.ts`：brace 嵌套/展开预算
 - `test/website-preview.test.ts`：预览服务器的路由解析
+- `test/core/update-dry-run.test.ts` + `update-dry-run.property.test.ts`：dry-run 的写入计划与属性
+- `test/commands/install-standalone.test.ts`、`test/core/standalone-tip.test.ts`：standalone 安装目标/PATH 检查与一次性提示
+- `test/core/version-check.test.ts`：standalone 的 `scope`、`(standalone)` 与升级命令

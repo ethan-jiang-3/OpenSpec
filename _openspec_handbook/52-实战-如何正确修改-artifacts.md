@@ -57,7 +57,8 @@ openspec config profile
 openspec config profile
 # 选择 "custom" 或输入你想启用的 workflows
 
-# 步骤 2：更新 AI 工具的 skills
+# 步骤 2：更新 AI 工具的 skills（v1.15.0+ 可先预演）
+openspec update --dry-run   # 只报告会 add/update/delete 哪些文件，不落盘
 openspec update
 
 # 步骤 3：只在 update 实际刷新了 IDE 驻留的 commands/skills 且 CLI 给出提示时重启

@@ -69,11 +69,13 @@ sequenceDiagram
         MD->>MD: 找到第一个 ready artifact
         MD->>TS: openspec instructions proposal --change X
         TS-->>MD: template + instruction
-        MD-->>User: "Change created. Schema: spec-driven.<br/>First artifact: proposal.md<br/>Template: …<br/>Ready to create? Run /opsx:continue."
+        MD-->>User: "Change created. Schema: <实际解析出的 schema>.<br/>First artifact: proposal.md<br/>Template: …<br/>Ready to create? Run /opsx:continue."
     end
 
     Note over MD,FS: ⚠ STOP —— 不生成任何 artifact
 ```
+
+v1.15.0 起（#2120），`openspec new change` 的进度行显示**实际解析出的 schema**：`--schema` → 项目 `openspec/config.yaml` 的 `schema` → root 默认值，按这个优先级解析一次，并同时用于创建和进度行；不再固定报 `spec-driven`。
 
 ## 关键 guardrail：STOP
 

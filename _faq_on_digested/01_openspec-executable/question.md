@@ -5,3 +5,5 @@
 # 背景
 
 直觉上这肯定是某个脚本，可能是 Python、Node.js 或者 shell 脚本。需要细节 —— 从 npm install 到命令被执行，完整链路是什么。
+
+> v1.15.0 起还有第二条安装路径：standalone 单文件，不走 npm、不需要 Node.js。本文只拆 npm 路径；standalone 的入口见 answer 末尾。

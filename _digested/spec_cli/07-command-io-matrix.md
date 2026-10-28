@@ -19,12 +19,15 @@
 > **v1.14.0**：新增 `version [--json] [--check]`；`list` 支持 `--archived/--all`；`view` 加 workflow status 行与 "Archived Changes" 分区；`show --json` 的 requirement/scenario 带 `name`；`status --json` 的 `actionContext.allowedEditRoots` 纳入 store 声明项目；`instructions apply --json` 的任务项带 `sourcePath`/`line`。
 >
 > **v1.14.1**：`view` **移除**了 v1.14.0 加的 "Archived Changes" 分区——归档多时它把活动工作挤出屏幕，现在只看当前工作；`list --archived/--all` 仍然照看归档。
+>
+> **v1.15.0**：新增 `install [version]`（standalone 安装/切换）；`update` 新增 `--dry-run`/`--json`；`version` 的 `scope` 可报 `standalone`；`new change` 的进度行显示实际解析出的 schema。standalone 状态下 `--check` 给出的升级命令是 `openspec install`。
 
 | 命令 | 主要受众 | 输入来源 | 直接输出 | 间接影响 | 是否改状态 |
 | --- | --- | --- | --- | --- | --- |
 | `init` | 人类 + 工具集成 | 项目路径、global config、工具目录、可选 `--language` | `openspec/` 基础设施、skills/commands、安装报告；greenfield language context | 决定外部工具能否使用 OpenSpec 工作流；已有 config 不被 language flag 覆盖 | 是 |
-| `update` | 人类 + 工具集成 | 当前版本、配置、已配置工具 | 更新后的 skills/commands、同步报告 | 决定工具侧工作流是否与配置一致 | 是 |
-| `version` | 人类 + 机器 | 当前安装（location/packageManager/scope）；`--check` 时 registry | 版本报告，或 `{ schemaVersion, version, install, update? }` JSON（`update` 仅 `--check` 时出现） | 提示用户是否/如何升级 CLI；`canSelfUpgrade` 判定能否原地升级 | 否 |
+| `update` | 人类 + 工具集成 | 当前版本、配置、已配置工具、可选 `--dry-run`/`--json` | 更新后的 skills/commands、同步报告；dry-run 时为计划（`add/update/delete` + `notes` + `failures`），不落盘 | 决定工具侧工作流是否与配置一致 | 是（dry-run 否） |
+| `install [version]` | 人类 | 版本号（可选）、官方安装脚本、`OPENSPEC_INSTALL_DIR` | standalone 单文件装到 `~/.local/bin`（Windows：`%LOCALAPPDATA%\Programs\openspec`）；PATH 检查与移除旧副本的命令 | 切换 CLI 安装形态；不改项目内容 | 是（本机安装） |
+| `version` | 人类 + 机器 | 当前安装（location/packageManager/scope，standalone 时为 `standalone`）；`--check` 时 registry | 版本报告，或 `{ schemaVersion, version, install, update? }` JSON（`update` 仅 `--check` 时出现） | 提示用户是否/如何升级 CLI；standalone 的升级命令是 `openspec install` | 否 |
 | `list` | 人类 + 机器 | changes/specs 目录（`--archived/--all` 含 `changes/archive/`）、task progress、mtime | 列表或 JSON 索引；归档浏览时条目带 `archived: true/false` | 帮助选择目标 change/spec | 否 |
 | `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard；active change 行带 `└─ [schemaName]` workflow status 行；**不含归档 change**（v1.14.1 #2031 `2500d6da` 起 dashboard 只显示当前工作，归档改用 `openspec list --archived`） | 改善浏览体验 | 否 |
 | `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON（requirement = `{ name, text, scenarios: [{ name, rawText }] }`） | 帮助人工审阅和调试解析结果；JSON 读者可按 `name` 引用 requirement | 否 |

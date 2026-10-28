@@ -4,7 +4,7 @@
 
 ## 一句话结论
 
-**OpenSpec 没有 `openspec upgrade` 命令。升级是两步：① 用你当初的安装方式升级全局 CLI（`openspec update` 在交互式 npm 全局下甚至可以替你升级并重跑）；② 对每个项目跑 `openspec update`，让新 CLI 用自己的模板重新生成该项目的 skills/commands、迁移旧目录、清理旧托管文件。顺序不能反——先升 CLI，再 update 项目；用旧 CLI 跑 update 只会重新生成旧的投递文件。**
+**OpenSpec 没有 `openspec upgrade` 命令。升级是两步：① 用你当初的安装方式升级全局 CLI（npm 全局下 `openspec update` 可以替你升级并重跑；standalone 用 `openspec install`）；② 对每个项目先 `openspec update --dry-run` 预演，再跑 `openspec update`，让新 CLI 用自己的模板重新生成该项目的 skills/commands、迁移旧目录、清理旧托管文件。顺序不能反——先升 CLI，再 update 项目；用旧 CLI 跑 update 只会重新生成旧的投递文件。**
 
 ---
 
@@ -37,6 +37,9 @@ CLI 会识别自己是**怎么被装的**（`detectPackageManager()`），然后
 | npx / 临时缓存 | `npx @fission-ai/openspec@latest update`（这条命令本身就算一次完整更新） |
 | 项目本地依赖 | 更新该项目的 `@fission-ai/openspec` 依赖（走该项目的包管理器） |
 | git clone 源码 | 没有升级建议——版本就是分支说的，`git pull`/切 tag 即可 |
+| standalone 单文件（v1.15.0+） | `openspec install`（原地重装；`version --check` 会给出这条命令） |
+
+v1.15.0 起 CLI 也可能是 standalone 安装：`openspec version` 会标 `(standalone)`，`--json` 的 `install.scope` 为 `standalone`，升级命令是 `openspec install`（若 PATH 上的 `openspec` 是别的副本，会给带全路径的重装命令）。standalone 不需要 Node.js；npm 等包管理器方式仍需要 Node.js 20.19+。
 
 ### 交互式 npm 全局：`openspec update` 可以替你升级
 
@@ -61,6 +64,10 @@ skills/commands 是 CLI **用自己当前版本的模板生成**的，生成文�
 7. **legacy 清理**：删掉 OpenSpec 历史上留的托管文件（v1.8.0 修了 CoStrict/Junie 目录误删 bug，现在只删 `openspec-*.md` 这类可识别托管文件，**永不删用户内容**）。
 8. **Copilot cloud 文件**：`openspec update` 从不提示——只刷新「已 opt-in」或「旧项目已存在 managed cloud 文件（视为隐含 opt-in）」的 Copilot 项目；用户自己改过的文件永不覆盖/删除；opt-out 只删 managed 文件。
 
+### 先预演：`openspec update --dry-run`
+
+v1.15.0 起，真跑之前可以先看计划：`openspec update --dry-run` 列出会 `add`/`update`/`delete` 的文件、归属 tool、交互式运行会问的步骤（`notes`）以及会失败的工具（`failures`，不中断其余计划）；不写任何文件。`--json` 给机器读，且只能与 `--dry-run` 同用。预演和真实更新走同一条写入路径，不是两套逻辑——预演通过不代表真实一定成功（权限/竞态仍可能失败），但计划内的新增/修改/删除不会漏报。
+
 ### `--force` 什么时候用
 
 智能检测认为 up to date、但你怀疑模板变了没触发版本戳差异时，用 `openspec update --force` 强制全部重生成。
@@ -71,6 +78,8 @@ skills/commands 是 CLI **用自己当前版本的模板生成**的，生成文�
 
 ```bash
 openspec --version                       # 全局 CLI 已是新版本
+openspec version --check                 # 看安装形态与升级命令（standalone 会给 openspec install）
+openspec update --dry-run                # 先预演：会改/删哪些文件
 openspec update                          # 每个项目跑一次（或带 --force）
 ```
 
@@ -91,6 +100,15 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 - **v1.13.2 对升级用户的实际意义**：CRLF 保持——写回文件时 `matchLineEnding(rebuilt, previous)` 保持原行尾，只有新文件才写 LF，Windows/编辑器 CRLF 仓库升级后 update/archive 不再产生全文件行尾 diff；Windows archive 的 EPERM/EXDEV 复制回退（watcher 占住目录时也能归档）；artifact 输出 glob 认 brace expansion 与 extglob（自定义 outputs 配置的生效面变宽）。
 - **升级后可用的新命令面**：`openspec version [--json] [--check]` 自查版本/安装方式/是否有更新；`openspec list --archived` / `--all` 浏览归档 change；`view` 显示 active change 的 workflow status（v1.14.3 起不再有末尾的归档分区）。
 - **`.openspec.yaml` 卫生（v1.14.0 口径，已被 0012 扩展）**：v1.14.0 起未知顶层键在 status/validate/archive 都会告警，`validate --strict` 直接失败——升级前把旧项目 metadata 里的实验性键清掉或改名（已知键：`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）。
+
+## v1.15.0 的具体提醒（来自同步记录 0013）
+
+- **安装形态多了一条**：standalone 单文件（macOS/Linux glibc/musl/Windows，x64/arm64）不需要 Node.js；`openspec install [version]` 可切换，旧包管理器副本不会自动删，只给移除命令。`openspec version` 会标 `(standalone)`。
+- **项目内更新先预演**：`openspec update --dry-run` 只报告计划、不落盘；`--json` 只能与 `--dry-run` 同用。计划含 `add/update/delete`、`notes`、`failures`。
+- **verify 的 REMOVED**：基线按精确规范化名称匹配（`Requirement:` 后文本、trim、有空格/tab 时才去掉结尾 `#`、大小写敏感）；同名近似项不再被当成被删除的那条。基线找不回时该条报 not verified 并跳过搜索，不是"删除通过"。
+- **`new change`**：进度行显示实际解析出的 schema（`--schema` → config → root 默认），不再固定 `spec-driven`。
+- **`feedback`**：issue body 对齐 bug 表单，手动提交链接预填 message/version/environment。
+- **`--json` 更快**：`status`/`instructions`/`new change`/`templates`/`validate`/`schema` 在 `--json` 下不加载 `ora`。
 
 ## v1.14.1–v1.14.3 的具体提醒（来自同步记录 0012）
 
