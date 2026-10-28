@@ -113,7 +113,7 @@ v1.14.0 一次性新增 10 个 `--tools` 目标，全部注册在 `src/core/conf
 2. **通用写入权仲裁**（v1.11.0 新增 `src/core/shared-skill-target.ts` 的 `resolveSharedSkillWriters`）：不再硬编码 Codex/Zed/agents 三方的排序规则。该函数遍历所有选中工具的 `skillsDir`，对每个共享物理根（如 `.agents/skills/`）选出一个 active writer：
    - **已有 compatible owner**（通过 `.openspec-target` marker 或推断）胜出。
    - **skills-native 渲染器优先于 adapter-backed**，因为其引用可被共享树的所有消费者使用。
-   - **新根默认指向 `agents` 还是 Codex 取决于现状**：优先级是"已有 marker 的 > 推断出的 > （当前已有 `.agents/skills` 树则 `agents`）> `codex` > 池中第一个"（`src/core/shared-skill-target.ts:118-125`）。所以**全新根**才回退到 Codex；已有 `.agents/skills` 树时是 `agents` 先胜。
+   - **新根默认指向 `agents` 还是 Codex 取决于现状**：优先级是"已有 marker 的 > 推断出的 > （当前已有 `.agents/skills` 树则 `agents`）> `codex` > 池中第一个"（`src/core/shared-skill-target.ts:133-140`）。所以**全新根**才回退到 Codex；已有 `.agents/skills` 树时是 `agents` 先胜。
    - 只有 active writer 生成 skill 文件；其他共享同一根的选中工具仍能独立写入 command surface（如 Antigravity 在 Codex 拥有 `.agents/skills/` 写入权时仍可安装 `.agents/workflows/` command 文件）。
 
 3. **`openspec init` 和 `openspec update` 均使用同一仲裁**：`init.ts` 和 `update.ts` 都调用 `resolveSharedSkillWriters`，确保初始化和增量更新使用相同的写入权判定。

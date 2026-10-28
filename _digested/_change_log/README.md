@@ -9,11 +9,11 @@
 1. **上游跟踪路径逐字节一致**：`git diff --diff-filter=MD <tag> HEAD`（M=修改，D=删除）必须为空。
 2. **新增内容只放在** `_digested/`、`_faq_on_digested/`、`_openspec_handbook/`，以及根目录的 `CONTEXT.md`（FAQ 术语表，上游没有）。
 
-因为上游从不碰这些路径，同步就只是“把目标 tag 的文件树盖上去”。squash 正好做到：代码树与 tag 一致，但不新增 upstream 血缘。再走真正的 merge 会新增 merge commit、以后每次都要处理；rebase 会改写 272 个本地提交的 hash。**都不做。**
+因为上游从不碰这些路径，同步就只是“把目标 tag 的文件树盖上去”。squash 正好做到：代码树与 tag 一致，但不新增 upstream 血缘。再走真正的 merge 会新增 merge commit、以后每次都要处理；rebase 会改写本地提交的 hash（数量随资料提交增长）。**都不做。**
 
 每次同步：
 
-1. **定目标**：明确指定 tag（本次 `v1.15.0`）；不跟 `upstream/main` 漂移，tag 后 main 的提交不自动纳入。
+1. **定目标**：明确指定 tag（例如 `v1.15.0`）；不跟 `upstream/main` 漂移，tag 后 main 的提交不自动纳入。
 2. `git fetch upstream --tags`
 3. 先确认本地没动过源码——**用 diff，不要用 log**：
 
@@ -25,7 +25,7 @@
 4. `git merge --squash <tag>`
 5. 共享文件冲突一律取上游版本；本地需要的忽略项写 `.git/info/exclude`，不要改受版本控制的文件。
 6. `pnpm install --frozen-lockfile && pnpm build && pnpm test`
-7. 一个 commit：`chore: sync upstream <tag>`；不推送 upstream。
+7. 源码同步一个 commit：`chore: sync upstream <tag>`；资料回填与记录另计；不推送 upstream。
 
 验收：
 

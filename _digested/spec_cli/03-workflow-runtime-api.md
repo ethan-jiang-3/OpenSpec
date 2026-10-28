@@ -229,7 +229,7 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 2. 确认 apply 前置要求需要哪些 artifacts。
 3. 检查这些 prerequisite artifacts 是否已经产生输出。
 4. 收集所有现存 artifact 输出文件作为 context files。
-5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器为 `src/utils/task-progress.ts` 的 `parseTaskLines`，与 `list`/`view`/`validate --archived`/archive 共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。v1.14.0 起，解析出的每个任务项还带 `sourcePath` 与 1-based `line`——但注意 `LocatedTask`/`parseLocatedTasks` **不在** `task-progress.ts` 里，而是 apply instruction 构造器的本地实现（`src/commands/workflow/instructions.ts:354`/`:360`），它内部仍调用 `parseTaskLines`，不改任务解析本身；apply workflow 据此直接定位到 tracking file 的该行勾选。
+5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器为 `src/utils/task-progress.ts` 的 `parseTaskLines`，与 `list`/`view`/`validate --archived`/archive 共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。v1.14.0 起，解析出的每个任务项还带 `sourcePath` 与 1-based `line`——但注意 `LocatedTask`/`parseLocatedTasks` **不在** `task-progress.ts` 里，而是 apply instruction 构造器的本地实现（`src/commands/workflow/instructions.ts:358`/`:364`），它内部仍调用 `parseTaskLines`，不改任务解析本身；apply workflow 据此直接定位到 tracking file 的该行勾选。
 6. v1.13.0 起，change 无任何 spec delta 时在结果中附带警告（写 specs 或 `skip_specs: true`），text 与 `--json` 均有。
 7. 归纳当前 apply state，并给出 instruction。
 
@@ -327,7 +327,7 @@ v1.7.0 新增的 archive instruction endpoint 也遵循“编译而非执行”�
 ### 输入
 
 - `--schema <name>`（缺省 `spec-driven`）
-- **当前工作目录**：`templates` 用 `process.cwd()` 作为 projectRoot（`templates.ts:40`），**它不参与 root / `--store` 的解析**——这一点和其他 workflow 命令不一样。所以在子目录里跑，或想查某个 registered store 的模板，会得到与预期不同的结果。
+- **当前工作目录**：`templates` 用 `process.cwd()` 作为 projectRoot（`templates.ts:44`），**它不参与 root / `--store` 的解析**——这一点和其他 workflow 命令不一样。所以在子目录里跑，或想查某个 registered store 的模板，会得到与预期不同的结果。
 
 ### 输出
 

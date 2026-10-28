@@ -11,19 +11,19 @@
 ## 5.1 证据边界：`src/` 与上游逐字节一致
 
 ```bash
-# src/ 相对 upstream/main 无改动（输出 0）
-git diff --name-only upstream/main..ethan -- src/ | wc -l
+# src/ 相对当前基线 tag 无改动（输出 0）
+git diff --name-only v1.15.0..ethan -- src/ | wc -l
 # → 0
 
-# 241 个变更文件全部是文档，无一行 src/
-git diff --name-only upstream/main..ethan | wc -l
-# → 241
-git -c core.quotepath=false diff --name-only upstream/main..ethan \
+# 258 个变更文件全部是本地资料，无一行 src/
+git diff --name-only v1.15.0..ethan | wc -l
+# → 258
+git -c core.quotepath=false diff --name-only v1.15.0..ethan \
   | awk -F/ '{print $1}' | sort | uniq -c
-# → 118 _digested ／ 102 _faq_on_digested ／ 19 _openspec_handbook ／ 1 .gitignore ／ 1 CONTEXT.md
+# → 120 _digested ／ 117 _faq_on_digested ／ 20 _openspec_handbook ／ 1 CONTEXT.md
 ```
 
-`-c core.quotepath=false` 是必需的：中文文件名会被 git 转义成 `"\344..."` 形式，导致目录统计出现重复项。
+`-c core.quotepath=false` 是必需的：中文文件名会被 git 转义成 `"\344..."` 形式，导致目录统计出现重复项。这里钉 `v1.15.0` 而不是 `upstream/main`：后者在 tag 之后可能还有上游提交（例如 website 修复），会把它们算进差异。
 
 ---
 

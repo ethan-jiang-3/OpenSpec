@@ -115,7 +115,7 @@
 - [x] E1 `pnpm run build` + `pnpm test` 全绿（源码未再改动，预期 229/6722）
 - [x] E2 版本一致性：`package.json` / `_digested/README.md` / FAQ 12 版本表 / handbook 00-index
 - [x] E3 回填 0013「当前处理状态」
-- [x] E4 提交资料更新：`ff602e22`（0013/计划/README 政策）+ `1c31fa2b`（三套资料回填）；本计划最终版随 `1c31fa2b` 提交
+- [x] E4 提交资料更新：`ff602e22`（0013/计划/README 政策）+ `1c31fa2b`（三套资料回填）；本计划随各次资料提交更新，内容以当前文件为准
 - [x] E5 `_change_log/README.md` 索引加 0013 与 `_plan-11` 两行
 - [x] E6 已推送 `origin/ethan`（含评审修正提交）；**永不推送 `upstream`**
 

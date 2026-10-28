@@ -36,7 +36,7 @@
 |---|---|---|
 | `openspec/work/**`<br>（goal / roadmap / slices / capstone / runbook） | 上游团队管理**自己项目**的产物，零 CLI 支持 | `openspec/work/` 在 `src/` 中引用数 **0**【实测】；`openspec/work/README.md` 自称 experimental，并明说 *"Current OpenSpec CLI validation, archive, and spec update behavior still centers on `openspec/changes/` and `openspec/specs/`."*【文档】 |
 | `openspec/initiatives/**`<br>+ `.initiative.yaml` | 运行时实现**已被删除** | PR #1190 `a0decbe3 feat(stores)!: replace workspaces and initiatives with stores` 删掉 `src/commands/initiative.ts` 与 `src/core/collections/`【实测：`git log --diff-filter=D`】；`src/cli/index.ts:888` 现为 `new Option('--initiative <id>', 'No longer supported').hideHelp()`【代码】 |
-| `openspec/explorations/**` | 纯目录约定，无工具链 | `src/` 里唯一一次提及是 `src/core/github-copilot/cloud-agent.ts:257`，标签为 `'legacy exploration directory'`【代码】 |
+| `openspec/explorations/**` | 纯目录约定，无工具链 | `src/` 里唯一一次提及是 `src/core/github-copilot/cloud-agent.ts:257-258`，标签为 `'legacy exploration directory'`【代码】 |
 | `test/vocabulary-sweep.test.ts`<br>（词表守卫） | 守的是 **OpenSpec 自己的 `src/`**，跑在它的 CI 上；你装了 openspec **零收益** | `SWEEP_ROOTS = ['src','test','docs','scripts','.codex']`（该文件 `:16`），是它仓库自己的目录【代码】 |
 | `openspec/changes/add-change-stacking-awareness/` | **已提案未落地** | `dependsOn`/`provides`/`requires`/`touches`/`parent` 在 `src/` **0 命中**【实测】；`openspec change graph` **不存在**（`change` 只有 `show\|list\|validate`）【实测】；该 change 卡在 3/4 artifacts【实测】 |
 

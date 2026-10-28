@@ -4,6 +4,8 @@
 
 ## 1. 开启 OpenSpec
 
+**全局行为（对下面所有命令生效）**：首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。zsh 的 uninstall 自 v1.14.0 起与 bash 一样逐字节还原：只删 install 加的 separator 行（且仅当 block 在文件顶部），用户自己的空行不动。完整边界见 `../mechanisms/05-cli-infra.md`。
+
 ### `openspec init`
 
 本质目标：
@@ -81,8 +83,6 @@
 - v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
 - v1.15.0 起，预演和真实更新走同一条写入路径（`src/core/update-plan.ts` 的 `UpdateFileOps` 接缝：真实运行用 `realFileOps`，预演用 `UpdatePlanRecorder`）；它不是“少写一部分”的另一套逻辑。`--json` 单独使用会报 `--json is only available with --dry-run.`。
 - v1.15.0 起，全局包管理器安装的用户在 update 后可能在 stderr 看到一次 standalone 提示（非 TTY/CI 延迟显示；只提示，不自动切换）。
-
-首次可读、且 action 真正到达 root `postAction` 的交互式 CLI 运行会在 stderr 一次性提示 `openspec completion install`；设置 `OPENSPEC_NO_COMPLETIONS=1` 可抑制。JSON、completion 自身、CI、非 TTY、已安装或不支持的 shell 不污染 stdout，其中 deferred 场景保留到以后可读运行。设置 `process.exitCode` 的失败仍会到达 hook；直接 `process.exit(1)` 的失败会跳过 hook且不消费提示。zsh 的 uninstall 自 v1.14.0 起与 bash 一样逐字节还原：只删 install 加的 separator 行（且仅当 block 在文件顶部），用户自己的空行不动。完整边界见 `../mechanisms/05-cli-infra.md`。
 
 ### `openspec install [version]`
 

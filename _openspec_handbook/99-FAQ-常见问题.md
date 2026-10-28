@@ -78,7 +78,9 @@ v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 sp
 - **原因**：为什么删除
 - **影响**：会影响谁
 - **迁移**：用户怎么办
-- **verify 时的基线匹配（v1.15.0）**：`/opsx:verify` 对 REMOVED 会先按**精确规范化名称**在主 spec 里找基线（`Requirement:` 后的标题文本、trim、仅当结尾 `#` 前有空格/tab 时去掉 `#`，大小写敏感；`C#` 保留 `#`）。相似措辞不算匹配；基线找不回就标 not verified 并跳过搜索，绝不把没搜过的移除算通过。
+
+### Q11a: `/opsx:verify` 怎么核对 REMOVED 的基线？
+**A**: 先按**精确规范化名称**在主 spec 里找基线：取 `Requirement:` 后的标题文本、trim，仅当结尾 `#` 串前有空格/tab 时去掉这段 `#`（所以 `C#` 保留 `#`），大小写敏感比较。相似措辞不算匹配；改名属于 RENAMED。主 spec 里没有这个精确名称时，去该文件历史里找（`git -C "<planningHome.root>" log -p -- openspec/specs/<capability-path>/spec.md`，或 `git show <commit>^:./openspec/specs/<capability-path>/spec.md`）。只有标题重述、没有正文/scenario 的基线不可用；主 spec 与历史都拿不到可用基线时，该条 Spec Coverage 标 **not verified** 并跳过搜索，绝不把没搜过的移除算通过。
 
 ---
 

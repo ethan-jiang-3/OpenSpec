@@ -326,7 +326,7 @@ D 又改了方向，specs 没跟上（真正的漂移）
 
 **② 消费 `show --json` 比对**——`openspec show <id> --json --deltas-only` 给出每个 delta 的 `operation` 和 `requirement`，能检测"两个 change 改同一条 requirement"。但**delta 不记录它派生自哪个 base**，所以只能查名字撞车，查不出语义漂移。
 
-上游现状（基线 `v1.15.0`）：
+上游现状（当前基线）：
 
 | 提案 | 状态 | 覆盖 |
 |---|---|---|

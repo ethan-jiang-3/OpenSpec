@@ -36,7 +36,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - 它并不理解 artifact 依赖。
 - 它不能替代 `status`。
 
-> **别和已弃用的 `openspec change list --json` 混用——两者 JSON 结构完全不同。** 名词优先的 `change ...` / `spec ...` 命令仍有实现，但会往 stderr 打 `Warning: The "openspec change ..." commands are deprecated. Prefer verb-first commands`（`src/cli/index.ts:495` 的 `preAction` 钩子，退出码不受影响），而且返回的是**另一种形状**：
+> **别和已弃用的 `openspec change list --json` 混用——两者 JSON 结构完全不同。** 名词优先的 `change ...` / `spec ...` 命令仍有实现，但会往 stderr 打 `Warning: The "openspec change ..." commands are deprecated. Prefer verb-first commands`（`src/cli/index.ts:549-550` 的 `preAction` 钩子，退出码不受影响），而且返回的是**另一种形状**：
 >
 > | | `openspec list --json`（推荐） | `openspec change list --json`（已弃用） |
 > |---|---|---|

@@ -170,8 +170,8 @@ apply     requires: [tasks]   tracks: tasks.md
 | **无「新鲜度」失效机制** | `status` 是**文件存在性**不是新旧。`src/core/templates/workflows/propose.ts:149` 原话：*"`status` is file-existence only, so an `applyRequires` artifact reading `done` does NOT mean its dependencies exist - writing `tasks.md` early marks `tasks` done while `specs` was never written. Use each artifact's `requires` edges, not its `status`"*【文档】；同见 `docs/agent-contract.md:61`【文档】 |
 | **glob artifact 假 done** | `specs/**/*.md` 只要匹配到一个文件就 `done`，中断后仍读 `done` 而文件不全【文档：`continue-change.ts` 的 `PARTIAL_ARTIFACT_CHECK`，issue #2034】 |
 | **改了上游 artifact 不会让下游失效** | 无任何机制把 `tasks.md` 标记为"因 `proposal.md` 变更而陈旧"【代码：不存在】 |
-| **specs 无陈旧信号** | `src/core/list.ts:275-285`：changes 模式算 `lastModified`，**specs 模式完全忽略 mtime**【代码】。另实测：把 `direction.md` 的 mtime 回退到 2020 年，`openspec list --changes` 仍显示 `just now`、`status` 仍显示下游 `[x]`【实测】——**连 change 级的 mtime 也不用于陈旧判定** |
-| `archive --no-validate` 跳过重建校验 | `src/core/archive.ts:126-131` —— 校验整个不跑，空 `## Requirements` 也能写进去【代码】 |
+| **specs 无陈旧信号** | `src/core/list.ts:275-285`：specs 模式完全忽略 mtime；changes 模式的 `lastModified` 见 `:63-96`【代码】。另实测：把 `direction.md` 的 mtime 回退到 2020 年，`openspec list --changes` 仍显示 `just now`、`status` 仍显示下游 `[x]`【实测】——**连 change 级的 mtime 也不用于陈旧判定** |
+| `archive --no-validate` 跳过重建校验 | `src/core/archive.ts:1454-1457` —— 校验整个不跑，空 `## Requirements` 也能写进去【代码】 |
 | `rules:` 写错静默失效 | 错键 warning 只走 stderr 且只由 `instructions` 触发；`validate --all` 不报（见 §A4）【实测】 |
 
 > **实操含义**：`status` 告诉你"文件在不在"，**不告诉你"还算不算数"**。方向变了之后，你必须自己判断哪些下游 artifact 已陈旧——工具不会提醒你。

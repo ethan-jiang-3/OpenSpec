@@ -11,7 +11,8 @@
 ```text
 version      版本 + 更新可用性
 init         初始化项目（--tools／--language／--force／--profile／--no-animation）
-update       重新投递 instruction 文件（--force）
+update       重新投递 instruction 文件（--force／--dry-run／--json）
+install      安装/切换 standalone 单文件（[version]）
 list         清单（--specs｜--changes｜--archived｜--all｜--sort recent|name｜--json｜--store）
 view         交互式 dashboard
 change       show ｜ list(DEPRECATED) ｜ validate        ← 没有 graph

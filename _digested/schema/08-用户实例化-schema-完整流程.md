@@ -312,8 +312,8 @@ openspec schema init writing-pipeline --no-default
 >
 > | 用途 | 路径 | 解析函数 |
 > |------|------|---------|
-> | 机器级**配置**（`config set/list/get`） | `$XDG_CONFIG_HOME/openspec/config.json`，Unix 回退 `~/.config/openspec/config.json`（Windows `%APPDATA%\openspec\`） | `getGlobalConfigDir()`，`global-config.ts:56` |
-> | 机器级**数据**（store 注册表、worksets、用户级 schema） | `$XDG_DATA_HOME/openspec`，Unix 回退 `~/.local/share/openspec` | `getGlobalDataDir()`，`global-config.ts:99` |
+> | 机器级**配置**（`config set/list/get`） | `$XDG_CONFIG_HOME/openspec/config.json`，Unix 回退 `~/.config/openspec/config.json`（Windows `%APPDATA%\openspec\`） | `getGlobalConfigDir()`，`global-config.ts:58` |
+> | 机器级**数据**（store 注册表、worksets、用户级 schema） | `$XDG_DATA_HOME/openspec`，Unix 回退 `~/.local/share/openspec` | `getGlobalDataDir()`，`global-config.ts:101` |
 >
 > 两者目录名相同（都叫 `openspec`）但父目录不同；配置是 **JSON**（`config.json`），项目级才是 **YAML**（`openspec/config.yaml`）。用 `openspec config path` 可直接打印真实路径，不要靠猜。
 

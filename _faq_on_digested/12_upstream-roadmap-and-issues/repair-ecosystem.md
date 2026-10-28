@@ -104,7 +104,7 @@ v1.6.0 引入（PR #1278）。当你想修改 planning artifacts（proposal/spec
 **官方回答**：
 1. 暂停 apply
 2. 手动编辑 change 目录下的 artifact 文件（`proposal.md`、`specs/<capability>/spec.md`、`design.md`、`tasks.md`）
-3. 重新运行 `/opsx:apply`（它每次调用都会重新读取所有上下文文件——源码 `src/commands/workflow/instructions.ts:336-353`）
+3. 重新运行 `/opsx:apply`（它每次调用都会重新读取所有上下文文件——源码 `src/commands/workflow/instructions.ts:595-615`）
 4. 或者用 `/opsx:update`（v1.6.0+）来自动调和关联产物
 
 **核心态度**：OpenSpec 是"fluid, not phase-locked"——没有阶段锁，随时可以编辑 artifacts 再重新 apply。哲学上是灵活的，但**实操上仍然是手工的**。#821 的 `/opsx:repair` 就是要把这个手工循环自动化。

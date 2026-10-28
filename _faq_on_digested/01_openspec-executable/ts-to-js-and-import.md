@@ -129,7 +129,7 @@ program.command('list').action(...);
 program.command('archive').action(...);
 // ... 几百行命令注册 ...
 
-// 文件末尾（src/cli/index.ts:845-853）
+// 文件末尾（src/cli/index.ts 的 runCli 定义）
 export { program };
 
 export function runCli(argv = process.argv): void {

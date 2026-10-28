@@ -17,7 +17,7 @@
 
 主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。
 
-> **当前边界（v1.15.0）**；以下这段描述的是 v1.10.0 时的边界，v1.11–v1.14 的补充见本文件后段。v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
+> **当前边界**；以下这段描述的是 v1.10.0 时的边界，v1.11–v1.14 的补充见本文件后段。v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
 
 ![Archive-ready 到 archived 的流程](figures/archive-ready-to-archived.svg)
 

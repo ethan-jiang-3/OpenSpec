@@ -188,7 +188,7 @@ skill 和 command 通常表达的是同一 workflow 语义，只是外壳不同�
 
 ## globalDataDir
 
-本页多处出现的 `<globalDataDir>` 由 `getGlobalDataDir()`（`src/core/global-config.ts:99-123`）解析，**不是 `~/.openspec`**：
+本页多处出现的 `<globalDataDir>` 由 `getGlobalDataDir()`（`src/core/global-config.ts` 的 `getGlobalDataDir()`）解析，**不是 `~/.openspec`**：
 
 | 平台 | 路径 |
 |---|---|

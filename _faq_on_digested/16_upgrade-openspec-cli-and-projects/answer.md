@@ -12,7 +12,7 @@
 
 ### 版本检查在什么时候、受什么门控
 
-**自动的 CLI 版本检查只发生在 `openspec update`**（`getAvailableCliUpdate()` 只在 update 命令里被调用；`openspec init` 不做）。另有一个**手动入口**：`openspec version --check`，它走同一个 `checkForCliUpdate()`，同样受下面这套门控（例如 `CI=1` 时会直接输出 `Update check disabled.`）。查到 npm registry 有新版本才提示。这个检查**不是默认一定发生**——`isCheckEnabled()` 会在下面任一条件下关掉它（`src/core/version-check.ts:33-42`）：
+**自动的 CLI 版本检查只发生在 `openspec update`**（`getAvailableCliUpdate()` 只在 update 命令里被调用；`openspec init` 不做）。另有一个**手动入口**：`openspec version --check`，它走同一个 `checkForCliUpdate()`，同样受下面这套门控（例如 `CI=1` 时会直接输出 `Update check disabled.`）。查到 npm registry 有新版本才提示。这个检查**不是默认一定发生**——`isCheckEnabled()` 会在下面任一条件下关掉它（`src/core/version-check.ts:67`）：
 
 - 环境变量 `OPENSPEC_NO_UPDATE_CHECK`（显式关闭）
 - `DO_NOT_TRACK=1` / `OPENSPEC_TELEMETRY=0`
@@ -43,7 +43,7 @@ v1.15.0 起 CLI 也可能是 standalone 安装：`openspec version` 会标 `(sta
 
 ### 交互式 npm 全局：`openspec update` 可以替你升级
 
-在**npm 全局安装 + 交互终端（stdout 是 TTY）**下，`openspec update` 检测到新版本时会直接**询问是否先升级**，确认后它替你跑 `npm install -g @fission-ai/openspec@latest`，成功后**用新 CLI 重跑 update**（`rerunUpdateWithUpgradedCli`，见 `src/cli/index.ts:249-266`）。这样本轮生成的投递文件就是新 CLI 的，不用你手工分两步。非 npm 全局（pnpm/bun/yarn/volta）、项目本地依赖、npx 缓存、源码 clone 都不会触发；**`npm_config_registry` 指向非官方源时也不会**（`canSelfUpgrade()` 里的 `isDefaultRegistry()` 检查）——企业私有镜像/npmrc 场景下别等这个提示这个自升级，只打印命令。
+在**npm 全局安装 + 交互终端（stdout 是 TTY）**下，`openspec update` 检测到新版本时会直接**询问是否先升级**，确认后它替你跑 `npm install -g @fission-ai/openspec@latest`，成功后**用新 CLI 重跑 update**（`rerunUpdateWithUpgradedCli`，见 `src/core/version-check.ts:936`；调用点在 `src/cli/index.ts:413`）。这样本轮生成的投递文件就是新 CLI 的，不用你手工分两步。非 npm 全局（pnpm/bun/yarn/volta）、项目本地依赖、npx 缓存、源码 clone 都不会触发；**`npm_config_registry` 指向非官方源时也不会**（`canSelfUpgrade()` 里的 `isDefaultRegistry()` 检查）——企业私有镜像/npmrc 场景下别等这个提示这个自升级，只打印命令。
 
 ---
 
