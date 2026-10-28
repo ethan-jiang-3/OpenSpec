@@ -166,4 +166,7 @@ opencode.json
 
 # Cursor
 .cursor/
-.corepack-cache/
+
+# Standalone binaries (scripts/binary/build.mjs); Bun can leave .bun-build temp files
+dist-bin/
+*.bun-build
