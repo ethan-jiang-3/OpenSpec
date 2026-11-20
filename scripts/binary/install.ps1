@@ -1,6 +1,6 @@
 # Installs the standalone `openspec.exe` (no Node.js needed) on Windows.
 #
-#   irm https://raw.githubusercontent.com/Fission-AI/OpenSpec/main/scripts/binary/install.ps1 | iex
+#   irm https://openspec.dev/cli/install.ps1 | iex
 #
 # $env:OPENSPEC_VERSION      release to install (default: the newest complete one), e.g. v1.15.0
 # $env:OPENSPEC_INSTALL_DIR  where to put it (default: %LOCALAPPDATA%\Programs\openspec)
@@ -18,9 +18,14 @@
   $ProgressPreference = 'SilentlyContinue'
 
   # The OS architecture, not this PowerShell's: an x64 shell on an ARM PC
-  # should still get the native ARM build.
-  $arch = switch ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture) {
-    'X64' { 'x64' }
+  # should still get the native ARM build. In Windows PowerShell 5.1 the bare
+  # RuntimeInformation type can bind to a copy whose OSArchitecture is empty
+  # (#2220), so ask for mscorlib's, and fall back to the machine-wide
+  # PROCESSOR_ARCHITECTURE, which names the OS's CPU even under emulation.
+  $osArch = try { [System.Runtime.InteropServices.RuntimeInformation, mscorlib]::OSArchitecture } catch { $null }
+  if (-not $osArch) { $osArch = [Environment]::GetEnvironmentVariable('PROCESSOR_ARCHITECTURE', 'Machine') }
+  $arch = switch ("$osArch") {
+    { $_ -in 'X64', 'AMD64' } { 'x64' }
     'Arm64' { 'arm64' }
     default { throw "openspec install: unsupported CPU $_. Install with npm instead: npm install -g @fission-ai/openspec" }
   }
@@ -41,7 +46,7 @@
   $releases = if ($env:OPENSPEC_RELEASES_URL) { $env:OPENSPEC_RELEASES_URL.TrimEnd('/') } else { 'https://github.com/Fission-AI/OpenSpec/releases' }
   Assert-Source 'OPENSPEC_RELEASES_URL' $releases
   if ($env:OPENSPEC_DOWNLOAD_URL) { Assert-Source 'OPENSPEC_DOWNLOAD_URL' $env:OPENSPEC_DOWNLOAD_URL }
-  $npmHint = 'Or install with npm (Node.js 20.19+): npm install -g @fission-ai/openspec'
+  $npmHint = 'Or install with npm (Node.js 22.12+): npm install -g @fission-ai/openspec'
   $dir = if ($env:OPENSPEC_INSTALL_DIR) { $env:OPENSPEC_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\openspec' }
   # Absolute, so the user PATH entry works from any directory.
   $dir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($dir)
@@ -84,19 +89,36 @@
       $base = "$releases/download/$version"
     }
 
-    Write-Host "Downloading $asset ($version)..."
     try {
-      Invoke-WebRequest -UseBasicParsing -Uri "$base/$asset" -OutFile $exe
       if (-not (Test-Path $sums)) { Invoke-WebRequest -UseBasicParsing -Uri "$base/SHA256SUMS" -OutFile $sums }
     } catch {
       throw "openspec install: could not download from ${base}: $($_.Exception.Message). $npmHint"
     }
 
-    $line = Get-Content $sums | Where-Object { ($_ -split '\s+')[1] -eq $asset } | Select-Object -First 1
-    if (-not $line) { throw "openspec install: $asset is not listed in SHA256SUMS" }
-    $expected = ($line -split '\s+')[0]
-    $actual = (Get-FileHash -Algorithm SHA256 -Path $exe).Hash
-    if ($actual -ne $expected) { throw "openspec install: checksum mismatch for $asset; refusing to install" }
+    # Releases ship a .zip; v1.15.0 and earlier, the bare .exe.
+    $lines = Get-Content $sums
+    $file = $null
+    $expected = $null
+    foreach ($candidate in "$($asset -replace '\.exe$', '.zip')", $asset) {
+      $line = $lines | Where-Object { ($_ -split '\s+')[1] -eq $candidate } | Select-Object -First 1
+      if ($line) { $file = $candidate; $expected = ($line -split '\s+')[0]; break }
+    }
+    if (-not $file) { throw "openspec install: $asset is not listed in SHA256SUMS" }
+
+    Write-Host "Downloading $file ($version)..."
+    $download = Join-Path $tmp $file
+    try {
+      Invoke-WebRequest -UseBasicParsing -Uri "$base/$file" -OutFile $download
+    } catch {
+      throw "openspec install: could not download from ${base}: $($_.Exception.Message). $npmHint"
+    }
+    $actual = (Get-FileHash -Algorithm SHA256 -Path $download).Hash
+    if ($actual -ne $expected) { throw "openspec install: checksum mismatch for $file; refusing to install" }
+    if ($file -ne $asset) {
+      $unpacked = Join-Path $tmp 'unpacked'
+      Expand-Archive -Path $download -DestinationPath $unpacked
+      Move-Item -Path (Join-Path $unpacked 'openspec.exe') -Destination $exe
+    }
 
     $installed = $null
     # A binary that cannot start at all throws instead of setting an exit code.

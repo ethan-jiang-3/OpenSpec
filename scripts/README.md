@@ -75,8 +75,9 @@ Validates package version consistency before publishing.
 
 Builds the standalone `openspec` executables (no Node.js needed), the default
 way users install OpenSpec. `.github/workflows/binaries.yml` cross-compiles
-every asset on Linux, tests each on its own OS and CPU, and attaches them,
-`SHA256SUMS`, `install.sh` and `install.ps1` to each published release.
+every asset on Linux, tests each on its own OS and CPU, and attaches them to
+each published release as `.tar.gz` archives (`.zip` on Windows) with
+`SHA256SUMS`. The installers are served from main.
 
 | File | What it is |
 |---|---|
@@ -93,3 +94,28 @@ bun scripts/binary/build.mjs --all              # every release asset
 bash scripts/binary/smoke.sh dist-bin/openspec-<asset>
 bash scripts/binary/e2e.sh dist-bin/openspec-<asset>
 ```
+
+## capture-released-fingerprints.mjs
+
+Records a fingerprint of every file each released OpenSpec version generated,
+and every tool-folder path it wrote, into
+`src/core/shared/released-generated-fingerprints.ts`. `openspec update` uses it
+to tell an untouched file from an earlier release (safe to remove when it is
+no longer needed) from a file the user edited (always kept).
+
+**When to use**: After every npm release, so the next release recognizes its
+output. A release left out of the list is not unsafe: its untouched files are
+only kept, as if the user had edited them.
+
+**Usage**:
+```bash
+pnpm build
+node scripts/capture-released-fingerprints.mjs [--cache DIR] [--only 1.16.0]
+pnpm build
+```
+
+It installs each release from npm into the cache folder, runs
+`init --tools all` in throwaway projects with a throwaway HOME (once per
+profile, former default workflow set and delivery the release supports), and
+rewrites the list. Releases
+before 0.12 have no non-interactive `init` and are skipped.
