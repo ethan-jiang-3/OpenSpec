@@ -63,6 +63,7 @@ _change_log/
 ├── 0011-v1.13.1-to-v1.14.0.md  # 完全同步 v1.14.0（10 个新工具目标含 dsh、list --archived、version --check、apply 任务源定位、archive sync 阻塞语义、verify 模板重写、CRLF 保持）
 ├── 0012-v1.14.0-to-v1.14.3.md  # 完全同步 v1.14.3（glob 输出路径边界与引擎替换、symlink 包含、unappliedContent、500 字符升 WARNING、x- 扩展键、archive 清理错误码、CLI 按需加载、view 移除归档分区）
 ├── 0013-v1.14.3-to-v1.15.0.md  # 完全同步 v1.15.0（免 Node.js 的 standalone 二进制、update --dry-run/--json、feedback 对齐 bug 表单、new change 显示实际 schema、verify REMOVED 精确名）
+├── 0014-v1.15.0-to-v1.17.0.md  # 完全同步 v1.17.0（历史产物指纹库与旧文件清扫、命令文件弃用预告、validate 三条收紧、version --check 语义、Node 22.12 门槛、安装改归档）
 ├── _plan-1-remaining-digested.md  # 计划 1/3：_digested/ → v1.5.0 更新
 ├── _plan-2-faq-on-digested.md     # 计划 2/3：_faq_on_digested/ → v1.5.0 更新
 ├── _plan-3-openspec-handbook.md   # 计划 3/3：_openspec_handbook/ → v1.5.0 更新
@@ -75,6 +76,7 @@ _change_log/
 ├── _plan-9-v1.14.0-full-sync.md   # v1.14.0 源码与三套资料的可恢复完全同步计划
 ├── _plan-10-v1.14.x-full-sync.md  # v1.14.3 源码与三套资料的可恢复完全同步计划
 ├── _plan-11-v1.15.0-full-sync.md  # v1.15.0 源码与三套资料的可恢复完全同步计划
+├── _plan-12-v1.17.0-full-sync.md  # v1.17.0 源码与三套资料的可恢复完全同步计划（第一步；2.x 另立 _plan-13）
 └── ...
 ```
 
