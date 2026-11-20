@@ -126,7 +126,7 @@ git diff --diff-filter=MD --cached <tag>    # 自动合并漂移；必须为空
 - [x] E3 版本一致性：`package.json`=1.17.0、CLI `--version`=1.17.0、`_digested/README.md` 基线 v1.17.0、FAQ 12 版本表到 v1.17.0、handbook 00-index 对齐 1.17.0
 - [x] E4 回填 0014「当前处理状态」与本计划进度日志
 - [x] E5 `_change_log/README.md` 索引已含 0014 与 `_plan-12` 两行（复核通过）
-- [x] E6 提交（源码一个 commit `1f8df1ec` 已在；资料回填为 `e08d2dcc`）；**永不推送 `upstream`**
+- [x] E6 提交（源码一个 commit `1f8df1ec` 已在；资料回填为 `9e91eed5`）；**永不推送 `upstream`**
 - [ ] E7 交人复核
 
 ## 阻塞与决策
@@ -147,5 +147,5 @@ git diff --diff-filter=MD --cached <tag>    # 自动合并漂移；必须为空
 - **2026-11-20 Phase B（`_digested/`）**：基线行改 v1.17.0；`spec_cli/01` 补 update 的任意版本升级/`--force` 不再是必需/命令弃用状态、validate 三条收紧的级别、`version --check` 两条语义；`system/06` 加 5 个新模块 + 采集脚本；`mechanisms/05` 新增指纹库与 `.gitattributes` 两节、`mechanisms/02` 新增「command 面的终点」（含三层辨析与能力矩阵）；`workflows/00` 加状态注记；`_coverage` 计数改 241/6931 并加 10 行测试映射。顺带修正 `mechanisms/05` 里 `engines.node = >=20.19.0` 的过期断言。
 - **2026-11-20 Phase C（`_faq_on_digested/`）**：01 改 Node 22.12.0 与归档格式；12 版本表补三行并新增 §1.2b（issue #2022 五步路线图与「为什么是这个顺序」）；16 新增「v1.16.0–v1.17.0 的具体提醒」，改 `--force` 段；17 新增 §八「三条收紧」；09/10 的内置 schema 范围延到 v1.17.0（`git ls-tree v1.17.0:schemas` 实测仍只有 `spec-driven`）；18 的验证命令改钉 v1.17.0（src 差异 0、总差异 260、122/117/20/1）。
 - **2026-11-20 Phase D（`_openspec_handbook/`）**：00-index 手册升 v1.15、对齐 1.17.0、加版本表行；99 新增 Q27g/Q27h/Q27i 并改 Q27f 的 Node 口径；52 加「升级后先跑 update」前置与 WHEN/THEN 小节；24 加 store 点名提示；01 加一行状态注记。
-- **2026-11-20 Phase E**：版本一致性五处对齐（package.json / CLI / `_digested/README` / FAQ12 / handbook00 均为 1.17.0）；机械校验 27 个改动文件的相对链接与锚点全部可解析；`git diff --diff-filter=MD v1.17.0 HEAD` 仍为空；资料提交 `e08d2dcc`。
+- **2026-11-20 Phase E**：版本一致性五处对齐（package.json / CLI / `_digested/README` / FAQ12 / handbook00 均为 1.17.0）；机械校验 27 个改动文件的相对链接与锚点全部可解析；`git diff --diff-filter=MD v1.17.0 HEAD` 仍为空；资料提交 `9e91eed5`。
 
