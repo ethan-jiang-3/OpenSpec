@@ -31,7 +31,9 @@
 | `src/core/init.ts`、`src/core/update.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 `.gitkeep` + 共享 restart；v1.13.0 损坏 command 检测） |
 | `src/core/shared/ide-restart.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 新增） |
 | `src/core/onboarding-commands.ts` | `../mechanisms/02-tool-delivery.md`（v1.13.0 `formatOptionalWorkflowsNote`） |
-| `src/core/migration.ts`、`src/core/legacy-cleanup.ts`、`src/core/profile-sync-drift.ts` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/migration.ts`、`src/core/legacy-cleanup.ts`、`src/core/profile-sync-drift.ts` | `../mechanisms/02-tool-delivery.md`（legacy-cleanup 自 v1.17.0 起判据改为“只删没人编辑过的发布版原样输出”，并补 Cline/Qwen 精确文件名） |
+| `src/core/shared/generated-fingerprint.ts`、`src/core/shared/released-generated-fingerprints.ts`、`src/core/released-output-sweep.ts` | `../mechanisms/05-cli-infra.md`（v1.17.0 指纹库与旧产物清扫；指纹表是**生成物**，勿手改） |
+| `src/core/shared/command-reconcile.ts`、`src/core/command-surface.ts` | `../mechanisms/02-tool-delivery.md`（v1.17.0 命令文件弃用与 reconcile 三分） |
 | `src/core/parsers/`、`src/core/validation/`、`src/core/schemas/` | `../mechanisms/03-spec-model.md`（v1.13.0 delta sections 改 list、`[-*+]` 标记、advisory merge preflight） |
 | `src/core/validation/purpose-placeholder.ts`、`src/core/validation/constants.ts` | `../mechanisms/03-spec-model.md`（v1.11.0 Purpose 占位符检测；与 archive writer 共享 `PURPOSE_PLACEHOLDER_PREFIX/SUFFIX`） |
 | `src/utils/requirement-diff.ts` | `../spec_cli/04-command-deep-dive.md`、`../spec_cli/01-human-facing-cli.md`（v1.11.0 `show --diff` 的统一 diff） |

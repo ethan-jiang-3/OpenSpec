@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-- **计划状态**：Phase A 完成，E1/E2 已跑；Phase B–E 其余未开始
+- **计划状态**：Phase A–E 全部完成（E7 待人工复核）
 - **本地分支**：`ethan`
 - **旧基线**：OpenSpec `v1.15.0`，tag/commit `8e0288df`
 - **目标基线**：OpenSpec `v1.17.0`，tag/commit `579fcac5`
@@ -91,42 +91,42 @@ git diff --diff-filter=MD --cached <tag>    # 自动合并漂移；必须为空
 
 ### Phase B：`_digested/` 更新
 
-- [ ] B1 `README.md`：SSOT 基线行 → `v1.17.0`（`579fcac5`）
-- [ ] B2 `spec_cli/01-human-facing-cli.md`（🔴）：`openspec update` 从任意版本升级、不需 `--force`、编辑过的文件保留并列出、命令弃用提示
-- [ ] B3 `spec_cli/` 校验相关（🔴）：`validate` 三条收紧的级别与 `archive` 拒绝条件
-- [ ] B4 `spec_cli/` 版本相关（🟡）：`version --check` 的遥测/CI 语义、standalone 只提示可装版本
-- [ ] B5 `system/06-源码地图与扩展点.md`（🔴）：新增 `generated-fingerprint.ts`、`released-generated-fingerprints.ts`（**生成物**）、`released-output-sweep.ts`、`command-reconcile.ts`、`command-surface.ts`；`scripts/capture-released-fingerprints.mjs`
-- [ ] B6 `mechanisms/`（🟡）：指纹归一化与清扫机制；生成物标记与 `.gitattributes`
-- [ ] B7 `workflows/`（🔴）：命令弃用状态口径注记（**不改成 skills-only 现状**）
-- [ ] B8 `_coverage/`（🟡）：`src-coverage.md`、`tests-coverage.md` 更新模块/测试文件计数；`doc-assertions.md` 记增量抽查
-- [ ] B9 checkpoint：抽查 B2/B5/B7 三个 🔴；`grep` 确认没有把「命令文件已删除」写成现状
+- [x] B1 `README.md`：SSOT 基线行 → `v1.17.0`（`579fcac5`）
+- [x] B2 `spec_cli/01-human-facing-cli.md`（🔴）：`openspec update` 从任意版本升级、不需 `--force`、编辑过的文件保留并列出、命令弃用提示；顺带修正 install 段过期的 Node 20.19+ 口径
+- [x] B3 `spec_cli/` 校验相关（🔴）：`validate` 三条收紧的级别与 `archive` 拒绝条件
+- [x] B4 `spec_cli/` 版本相关（🟡）：`version --check` 的遥测/CI 语义、standalone 只提示可装版本、`node:http(s)` 替换 `fetch` 的原因
+- [x] B5 `system/06-源码地图与扩展点.md`（🔴）：新增 `generated-fingerprint.ts`、`released-generated-fingerprints.ts`（**生成物**）、`released-output-sweep.ts`、`command-reconcile.ts`、`command-surface.ts`；`scripts/capture-released-fingerprints.mjs` 与 `legacy-cleanup.ts` 大改记入 init/update 表
+- [x] B6 `mechanisms/`（🟡）：`05-cli-infra.md` 新增「指纹库」与「生成物标记与 `.gitattributes`」两节；`02-tool-delivery.md` 新增「command 面的终点：v1.17.0 的弃用预告」（含三层辨析、能力矩阵、reconcile 三分）；修正 `05-cli-infra.md` 里 `engines.node = >=20.19.0` 的过期断言
+- [x] B7 `workflows/00-overview.md`（🔴）：命令弃用状态口径注记（**不改成 skills-only 现状**），并点明「精确性在 CLI，不在 prompt」
+- [x] B8 `_coverage/`（🟡）：`tests-coverage.md` 基线改 241 files / 6931 tests 并加 10 行新测试映射；`src-coverage.md` 加 4 组新模块；`doc-assertions.md` 记 v1.17.0 增量抽查（10 个 sha 全有效、12 个 PR 编号全命中、`#2087`/`#2089` 为关闭未合并的预期例外）
+- [x] B9 checkpoint：抽查 B2/B5/B7 三个 🔴；`grep` 确认没有把「命令文件已删除」写成现状（无违例）；`git diff --diff-filter=MD v1.17.0 HEAD` 仍为空
 
 ### Phase C：`_faq_on_digested/` 更新
 
-- [ ] C1 `01_openspec-executable`（🔴）：Node 门槛 22.12.0；安装产物归档格式
-- [ ] C2 `12_upstream-roadmap-and-issues`（🟡）：版本表加到 1.17.0；链接 0014
-- [ ] C3 `16_upgrade-openspec-cli-and-projects`（🔴）：从任意旧版升级、`--force` 不再是必需、编辑过的文件处理、命令弃用状态口径
-- [ ] C4 `17_review-and-validation-surface`（🔴）：WHEN/THEN 警告、未识别 Requirements 段 ERROR、坏 config 退出 1
-- [ ] C5 其余目录 `[~]` 核实并写依据；`_faq_on_digested/README.md` 基线脚注
-- [ ] C6 checkpoint：抽查 C3/C4
+- [x] C1 `01_openspec-executable`（🔴）：Node 门槛 22.12.0；安装产物归档格式；安装入口收敛到 `openspec.dev/cli`
+- [x] C2 `12_upstream-roadmap-and-issues`（🟡）：版本表加 1.16.0 / 1.16.1 / 1.17.0；新增 §1.2b 记录 issue #2022 的五步 2.0 路线图与「为什么是这个顺序」；链接 0014
+- [x] C3 `16_upgrade-openspec-cli-and-projects`（🔴）：从任意旧版升级、`--force` 不再是必需、编辑过的文件处理、命令弃用状态口径；新增「v1.16.0–v1.17.0 的具体提醒」一节；修正 npm Node 口径
+- [x] C4 `17_review-and-validation-surface`（🔴）：新增 §八「三条收紧」——WHEN/THEN 警告（`--strict` 才失败）、未识别 Requirements 段 ERROR（archive 拒绝）、坏 config 退出 1；补解析器四处修正与写作者新要求
+- [x] C5 其余目录 `[~]` 核实并写依据：`09`/`10` 的内置 schema 范围从 v1.15.0 延到 v1.17.0（`git ls-tree v1.17.0:schemas` 仍只有 `spec-driven`）；`18` 的验证命令与计数改为 v1.17.0（src 差异 0、总差异 260、122/117/20/1）；`18/appendix-a` 加「子命令一个没变」复核注；`_faq_on_digested/README.md` 索引入口表述更新
+- [x] C6 checkpoint：抽查 C3/C4；`grep --force` 确认口径一致（只剩 `~` 共享 prompt 与强制重生成两种用法）
 
 ### Phase D：`_openspec_handbook/` 更新
 
-- [ ] D1 `00-index.md`（🔴）：版本表加 1.16.0 / 1.16.1 / 1.17.0 行；链接 0014
-- [ ] D2 `99-FAQ-常见问题.md`（🔴）：Node 门槛、命令弃用状态口径、validate 收紧
-- [ ] D3 `52-实战-如何正确修改-artifacts`（🟡）：`update` 升级旧项目的新行为；WHEN/THEN 书写要求
-- [ ] D4 `24-高级-store-跨仓库协同.md`（🟡）：找不到 root 时的 store 提示
-- [ ] D5 其余章节 `[~]` 核实并写依据
-- [ ] D6 checkpoint：全局 grep 无旧口径残留
+- [x] D1 `00-index.md`（🔴）：手册版本 v1.14 → **v1.15**、对齐 OpenSpec 1.15.0 → **1.17.0**；版本表加 1.16.0 / 1.16.1 / 1.17.0 三行并链接 0014
+- [x] D2 `99-FAQ-常见问题.md`（🔴）：Q27f 改 Node 22.12.0 并补归档格式；新增 Q27g（旧项目一次升级、`--force` 不再必需）、Q27h（命令文件弃用 ≠ CLI 没了）、Q27i（`validate` 三条收紧的分级表）；Q5 加状态注记并指向 Q27h
+- [x] D3 `52-实战-如何正确修改-artifacts`（🟡）：顶部加「升级后先跑 `update`」前置；新增「scenario 必须有 WHEN/GIVEN 和 THEN」小节（含未识别段落标题的 ERROR 边界）
+- [x] D4 `24-高级-store-跨仓库协同.md`（🟡）：新增「找不到 root：v1.16.0 起会点名候选 store」，说明只提示不自动选及原因
+- [x] D5 其余章节 `[~]` 核实并写依据：`grep 20.19` 无残留；`grep "update --force"` 无旧口径；`01-初级` 加一行状态注记；其余 `Node.js` 命中均为示例 `config.yaml` 的技术栈内容，不是 OpenSpec 要求，不改
+- [x] D6 checkpoint：全局 grep 无旧口径残留（命令文件状态词、Node 门槛、`--force` 三处均已收敛）
 
 ### Phase E：验收与收尾
 
 - [x] E1 `pnpm install --frozen-lockfile` + `pnpm run build` + `pnpm test` 全绿（241 files / 6931 tests passed，1 file / 16 tests skipped，81.68s）
 - [x] E2 CLI 版本：`node bin/openspec.js --version` = `1.17.0`
-- [ ] E3 版本一致性：`package.json` / `_digested/README.md` / FAQ 12 版本表 / handbook 00-index
-- [ ] E4 回填 0014「当前处理状态」与本计划进度日志
-- [ ] E5 `_change_log/README.md` 索引加 0014 与 `_plan-12` 两行
-- [ ] E6 提交（源码一个 commit `1f8df1ec` 已在；资料回填另计）；**永不推送 `upstream`**
+- [x] E3 版本一致性：`package.json`=1.17.0、CLI `--version`=1.17.0、`_digested/README.md` 基线 v1.17.0、FAQ 12 版本表到 v1.17.0、handbook 00-index 对齐 1.17.0
+- [x] E4 回填 0014「当前处理状态」与本计划进度日志
+- [x] E5 `_change_log/README.md` 索引已含 0014 与 `_plan-12` 两行（复核通过）
+- [x] E6 提交（源码一个 commit `1f8df1ec` 已在；资料回填为 `e08d2dcc`）；**永不推送 `upstream`**
 - [ ] E7 交人复核
 
 ## 阻塞与决策
@@ -144,4 +144,8 @@ git diff --diff-filter=MD --cached <tag>    # 自动合并漂移；必须为空
 - **审计（Phase A）**：按源码而非 changelog 读，确认本版重量在 `released-generated-fingerprints.ts`（4010 行 / 2867 指纹 / 1130 路径 / 42 个版本），其余是 validate、解析器、`version --check` 的收紧，外加 Node 门槛与安装归档格式。0014 写入。
 - **验证（E1/E2）**：`pnpm install --frozen-lockfile` 成功（15.2s，`prepare` 已顺带构建）；`node bin/openspec.js --version` = `1.17.0`；`pnpm test` **241 passed | 1 skipped（242 files）、6931 passed | 16 skipped（6947 tests）**，81.68s。相对 v1.15.0 基线（229 files / 6722 tests）多 13 个测试文件、225 个测试。
 - **下一步**：Phase B–D 三套资料回填。
+- **2026-11-20 Phase B（`_digested/`）**：基线行改 v1.17.0；`spec_cli/01` 补 update 的任意版本升级/`--force` 不再是必需/命令弃用状态、validate 三条收紧的级别、`version --check` 两条语义；`system/06` 加 5 个新模块 + 采集脚本；`mechanisms/05` 新增指纹库与 `.gitattributes` 两节、`mechanisms/02` 新增「command 面的终点」（含三层辨析与能力矩阵）；`workflows/00` 加状态注记；`_coverage` 计数改 241/6931 并加 10 行测试映射。顺带修正 `mechanisms/05` 里 `engines.node = >=20.19.0` 的过期断言。
+- **2026-11-20 Phase C（`_faq_on_digested/`）**：01 改 Node 22.12.0 与归档格式；12 版本表补三行并新增 §1.2b（issue #2022 五步路线图与「为什么是这个顺序」）；16 新增「v1.16.0–v1.17.0 的具体提醒」，改 `--force` 段；17 新增 §八「三条收紧」；09/10 的内置 schema 范围延到 v1.17.0（`git ls-tree v1.17.0:schemas` 实测仍只有 `spec-driven`）；18 的验证命令改钉 v1.17.0（src 差异 0、总差异 260、122/117/20/1）。
+- **2026-11-20 Phase D（`_openspec_handbook/`）**：00-index 手册升 v1.15、对齐 1.17.0、加版本表行；99 新增 Q27g/Q27h/Q27i 并改 Q27f 的 Node 口径；52 加「升级后先跑 update」前置与 WHEN/THEN 小节；24 加 store 点名提示；01 加一行状态注记。
+- **2026-11-20 Phase E**：版本一致性五处对齐（package.json / CLI / `_digested/README` / FAQ12 / handbook00 均为 1.17.0）；机械校验 27 个改动文件的相对链接与锚点全部可解析；`git diff --diff-filter=MD v1.17.0 HEAD` 仍为空；资料提交 `e08d2dcc`。
 

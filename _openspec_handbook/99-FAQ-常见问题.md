@@ -35,6 +35,7 @@
 - CLI 里没有 `openspec propose` 这个等价命令
 - 对应的底层步骤通常是 `openspec new change <name>`，再用 `openspec status --change <name> --json` 和 `openspec instructions <artifact> --change <name> --json` 生成 artifacts
 - 机器协议层面（status/instructions 返回什么、agent 怎么跑多步），详见 [90 附录·给机器看的 agent 协议](90-附录-给机器看的-agent-协议.md)
+- **状态注记（v1.17.0）**：`/opsx:*` 这类**命令文件**已标记弃用，2.0 起不再生成；同一份 workflow 的 **skill**（如 `openspec-propose`）会保留，两者内容几乎相同。所以“宿主 workflow 和 CLI 的关系”这条结论不变——变的只是宿主侧的调用形式。详见 [Q27h](#q27h-提示说command-files-are-deprecated-and-go-away-in-openspec-20我的-cli-要没了)。
 
 ### Q6: 我必须按 propose → apply → archive 的顺序吗？
 **A**: 不是必须的。这是推荐顺序，但你可以：
@@ -280,7 +281,39 @@ npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction`
 ### Q27f: 不装 Node.js 能用 OpenSpec 吗？
 **A**: 能（v1.15.0+）。每个 release 提供 8 个平台的 standalone 单文件：macOS 13+、Linux glibc 2.17+、Alpine 3.17+（需先 `apk add libstdc++ libgcc`）、Windows 10+，x64 与 arm64 都有。用文档的一行安装命令，或已经装过任一版本时跑 `openspec install` 切换；安装器校验 `SHA256SUMS`，默认放到 `~/.local/bin/openspec`（Windows：`%LOCALAPPDATA%\Programs\openspec`）。
 
-`openspec version` 会标 `(standalone)`；升级用 `openspec install`（原地重装），之后再 `openspec update` 刷新项目。`npm install -g` 方式仍需要 Node.js 20.19+；`openspec install` 不会自动删旧包管理器副本，只给移除命令。
+`openspec version` 会标 `(standalone)`；升级用 `openspec install`（原地重装），之后再 `openspec update` 刷新项目。`npm install -g` 方式需要 Node.js **22.12.0+**（v1.16.0 起；Node 20 已于 2026-04-30 EOL，所以只有还停在 Node 20 的 npm 用户受影响——这正是 standalone 存在的理由）。`openspec install` 不会自动删旧包管理器副本，只给移除命令。
+
+> 安装命令在 v1.16.0 收敛为 `curl -fsSL https://openspec.dev/cli/install.sh | sh`（Windows：`irm https://openspec.dev/cli/install.ps1 | iex`）；release 资产同时从裸二进制改成 `.tar.gz`（Windows `.zip`）归档。
+
+### Q27g: 我的项目是从很旧的版本升上来的，`update` 要一路跑很多次吗？
+**A**: 不用（v1.17.0+）。`openspec update` 能从 **0.12 以来任意版本一次跑完**，并且**不再需要 `--force`**。
+
+关键在于它怎么判断“这个旧文件能不能删”：命令文件没有版本戳，所以 OpenSpec 用**内容指纹**——判断条件是“这份内容是不是某个已发布版本原样写出来的”（归一化去掉 BOM、CRLF 和 `generatedBy` 里的版本号之后）。只有证明“没人动过”才删；**你编辑过的会保留并列出**，读不了/删不了的单独报 `unchecked`。
+
+三条安全边界值得知道：路径上任何一段是符号链接就完全不碰（即使加 `--force`）；工具更新失败或你拒绝过清扫时整个清扫跳过；上游发版后如果忘了重新采集指纹（`scripts/capture-released-fingerprints.mjs`），新版本的文件会被当成“改过”保留——**失败模式全部倒向“留着”**。
+
+> `~` 里的共享 prompt 文件是例外：同一台机器多个项目共用，仍然只在 `--force` 或终端确认时删。
+
+### Q27h: 提示说“Command files are deprecated and go away in OpenSpec 2.0”，我的 CLI 要没了？
+**A**: 不是。**弃用的是斜杠命令文件，不是 CLI。**
+
+`/opsx:propose` 这类东西是 AI 工具里的斜杠命令，由 `.claude/commands/opsx/propose.md` 这种 markdown 文件定义；`openspec validate` / `archive` / `update` / `instructions` 是真正的 CLI 子命令，一个都没少，2.0 也不动它们。
+
+同一份 workflow 本来就有两种 packaging：command 文件（`/opsx:propose`）和 skill（`openspec-propose`），内容几乎相同，**内部都是在指挥 CLI**。2.0 停止生成前者，保留后者，并将技能收成 `.agents/skills/` 一份真身 + 14 个工具的软链。
+
+**v1.17.0 仍然生成命令文件，`/opsx:*` 仍然可用**，提示是预告。想提前适应就按提示跑 `openspec config set delivery skills && openspec update`——它只删 OpenSpec 生成的命令文件，你改过的保留并列出。
+
+### Q27i: 升级后 `validate` 突然报错了，是回归吗？
+**A**: 大概率是 v1.16 的三条收紧，修的是“看起来通过、实际什么都没查”的 bug。分三个级别看：
+
+| 情况 | 级别 | 影响 |
+|---|---|---|
+| `#### Scenario:` 没有 **WHEN/GIVEN** 触发步，或没有 **THEN** 结果步 | WARNING | 普通 `validate` 和 `archive` 照常；只有 `--strict` 失败 |
+| requirement 落在 `## DEPRECATED Requirements`、`## Add Requirements` 这类“像 delta 操作但不是四个合法段”的标题下 | **ERROR** | `validate` 报错，`archive` **拒绝** |
+| `openspec/config.yaml` 读不了或 YAML 解析失败 | **退出 1** | 只有 `validate` 硬失败；其他命令仍警告继续 |
+
+第二条以前是“警告 + 静默丢掉那条 requirement”——这是最坏的一种失败：change 声称做了它没做的事。判断边界很细：`## Notes`、`## Behavior` 这类散文段下的孤立 requirement **仍是 WARNING**，区别在于标题是否读起来像 delta 操作。
+
 
 ### Q28: 为什么有 `.claude/` 和 `openspec/` 两个目录？
 **A**: 

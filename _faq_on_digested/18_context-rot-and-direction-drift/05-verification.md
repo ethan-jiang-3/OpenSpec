@@ -12,18 +12,18 @@
 
 ```bash
 # src/ 相对当前基线 tag 无改动（输出 0）
-git diff --name-only v1.15.0..ethan -- src/ | wc -l
+git diff --name-only v1.17.0..ethan -- src/ | wc -l
 # → 0
 
-# 258 个变更文件全部是本地资料，无一行 src/
-git diff --name-only v1.15.0..ethan | wc -l
-# → 258
-git -c core.quotepath=false diff --name-only v1.15.0..ethan \
+# 260 个变更文件全部是本地资料，无一行 src/
+git diff --name-only v1.17.0..ethan | wc -l
+# → 260
+git -c core.quotepath=false diff --name-only v1.17.0..ethan \
   | awk -F/ '{print $1}' | sort | uniq -c
-# → 120 _digested ／ 117 _faq_on_digested ／ 20 _openspec_handbook ／ 1 CONTEXT.md
+# → 122 _digested ／ 117 _faq_on_digested ／ 20 _openspec_handbook ／ 1 CONTEXT.md
 ```
 
-`-c core.quotepath=false` 是必需的：中文文件名会被 git 转义成 `"\344..."` 形式，导致目录统计出现重复项。这里钉 `v1.15.0` 而不是 `upstream/main`：后者在 tag 之后可能还有上游提交（例如 website 修复），会把它们算进差异。
+`-c core.quotepath=false` 是必需的：中文文件名会被 git 转义成 `"\344..."` 形式，导致目录统计出现重复项。这里钉 `v1.17.0` 而不是 `upstream/main`：后者在 tag 之后可能还有上游提交（例如 2.0 的 #2223），会把它们算进差异。
 
 ---
 

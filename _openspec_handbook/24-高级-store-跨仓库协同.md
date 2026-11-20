@@ -158,6 +158,17 @@ openspec view --store platform-api # 明确查看指定 store
 
 这也是为什么 store 不适合作为“多处 guidance 拼装器”：真正的项目配置必须写在最终被解析为 planning root 的位置。
 
+### “找不到 root”：v1.16.0 起会点名候选 store
+
+当一条命令找不到 OpenSpec root、但你已注册了 store 时（v1.16.0 起，#2077），错误信息不再只说“没找到”，而是点名**哪个 store 的 id 和你仓库 `origin` remote 里的仓库名对得上**，并给出选中它需要的两种写法：
+
+```text
+--store <id>          # 命令行标志
+store: <id>           # 或写进 openspec/config.yaml
+```
+
+**它只提示，从不按名字自动选中。** 这不是过度保守——不同组织的仓库完全可以重名，按名字猜等于让一条命令替你决定读哪个组织的 specs。看到提示后，你自己确认那是不是对的仓库，再显式传 `--store`。
+
 ### MODIFIED delta：不要把 cwd 当成 main-spec root
 
 v1.10.0 修复的是 **specs instruction 给 agent 的路径合同**，不是新增自动 spec retrieval。一个 change 在 store 中时，当前 shell 的仓库与 main spec 所在 root 可能不同：

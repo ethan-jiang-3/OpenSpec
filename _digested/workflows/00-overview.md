@@ -56,6 +56,10 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 
 > 表中 `/opsx:*` 是 command adapter（例如 Claude Code）的示例，不是通用调用语法。Codex 使用 `$openspec-*`；Zed Agent 使用 `/openspec-*` 或 `@openspec-*`。Codex、Zed Agent 与 vendor-neutral `agents` 三方共享 `.agents/skills/`（见 `../mechanisms/02-tool-delivery.md`）；其他 host 应以实际安装的 command/skill 名为准。
 
+> **v1.17.0 状态注记：command 文件已标记弃用，但本版仍然可用。** 上表左右两列（`/opsx:*` 与 `openspec-*`）描述的都是**当前 release 的状态**：`/opsx:*` 命令文件仍会生成、仍能触发；同一份 workflow 也仍然有等价的 skill。OpenSpec 2.0 才停止生成 command 文件，届时统一用 skill 调用（细节见 issue #2022）。`openspec update` 会在配置仍会得到 command 文件时打印一条弃用提示，并给出 `openspec config set delivery skills && openspec update` 的提前切换命令。
+>
+> 注意不要让这层状态影响对**机制**的理解：command 与 skill 只是同一份 template 的两种 packaging，两者内部都在调用 CLI（`openspec instructions` / `openspec status` / `openspec archive` …）。**精确的校验与合并发生在 CLI，不发生在 prompt 里。**
+
 > **core profile**（默认）：propose, explore, apply, update, sync, archive —— 6 个。大多数用户只看到这些。
 > **custom profile**：需在 `customWorkflows` 中显式启用，才能解锁全部 12 个。
 > custom 选择 `archive` 或 `bulk-archive` 时会自动在第一个依赖者前补 `sync`；已有 `sync` 不重复、不重排，profile 仍保持 custom。

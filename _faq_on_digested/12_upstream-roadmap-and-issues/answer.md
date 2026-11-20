@@ -18,7 +18,7 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v1.15.0）
+### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v1.17.0）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
@@ -41,6 +41,9 @@
 | v1.14.2 | 补丁：delta 里「归档不会带走」的文本（首个 `##` 前正文 / 首个 requirement 前散文 / 额外 `##` 段）报 WARNING；`.openspec.yaml` 接受顶层 `x-` 扩展键；`openspec/`、`changes/`、`specs/` 可为项目内 symlink（`archive/` 不行）；explore 捕获表限定默认 schema；update 的 glob 新文件例外写在两处；verify 的 REMOVED 先读主 spec 基线；`__complete` 跳过遥测（344→48 模块） | v1.14.2 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
 | v1.14.3 | 补丁：artifact 创建前先定并校验输出路径（propose/ff/continue/explore 统一，glob 工件必须落在 change 目录内）；单条 `specs/<capability>/spec.md` 可为指向项目内其他位置的 symlink；glob 引擎由 `fast-glob` 换到 `tinyglobby`（brace 嵌套 ≤16、展开 ≤1024，移走 `braces` 传递依赖）；零宽 TTY 下 spinner 不再挂死；website 预览改零依赖脚本 | v1.14.3 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
 | v1.15.0 | 独立安装 + update 预演（minor）：8 平台 standalone 单文件（无需 Node.js）、`openspec install` 切换安装形态、`openspec update --dry-run/--json`、feedback 对齐 bug 表单、`new change` 显示实际 schema、verify 的 REMOVED 按精确规范化名称匹配、`--json` 不加载 ora | v1.15.0 依据（见 [`0013`](../../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)） |
+| v1.16.0 | 基础设施 + 校验收紧（minor，含一个 Breaking）：npm 包要求 **Node 22.12.0+**（Node 20 EOL）、release 资产改 `.tar.gz` / `.zip` 归档、安装入口收敛到 `openspec.dev/cli`、`validate` 三条收紧（scenario 无 WHEN/THEN → WARNING；未识别 `## ... Requirements` 段 → ERROR 且 archive 拒绝；坏 `config.yaml` → 退出 1）、parser 三修复（行内三反引号、无空格 `###Requirement:`、闭合 `#` run）、store 提示按 origin 仓库名点名、zsh 补全写 `$ZDOTDIR/.zshrc` | v1.16.0 依据（见 [`0014`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)） |
+| v1.16.1 | 补丁：显式 `version --check` 不再受遥测/CI 影响、standalone 只提示有 `SHA256SUMS` 的版本（HTTP 改 `node:http(s)` 以免 abort 后句柄滞留）、`validate` 拒绝未识别 delta 段（从“警告并静默丢弃”改为 ERROR）、闭合 `#` run 支持 | v1.16.1 依据（见 [`0014`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)） |
+| v1.17.0 | **迁移基础设施**（minor）：历史产物指纹库（2867 指纹 / 1130 路径 / 42 个版本，4010 行生成物）+ 旧文件清扫，使 `update` 从 0.12 以来任意版本一次升级、**不再需要 `--force`**；切换 skills-only 不再删用户编辑过的 command 文件；**command 文件标记弃用**（2.0 移除，本版仍生成）；上游自家 19 个 change 归档 | v1.17.0 依据（见 [`0014`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
@@ -49,6 +52,21 @@
 - **Roadmapping 功能** — 多 change 规划、优先级排序、依赖追踪。
 - **TUI dashboard** — 探索 `opentui` 做终端可视化。
 - **Native integration** — 所有支持自定义 slash command 的 AI 工具的深度集成。
+
+### 1.2b 已经写死的下一步：OpenSpec 2.0（issue #2022）
+
+这是目前**唯一有公开分批计划**的方向，也是理解 v1.16–v1.17 的关键：那两版不是随意排的，是在替它清路。维护者（TabishB）在 #2022 里列了五步：
+
+| # | 版本 | 内容 | 状态 |
+|---|------|------|------|
+| 1–2 | **1.17.0** | `update` 能从 0.12 起任意版本一次升级；没人编辑过的旧文件删掉、编辑过的保留；`update` 预告 command 文件在 2.0 消失 | **已交付**（#2213） |
+| 3 | **2.0** | 每个 skill 只留一份真身放 `.agents/skills/`，14 个只读自己目录的工具用软链指回来；不再生成 command 文件；Amazon Q Developer 退役（AWS 已转向 Kiro） | #2223，已合并进 2.0 线 |
+| 4 | 2.x | 可选的**每机全局** skill 安装，对齐 `npx skills` | 设计中 |
+| 5 | 2.x | router skill + references，然后是更瘦的 skill | 第 4 步之后，每次改动前先量 |
+
+**为什么是这个顺序**：2.0 要删掉 command 文件，而 1.x 项目里堆着两个版本布局的残留（同一套 workflow 一份 skill 一份 command）。如果用户带着这些残留直接进 2.0，要么丢文件要么看到重复。所以 1.17.0 必须先让 `update` 具备「证明这个文件没人改过」的能力——这就是那个 4000 行指纹库的由来。**它不是内务，是迁移的前置条件。**
+
+**风险分级（维护者自评）**：第 1–2 步低（只在内容匹配某发布版时才删）；第 3 步中（习惯 `/opsx:propose` 的人要改说 skill 名；Windows 软链依赖 git 的 `core.symlinks`，没有就退化成写真副本）。
 
 ### 1.3 Workspace & Multi-Repo 四阶段路线图
 

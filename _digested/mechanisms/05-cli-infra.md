@@ -79,9 +79,11 @@ seen flag 写 global config 时使用 raw read/merge + 临时文件 rename，不
 
 ### 测试矩阵扩到 Node 20/22/24（v1.14.2 #981）
 
-CI 的 OS 矩阵每格现在显式钉 Node 版本：Linux/macOS/Windows 全跑**最老的受支持版本**（`package.json` 的 `engines.node` = `>=20.19.0`），Linux 额外跑当前 LTS 线（22、24）。改前只有 Ubuntu 用 runner 的默认 Node，macOS/Windows 的预装版本还各不相同——同一个 tag 在不同时间点测到的 Node 版本并不一样。
+CI 的 OS 矩阵每格现在显式钉 Node 版本：Linux/macOS/Windows 全跑**最老的受支持版本**，Linux 额外跑当前 LTS 线（22、24）。改前只有 Ubuntu 用 runner 的默认 Node，macOS/Windows 的预装版本还各不相同——同一个 tag 在不同时间点测到的 Node 版本并不一样。
 
 对使用者的含义：`engines.node` 是**真的被 CI 覆盖**的下限，不是免责声明。
+
+> **v1.16.0 起下限变了**：`engines.node` 从 `>=20.19.0` 抬到 **`>=22.12.0`**（#2159，CHANGELOG 标 Breaking），`@types/node` 20→22。原因写在发布说明里：Node 20 于 2026-04-30 EOL。影响面很窄——**只有 Node 20 上的 npm 安装**；standalone 二进制不用 Node（自 v1.15.0 起是默认安装方式），Homebrew 会自己管 Node 依赖。CI 矩阵随之以 22.12 为最老受支持版本。
 
 ### npm git 安装免 pnpm + Node 20 chalk 兼容
 
@@ -313,6 +315,43 @@ return !stream.isTTY ? true : (stream.columns ?? 0) > 0;
 
 单文件没有 package 目录，`version-check.getInstallDir()` 不再用 `require.resolve('../../package.json')`（会被 bundler 在构建时把构建机路径烤进去），改为按 `import.meta.url` 解析并在运行时 `fs.existsSync` 判断；standalone 入口另用 `markStandaloneBinary(process.execPath)` 把安装形态标成 `standalone`。schemas 由 `entry.mjs` 解到 global data dir 并通过 `setPackageSchemasDir` 注入。
 
+## v1.16.0–v1.17.0 更新
+
+### 指纹库：让 `update` 能证明“这个文件没人改过”（#2213）
+
+这是 v1.17.0 几乎全部的重量，也是本仓库里第二个**生成物**源码文件。
+
+**问题**：用户可能从 0.12 一路升到 1.17。中间 42 个版本写过不同布局（Cline/Qwen 的命令文件在上一级目录、Codex 的 `.codex`、Antigravity 的 `.agent`），默认 workflow 集还变过四次（`ten` → `four` → `five` → `six`）。`update` 面对这些旧文件只有两个坏选择：留着（同一套工作流两份陈旧副本，工具里每个 skill 出现两次），或者 `--force` 全删（会删掉用户改过的）。
+
+**判据**：命令文件**没有版本戳**，所以“是否被改过”只能用内容相等来判断——这份内容是不是某个已发布版本原样写出来的。
+
+**归一化是承重墙**（`src/core/shared/generated-fingerprint.ts`）：哈希前先去掉 BOM、把 CRLF 折成 LF、把 frontmatter 里 `generatedBy:` 的**合法版本号**替换成 `<generated-version>`。这样“因为升级而不同”不算编辑，“人真改过”才算。不这么做，每次发版所有指纹都会失效。`generatedBy` 里的自由文本仍是实质内容，不抹。
+
+一个实现细节值得记：版本行匹配缩进用 `[ \t]` 而不是 `\s`。注释写明了原因——`m` 锚定的 `\s*` 会从每一行行首重新扫描，在空白密集的 frontmatter 上是二次方复杂度。
+
+**数据**：`released-generated-fingerprints.ts` 4010 行、2867 个内容指纹、1130 条项目相对路径、覆盖 42 个版本（0.12.0→1.16.1）。0.1.0–0.11.0 不覆盖，因为那时还没有非交互式 `init`。由 `scripts/capture-released-fingerprints.mjs` 生成：对 npm 上每个版本装进缓存，用一次性 `HOME` 在临时项目里跑 `init --tools all`，**每个 profile、每个旧默认 workflow 集、每个 `delivery` 各跑一次**。
+
+**清扫的保守性**（`released-output-sweep.ts`）：删一个文件要同时满足——当前版本根本不写该路径、内容仍是某发布版原样、该工具的替代产物已就位、路径上任何一段不是链接、工具未更新失败且用户未拒绝过清扫。删完用 `rmdir` 回收空目录（非空即停）。
+
+**失败模式全部倒向“留着”**：忘了跑 capture → 新版本的文件被当成“改过”保留；读不了 → 进 `unchecked`；工具失败 → 整个 sweep 跳过。没有一个分支是“猜一下然后删”。
+
+### 生成物标记与 `.gitattributes`
+
+`released-generated-fingerprints.ts` 由脚本重写，所以 `.gitattributes` 加了两类标记：
+
+```gitattributes
+test/fixtures/released-output/** -text                              # 真实发布产物按字节保存，不许 autocrlf 转换
+src/core/shared/released-generated-fingerprints.ts linguist-generated=true
+test/fixtures/released-output/** linguist-generated=true
+```
+
+`-text` 那条是必要的：夹具是**真实发布产物的字节副本**，只用来证明指纹能对上；让 git 转换行尾会让它们永远对不上。这与 `line-endings.ts` 的“写回保持行尾”是同一类约束的两个方向。
+
+### 依赖与安全（v1.16.0–v1.16.1）
+
+- `vitest` 4→5、`@vitest/ui` 4→5、`vite` 7→8（#2194/#2221）；`vitest` 不允许被降级。
+- `pnpm-workspace.yaml` 强制 `minimatch@<11.0.1` → `>=11.0.1`（GHSA-g3hv-75wg-m249 / CVE-2026-118764）。注释写明这是 **dev-only**：经 eslint 传递，**不进发布产物**——和 v1.14.3 那条 `braces` 的结论一样，先分清是运行时还是开发期，再决定要不要对消费者解释。
+
 ## 测试锚点补充（v1.14.1–v1.15.0）
 
 - `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs`：记录并断言启动时加载的模块数（防止按需加载被无意退回）
@@ -324,3 +363,9 @@ return !stream.isTTY ? true : (stream.columns ?? 0) > 0;
 - `test/core/update-dry-run.test.ts` + `update-dry-run.property.test.ts`：dry-run 的写入计划与属性
 - `test/commands/install-standalone.test.ts`、`test/core/standalone-tip.test.ts`：standalone 安装目标/PATH 检查与一次性提示
 - `test/core/version-check.test.ts`：standalone 的 `scope`、`(standalone)` 与升级命令
+
+测试锚点补充（v1.16.0–v1.17.0）：
+
+- `test/cli-e2e/upgrade-from-releases.test.ts`：**最有价值的一个**——装真实 npm 发布版（0.14.0 / 0.23.0 / 1.0.0 / 1.2.0 / 1.10.0 / 1.16.0）到临时项目，用当前构建 `update` 升级，断言“不需要 `--force`、没留下任何未编辑的旧产物、用户编辑过的保留、第二次运行无事可做”。需要网络，所以只在 `OPENSPEC_RELEASE_UPGRADES=1` 时跑
+- `test/fixtures/released-output/`：6 个真实发布产物（v0.23.0 / v1.0.0 的 CLAUDE.md、命令、prompt），按字节校验指纹
+- `test/core/update-dry-run*.test.ts`：清扫与 reconcile 在 dry-run 下的计划正确性

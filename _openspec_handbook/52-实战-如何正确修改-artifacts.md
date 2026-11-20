@@ -13,6 +13,8 @@ OpenSpec 有两种 profile（配置模式）：
 > **v1.13.1 artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的 metadata。每条 task 自带 verification；capability 退役若仍有未归属内容会被阻止。配置方面，artifact `rules` 只影响 artifact 生成，Apply/Archive 读 project `context` 与对应 operation guidance。
 > **v1.13.1 update 守卫。** `/opsx:update` 现在先起草修订（step 4），经你确认后才写入文件（step 5）——与 explore 的 capture 确认同属「写前确认」护栏。
 
+> **升级 OpenSpec 后先跑一次 `openspec update`（v1.17.0 起更省事）。** 你用来改 artifacts 的 workflow（skills / 命令文件）是 CLI 用**自己当前版本的模板**生成的；旧 CLI 生成的那份描述的是旧语义。所以升级 CLI 之后要跑一次 `openspec update` 让工具侧跟上。v1.17.0 起这一步能从 **0.12 以来任意版本一次跑完**，且**不再需要 `--force`**：没人编辑过的旧 OpenSpec 文件会被清掉（靠内容指纹证明），你改过的保留并列出，路径上有符号链接的一概不碰。升级后第一次 `validate` 若报出新错误，见 [99 FAQ Q27i](99-FAQ-常见问题.md#q27i-升级后-validate-突然报错了是回归吗)。
+
 | Profile | 命令数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
 | **core** | 6 个命令（v1.6.0 起） | 快速开发，简单场景 | 是（默认） |
@@ -1013,6 +1015,22 @@ rm -rf openspec/changes/add-task-csv-export/
 
 - **行尾保持**：写回文件时 CLI 保持原有行尾（CRLF 文件写回仍是 CRLF，只有新文件才写 LF）。在 Windows 仓库手改或让 AI 重写 artifact，不会再出现"整文件被重写成 LF"的噪声 diff——review 时看到的差异就是真实的内容改动。
 - **未知键告警**：`.openspec.yaml` 写进白名单之外的键不会静默被忽略，status/validate/archive 都会点名；用 `validate --strict` 可以把它变成硬失败，适合放进 CI。
+
+#### scenario 必须有 WHEN/GIVEN 和 THEN（v1.16.0 起会告警）
+
+写 `#### Scenario:` 时，正文要给**触发步**和**结果步**：
+
+```markdown
+#### Scenario: Export succeeds
+- **WHEN** a user exports the selected rows
+- **THEN** the legacy file is returned
+```
+
+v1.16.0 起（#2079），缺 WHEN/GIVEN 或 缺 THEN 会报 **WARNING**。级别要记准：普通 `validate` 和 `archive` **行为不变**，只有 `validate --strict` 失败。这个检查对 delta spec 和主 spec 走同一套判断，所以“什么都不断言”的 scenario 在哪个位置都会被点出来。
+
+只写 `**AND**` 行、或整段散文，仍然是合法的 scenario（不会被判结构错误），但会被标警告——它至少没有说清“什么时候”和“结果是什么”。
+
+> **别把段落标题写错。** requirement 必须落在 `## ADDED Requirements` / `## MODIFIED Requirements` / `## REMOVED Requirements` / `## RENAMED Requirements` 四者之一下面。写成 `## DEPRECATED Requirements`、`## Add Requirements` 这类“读起来像 delta 操作但不是合法段”的标题时，v1.16.1 起是 **ERROR**（`validate` 报错、`archive` 拒绝），因为以前它会**警告后把那条 requirement 静默丢掉**。想写备注就用 `## Notes`、`## Behavior` 这类不含 Requirements 的标题——那里的孤立 requirement 只是 WARNING。
 
 #### tasks：可追踪不等于可验证
 

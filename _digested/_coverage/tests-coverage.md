@@ -1,6 +1,7 @@
 # 测试覆盖矩阵
 
-> **v1.15.0 基线**：`pnpm test` = 229 test files / 6722 tests（v1.14.3 基线 223 / 6585）。
+> **v1.17.0 基线**：`pnpm test` = 241 test files / 6931 tests passed（另 1 file / 16 tests skipped），81.68s；`pnpm build` 全绿。
+> 上一基线 v1.15.0 = 229 / 6722；v1.14.3 = 223 / 6585。本区间多 13 个测试文件、225 个测试。
 
 ## 已对应专题
 
@@ -108,3 +109,18 @@
 | `test/core/standalone-tip.test.ts` | 一次性提示的触发面：全局安装、update 后、非 TTY/CI 延迟、只提示不切换 | `../mechanisms/05-cli-infra.md` |
 | `test/core/version-check.test.ts`（+70 行） | standalone：`scope: 'standalone'`、`(standalone)`、`openspec install` 升级命令 | `../spec_cli/01-human-facing-cli.md` |
 | `test/core/templates/verify-change-delta-operations.test.ts`（扩展） | verify 模板文本要求 "exact normalized name"、大小写敏感、近似名不算；规范化本身由 `test/core/parsers/closed-requirement-heading.test.ts` 覆盖（`C#` 保留 `#`） | `../workflows/08-verify.md` |
+
+## v1.16.0–v1.17.0 新增/大改测试
+
+| 测试 | 覆盖内容 | 对应 digest |
+|------|----------|-------------|
+| `test/cli-e2e/upgrade-from-releases.test.ts` | **本版最有价值的测试**：把真实 npm 发布版（0.14.0 / 0.23.0 / 1.0.0 / 1.2.0 / 1.10.0 / 1.16.0）装进临时项目，用当前构建 `update` 升级，断言不需要 `--force`、不留下未编辑的旧产物、编辑过的保留、第二次运行无事可做。需网络，`OPENSPEC_RELEASE_UPGRADES=1` 才启用 | `../mechanisms/05-cli-infra.md`、`../mechanisms/02-tool-delivery.md` |
+| `test/fixtures/released-output/`（6 个新夹具） | 真实发布产物（v0.23.0 / v1.0.0 的 CLAUDE.md、命令、prompt），按字节校验指纹；`.gitattributes` 里 `-text` 禁止 autocrlf 转换 | `../mechanisms/05-cli-infra.md` |
+| `test/core/released-output-sweep*.test.ts` | 清扫的五重条件、链接路径一律不碰、`pruneEmptyParents` 只回收空目录 | `../mechanisms/05-cli-infra.md` |
+| `test/core/shared/generated-fingerprint.test.ts` | 归一化边界：BOM、CRLF、合法/非法版本号、`generatedBy` 自由文本仍算实质、`C#` 与 NBSP | `../mechanisms/05-cli-infra.md` |
+| `test/core/shared/command-reconcile*.test.ts` | `removed`/`kept`/`unchecked` 三分；三组 workflow 集的候选比对；symlink 越界归 `unchecked` | `../mechanisms/02-tool-delivery.md` |
+| `test/core/command-surface.test.ts` | 能力矩阵与四条判定；弃用提示只在“切 skills 会改变该工具”时出现 | `../mechanisms/02-tool-delivery.md` |
+| `test/core/parsers/closed-requirement-heading.test.ts` | `## Purpose ##` 等价、`### Requirement: Foo ###`、`C#` 保 `#`、NBSP 不剥 | `../spec_cli/01-human-facing-cli.md` |
+| `test/core/validation.*`（v1.16 扩展） | #2079 scenario 无 WHEN/THEN 为 WARNING 且 `--strict` 才失败；#2207 未识别 Requirements 段为 ERROR 且 archive 拒绝；#2127 坏 config 退出 1 | `../spec_cli/01-human-facing-cli.md` |
+| `test/core/version-check.test.ts`（v1.16.1 扩展） | 显式 `--check` 不受遥测/CI 影响；standalone 只提示有 `SHA256SUMS` 的版本 | `../spec_cli/01-human-facing-cli.md` |
+| `test/core/completions/zsh-installer.test.ts` | `ZDOTDIR` 绝对路径写 `$ZDOTDIR/.zshrc`；相对/`~` 前缀忽略；uninstall 清同一文件并清早期 `~/.zshrc` 残留 | `../mechanisms/05-cli-infra.md` |

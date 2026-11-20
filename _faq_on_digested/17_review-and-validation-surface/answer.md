@@ -173,9 +173,44 @@ validate <change>            # 结构 + merge 预检 + unapplied 文本 WARNING
 
 ---
 
+## 八、v1.16.0–v1.16.1 补充：三条收紧，方向都是“不许静默”
+
+这一批和前七节是同一个项目：**“解析保真”线又推进了一段**。区别在于它开始对**写错的 spec** 报错，而不只是对**读不懂的 spec** 报警。
+
+| 变化 | PR | 级别 | 谁受影响 |
+|---|---|---|---|
+| `Scenario:` 没有 WHEN/GIVEN 触发步、或没有 THEN 结果步 | #2079（1.16.0） | **WARNING** | 普通 `validate` 与 `archive` 不变；只有 `--strict` 失败 |
+| requirement 落在 `## DEPRECATED Requirements` / `## Add Requirements` 这类“像 delta 操作但不是四个合法段”的标题下 | #2207（1.16.1） | **ERROR** | `validate` 报错；`archive` 拒绝 |
+| `openspec/config.yaml` 读不了或 YAML 解析失败 | #2127（1.16.0） | **退出 1** | 只有 `validate` 硬失败；其他命令仍警告继续 |
+
+**为什么第三个只让 `validate` 硬失败**：坏 config 会让所有规则被静默忽略，等于“校验通过但其实什么都没查”。但别的命令（`list`、`status`）没有理由因为配置文件坏了就罢工。CI 需要一个地方拦住它——`validate` 就是那个地方。JSON 输出的 code 是 `unreadable_config` / `unparseable_config`。
+
+**第二个以前是「警告 + 静默丢掉那条 requirement」**，这是本批唯一改级别的一处。判断边界很细：`## Notes`、`## Behavior` 这类**散文段**下的孤立 requirement 仍然是 WARNING——区别在于标题是否读起来像一个 delta 操作。少写一个 `A` 的 `## ADDED Requirements` 会被当成真 ERROR，因为作者显然想表达一次 delta。
+
+**第一个覆盖 delta 与主 spec 同一套检查**：两者走同一批 `#### ` 块，所以“什么都不断言”的 scenario 在哪个位置都会被报出来。只写 AND 行、或纯散文仍然算“有场景”，但会被标警告——它至少没说 WHEN 之外还发生了什么。
+
+### 配套的解析器修正（同批）
+
+- **闭合 `#` run**（#2205，1.16.1）：`## Purpose ##` 与 `## Purpose` 等价，`### Requirement: Foo ###` 的 requirement 名是 `Foo`。只在 `#` 前有空格/制表符时才剥——所以 `C#` 保留 `#`；用 `[ \t]` 而非 `\s` 是为了不让 NBSP 分隔的 run 被剥掉。
+- **无空格 `###Requirement:`**（#2133，1.16.0）：主 spec 结构检查现在按 `archive` 的读法匹配它，能报重复或位置错误。以前 `archive` 读得到、`validate` 看不见——正是“解析保真”线要消灭的那类不一致。
+- **行内三反引号**（#2131，1.16.0）：```` ```npm test``` ```` 不再被当成代码围栏开头。这个 bug 很恶性——它会把**这一行之后所有 requirement 都藏起来**，而文件本身看起来完全正常。
+- **围栏内与 HTML 注释被 mask**（#2207 配套）：注释掉的草稿不会被报成“丢了一个 requirement”。
+
+### 对写作者的新要求
+
+```text
+#### Scenario: 名称
+- **WHEN** 触发条件        ← 没有就是 WARNING（--strict 失败）
+- **THEN** 可观察结果      ← 没有就是 WARNING
+```
+
+`#### Scenario:` 的标题要落在四个合法段标题之下：`## ADDED Requirements` / `## MODIFIED Requirements` / `## REMOVED Requirements` / `## RENAMED Requirements`。想写“以后再说”的段落，用 `## Notes`、`## Behavior` 这类**不含 Requirements** 的标题，否则会被当成写错的 delta。
+
+---
+
 ## 参考来源
 
-- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)、[`0012-v1.14.0-to-v1.14.3.md`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)、[`0013-v1.14.3-to-v1.15.0.md`](../../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)
+- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)、[`0012-v1.14.0-to-v1.14.3.md`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)、[`0013-v1.14.3-to-v1.15.0.md`](../../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)、[`0014-v1.15.0-to-v1.17.0.md`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)
 - 机制：[`../../_digested/mechanisms/03-spec-model.md`](../../_digested/mechanisms/03-spec-model.md)（parser/validator 分工、Purpose 占位符、advisory preflight）
 - 命令面：[`../../_digested/spec_cli/01-human-facing-cli.md`](../../_digested/spec_cli/01-human-facing-cli.md)、[`02-machine-facing-cli.md`](../../_digested/spec_cli/02-machine-facing-cli.md)
 - 失真治理：[`../../_digested/specs_truth/00-map.md`](../../_digested/specs_truth/00-map.md)

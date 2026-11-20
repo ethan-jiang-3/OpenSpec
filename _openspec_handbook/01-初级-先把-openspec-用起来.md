@@ -67,6 +67,8 @@ OpenSpec 做的事，就是给"改代码"也加上装修那套**"先想清楚，
 
 这里的 `/opsx:*` 不是另一套叫 OPSX 的工具，而是 Claude 等宿主的 command 入口。你在终端里直接运行的是 `openspec ...` CLI；在 agent 对话里触发工作流要使用宿主安装的入口（Codex 为 `$openspec-*` skills）。
 
+> **v1.17.0 状态注记**：`/opsx:*` 这类**命令文件**已被标记弃用，OpenSpec 2.0 起不再生成；同一份工作流的 **skill**（如 `openspec-propose`）会保留，两者内容是同一份模板的两种包装。本版**仍然生成命令文件，`/opsx:*` 仍然可用**。CLI 本身（`openspec validate` / `archive` / `update` …）不受影响，2.0 也不动它。详见 [99 FAQ Q27h](99-FAQ-常见问题.md)。
+
 ---
 
 ## 你日常最常用的 3 个动作

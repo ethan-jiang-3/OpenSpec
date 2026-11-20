@@ -51,6 +51,7 @@
 
 - 将已配置工具中的 OpenSpec 工作流文件更新到当前版本和当前配置。
 - 同步 profile/delivery 变化，删除已取消的 workflow 产物。
+- 从任意旧版本（0.12 起）一次升级到位，并清扫旧版本留在项目里、**没人编辑过**的 OpenSpec 文件。
 
 输入：
 
@@ -63,8 +64,9 @@
 输出：
 
 - 更新后的 skills/commands 文件。
-- 删除不再需要的产物。
-- 控制台上的更新计划与结果。
+- 删除不再需要的产物，包括旧版本写在“当前版本根本不会写”的路径上、且内容仍是某发布版原样输出的文件（清扫只回收空目录，不碰非空目录）。
+- 控制台上的更新计划与结果；清扫过时会单独一行说明删了几个旧文件。
+- 仍会得到命令文件的工具会看到一条弃用提示（见下）。
 - `--dry-run` 时只报告计划：`add` / `update` / `delete`、每个文件归属的 tool、交互式运行会问的步骤（`notes`）、以及会失败的工具（`failures`，不中断其余计划）；不写任何文件。
 
 影响：
@@ -83,6 +85,9 @@
 - v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
 - v1.15.0 起，预演和真实更新走同一条写入路径（`src/core/update-plan.ts` 的 `UpdateFileOps` 接缝：真实运行用 `realFileOps`，预演用 `UpdatePlanRecorder`）；它不是“少写一部分”的另一套逻辑。`--json` 单独使用会报 `--json is only available with --dry-run.`。
 - v1.15.0 起，全局包管理器安装的用户在 update 后可能在 stderr 看到一次 standalone 提示（非 TTY/CI 延迟显示；只提示，不自动切换）。
+- v1.17.0 起，`update` 能从 **0.12 以来任意版本一次跑完**，且**不再需要 `--force`**。删旧文件的判据不是版本戳（命令文件根本没有版本戳），而是内容指纹：内容归一化后，等于某个已发布版本原样写出过的文件才删。编辑过的旧文件**保留并列出**（`kept`），读不了/删不了的单独列为 `unchecked`。例外是 `~` 里的共享 prompt 文件——它被同一台机器的多个项目共用，仍然只在 `--force` 或终端确认时删除。
+- v1.17.0 起，清扫**永不跨链接**：路径上任何一段是 symlink 就不搜索、不判断、不删除，即使加了 `--force` 也一样。工具更新失败或用户拒绝过清扫时，整个清扫跳过——旧文件可能还是该工具能用的唯一一份。
+- v1.17.0 起，命令文件**已标记弃用**（2.0 移除），`update` 在“某个已配置工具仍会得到命令文件、且切到 skills-only 确实会改变它”时打印一条提示，并给出 `openspec config set delivery skills && openspec update`。**这是预告，不是已经删**：1.17.0 仍然生成命令文件，`/opsx:*` 仍然可用。skills-only 项目不提示，Codex 这类本来就只有 skills 的工具也不提示（劝它切等于劝它离开唯一能用的接口）。
 
 ### `openspec install [version]`
 
@@ -112,7 +117,7 @@
 - 它不是“升级项目里的 OpenSpec 工作流文件”——那是 `openspec update`。
 - 它不会替你卸载旧的全局包，只给命令。
 - 它默认装“最新完整 release”，不是 `main` 分支快照；`latest` 也要等 `SHA256SUMS` 已上传才认。
-- 单文件不需要 Node.js；但 `npm install -g` 方式仍需要 Node.js 20.19+。
+- 单文件不需要 Node.js；但 `npm install -g` 方式需要 Node.js **22.12.0+**（v1.16.0 起；Node 20 已于 2026-04-30 EOL）。release 资产自 v1.16.0 起是 `.tar.gz`（Windows `.zip`）归档，不是裸二进制。
 
 ### `openspec version`
 
@@ -139,6 +144,9 @@
 
 - `disabled`（检查被关闭或 registry 不可用）与 `offline` 是显式状态而不是错误；`canSelfUpgrade` 会拒绝非默认 registry 等不确定归属的安装，不给出可能落错的升级命令。
 - 它提示的是已安装二进制版本，和源码 checkout 的 Git 版本是两件事（与 `update` 的升级提示同口径）。
+- v1.16.1 起（#2204），**显式 `--check` 不受遥测开关与 CI 检测影响**。用户主动要这一下，只有 `OPENSPEC_NO_UPDATE_CHECK` 和测试守卫还能挡；`update` 的后台检查**仍然**尊重 telemetry opt-out 与 CI。设计取舍写在源码注释里：设了 `DO_NOT_TRACK` 的用户没同意“另一种出站请求”，但主动敲 `--check` 是另一回事。
+- v1.16.1 起（#2206），standalone 的 `--check` 只提示**真能装上**的版本：按 `install.sh` / `install.ps1` 的找法，在 releases atom 源里从新到旧找第一个 `SHA256SUMS` 存在的稳定 tag。npm 的 `latest` 不能当答案——它比 GitHub 资产早几分钟发布，资产 job 一失败就永远没有对应文件；提示一个装不上的版本，会让 `openspec install` 悄悄退回旧版。
+- HTTP 实现从 `fetch` 换成 `node:http(s)`：abort 一个还在 TCP 握手的 `fetch`（防火墙丢包、强制门户）会留下连接句柄，CLI 退不出去，比提示本身还久。
 
 ## 2. 发现当前项目里有什么
 
@@ -255,6 +263,10 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 - 对 spec 来说，重点检查正式规范结构与 requirement/scenario 完整性。
 - `--archived` 适合 CI / pre-commit，抓“归档时 tasks 没勾完”的工作；它不重验已应用的 delta。
 - v1.14.0 起，`.openspec.yaml` 里出现已知键（`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）之外的未知键会以 WARNING 报告（`status` 与 archive 流程同样告警）；`--strict` 下该 WARNING 升级为失败。
+- v1.16.0 起（#2079），`Scenario:` 没有 WHEN/GIVEN 触发步、或没有 THEN 结果步时报告 **WARNING**。**级别很重要**：普通 `validate` 与 `archive` 的行为不变，只有 `--strict` 失败。该检查对 delta 与主 spec 走同一批 `#### ` 块，所以“什么都不断言”的场景在哪个位置都会被报出来；只写 AND 行或纯散文仍然算场景，但会被标警告。
+- v1.16.1 起（#2207），requirement 落在 `## DEPRECATED Requirements`、`## Add Requirements` 这类“读起来像 delta 操作、但不是 ADDED/MODIFIED/REMOVED/RENAMED 四个合法段”的标题下时报告 **ERROR**：`validate` 报错，`archive` 拒绝。以前是“警告 + 静默丢掉那条 requirement”——这是本版收紧里唯一改级别的一处。`## Notes`、`## Behavior` 这类散文段下的孤立 requirement **仍是 WARNING**，区别在于标题是否读起来像 delta 操作。
+- v1.16.0 起（#2127），`openspec/config.yaml` 读不了或 YAML 解析失败时 `validate` **退出 1**，而不是“通过但所有规则被忽略”。**只有 `validate` 硬失败**，其他命令仍只警告继续——CI 需要一个地方拦住坏 config。JSON 输出的 code 是 `unreadable_config` / `unparseable_config`。
+- 解析器同步收紧（同版本）：v1.16.1 起（#2205）接受 CommonMark 闭合 `#` run，`## Purpose ##` 与 `## Purpose` 等价、`### Requirement: Foo ###` 的名字是 `Foo`（只有 `#` 前是空格/制表符才剥，所以 `C#` 保留 `#`）；v1.16.0 起（#2133）`###Requirement:`（**没有空格**）也按 archive 的读法进入主 spec 结构检查；v1.16.0 起（#2131）行内三反引号（```` ```npm test``` ````）不再被当成代码围栏开头——以前这一行会把**之后所有 requirement 都藏起来**。
 
 容易误解：
 
@@ -301,6 +313,7 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 
 - 它不是简单的“标记完成”。
 - 它真正做的是把 change 里的 delta specs 吸收到正式 specs。
+- v1.16.1 起（#2207），delta spec 把 requirement 放在未识别的 `## ... Requirements` 段下时 archive **直接拒绝**，而不是“警告后把那一条悄悄丢掉”。理由很直接：archive 是唯一把 delta 合并进主 specs 的动作，静默丢弃等于让 change 声称做了它没做的事。散文段（`## Notes` 等）下的孤立 requirement 不在此列，仍是警告。
 
 ## 6. 配置 OpenSpec 的工作方式
 
@@ -313,7 +326,7 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 重点不是业务 change，而是工作流投递策略：
 
 - `profile`: 选哪些 workflows。
-- `delivery`: 以 skills、commands 还是 both 的方式投递。
+- `delivery`: 以 skills、commands 还是 both 的方式投递。v1.17.0 起 `commands` 进入弃用通道（2.0 移除命令文件）；切到 `skills` 时只删 OpenSpec 生成的命令文件，用户编辑过的保留并列出。
 - `workflows`: 自定义 profile 时启用哪些工作流。
 
 输入：

@@ -202,6 +202,38 @@ OpenCode 只有在正文没有 `$ARGUMENTS`/位置参数占位符、且 Input �
 
 v1.9.0/.11.0 起，遗留迁移路径遵守同一条 one-writer 规则：若 `.agents` 已被某个工具占用（marker 或已有树），`openspec update` **不会**凭全局信号把 skills 改写成另一工具语法、也不会翻 ownership。`resolveSharedSkillWriters` 决定哪个工具是 active writer，其他共享同一物理根的工具跳过 skill 生成但保留 command surface。跳过时该工具的 repo-local legacy 文件（如 `.agent/workflows/` 或 `.codex/prompts/openspec-*.md`）一并保留。真正的首次安装（还没有 `.agents` 树）不受影响。
 
+## command 面的终点：v1.17.0 的弃用预告
+
+**先钉死一件事：弃用的是 command 文件，不是 CLI。** `/opsx:propose` 是 AI 工具里的斜杠命令（由 `.claude/commands/opsx/propose.md` 这类文件定义），不是 `openspec propose` 子命令——OpenSpec CLI 根本没有 `propose` 这个子命令。CLI 子命令表在 v1.15.0→v1.17.0 之间**一个都没增删**。
+
+三层要分清：
+
+| 层 | 是什么 | 2.0 |
+|---|---|---|
+| CLI 本体 | `openspec validate` / `archive` / `update` / `instructions` … | 保留，继续演进 |
+| command 文件 | markdown 提示词，`.claude/commands/opsx/<id>.md` | 移除 |
+| skill 文件 | 同样的 markdown，`.claude/skills/openspec-<id>/SKILL.md` | 保留，且合成一份共享真身 |
+
+**两层 markdown 几乎同源**：`src/core/templates/workflows/propose.ts` 里 `getOpsxProposeSkillTemplate()` 与 `getOpsxProposeCommandTemplate()` 共享同一份 instructions 正文，差异只有 packaging 与 handoff 措辞（#258：command-only 工具没有对话代理可问，不能邀请“让我来实施”）。两者内部都是**指挥 CLI 的调度脚本**——全模板里 `openspec instructions` 出现 52 次、`openspec status` 46 次、`openspec archive` 27 次。精确性在 CLI 里，不在 markdown 里。
+
+**为什么要砍 command 面**（issue #2022）：1.x 把每个 workflow 写两遍（默认 `delivery = 'both'`），49 个工具 × 12 个 workflow 的重复文件；command 格式每家不同，要维护几十个 adapter；skills 是 [agentskills.io](https://agentskills.io) 标准且能靠 frontmatter `description` 自动触发，斜杠命令必须人先记住名字。2.0 还会进一步把技能收成 `.agents/skills/` 一份真身 + 14 个工具的软链。
+
+**能力模型**（`src/core/command-surface.ts`，v1.17.0）：
+
+| 能力 | 含义 | 例子 |
+|---|---|---|
+| `adapter-backed` | 有 command adapter，能生成 command 文件 | Claude Code 等 |
+| `skills-invocable` | 没有 command adapter，但能用 skills 调用 | `codex`、`warp` |
+| `none` | 两者都没有 | — |
+
+四条判定由 `delivery` × 能力矩阵驱动：`shouldGenerateSkillsForTool` / `shouldRemoveSkillsForTool` / `shouldGenerateCommandsForTool` / `shouldReconcileCommandFilesForTool`。
+
+**提示文案的触发条件**（`formatCommandDeprecationNotice`，v1.17.0）：只在“某个已配置工具**现在会得到** command 文件、且切到 `skills` 后**不再得到**”时打印。skills-only 项目不提示；Codex 这类只有 skills 的工具不提示（劝它切等于劝它离开唯一能用的接口）。时机选在 `update`：它是在升级时跑的，所以这条能在 2.0 删除发生前触达用户，又不会天天唠叨。
+
+**配套的保命改动**（#2087 折叠进 #2213）：切到 skills-only 时**不再删用户编辑过的 command 文件**。`classifyCommandFiles` 用同一套指纹判断，结果分三类——`removed`（OpenSpec 生成、删）、`kept`（内容对不上，用户改过，保留并列出）、`unchecked`（读不了、删不了、symlink 无法证明在项目内）。逻辑很直接：提示让人**现在**就切，如果不修这个，切换就会删掉编辑过的文件。
+
+**状态口径**：v1.17.0 仍然生成 command 文件、`/opsx:*` 仍然可用，只是被标记弃用；2.0（#2223）才真正停止生成并清理。资料里**不要写成「已移除」**。
+
 ## GitHub Copilot：本地 skill 与 opt-in cloud coding-agent
 
 GitHub Copilot 是 v1.8.0 的一等工具目标，但被拆成两层，其中 cloud 层默认不生成：
