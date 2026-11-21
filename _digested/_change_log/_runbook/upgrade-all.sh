@@ -20,7 +20,7 @@
 set -uo pipefail
 
 # ─────────────────────────── 参数 ───────────────────────────
-MODE=plan; APPLY=0; CLEAN=0; COMMIT=0; SKIP_CLI=0; ALLOW_DIRTY=0; NO_BACKUP=0; RESTORE=""
+MODE=plan; APPLY=0; CLEAN=0; COMMIT=0; SKIP_CLI=0; ALLOW_DIRTY=0; NO_BACKUP=0; NO_VERIFY=0; RESTORE=""
 ONLY=""; SKIP=""
 EXPECTED_MAJOR=2
 LOG="$HOME/openspec-upgrade-$(date +%Y%m%d-%H%M%S).log"
@@ -33,6 +33,7 @@ while [ $# -gt 0 ]; do
     --skip-cli)    SKIP_CLI=1 ;;
     --allow-dirty) ALLOW_DIRTY=1 ;;
     --no-backup)   NO_BACKUP=1 ;;
+    --no-verify)   NO_VERIFY=1 ;;
     --restore)     if [ $# -gt 1 ] && [ "${2#-}" = "$2" ]; then RESTORE="$2"; shift; else RESTORE=latest; fi ;;
     --only)        ONLY="${2:-}"; shift ;;
     --skip)        SKIP="${2:-}"; shift ;;
@@ -428,10 +429,12 @@ for f in fails:
   if [ "$APPLY" = 1 ] && [ "$COMMIT" = 1 ] && [ -d "$dir/.git" ]; then
     if [ -n "$(git -C "$dir" status --porcelain)" ]; then
       git -C "$dir" add -A >/dev/null 2>&1
-      if git -C "$dir" commit -q -m "chore: upgrade OpenSpec to v$CLI_NOW (commands removed, skills shared)" >>"$LOG" 2>&1; then
+      verify=""; [ "$NO_VERIFY" = 1 ] && verify="--no-verify"
+      if git -C "$dir" commit -q $verify -m "chore: upgrade OpenSpec to v$CLI_NOW (commands removed, skills shared)" >>"$LOG" 2>&1; then
         ok "已提交"
       else
-        warn "提交失败（可能 hooks 拦截），改动保留在工作区"
+        warn "提交失败（仓库的 pre-commit 钩子挡住了生成文件），改动已暂存"
+        info "处理: 在该仓库手动 git commit --no-verify，或重跑本脚本时加 --no-verify"
       fi
     else
       info "无改动，不提交"

@@ -194,8 +194,8 @@ for f in _openspec_handbook/*.md; do n=$(grep -o "✅\|❌" "$f" | wc -l); [ "$n
 - [x] G1 `_digested/_change_log/README.md` 索引含 0015 与 plan-13/14
 - [x] G2 `_digested/_coverage/doc-assertions.md` 记本轮增量与口径反转
 - [x] G3 plan-13 的 Phase B–D 标注「由 plan-14 接续」
-- [ ] G4 本计划勾选完毕、进度日志收尾
-- [ ] G5 提交（资料回填单独一个 commit）
+- [x] G4 本计划勾选完毕、进度日志收尾
+- [x] G5 提交（资料回填单独一个 commit）：Phase B–F → `91314d4a`；升级准备与回滚 → `0e80f66b`；账本收尾 → 本次提交
 
 ---
 

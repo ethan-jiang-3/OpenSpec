@@ -104,7 +104,7 @@ git diff --cached --name-only --diff-filter=A -- . ":!_\*" ":!CONTEXT.md"
 - [x] B6 `workflows/`（🔴）：命令→技能的对应表；`/openspec-<name>` 调用形式
 - [x] B7 工具面（🟡）：退役机制与 Amazon Q → Kiro
 - [x] B8 `_coverage/`（🟡）：计数更新（249 files / 6510 tests）；说明测试数为何下降
-- [ ] B9 checkpoint：抽查 B2/B3/B4；`grep` 确认没有残留「已标记弃用」「delivery 三态」
+- [~] B9 checkpoint：抽查 B2/B3/B4；`grep` 确认没有残留「已标记弃用」「delivery 三态」——**由 plan-14 接续执行**：grep 命中处均为「三态已退役」的正确表述；另修掉 `mechanisms/02` 一处未标历史的 1.x delivery 描述
 
 ### Phase C：`_faq_on_digested/` 更新
 
@@ -112,25 +112,25 @@ git diff --cached --name-only --diff-filter=A -- . ":!_\*" ":!CONTEXT.md"
 - [x] C2 `12_upstream-roadmap-and-issues`（🟡）：版本表到 2.1.1；链接 0015
 - [x] C3 `16_upgrade-openspec-cli-and-projects`（🔴）：2.0 升级步骤、命令文件处理、改过的文件保留、Windows 链接
 - [x] C4 `17_review-and-validation-surface`（🟡）：2.1.1 的 validate/archive 修复
-- [ ] C5 其余目录 `[~]` 核实并写依据；`README.md` 基线脚注
-- [ ] C6 checkpoint：抽查 C3/C4
+- [~] C5 其余目录核实并写依据；`README.md` 基线脚注——**由 plan-14 Phase D 接续**（D5 已补 16/17 两条描述；`_faq_on_digested/README.md` 引用 `_digested` 的 SSOT，本身不声明基线）
+- [~] C6 checkpoint：抽查 C3/C4——**由 plan-14 Phase D 接续完成**
 
 ### Phase D：`_openspec_handbook/` 更新
 
 - [x] D1 `00-index.md`（🔴）：版本表加 2.0.0 / 2.1.0 / 2.1.1；链接 0015
 - [x] D2 `99-FAQ-常见问题.md`（🔴）：命令文件没了怎么办、skills 在哪、怎么全局装
 - [x] D3 `50-实战-claude-code 里的 openspec 到底怎么落地.md`（🔴）：调用形式从 `/opsx:*` 改为技能名
-- [ ] D4 其余章节 `[~]` 核实并写依据
-- [ ] D5 checkpoint：全局 grep 无 `/opsx:` 的现行用法（历史溯源除外）
+- [~] D4 其余章节核实并写依据——**由 plan-14 Phase E 接续完成**（E3–E6 逐章：155/157/222、76-81/195、346/390、store 段）
+- [~] D5 checkpoint：全局 grep 无 `/opsx:` 现行用法——**由 plan-14 Phase E/F 接续完成**：93 行现行示例已批量转为技能名，`handbook` 内剩余 `/opsx:` 全部带「1.x / v2.0.0 起已移除」历史标记（实测复核通过）
 
 ### Phase E：验收与收尾
 
 - [x] E1 `pnpm install --frozen-lockfile` + `pnpm run build` + `pnpm test` 全绿（248 files / 6491 tests passed，1 file / 19 tests skipped，122.91s）
 - [x] E2 CLI 版本：`node bin/openspec.js --version` = `2.1.1`
-- [ ] E3 版本一致性：`package.json` / `_digested/README.md` / FAQ 12 版本表 / handbook 00-index
-- [ ] E4 回填 0015「当前处理状态」与本计划进度日志
-- [ ] E5 `_change_log/README.md` 索引加 0015 与 `_plan-13` 两行
-- [ ] E6 提交（源码一个 commit `1fb874fb` 已在；资料回填另计）；**永不推送 `upstream`**
+- [x] E3 版本一致性：`package.json`=2.1.1、`_digested/README.md`=v2.1.1、FAQ 12 版本表到 v2.1.1、handbook 00-index 与 README 表头均为 2.1.1（实测通过）
+- [x] E4 回填 0015「当前处理状态」与本计划进度日志（0015 的 Phase B–E 已全部勾选；本地差异计数修正为 272）
+- [x] E5 `_change_log/README.md` 索引已含 0015 与 `_plan-13`/`_plan-14` 三行
+- [x] E6 提交：源码 `1fb874fb`；资料 `9e4b0dc5`、`91314d4a`、`0e80f66b` 及本轮收尾提交；**未推送 `upstream`**
 - [ ] E7 交人复核
 
 ## 阻塞与决策

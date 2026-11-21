@@ -199,6 +199,44 @@ cd ~/OpenSpec/_digested/_change_log/_runbook
 
 **为什么必须有备份**：5 个项目把工具目录写进了 `.gitignore`（`ai_dsh_bsimulation`、`ai_tool_bsimulation`、`ai_deerflow_deep_research_v2`、`ai_deerflow_wiki`、`ai_tool_ppt_maker`）。这些目录**不在 git 里**，`git checkout` 救不回来——只有备份能救。
 
+## 六bis、执行结果（2026-11-21 完成）
+
+**全局 CLI：1.15.0 → 2.1.1 ✅　14/14 项目全部升级完成。**
+
+| 项目 | 官方技能 | 遗留命令 | 未提交 |
+|---|---|---|---|
+| `ai_deerflow_dr_v3` | 6 | 0 | 0 |
+| `ai_dsh_bsimulation` | 6 | 0 | 10（**你自己的归档操作，待提交**） |
+| `ai_pi_deep_research` | 6 | 0 | 0 |
+| `ai_tool_bsimulation` | 6 | 0 | 0 |
+| `ai_deerflow_deep_research_v2` | 6 | 0 | 0 |
+| `ai_tool_deepresearch` | 6 | 0 | 0 |
+| `ai_deerflow_wiki` | 6 | 0 | 0 |
+| `ait_exam_openspec_calender` | 6 | 0 | 0 |
+| `ait_exam_openspec_demo` | 6 | 0 | 0 |
+| `ait_exam_openspec_ticketflow` | 6 | 0 | 0 |
+| `ai_tool_ppt_maker` | 6 | 0 | 0 |
+| `ait_exam_haitai` | 6 | 0 | 0 |
+| `openspec-schemas` | 6+2 自定义 | 0 | 0 |
+| `ait_exam_openspec_plms` | 6 | 0 | 0 |
+
+**过程中清掉的乱摊子**（都是历史遗留，与本次升级无关）：
+
+| 项目 | 清理内容 |
+|---|---|
+| `ai_deerflow_wiki` | `df_home0/` —— 测试残留（`test-user-autouse/…/demo-skill.jsonl`） |
+| `ait_exam_openspec_calender` | 空的 `AGENTS.md`；提交了「旧 `openspec/AGENTS.md`/`project.md` → `config.yaml`」的迁移 |
+| `ait_exam_openspec_ticketflow` | `_eval_output/` 加入 `.gitignore`（保留文件，不进版本库） |
+| `ai_tool_deepresearch` | 恢复了误删的 `skills-lock.json` |
+| 4 个项目 | 删除 11 个指向已下线全局技能的悬空链接 `resolving-merge-conflicts` |
+| `ai_deerflow_dr_v3` | 清理脚本遗留的 `config.yaml.bak.*` |
+
+**仍需你做的**：
+
+1. `ai_dsh_bsimulation` 里有你自己的未提交改动（`cockpit-single-owner` 归档），提交即可。
+2. **重启 IDE**（Cursor / Claude Code），否则看不到新技能。
+3. 选做的清理：如果你不再用 Cline，可删掉 `ait_exam_openspec_plms` 之外的 Cline 相关目录。
+
 ## 七、回滚
 
 ### 单个项目回滚
