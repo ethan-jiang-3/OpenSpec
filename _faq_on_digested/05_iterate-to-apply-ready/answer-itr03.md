@@ -102,7 +102,7 @@ tasks: ⚠ 2.1 太粗（"Implement OAuth login"），建议拆成 3-4 步
 
 ## 参考来源
 
-源码引用：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

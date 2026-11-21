@@ -48,11 +48,11 @@
   <line x1="475" y1="96" x2="515" y2="96" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="525" y="82" width="165" height="28" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="100" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:96-111</text>
+  <text x="607" y="100" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:1463-1490</text>
 
   <rect x="735" y="78" width="240" height="36" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
   <text x="855" y="92" text-anchor="middle" font-size="8" fill="#ea580c">Read: proposal.md</text>
-  <text x="855" y="106" text-anchor="middle" font-size="7" fill="#ea580c">⚠ 非阻塞 — 验证失败只 warning</text>
+  <text x="855" y="106" text-anchor="middle" font-size="7" fill="#ea580c">⚠ 非阻塞 — 失败只打印 warning</text>
 
   <!-- 1b: delta spec validation -->
   <rect x="210" y="122" width="265" height="42" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
@@ -61,25 +61,27 @@
   <line x1="475" y1="143" x2="515" y2="143" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="525" y="122" width="165" height="42" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="136" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:113-151</text>
+  <text x="607" y="136" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:1494-1577</text>
   <text x="607" y="152" text-anchor="middle" font-size="8" fill="#16a34a">parseDeltaSpec() 解析</text>
 
   <rect x="735" y="118" width="240" height="50" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
-  <text x="855" y="132" text-anchor="middle" font-size="8" fill="#ea580c">扫描: specs/*/spec.md</text>
+  <text x="855" y="132" text-anchor="middle" font-size="8" fill="#ea580c">扫描: specs/**/spec.md</text>
   <text x="855" y="146" text-anchor="middle" font-size="8" fill="#ea580c">匹配 delta headers:</text>
   <text x="855" y="160" text-anchor="middle" font-size="7" fill="#ea580c">ADDED/MODIFIED/REMOVED/RENAMED</text>
 
-  <!-- 1c: tasks check -->
-  <rect x="210" y="176" width="265" height="28" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
-  <text x="342" y="194" text-anchor="middle" font-size="8" fill="#2563eb">1c. 扫描 tasks.md checkbox — 未完成则警告确认</text>
-  <line x1="475" y1="190" x2="515" y2="190" stroke="#555" marker-end="url(#arrow)"/>
+  <!-- 1c: tasks check + pre-merge archive target check -->
+  <rect x="210" y="176" width="265" height="40" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
+  <text x="342" y="191" text-anchor="middle" font-size="8" fill="#2563eb">1c. 任务完成统计 + 写主 spec 前预检归档目标</text>
+  <text x="342" y="205" text-anchor="middle" font-size="7.5" fill="#2563eb">assertArchiveDestinationAvailable()</text>
+  <line x1="475" y1="196" x2="515" y2="196" stroke="#555" marker-end="url(#arrow)"/>
 
-  <rect x="525" y="176" width="165" height="28" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="194" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:174-194</text>
+  <rect x="525" y="176" width="165" height="40" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
+  <text x="607" y="191" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:1616-1678</text>
+  <text x="607" y="205" text-anchor="middle" font-size="7.5" fill="#16a34a">目标已存在 → 直接中止</text>
 
-  <rect x="735" y="173" width="240" height="34" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
-  <text x="855" y="188" text-anchor="middle" font-size="8" fill="#ea580c">Read: tasks.md checkbox 统计</text>
-  <text x="855" y="202" text-anchor="middle" font-size="7" fill="#ea580c">⚠ 有未完成则警告，要求确认</text>
+  <rect x="735" y="173" width="240" height="44" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
+  <text x="855" y="188" text-anchor="middle" font-size="8" fill="#ea580c">Read: tracked tasks + lstat archive/</text>
+  <text x="855" y="202" text-anchor="middle" font-size="7" fill="#ea580c">⚠ 未完成需确认；归档目录撞名不碰主 spec</text>
 
   <!-- ===== PHASE 2: MERGE ===== -->
   <rect x="15" y="265" width="970" height="420" rx="4" fill="none" stroke="#16a34a" stroke-width="1.1" stroke-dasharray="6,3"/>
@@ -91,12 +93,12 @@
   <line x1="475" y1="306" x2="515" y2="306" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="525" y="292" width="165" height="28" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="310" text-anchor="middle" font-size="8" fill="#16a34a">specs-apply.ts:57-96</text>
+  <text x="607" y="310" text-anchor="middle" font-size="8" fill="#16a34a">specs-apply.ts:122-163</text>
 
   <rect x="735" y="286" width="240" height="40" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
-  <text x="855" y="300" text-anchor="middle" font-size="8" fill="#ea580c">change/specs/data-export/spec.md</text>
-  <text x="855" y="314" text-anchor="middle" font-size="7" fill="#ea580c">→ openspec/specs/data-export/spec.md</text>
-  <text x="855" y="325" text-anchor="middle" font-size="7" fill="#ea580c">返回 SpecUpdate[] {source, target, exists}</text>
+  <text x="855" y="300" text-anchor="middle" font-size="8" fill="#ea580c">change/specs/&lt;cap&gt;/spec.md</text>
+  <text x="855" y="314" text-anchor="middle" font-size="7" fill="#ea580c">→ openspec/specs/&lt;cap&gt;/spec.md</text>
+  <text x="855" y="325" text-anchor="middle" font-size="7" fill="#ea580c">返回 SpecUpdate[] {id, source, target, exists}</text>
 
   <!-- 2b: parse delta plan -->
   <rect x="210" y="332" width="265" height="28" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
@@ -104,7 +106,7 @@
   <line x1="475" y1="346" x2="515" y2="346" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="525" y="332" width="165" height="28" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="350" text-anchor="middle" font-size="8" fill="#16a34a">requirement-blocks.ts:99-234</text>
+  <text x="607" y="350" text-anchor="middle" font-size="8" fill="#16a34a">requirement-blocks.ts:237-295</text>
 
   <rect x="735" y="326" width="240" height="40" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
   <text x="855" y="340" text-anchor="middle" font-size="8" fill="#ea580c">解析 4 种 section:</text>
@@ -113,12 +115,12 @@
 
   <!-- 2c: pre-validate -->
   <rect x="210" y="372" width="265" height="42" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
-  <text x="342" y="386" text-anchor="middle" font-size="8" fill="#2563eb">2c. 预验证（6 项检查）</text>
-  <text x="342" y="402" text-anchor="middle" font-size="8" fill="#2563eb">    section内重复/跨section冲突/RENAMED+MODIFIED</text>
+  <text x="342" y="386" text-anchor="middle" font-size="8" fill="#2563eb">2c. 预验证（未配对改名 / 误拼操作节 / 重复与跨节冲突）</text>
+  <text x="342" y="402" text-anchor="middle" font-size="8" fill="#2563eb">    section内重复 / 跨section冲突 / RENAMED+MODIFIED</text>
   <line x1="475" y1="393" x2="515" y2="393" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="525" y="372" width="165" height="42" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="386" text-anchor="middle" font-size="8" fill="#16a34a">specs-apply.ts:113-200</text>
+  <text x="607" y="386" text-anchor="middle" font-size="8" fill="#16a34a">specs-apply.ts:229-449</text>
   <text x="607" y="402" text-anchor="middle" font-size="8" fill="#16a34a">RENAMED+ADDED / 空delta</text>
 
   <!-- 2d: extract -->
@@ -127,7 +129,7 @@
   <line x1="475" y1="440" x2="515" y2="440" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="525" y="426" width="165" height="28" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="444" text-anchor="middle" font-size="8" fill="#16a34a">requirement-blocks.ts</text>
+  <text x="607" y="444" text-anchor="middle" font-size="8" fill="#16a34a">requirement-blocks.ts:53-131</text>
 
   <rect x="735" y="422" width="240" height="36" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
   <text x="855" y="436" text-anchor="middle" font-size="8" fill="#ea580c">拆主 spec 为:</text>
@@ -135,7 +137,7 @@
 
   <!-- 2e: APPLY OPERATIONS IN ORDER (highlighted) -->
   <rect x="200" y="466" width="780" height="100" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
-  <text x="212" y="482" font-size="9" font-weight="bold" fill="#16a34a">2e. 按序应用操作（buildUpdatedSpec 核心）— specs-apply.ts:244-306</text>
+  <text x="212" y="482" font-size="9" font-weight="bold" fill="#16a34a">2e. 按序应用操作（buildUpdatedSpec 核心）— specs-apply.ts:461-608</text>
 
   <!-- Op order -->
   <rect x="210" y="492" width="175" height="30" rx="3" fill="#dcfce7" stroke="#86efac"/>
@@ -158,34 +160,34 @@
 
   <!-- 2f: pre-write validation -->
   <rect x="210" y="572" width="265" height="28" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
-  <text x="342" y="590" text-anchor="middle" font-size="8" fill="#2563eb">2f. Validator.validateSpecContent() — 写前验证</text>
+  <text x="342" y="590" text-anchor="middle" font-size="8" fill="#2563eb">2f. Validator.validateSpecContent() — 写前全量验证</text>
   <line x1="475" y1="586" x2="515" y2="586" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="525" y="572" width="165" height="28" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="590" text-anchor="middle" font-size="8" fill="#16a34a">有ERROR → 归档中断</text>
+  <text x="607" y="590" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:1872-1969</text>
 
   <!-- 2g: write -->
   <rect x="210" y="612" width="265" height="28" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
-  <text x="342" y="630" text-anchor="middle" font-size="8" fill="#2563eb">2g. writeUpdatedSpec() → 写回主 specs 目录</text>
+  <text x="342" y="630" text-anchor="middle" font-size="8" fill="#2563eb">2g. 快照 + writeUpdatedSpec() / retireSpec()</text>
   <line x1="475" y1="626" x2="735" y2="626" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="745" y="612" width="230" height="28" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
-  <text x="860" y="630" text-anchor="middle" font-size="8" fill="#ea580c">openspec/specs/&lt;capability&gt;/spec.md 写入</text>
+  <text x="860" y="630" text-anchor="middle" font-size="8" fill="#ea580c">specs-apply.ts:1099-1343 写入/退役主 spec</text>
 
   <!-- ===== PHASE 3: MOVE ===== -->
   <rect x="15" y="695" width="970" height="55" rx="4" fill="none" stroke="#e5e7eb" stroke-dasharray="4,2"/>
   <text x="25" y="709" font-size="8" fill="#999">Phase 3 · Move</text>
 
   <rect x="210" y="715" width="265" height="28" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
-  <text x="342" y="733" text-anchor="middle" font-size="8" fill="#2563eb">3. 生成归档名 YYYY-MM-DD-add-dark-mode → moveDirectory()</text>
+  <text x="342" y="733" text-anchor="middle" font-size="8" fill="#2563eb">3. 锁定目标 → moveDirectory() + 校验归档 delta</text>
   <line x1="475" y1="729" x2="515" y2="729" stroke="#555" marker-end="url(#arrow)"/>
 
   <rect x="525" y="715" width="165" height="28" rx="4" fill="url(#cliGrad)" stroke="#86efac"/>
-  <text x="607" y="733" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:267-285</text>
+  <text x="607" y="733" text-anchor="middle" font-size="8" fill="#16a34a">archive.ts:712-754, 2254</text>
 
   <rect x="735" y="710" width="240" height="38" rx="4" fill="url(#fsGrad)" stroke="#fdba74"/>
   <text x="855" y="724" text-anchor="middle" font-size="8" fill="#ea580c">mv changes/X/ → archive/YYYY-MM-DD-X/</text>
-  <text x="855" y="740" text-anchor="middle" font-size="7" fill="#ea580c">⚠ 不可逆 — 除非手动 mv 回来</text>
+  <text x="855" y="740" text-anchor="middle" font-size="7" fill="#ea580c">⚠ 失败时尽力恢复主 spec 快照与 active change</text>
 
   <!-- Legend -->
   <rect x="20" y="755" width="965" height="20" rx="4" fill="#f9fafb" stroke="#e5e7eb"/>
@@ -193,5 +195,5 @@
   <rect x="150" y="758" width="30" height="12" rx="2" fill="url(#cliGrad)" stroke="#86efac"/><text x="184" y="768" font-size="7" fill="#666">内部函数</text>
   <rect x="250" y="758" width="30" height="12" rx="2" fill="url(#fsGrad)" stroke="#fdba74"/><text x="284" y="768" font-size="7" fill="#666">文件系统</text>
   <rect x="355" y="758" width="80" height="12" rx="2" fill="none" stroke="#16a34a" stroke-dasharray="6,3"/><text x="398" y="768" text-anchor="middle" font-size="7" fill="#666">Merge</text>
-  <text x="460" y="768" font-size="7" fill="#999">本图是 CLI 路径；/opsx:archive 的 sync 检查属于 agent 模板层</text>
+  <text x="450" y="768" font-size="7" fill="#999">本图是 CLI 路径；openspec-archive-change 技能的写前目标预检与 sync 评估属于 agent 模板层</text>
 </svg>

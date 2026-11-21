@@ -43,9 +43,9 @@ sequenceDiagram
     rect rgb(255, 250, 240)
         Note over User,FS: ══════ Phase 1 · OpenSpec 状态调查 ══════
         MD->>TS: openspec list --json
-        TS->>FS: 解析 planning home<br/>扫描 changes/ 目录
+        TS->>FS: resolveRootForCommand<br/>扫描 changes/ 目录
         FS-->>TS: active changes 列表
-        TS-->>MD: JSON: [{name, schema, status}, …]<br/>或空数组 []
+        TS-->>MD: JSON: { changes: [...], root: {...} }<br/>（无 active change 时 changes: []）
         MD->>MD: 解读：有没有 active change？<br/>用户话题是否命中某个？
     end
 
@@ -162,7 +162,7 @@ sequenceDiagram
 ```text
 MD: "现在有哪些 active change？"
   → TS: openspec list --json
-  ← TS: [{name: "add-oauth", …}]
+  ← TS: { changes: [{ name: "add-oauth", ... }], root: { ... } }
 MD: "有一个 add-oauth，和用户说的 auth 相关，值得深入看。"
 ```
 
@@ -242,13 +242,13 @@ MD 的职责：把 JSON + 用户意图 + 代码事实 → 工程判断 → artif
 
 ## 参考来源
 
-源码引用基于 commit `970cb44`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/explore.ts` | Explore skill 规定了 `openspec list --json`、`openspec status --change "<name>" --json`、读 artifacts、读代码但不实施的完整协议 |
+| `src/core/templates/workflows/explore.ts` | Explore skill 规定了 `openspec list --json`、`openspec list --specs`、`openspec status --change "<name>" --json`、读 artifacts、读代码但不实施的完整协议 |
 | `src/core/templates/workflows/propose.ts` | Propose skill 规定了 `openspec new change`、`openspec status`、`openspec instructions` 的 artifact 生成循环 |
-| `src/commands/workflow/status.ts` | `status --json` 的实现：解析 planning home → 加载 change context → formatChangeStatus |
+| `src/commands/workflow/status.ts` | `status --json` 的实现：`resolveRootForCommand` + `toPlanningHome` → 加载 change context → `formatChangeStatus` |
 | `src/commands/workflow/instructions.ts` | `instructions --json` 的实现：loadChangeContext → generateInstructions → dependencies/template/instruction |
 | `src/core/artifact-graph/instruction-loader.ts` | `formatChangeStatus()` 组装 artifactPaths/actionContext；`generateInstructions()` 组装 artifact 操作包 |
 | `schemas/spec-driven/schema.yaml` | artifact DAG 定义（requires/generates 依赖关系）— CLI 据此计算 instructions |

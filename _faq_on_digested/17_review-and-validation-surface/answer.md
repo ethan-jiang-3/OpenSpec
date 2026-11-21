@@ -109,11 +109,12 @@
 
 ---
 
-## 六之二、v2.1.1 补充：MODIFIED 增长告警、frontmatter 放宽、archive 两处修正
+## 六之二、v2.1.1 补充：MODIFIED 超长告警、frontmatter 放宽、退役 `<` 折行放行与 archive 两处修正
 
-- **MODIFIED 超长改为「相对基线」告警**（#2265）：MODIFIED requirement 相对主 spec 里的基线**增长超过 500 字符**时给 WARNING，让 `validate <change> --strict` 在 archive 之前就能拦住。这不是把 MODIFIED 也按绝对长度卡死——基线本身可能就长，卡绝对长度只会逼人重写既有正文。
-- **delta 顶部允许 frontmatter**（#2273）：`validate --strict` 不再因 delta spec 开头有 frontmatter 块而失败。archive 仍会把该块留在归档的 change 里，并**在结果里点名说明**——不是静默保留。
-- **archive 的两处修正**：#2267 新建主 spec 时在 `## Purpose` 之后补一个空行，让输出直接通过 Prettier 与 markdownlint MD022，不需要再格式化；#2277 改为**先定位归档目录、再写主 spec**，避免写了一半才失败。
+- **MODIFIED 超长改为「超 500 字符且比基线更长」时告警**（#2265，`src/core/validation/validator.ts:789-801`）：校验条件是 `nextText.length > 500 && nextText.length > currentTextLength`——即 **MODIFIED requirement 正文总长度超过 500 字符，且比主 spec 里的基线正文更长（哪怕多 1 个字符）**时发出 WARNING，让 `validate <change> --strict` 在 archive 之前就能拦住（注意**不是**「比基线多出 500 字符才报」）。若主 spec 既有基线已超 500 字符，只要本次未继续拉长（保持原长或缩短），就不会误报，避免逼作者重写既有长需求。
+- **delta 顶部允许 YAML frontmatter**（#2273，`src/core/parsers/requirement-blocks.ts`）：以合法键值开头的首行闭合 `---` frontmatter 块不再算作归档丢失文本，`validate --strict` 正常通过（两条 `---` 之间若是普通散文仍告警）。archive 仍会把该块留在归档的 change 里，并**在结果里点名说明**——不是静默保留。
+- **能力退役放行 `<` 开头的折行散文**（#2266，`src/core/specs-apply.ts`）：`retire_capabilities` 删除 capability 时，requirement 正文或 scenario bullet 折行后若以 `<args>` 这类类标签词开头并继续成句，按 CommonMark 规则视为同一段落续行，不再误报为「requirement 之外的残留内容」而拒绝退役；真正的原始 HTML 块（如 `<div>`、`<!--`、`<script>`）以及非段落内独立成行的标签仍会被拦截。
+- **archive 的两处修正**：#2267 新建主 spec 时在 `## Purpose` 之后补一个空行，让输出直接通过 Prettier 与 markdownlint MD022，不需要再格式化；#2277 让 `openspec-archive-change` **在写任何主 spec 之前先找好既有归档目录**，避免写完主 spec 才因归档目录冲突中断。
 
 ## 六、v1.14.0 补充：verify 按 status 契约重写、metadata 未知键告警、500 字符引导
 
@@ -134,11 +135,11 @@ verify 不再自己解析 checkbox。它改读 **`openspec instructions apply --
 
 **v1.14.2 起小写 `x-` 开头的顶层键是例外**：它们属于使用者，OpenSpec 不读不写不校验，`--strict` 照常通过（`X-Tracker`、裸 `x-`、`x- tracker` 仍报未知；`initiative:` 内部仍严格）。注意 `ChangeMetadataSchema` 会 strip 未知键**包括 `x-*`**，任何重写 `.openspec.yaml` 的调用方必须从原始 YAML 合并回来。
 
-`--strict` 对**超长 requirement** 直接失败：v1.14.1 起 requirement 正文 >500 字从 INFO 升为 WARNING（`--strict` 即失败），且同一限制前移到 change 的 ADDED requirement（MODIFIED 不受限）。
+`--strict` 对**超长 requirement** 直接失败：v1.14.1 起 requirement 正文 >500 字从 INFO 升为 WARNING（`--strict` 即失败），同一限制前移到 change 的 ADDED requirement；v2.1.1（#2265）进一步对总长 `>500` 字符**且**比主 spec 基线更长的 MODIFIED requirement 同样报 WARNING（未变长或缩短的既有超长块不报）。
 
 ### requirements 500 字符引导口径
 
-500 字符上限（`MAX_REQUIREMENT_TEXT_LENGTH`）早就存在，v1.14.0 把"怎么写短"写进了 specs instruction 与 validate 提示：新 requirement 一条只写一个行为，示例和边界情况移进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` 块；validate 对超长 requirement 的 flag 现在是 **WARNING**（v1.14.1 起，此前 INFO；`--strict` 会失败），仍不是 error；同一限制也作用于 change 里的 ADDED requirement，所以超长在 authoring 阶段就暴露。MODIFIED 原本不受此检查（避免逼人拆动既有正文），且保持既有 requirement block 完整，**不为凑长度拆写、裁剪或重写已有文本**；确需拆分时按 specs instruction：保留 header 与全部 scenario，正文收敛到一个行为，被移除的行为各自作为新的 ADDED requirement。
+500 字符上限（`MAX_REQUIREMENT_TEXT_LENGTH`）早就存在，v1.14.0 把"怎么写短"写进了 specs instruction 与 validate 提示：新 requirement 一条只写一个行为，示例和边界情况移进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` 块；validate 对超长 requirement 的 flag 现在是 **WARNING**（v1.14.1 起，此前 INFO；`--strict` 会失败），仍不是 error；同一限制也作用于 change 里的 ADDED requirement，所以超长在 authoring 阶段就暴露。对于 MODIFIED，v1.14.x 曾完全豁免（避免逼人拆动既有长正文），v2.1.1（#2265）收紧为**正文总长 `>500` 字符且长于主 spec 基线（`nextText.length > 500 && nextText.length > currentTextLength`）时同样报 WARNING**；未继续拉长既有超长块时仍不告警，且应保持既有 requirement block 完整，**不为凑长度拆写、裁剪或重写已有文本**；确需拆分时按 specs instruction：保留 header 与全部 scenario，正文收敛到一个行为，被移除的行为各自作为新的 ADDED requirement。
 
 ## 七、v1.14.1–v1.14.3 补充：归档前能看见的失真又多了两类
 
@@ -152,7 +153,7 @@ verify 不再自己解析 checkbox。它改读 **`openspec instructions apply --
 | `## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文 | "这组改动是因为……" |
 | Purpose 与四类 delta 段之外的任何 `## ` 段 | `## Notes`、`## Migration` |
 
-以前它们静默消失。现在 `parseDeltaSpec` 返回 `unappliedContent`（`{section, line}[]`），`validate` 报 WARNING、`archive` 在重建主 spec 时 `warn()`，文案直接给出出路：挪进 requirement，或挪进 proposal/design。HTML 注释、`# ` 标题、Purpose 段、REMOVED/RENAMED 正文都不告警。
+以前它们静默消失。现在 `parseDeltaSpec` 返回 `unappliedContent`（`{section, line}[]`），`validate` 报 WARNING、`archive` 在重建主 spec 时 `warn()`，文案直接给出出路：挪进 requirement，或挪进 proposal/design。HTML 注释、顶部含真实键值的闭合 YAML frontmatter 块（v2.1.1 #2273；archive 保留在归档 change 中并点名提示）、`# ` 标题、Purpose 段、REMOVED/RENAMED 正文都不告警。
 
 **搬运行为不变**——这条只让丢失可见，不改变结果。
 
@@ -216,7 +217,7 @@ validate <change>            # 结构 + merge 预检 + unapplied 文本 WARNING
 
 ## 参考来源
 
-- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)、[`0012-v1.14.0-to-v1.14.3.md`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)、[`0013-v1.14.3-to-v1.15.0.md`](../../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)、[`0014-v1.15.0-to-v1.17.0.md`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)
+- 变更史：[`../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)、[`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)、[`0011-v1.13.1-to-v1.14.0.md`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)、[`0012-v1.14.0-to-v1.14.3.md`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)、[`0013-v1.14.3-to-v1.15.0.md`](../../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)、[`0014-v1.15.0-to-v1.17.0.md`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)、[`0015-v1.17.0-to-v2.1.1.md`](../../_digested/_change_log/0015-v1.17.0-to-v2.1.1.md)
 - 机制：[`../../_digested/mechanisms/03-spec-model.md`](../../_digested/mechanisms/03-spec-model.md)（parser/validator 分工、Purpose 占位符、advisory preflight）
 - 命令面：[`../../_digested/spec_cli/01-human-facing-cli.md`](../../_digested/spec_cli/01-human-facing-cli.md)、[`02-machine-facing-cli.md`](../../_digested/spec_cli/02-machine-facing-cli.md)
 - 失真治理：[`../../_digested/specs_truth/00-map.md`](../../_digested/specs_truth/00-map.md)

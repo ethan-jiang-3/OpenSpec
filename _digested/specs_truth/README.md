@@ -12,20 +12,21 @@
 
 三层展开：**机理**（specs 怎么被 delta 造出来）→ **漂移与噪声**（为什么会失真、为什么没工具自动抓）→ **手段**（怎么治，真实结构是什么）。
 
-## 先分清两层：CLI 命令 vs /opsx: slash
+## 先分清两层：CLI 命令 vs `openspec-*` 技能
 
-很多人把 "explore/propose/apply/archive/validate" 当同一类动词，其实分两层（基础区分，全专题沿用；详查 `06` 的 validate 命令参考）：
+很多人把 "explore/propose/apply/archive/validate" 当同一类动词，其实分两层（基础区分，全专题沿用；详查 `06` 的 validate 命令参考。注：v2.0.0 起 1.x 的 `/opsx:*` 命令文件已移除，当前唯一宿主交付形态为 `openspec-*` skills）：
 
-| 动词 | `openspec` CLI | `/opsx:` slash |
+| 动词 | `openspec` CLI | `openspec-*` 技能（Claude `/openspec-*` / Codex `$openspec-*`） |
 |------|:---:|:---:|
-| **validate** | ✓ | ✗（无 `/openspec-validate`） |
-| **archive** | ✓ | ✓ |
-| **new** | ✓（`new change`） | ✓（`/openspec-new-change`） |
+| **validate** | ✓ | ✗（无 `openspec-validate`） |
+| **archive** | ✓ | ✓（`openspec-archive-change`） |
+| **update** | ✓（刷新本地已装 skills） | ✓（`openspec-update-change`，规划变更修订） |
+| **new** | ✓（`new change`） | ✓（`openspec-new-change`） |
 | **explore / propose / apply** | ✗ | ✓ |
 | continue / ff / sync / verify / onboard / bulk-archive | ✗ | ✓ |
 | list / view / show / status / instructions / config / schema / store / context / workset / … | ✓ | ✗ |
 
-日常工作流圈 **explore → propose → apply → archive**：前三步在 `/opsx:` slash 层（agent 驱动），**archive 是 CLI**（把 delta 合进 specs 那一步）。`validate`/`list`/`view` 是另一类——**CLI 工具命令，只读不写、偶尔用，不在工作流圈里**。`validate` 是结构 linter，**抓不出 specs↔代码漂移**（见 `02`/`06`）。
+日常工作流圈 **explore → propose → apply → archive**：前三步在 `openspec-*` 技能层（agent 驱动），**archive 是 CLI**（也可由 `openspec-archive-change` 技能编排调用，把 delta 合进 specs 那一步）。`validate`/`list`/`view` 是另一类——**CLI 工具命令，只读不写、偶尔用，不在工作流圈里**。`validate` 是结构 linter，**抓不出 specs↔代码漂移**（见 `02`/`06`）。
 
 ## 与同级目录的关系
 
@@ -35,7 +36,7 @@
 | `../mechanisms/03-spec-model.md` | 讲 spec/change 的 parser/schema/validator 模型。本专题追问这套身份模型的长期脆弱性 |
 | `../system/02-目录与状态边界.md` | 讲"哪个目录是 source of truth"。本专题追问：目录判对了，内容还对得上代码吗 |
 | `../../_openspec_handbook/` | 面向学习者的使用手册。本专题面向"想搞懂背后机理"的人 |
-| `../_faq_on_digested/keep-specs-aligned/` | **通俗版**："平时习惯 / 怎么发现要修 / 最常见几招"，看不懂或嫌重就先去这 |
+| `../../_faq_on_digested/11_keep-specs-aligned/` | **通俗版**："平时习惯 / 怎么发现要修 / 最常见几招"，看不懂或嫌重就先去这 |
 
 ## 阅读路径（按受众）
 

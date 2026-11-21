@@ -13,7 +13,7 @@
 
 new 是**最轻量的规划 workflow**：只创建 change scaffold（目录 + `.openspec.yaml`），不生成任何 artifact 内容。创建完后展示第一个 artifact 的 instructions，然后 **STOP**。
 
-它的价值是把 "创建容器" 和 "生成内容" 拆开——适合先占位、手动推进、显式选择 schema 或 initiative linkage。
+它的价值是把 "创建容器" 和 "生成内容" 拆开——适合先占位、显式选择 schema，随后一步步审慎推进（注：`--initiative` 和 `--areas` 选项已移除，跨仓协调改走 `--store <id>`）。
 
 ## 和 propose 的关键区别
 
@@ -69,7 +69,7 @@ sequenceDiagram
         MD->>MD: 找到第一个 ready artifact
         MD->>TS: openspec instructions proposal --change X
         TS-->>MD: template + instruction
-        MD-->>User: "Change created. Schema: 实际解析出的 schema.<br/>First artifact: proposal.md<br/>Template: …<br/>Ready to create? Run /openspec-continue-change."
+        MD-->>User: "Change created. Schema: 实际解析出的 schema.<br/>First artifact: proposal.md + Template<br/>Ready to create the first artifact? Just describe<br/>what this change is about and I'll draft it, or ask me to continue."
     end
 
     Note over MD,FS: ⚠ STOP —— 不生成任何 artifact
@@ -104,32 +104,34 @@ Do NOT advance beyond showing the first artifact template
 | change 同名 → suggest continue | 避免重复创建 |
 | Pass --schema if non-default | 尊重用户选择 |
 
-## 和 continue / ff 的配合
+## 和 continue 的配合
 
-new 创建 scaffold 后，典型的后续路径：
+`new-change.ts:80` 的收尾提示采用自然语言（`"Ready to create the first artifact? Just describe what this change is about and I'll draft it, or ask me to continue."`），不硬绑任何斜杠命令。new 创建 scaffold 后，典型的逐步推进路径是配合 `continue`（注意 `ff` 只用于新建 change，不能直接挂在 `new` 已建好的同名 change 后面）：
 
 ```text
 /openspec-new-change add-oauth
-  → "Change created. First: proposal.md"
+  → 创建目录与 .openspec.yaml，展示首个 ready 产物（proposal）的模板 → STOP
 /openspec-continue-change
   → 创建 proposal.md → STOP
 /openspec-continue-change
-  → 创建 specs/ → STOP
+  → 创建 specs/<capability-path>/spec.md → STOP
 /openspec-continue-change
   → 创建 design.md → STOP
-/openspec-ff-change
-  → 批量生成剩余 artifact → apply-ready
+/openspec-continue-change
+  → 创建 tasks.md → 规划完成，提示开始 apply
 ```
 
 ## 源码锚点
 
-| 内容 | 行号范围（new-change.ts） |
+| 内容 | 行号范围（`new-change.ts`，共 167 行） |
 |---|---|
-| SkillTemplate 定义 | L28-L103 |
-| CommandTemplate 定义 | L105-L177（文件 178 行） |
-| Step 2: 确定 schema | L51-L59（command 版 L130） |
-| Step 3: new change | L61-L66（L140） |
-| Step 4: status | L68-L72（L147） |
-| Step 5: instructions | L74-L80（L153） |
-| Step 6: STOP | L82（L160） |
-| Guardrails | L93-L98（L171） |
+| 提示文案常量 | L11-L15 |
+| SkillTemplate 定义 | L17-L92 |
+| CommandTemplate 定义 | L94-L167 |
+| Step 2: 确定 schema | L40-L48（command 版 L119-L127） |
+| Step 3: `new change` | L50-L55（L129-L134） |
+| Step 4: `status` | L57-L61（L136-L140） |
+| Step 5: `instructions` | L63-L69（L142-L147） |
+| Step 6: STOP | L71（L149） |
+| Output 收尾提示 | L80（command 版 L158） |
+| Guardrails | L82-L87（L160-L165） |

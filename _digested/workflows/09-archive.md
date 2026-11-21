@@ -30,23 +30,23 @@ CLI 列中的完整 mutation 边界是：全量预构建 → 全量 rebuilt vali
 ## CLI 命令调用序列
 
 ```text
-1. 显式名称 → 对话推断 → 唯一 active change 自动选择；仅歧义时 `openspec list --json`
-2. openspec instructions archive --change "<name>" --json  # 读取 context + operationGuidance（不影响 CLI contract）
+1. 显式名称 → 对话推断 → 唯一 active change 自动选中；仅歧义时 `openspec list --json` 让用户选
+2. openspec instructions archive --change "<name>" --json  # 读取可选的 context + operationGuidance（失败不阻断）
 3. openspec status --change "<name>" --json        # 检查 artifact 完成度；done / skipped 都满足
-4. openspec list --json                            # 任务完成度：同名条目的 totalTasks/completedTasks
-   #   schema-aware（CLI 自己解析追踪文件，含自定义任务文件名/glob）
-   #   查找失败 / 计数非法 → 报告并停止，不 sync 不 archive
-5. [agent 读 delta specs + main specs 对比]         # sync assessment
-   → main spec 路径用 <planningHome.root>/openspec/specs/（store-aware）
-   → 用户可选 Cancel / Archive without syncing / Sync now / Sync anyway
-   → 若选 sync：先取一次 specs instructions 快照 → inline 执行（不得委托后台）
-     → sync 报 stop/blocking 即视为失败：立即停止，changeRoot 未动，可重跑
-     → 通过后逐 capability 内容比对 + 结构验证 → 全过才继续
-6. mkdir -p "<changesDir>/archive"                 # 创建 archive 目录
-7. mv "<changeRoot>" "<archiveDir>/YYYY-MM-DD-<name>"  # 移动
+4. openspec list --json                            # 任务完成度：同名条目的 totalTasks/completedTasks（查找失败/非法即停）
+5. [Step 4 写前预检 + sync 评估与执行]
+   a. 先推导 <target-name>，预检 <planningHome.changesDir>/archive/<target-name> 是否已存在（#2277）
+      → 若已存在，在写任何主 spec 前立即停止！
+   b. 对比 artifactPaths.specs.existingOutputPaths 与 <planningHome.root>/openspec/specs/
+   c. 用户可选 Cancel / Archive without syncing / Sync now / Sync anyway
+   d. 若选 sync：再次检查归档目标未占用 → 拉一次 `openspec instructions specs --change "<name>" --json` 规则快照
+      → 已装 `openspec-sync-specs` 技能则 inline 调用，未装则由 agent 自身按 `SYNC_FALLBACK_SAFEGUARDS` 内联合并并跑 `openspec validate --specs`（#1977）
+      → 报 stop/blocking 即停；通过后做主 spec 结构验证 + 全 capability 内容复核
+6. mkdir -p "<planningHome.changesDir>/archive"    # 创建 archive 目录
+7. 再次检查 `<target-name>` 未占用 → mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
 ```
 
-注意：archive template **不调用** `openspec archive` CLI 命令。它自己执行 `mv`。
+注意：archive template **不调用** `openspec archive` CLI 命令。它自己完成预检、sync 协调与 `mv`。
 
 ## 时序图
 
@@ -58,12 +58,13 @@ sequenceDiagram
     participant FS as 文件系统
 
     User->>MD: /openspec-archive-change [change-name]
-    MD->>MD: 若无 name → openspec list → 用户选择
+    MD->>MD: 显式传入 > 对话推断 > 唯一 active 自动选中；歧义时 list 询问
+    MD->>TS: openspec instructions archive --change X --json（可选提示输入）
 
     rect rgb(240, 248, 255)
         Note over MD,FS: Step 2 · artifact 完成度
         MD->>TS: openspec status --change X --json
-        TS-->>MD: artifacts[{id, status}]
+        TS-->>MD: artifacts[{id, status}], planningHome, changeRoot, artifactPaths
         alt 有 artifact 既非 done 也非 skipped
             MD-->>User: "Warning: N artifacts incomplete. Continue?"
             User-->>MD: y/N
@@ -73,9 +74,9 @@ sequenceDiagram
     rect rgb(255, 250, 240)
         Note over MD,FS: Step 3 · task 完成度
         MD->>TS: openspec list --json
-        TS-->>MD: 该 change 的 totalTasks/completedTasks<br/>（schema-aware，CLI 解析追踪文件）
+        TS-->>MD: 该 change 的 totalTasks/completedTasks（schema-aware）
         alt lookup 失败或计数非法
-            MD-->>User: 报告问题，停止——<br/>不 sync 不 archive
+            MD-->>User: 报告问题，停止——不 sync 不 archive
         else 有未完成 tasks
             MD-->>User: "Warning: N incomplete tasks. Continue?"
             User-->>MD: y/N
@@ -83,35 +84,37 @@ sequenceDiagram
     end
 
     rect rgb(255, 240, 255)
-        Note over MD,FS: Step 4 · delta spec sync assessment
-        MD->>FS: 读 change/specs/*/spec.md（delta）
-        MD->>FS: 读 <planningHome.root>/openspec/specs/*/spec.md（main）
-        MD->>MD: 对比：哪些 ADDED/MODIFIED/REMOVED/RENAMED
-        alt 需要 sync
-            MD-->>User: "Sync now (recommended) /<br/>Archive without syncing / Cancel"
+        Note over MD,FS: Step 4 · 写前归档目标预检（#2277）+ delta spec sync
+        MD->>FS: 检查 <planningHome.changesDir>/archive/<target-name> 是否已存在
+        alt 归档目标已存在
+            MD-->>User: 写主 spec 前立即报错停止，changeRoot 原封不动
+        else 目标可用且存在 delta specs
+            MD->>FS: 读 delta specs 与 <planningHome.root>/openspec/specs/ 主 specs 对比
+            MD-->>User: "Sync now (recommended) / Archive without syncing / Cancel"
             alt 用户选 Cancel
                 MD-->>User: 停止，不 archive
-            else 用户选 Archive without syncing
-                Note over MD: 继续 archive
+            else 用户选 Archive without syncing / Archive now
+                Note over MD: 继续 Step 5
             else 用户选 Sync now / Sync anyway
-                MD->>MD: 调 openspec-sync-specs **inline**<br/>（不得委托后台——step 5 的 mv 会<br/>移走 changeRoot；只能同步等待）
-                MD->>MD: sync 报任何 stop/blocking →<br/>视为 sync 失败：立即停止，<br/>不做 post-sync 比对、不移 changeRoot
-                MD->>FS: sync 后重新对比**全部 capability**
-                MD->>MD: 结构验证：主 spec 无 delta headers、<br/>REMOVED 已删、retired capability<br/>主 spec 已删除而非留空
-                MD->>MD: 验证：ADDED 存在、MODIFIED 含变更、<br/>REMOVED 消失、RENAMED 用新名
+                MD->>FS: 再次确认 archive/<target-name> 未出现
+                MD->>TS: openspec instructions specs --change X --json（失败即停）
+                MD->>MD: inline 运行 openspec-sync-specs（若未安装该技能，<br/>则内联自合并 + 跑 openspec validate --specs，#1977）
+                MD->>MD: 报任何 stop/blocking → 立即停止，不移 changeRoot
+                MD->>FS: 结构验证 + 对全部 capability 重新比对内容
                 alt sync 失败或验证不通过
-                    MD-->>User: "Sync mismatch detected.<br/>停止，不 archive。<br/>changeRoot 完整，可重试。"
+                    MD-->>User: "Sync mismatch / failed：停止，changeRoot 完整保留"
                 end
             end
         end
     end
 
     rect rgb(240, 255, 240)
-        Note over MD,FS: Step 5-6 · 执行 archive
-        MD->>TS: mkdir -p "<changesDir>/archive"
-        MD->>TS: mv "<changeRoot>" "<archiveDir>/YYYY-MM-DD-<name>"
+        Note over MD,FS: Step 5-6 · 复检目标并移动目录
+        MD->>TS: mkdir -p "<planningHome.changesDir>/archive"
+        MD->>FS: mv 前最后复检 archive/<target-name> 未被并发占用
+        MD->>TS: mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
         TS-->>MD: 移动完成
-        MD-->>User: "## Archive Complete<br/>Change: <name><br/>Specs: ✓ Synced"
+        MD-->>User: "## Archive Complete"
     end
 ```
 
@@ -141,12 +144,13 @@ template 规定 agent 必须做 delta spec 和 main spec 的对比分析，然�
 
 | Guardrail | 含义 |
 |---|---|
-| Always prompt for change selection | 不自动选 |
+| Announce the selected change; prompt when ambiguous | 唯一活跃 change（或对话明确指代）时自动选中并播报；仅在有歧义时弹列表让用户选（对比 `bulk-archive` 才是永不自动选） |
+| Pre-check `<planningHome.changesDir>/archive/<target-name>` before writing main specs（#2277） | Step 4 开头、启动 sync 前、Step 5 `mv` 前三重检查，绝不改完主 spec 才发现归档目录重名 |
 | Use artifact graph for completion checking | 不猜 |
 | Task progress comes from schema-aware `openspec list --json` | 不自己数 checkbox；lookup 失败即停，不 sync 不 archive |
 | Don't block archive on warnings | warning 只是确认 |
 | Preserve .openspec.yaml when moving | 随目录移动 |
-| If sync requested, run openspec-sync-specs **inline**（不得委托后台任务） | 只能同步等待 |
+| If sync requested, run `openspec-sync-specs` **inline** or fallback inline merge + `validate --specs`（#1977） | 已装技能则复用 `instructions specs` 快照同步执行；未装技能则自合并并遵守 `SYNC_FALLBACK_SAFEGUARDS`（退役门禁 + `openspec validate --specs`） |
 | If sync reports any stop/blocking condition, treat it as failed and stop | 不做 post-sync 比对、不移 changeRoot，一切未动可重跑 |
 | Verify main-spec structure after sync（无 delta headers、REMOVED 已删、retired capability 主 spec 已删除） | 再逐 capability 内容比对，全过才 mv |
 | Never archive while spec sync is still in flight | inline sync + verify before mv |
@@ -198,17 +202,18 @@ FAQ `07_archive-ready-to-archived/` 从 CLI 主线视角分析了 programmatic m
 
 ## 源码锚点
 
-| 内容 | 行号范围（archive-change.ts） |
+| 内容 | 行号范围（`archive-change.ts`，共 510 行） |
 |---|---|
-| SkillTemplate 定义 | L31-L238 |
-| CommandTemplate 定义 | L241-L494 |
-| Step 1: 选择 change + archive inputs | L47-L84 |
-| Step 2: artifact 检查 | L86-L98 |
-| Step 3: task 检查（schema-aware `list --json`） | L100-L122 |
-| Step 4: sync assessment + 阻塞语义 + 结构/内容验证 | L124-L180 |
-| Step 5: 移动目录 | L182-L197（含 `mv` 代码块） |
-| Step 6: 输出摘要 | L199-L219 |
-| Guardrails | L221-L234（13 条；235-238 是返回对象的收尾） |
+| `SYNC_INLINE_HANDOFF` / `SYNC_GUARDRAIL` / `SYNC_FALLBACK_SAFEGUARDS`（#1977） | L19-L31 |
+| SkillTemplate 定义 | L32-L247 |
+| CommandTemplate 定义 | L249-L510 |
+| Step 1: 选择 change + `instructions archive` | L48-L85 |
+| Step 2: artifact 检查 | L87-L99 |
+| Step 3: task 检查（schema-aware `list --json`） | L101-L123 |
+| Step 4: 写前归档目标预检（#2277 L127-L130, L157）+ sync 评估 + `instructions specs` + 结构/内容验证 | L125-L188 |
+| Step 5: 再次检查目标 + `mv` 移动目录 | L189-L204 |
+| Step 6: 输出摘要 | L206-L226 |
+| Guardrails | L228-L242（15 条） |
 
 ## v1.13.0–v1.13.1 正确性大修
 

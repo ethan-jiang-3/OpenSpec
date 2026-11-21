@@ -40,11 +40,11 @@ artifacts:
     requires: []
 
   - id: specs
-    generates: "specs/**/*.md"
+    generates: "requirements/**/*.md"
     description: 正式需求规格文档（PRD）——结构化、可测试、有优先级的需求定义
     template: spec.md
     instruction: |
-      创建正式的需求规格文档——将 proposal 中的原始需求转化为结构化、可测试、可排期的 PRD。
+      创建正式的需求规格文档——将 proposal 中的原始需求转化为结构化、可测试、可排期的 PRD，写入 `requirements/` 目录下（如 `requirements/<feature>/spec.md` 或 `requirements/<module>.md`，按域或模块拆分；切勿写进保留给 OpenSpec delta spec 合并校验的 `specs/` 目录）。
 
       你是需求分析师，处于**规格化阶段**。输入是 proposal.md 中的原始需求（用利益相关者的语言记录），
       输出是一个结构化的产品需求文档，开发团队可以直接使用。
@@ -88,8 +88,8 @@ artifacts:
     instruction: |
       创建需求工程流程的任务清单。
 
-      **重要：严格按照下面的模板格式。** apply 阶段通过解析 checkbox 格式来追踪进度。
-      不遵循 `- [ ]` 格式的任务不会被追踪。
+      **重要：严格按照下面的模板格式。** apply 阶段通过 `TASK_LINE_PATTERN` 解析所有 CommonMark 列表标记（`-`、`*`、`+`、`1.`、`1)`）的复选框行来追踪进度：
+      只有 `[x]`/`[X]`（允许空格如 `[ x]`）算已完成；其余单字符或空复选框标记（如 `[~]`、`[-]`、`[]`、`[ ]`）均计为未完成；只有不带复选框的纯文本列表行才不计入追踪（若包含归档后才做的步骤，请用末尾可选的 `## Workflow follow-up` 纯 bullet 段记录）。
 
       指南：
       - 用 ## 编号标题分组相关任务
@@ -119,20 +119,20 @@ apply:
   tracks: tasks.md
   instruction: |
     Execute the requirement engineering workflow using the checklist:
-    1) read proposal.md and specs before making changes
+    1) read proposal.md and requirements/**/*.md (specs artifact) before making changes
     2) complete tasks in priority order, mark `[x]` as you go
     3) when a task needs stakeholder input, ask — don't assume or invent
-    4) if review finds gaps in specs, update specs and re-review; if gaps trace back to proposal, update proposal too
+    4) if review finds gaps in requirements/**/*.md, update the PRD files and re-review; if gaps trace back to proposal, update proposal too
     5) add new tasks to tasks.md when discoveries trigger rework
 
-    Review each spec against this checklist before marking Review tasks complete:
+    Review each PRD file under requirements/ against this checklist before marking Review tasks complete:
     - every Must FR has testable acceptance criteria (binary pass/fail)
     - happy path + error + empty + edge cases covered
     - no conflicting or ambiguous requirements
-    - no unstated assumptions (all documented in specs)
+    - no unstated assumptions (all documented in the PRD)
 
     Definition of done:
     - all tasks checked
-    - Approval section in specs filled (Approver, Date, Status)
-    - Developer Handoff Notes in specs completed
+    - Approval section in requirements/**/*.md filled (Approver, Date, Status)
+    - Developer Handoff Notes in requirements/**/*.md completed
     - stakeholder confirms "this is what I want"

@@ -186,13 +186,13 @@ archive 没有跳过关键 validation
 
 ## 参考来源
 
-源码引用：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/archive.ts` | hard stop、warnings、skip specs、skip validation、move fallback |
-| `src/core/specs-apply.ts` | prepare before write、merge failure behavior |
-| `src/utils/task-progress.ts` | missing tasks and checkbox progress |
-| `src/core/templates/workflows/archive-change.ts` | OPSX  |
+| `src/core/archive.ts` | hard stop、warnings、skip specs、skip validation、快照回滚与 move fallback |
+| `src/core/specs-apply.ts` | prepare before write、merge failure behavior、退役全文审计（含 `#2266` `<` 续行放行） |
+| `src/utils/task-progress.ts` | schema-aware missing tasks 与 checkbox progress |
+| `src/core/templates/workflows/archive-change.ts` | `openspec-archive-change` skill 的写主 spec 前归档目标冲突预检（`#2277`）、inline sync 阻塞语义与结构验证 |
 | `test/core/archive.test.ts` | missing tasks/specs、skip specs、declined updates、archive exists、interactive confirmation |
 | `src/utils/change-metadata.ts` | marker honorability 与安全 reason |

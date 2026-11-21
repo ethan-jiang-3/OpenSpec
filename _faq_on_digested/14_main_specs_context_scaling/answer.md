@@ -38,7 +38,7 @@
 | `config.yaml` 的 context | 50KB 上限；context / operation guidance 进入 apply、archive instructions | 适合很小的全局“宪法”；不是 main specs 的替身或检索器。 |
 | store-aware MODIFIED instruction | 使用 `planningHome.root` 定位已选中的 main spec | 修复 cwd/repo-local 假设；不负责 catalog、语义选择或自动 retrieval。 |
 
-当前行为基线的 CLI 可以创建和 archive nested path，并在生成 instructions 时返回 resolved planning home。源码 checkout 与全局 npm CLI 仍是两条独立更新路径；版本演进见 [`0004`](../../_digested/_change_log/0004-v1.6.0-to-v1.7.0.md)、[`0005`](../../_digested/_change_log/0005-v1.7.0-to-v1.8.0.md)、[`0006`](../../_digested/_change_log/0006-v1.8.0-to-v1.9.0.md) 与 [`0007`](../../_digested/_change_log/0007-v1.9.0-to-v1.10.0.md)。
+当前行为基线的 CLI 可以创建和 archive nested path，并在生成 instructions 时返回 resolved planning home。源码 checkout 与全局 npm CLI 仍是两条独立更新路径；完整版本演进见 [`_change_log/README.md`](../../_digested/_change_log/README.md)（[`0004`](../../_digested/_change_log/0004-v1.6.0-to-v1.7.0.md)–[`0015`](../../_digested/_change_log/0015-v1.17.0-to-v2.1.1.md)）。
 
 ## 官方现状：问题已被明确提出，但还没有落地
 
@@ -197,4 +197,4 @@ Issue #901 / PR #902 已经覆盖了前两步和可选 sub-agent 的思路。它
 - [PR #700: list --specs JSON/detail](https://github.com/Fission-AI/OpenSpec/pull/700) — #901 的 `--detail` 实现，尚未进入 main。
 - [PR #902: sub-agent spec discovery](https://github.com/Fission-AI/OpenSpec/pull/902) — 社区实现和实验性 token 数据，未当作已发布能力。
 - [Issue #872: too many OpenSpec files](https://github.com/Fission-AI/OpenSpec/issues/872) — summarization 需求仍为 open 问题。
-- [upstream `4e16790`](https://github.com/Fission-AI/OpenSpec/tree/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b) — 同步的官方源码基线；已确认其 `list`、references 和 project-config 仍没有 local main-spec automatic retrieval。（复核：结论不变。）
+- [upstream `0c737dc1`](https://github.com/Fission-AI/OpenSpec/tree/0c737dc1b543249b38b0f4716816fcf493d894dd) — 对应 [`../../_digested/README.md`](../../_digested/README.md) 声明的源码基线；其 `list`、`references` 与 `project-config` 仍没有 local main-spec automatic retrieval。

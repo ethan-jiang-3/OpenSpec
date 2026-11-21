@@ -42,28 +42,31 @@ Phase 3: Move
 
 ### 2.1 proposal 验证（非阻塞）
 
-`archive.ts` 的 `ArchiveCommand.execute()` 内（`validator.validateChange(changeFile)` 调用点）：用 `Validator.validateChange()`（`src/core/validation/validator.ts`）验证 proposal.md 的结构（Why/What Changes 等 section 是否存在、长度是否合理）。但**验证失败不会阻止 archive**——proposal 验证是信息性的。
+`archive.ts:1461-1491`（仅在非 `--json` 人类模式下执行）：调用 `Validator.validateChange(proposal.md)`（`src/core/validation/validator.ts:110-154`）按 `ChangeSchema` 检查 `proposal.md` 的结构（Why/What Changes 是否存在、长度上下限、**以及单 change 的 delta 条目数上限 `MAX_DELTAS_PER_CHANGE = 10`** 等，同时过滤掉 `deltas.<n>.requirement(s)` 避免重复告警）。**这里的任何 issue（哪怕在 `ChangeSchema` 里属于 `ERROR` 级）在 `openspec archive` 中都是纯信息性的 `Proposal warnings in proposal.md (non-blocking)`，绝不阻塞归档**。
 
 ### 2.2 delta spec 验证（阻塞）
 
-`validator.validateChangeDeltaSpecs(changeDir)` 调用点：扫描 `<changeDir>/specs/` 下每个子目录中带 delta header 的文件（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`）。
+`archive.ts:1494-1577`：扫描 `<changeDir>/specs/`（含根级误放的 `specs/spec.md`、合并路径不读的散落 delta 文件、以及 `skip_specs` 与 `specs/` 文件共存冲突），用 `Validator.validateChangeDeltaSpecs(changeDir)`（`src/core/validation/validator.ts:175-578`）做结构与内容验证：
 
-如果发现 delta spec，用 `Validator.validateChangeDeltaSpecs()`（`src/core/validation/validator.ts`）做结构与内容验证：
-
-| 检查项 | 级别 |
+| 检查项 | 级别（`openspec archive` 行为） |
 |--------|------|
-| 缺少 `## Requirements` section 中的 `### Requirement:` header | ERROR |
-| ADDED/MODIFIED requirement 正文缺失 | ERROR |
-| requirement 正文存在但缺少 SHALL/MUST | WARNING（显示但不阻止 archive） |
-| requirement 缺少 scenario | ERROR |
-| 同一 section 内 requirement 名重复 | ERROR |
-| 同一 requirement 出现在多个 section 中（如同时 ADDED 和 MODIFIED） | ERROR |
-| requirement 文本过长 | WARNING |
-| delta 数量超过 10 个（`MAX_DELTAS_PER_CHANGE`） | **ERROR**（Zod 校验失败，一律 ERROR，archive 直接拒） |
+| 根级 `specs/spec.md` 或非 `<capability>/spec.md` 的散落 delta 文件 | **ERROR**（阻塞归档） |
+| 无法识别的 `## ... Requirements` 标题（如 `## DEPRECATED Requirements`、`## Add Requirements`）下含 `### Requirement:`（#2207） | **ERROR**（阻塞归档；`buildUpdatedSpec` 也会二次拒绝） |
+| 普通非 delta 章节（如 `## Notes`）下或首个 `## ` 之前的孤立 `### Requirement:` | WARNING（提示但放行） |
+| 缺少合法 delta section，或 section 内无任何可解析条目 | **ERROR**（阻塞归档） |
+| `RENAMED` 中存在未成对的孤立 `FROM:` / `TO:` 行 | **ERROR**（阻塞归档） |
+| ADDED/MODIFIED requirement 正文缺失 | **ERROR**（阻塞归档） |
+| requirement 正文存在但缺少英文 `SHALL`/`MUST` | WARNING（显示但不阻止归档；`validate --strict` 失败） |
+| ADDED/MODIFIED requirement 缺少有效 scenario（空 scenario 标题不计数） | **ERROR**（阻塞归档） |
+| `#### Scenario:` 缺少触发步骤（`WHEN`/`GIVEN`）或结果步骤（`THEN`）（#2079） | WARNING（显示但不阻止归档；`validate --strict` 失败） |
+| 同一 section 内 requirement 名重复，或跨 section 冲突（含 `RENAMED`+`REMOVED` 大小写折叠冲突） | **ERROR**（阻塞归档） |
+| ADDED requirement 正文 `> 500` 字符（或独立 `validate <change>` 下 MODIFIED 正文 `> 500` 字符且比主 spec 基线更长，#2265） | WARNING（显示但不阻止归档；`validate --strict` 失败） |
+| delta spec 顶部 YAML frontmatter（#2273） | **合法放行**（`validate --strict` 亦不报错；合并时留在 change 内并在 `warnings` 说明） |
+| `skip_specs: true` 与 `specs/` 下任何文件共存，或 `.openspec.yaml` 元数据非法导致标记无法生效 | **ERROR**（阻塞归档） |
 
-如果存在任何 ERROR，**CLI 拒绝 archive**。WARNING 只显示，不阻止。
+> **易混纠偏**：`MAX_DELTAS_PER_CHANGE`（10）定义在 `ChangeSchema`（`src/core/schemas/change.schema.ts:32`），只走 2.1 节针对 `proposal.md` 的非阻塞 `validateChange()`，**不在** `validateChangeDeltaSpecs()` 中检查，因此超过 10 条 delta **不会**阻塞 `openspec archive`。
 
-`--no-validate` 可以跳过所有验证，但需要额外确认（或 `--yes`）。
+如果 `validateChangeDeltaSpecs` 存在任何 **ERROR**，**CLI 立即拒绝归档**；WARNING 只显示，不阻止。`--no-validate` 可跳过验证阶段，但需要额外确认（或 `--yes`，且跳过验证时永不触发 capability 退役）。
 
 ### 2.3 任务完成检查
 
@@ -123,24 +126,26 @@ interface DeltaPlan {
 
 2. **REMOVED 的 bullet 形式与 RENAMED 的 `FROM:`/`TO:` 行接受 `[-*+]` 全部 CommonMark 列表标记**。之前硬编码 `-`，用 `*`/`+` 写的删除/改名 delta 匹配不到任何东西——`validate` 报 valid、`archive` 退出 0，但需求根本没动。`FROM:`/`TO:` bullet 保持可选；`### Requirement:` header 形式不变。
 
-### 3.2.2 scenario bullet 换行不再挡退役
+### 3.2.2 scenario bullet 换行与 `<` 开头散文行不再误挡退役
 
-`retire_capabilities` 之前拒绝任何 scenario bullet 换行到第二行的 spec——续行被当成 merge 无法归属的内容，退役被整个阻塞，且提示 marker 的 hint 也被吞掉。把续行读成同一条 bullet；`+` 列表标记也被正确识别（之前只认 `-`/`*`，`+` 写的 scenario 全部报 unaccounted，capability 完全无法退役）。
+`retire_capabilities` 全文件审计（`contentTheMergeCannotName` / `mayBeRawHtml` in `src/core/specs-apply.ts:735-1017`）经历两轮关键保真收敛：
+- **折行列表项与 `+` 标记识别**：把缩进或懒折行续行识别为同一条 scenario bullet，且支持 `[-*+]` 与 1–9 位有序标记（此前换到第二行的 bullet 或 `+` 标记写的 scenario 会被误判为无法归属内容，卡死退役）。
+- **`<` 开头的普通散文行放行（v2.1.1 #2266）**：`mayBeRawHtml()` 仅将真正的 CommonMark HTML 块（kinds 1–6，如 `<details>`/`<div>`/`<!--`）或整行独立闭合标签（kind 7）判为原始 HTML；像 `<args> are passed on` 这类碰巧以 `<` 开头的折行英文散文按普通文本放行，不再无故阻止能力退役。
 
-### 3.3 预验证（合并前）
+### 3.3 预验证与新 spec 骨架（合并前）
 
-`buildUpdatedSpec()` 在修改任何文件之前先做六重检查（前五项是"重复/冲突"类，最后一项是"空 delta"防护）：
+`buildUpdatedSpec()`（`specs-apply.ts:229-449`）在修改任何文件之前先做结构与冲突检查：
 
-1. **section 内重复**：同一个 ADDED section 内不能有两个同名 requirement；MODIFIED/REMOVED/RENAMED 同理
-2. **跨 section 冲突**：同一个 requirement 名不能同时出现在 ADDED 和 MODIFIED 中（或任何其他组合）
-3. **RENAMED + MODIFIED 交互**：如果有 RENAMED 将 `OldName` → `NewName`，则 MODIFIED 必须引用 `NewName`（不能引用 `OldName`）
-4. **RENAMED + ADDED 冲突**：RENAMED 的 TO 不能和 ADDED 的 requirement 重名
-5. **空 delta**：至少有一个 delta 操作
+1. **未配对 `RENAMED` 拒绝**：任何孤立的 `FROM:` 或 `TO:` 行直接报错拒绝，绝不猜测错位配对。
+2. **误拼 `## ... Requirements` 章节拒绝（#2207）**：若 `orphanedRequirements` 落在非四类标准名的 `## ... Requirements` 标题下（`isUnrecognizedDeltaSection`），直接抛错中止；落在普通散文标题下的孤立 requirement 则记入 `warnings`；delta 顶部的 YAML frontmatter（#2273，`hasFrontmatter`）保持在 change 内并记一条说明性 warning。
+3. **section 内重复**：同一个 ADDED/MODIFIED/REMOVED/RENAMED section 内不能出现同名 requirement。
+4. **跨 section 冲突**：同一 requirement 不能同时出现在多个操作节中（其中 `RENAMED` 的 `FROM` 与 `REMOVED` 采用大小写/空白折叠比对）。
+5. **RENAMED + MODIFIED / ADDED 交互**：若 `RENAMED` 将 `OldName` → `NewName`，`MODIFIED` 必须引用新名 `NewName`，且 `ADDED` 不能与 `NewName` 撞名。
+6. **空 delta 防护**：至少解析出一个 delta 操作。
 
 如果目标 spec 不存在（新 capability）：
-- 只允许 ADDED。MODIFIED/RENAMED 会报错（因为没有东西可以 modify/rename）
-- REMOVED 会被忽略并产生警告（没有东西可以 remove）
-- delta 若含可读的 `## Purpose`，`buildSpecSkeleton()` 会把它写入新 main spec；缺失或不可读时才回退到 TBD placeholder。已有目标的 Purpose 不被 delta 覆盖。
+- 只允许 ADDED；含 MODIFIED 或 RENAMED 直接报错；含 REMOVED 则忽略并产生警告。
+- **`buildSpecSkeleton()`（`specs-apply.ts:1458-1464`）**：若 delta 含可读的 `## Purpose`（不含未闭合 fence 或 HTML 注释），将其拷入新主 spec（少于 50 字符时额外提示 `validate --strict` 会报过短），缺失或不可读时回退到 `TBD ...` 占位符；v2.1.1 **#2267** 起生成的骨架固定为 `# <spec> Specification\n\n## Purpose\n\n<body...>\n\n## Requirements\n`——在 `## Purpose` 标题后补齐空行，使新建主 spec 天然通过 Prettier 与 markdownlint `MD022`。已有主 spec 的 `## Purpose` 永不被 delta 覆盖（若两侧不同会给出忽略提示）。
 
 ### 3.4 提取主 spec 的 Requirements section
 
@@ -162,77 +167,80 @@ after:    ""（Requirements section 之后的文字）
 
 这是整个 archive 流程中最关键的代码段（`buildUpdatedSpec()` 的合并主体，`specs-apply.ts` 的 `// RENAMED` / `// REMOVED` / `// MODIFIED` / `// ADDED` 四个注释块）。操作有严格的顺序，**不能打乱**：
 
-#### 第一：RENAMED（`specs-apply.ts` 的 `// RENAMED` 块）
+#### 第一：RENAMED（`specs-apply.ts:462-519`）
 
 ```typescript
-// 1. 在 map 中查找 from → 找不到报错
-// 2. 检查 to 是否已被占用 → 已占用报错
-// 3. 获取 from 的 block，改写 header 行
-// 4. 删除旧 key，用新 key 替换
+// 1. 在 map 中查找 from：
+//    - 若 from 不在但 to 已在（且无大小写/空白近似拼写残留）→ early-sync 幂等 no-op，直接 continue
+//    - 若 from 与 to 都不在（或存在近似拼写歧义）→ 报错
+// 2. 检查 to 是否已被占用（含大小写/空白近似冲突）→ 已占用报错
+// 3. 获取 from 的 block，改写 header 行，删除旧 key 并写入新 key，原位更新 orderedKeys[orderIndex] = to
 ```
 
 为什么 RENAMED 必须最先做？因为如果 RENAMED 在后，MODIFIED 只能引用旧名字，导致改名后 MODIFIED 的内容丢失。
 
-**修复**：rename 操作现在使用 `orderedKeys` 列表追踪位置标识。rename 更新 key 而不把块移到 spec 尾部（之前的 Map delete+set 会将条目移到插入顺序末尾），因此 RENAMED + MODIFIED 同一条时 rename 保持在原位置，archive diff 更易读。
+**修复**：rename 操作使用 `orderedKeys` 列表追踪位置标识。rename 更新 key 而不把块移到 spec 尾部（之前的 Map delete+set 会将条目移到插入顺序末尾），因此 RENAMED + MODIFIED 同一条时 rename 保持在原位置，archive diff 更易读。
 
-#### 第二：REMOVED（`specs-apply.ts` 的 `// REMOVED` 块）
+#### 第二：REMOVED（`specs-apply.ts:521-547`）
 
 ```typescript
-// 1. 在 map 中查找 name → 找不到报错（新 spec 除外）
-// 2. 从 map 中 delete
+// 1. 在 map 中查找 name：
+//    - 若不存在：若 map 中有大小写/空白近似名（疑似拼错）→ 报错；否则视为已 early-sync 移除，发 warning 并 continue
+// 2. 存在则从 map 中 delete，removedApplied++
 ```
 
 为什么 REMOVED 在 MODIFIED 前？因为如果 MODIFIED 在 REMOVED 前，REMOVED 会删除 MODIFIED 的结果。正确的语义是：先移掉不需要的，再修改保留的。
 
 为什么 REMOVED 在 RENAMED 后？因为 RENAMED 改了 key，REMOVED 应该针对的是新 key。
 
-#### 第三：MODIFIED（`specs-apply.ts` 的 `// MODIFIED` 块）
+#### 第三：MODIFIED（`specs-apply.ts:549-578`）
 
 ```typescript
 // 1. 在 map 中查找 name → 找不到报错
-// 2. 验证新 block 的 header 与 key 一致
-// 3. 替换 map 中的 block
+// 2. 验证新 block 的 header 与 key 一致，并用 diffScenarioNames 检查未丢掉主 spec 现存 scenario（漏掉直接报错）
+// 3. 替换 map 中的 block（仅当 normalizeBlockRaw 内容真有变化时才递增 modifiedApplied，幂等兼容 early-sync）
 ```
 
 完整的 requirement block（包括所有 scenario）必须在 MODIFIED 中提供 —— 不是 diff，是整个替换。这就是为什么 schema instruction 反复强调"copy the ENTIRE requirement block"。
 
-#### 第四：ADDED（`specs-apply.ts` 的 `// ADDED` 块）
+#### 第四：ADDED（`specs-apply.ts:580-607`）
 
 ```typescript
-// 1. 在 map 中查找 name → 已存在报错
-// 2. 插入新 block
+// 1. 在 map 中查找 name：
+//    - 若同名已存在且 normalizeBlockRaw 完全一致 → early-sync 幂等 no-op，直接 continue
+//    - 若同名已存在但内容不同，或存在大小写/空白近似名 → 报错
+// 2. 插入新 block，addedApplied++
 ```
 
 为什么 ADDED 最后？因为如果在 RENAMED 之前做 ADDED，RENAMED 的 TO 可能和 ADDED 冲突检测为假阴性。ADDED 应该检测合并后的最终状态。
 
-### 3.6 重建 spec（修复 rename 保序）
+### 3.6 重建 spec（保序与围栏外空行折叠）
 
-此前 rename 操作通过 Map delete+set 将块移到 insertion-order 尾部。它使用 `orderedKeys` 列表独立追踪位置标识：
+此前 rename 操作通过 Map delete+set 将块移到 insertion-order 尾部。当前使用 `orderedKeys` 列表独立追踪位置标识（`specs-apply.ts:612-670`）：
 
 ```typescript
-// orderedKeys 保持源块的顺序标识，rename 更新 key 不移动尾部
+// orderedKeys 保持源块的顺序标识，rename 更新 orderedKeys[index] = to 而非移到尾部
 const orderedKeys = parts.bodyBlocks.map((b) => normalizeRequirementName(b.name));
-// ... rename 操作更新 orderedKeys[index] = to 而非 delete+set
-// 重建时按 orderedKeys 顺序而非 Map 迭代顺序
+// ...
 for (let index = 0; index < parts.bodyBlocks.length; index++) {
   const key = orderedKeys[index];
   const replacement = nameToBlock.get(key);
-  ...
+  if (replacement) {
+    keptOrder.push(replacement); // 原位保留或替换
+    seen.add(key);
+  }
+}
+for (const [key, block] of nameToBlock.entries()) {
+  if (!seen.has(key)) keptOrder.push(block); // 全新追加到末尾
 }
 
-for (const block of parts.bodyBlocks) {
-  const key = normalizeRequirementName(block.name);
-  const replacement = nameToBlock.get(key);
-  if (replacement) keptOrder.push(replacement);  // 原有或替换
-}
-for (const [key, block] of nameToBlock) {
-  if (!seen.has(key)) keptOrder.push(block);      // 全新追加
-}
-
-// 拼接：before + header + body + after
-const rebuilt = [parts.before, parts.headerLine, reqBody, parts.after]
-  .join('\n')
-  .replace(/\n{3,}/g, '\n\n');  // 压缩多余空行
+// 非空切片用双换行拼接，再仅在代码围栏外折叠多余空行（确保末尾单 LF）
+const rebuilt =
+  collapseBlankRunsOutsideFences(
+    [parts.before.trimEnd(), parts.headerLine, reqBody, parts.after.trim()]
+      .filter((s) => s !== '')
+      .join('\n\n')
+  ).trimEnd() + '\n';
 ```
 
 新内容（ADDED）仍追加到末尾。保留的块中有 `## Scenario:` 等被 MODIFIED 吸收的 tail 内容时，会检测 `firstForeignTail` 并标记 loss 信息。
@@ -323,6 +331,8 @@ if delta specs exist:
 ```
 
 **当前加固行为**：
+- **在接触任何主 spec 之前预检归档目标目录（v2.1.1 #2277，`archive-change.ts:127-130, 157`）**：Step 4 一开头（评估 delta 前）以及用户确认同步、即将写主 spec 前，都会先推导 `<target-name>` 并检查 `<planningHome.changesDir>/archive/<target-name>` 是否已存在——一旦重名冲突，**在写入或退役任何主 spec 之前立即中止**，避免改完主 spec 才在 Step 5 `mv` 时发现归档目标已被占用。CLI `archive.ts:1662-1678` 同样在进入 spec 更新分支前先跑 `assertArchiveDestinationAvailable()`。
+- **sync 技能缺失时的内联合并回退与 `validate --specs` 兜底（#1977，`archive-change.ts:29-31, 168, 234-235`）**：正常情况下在写出主 spec 前先拉一次 `openspec instructions specs --change "<name>" --json` 规则快照并传给 `openspec-sync-specs` 技能内联执行；若项目自定义裁剪掉了 `sync` 技能，agent 会直接在当前流程内完成等效的智能合并，且必须遵守 `SYNC_FALLBACK_SAFEGUARDS`——仅在 `.openspec.yaml` 声明 `retire_capabilities: true`、无额外手写章节且路径解析在真实 specs 根内时才允许删除空主 spec，并在合并后强制运行 **`openspec validate --specs`**（校验失败即按 sync 失败中止归档，不移动 `changeRoot`）。
 - sync 必须 **inline** 执行（不等完成绝不 mv——防止 changeRoot 被移走后 sync 读不到 delta spec）。若 agent 只能通过委托运行 sync，也必须**同步**委托并等待结果，不得丢给后台
 - **sync 报任何 stop/blocking 条件即视为 sync 失败**（v1.14.0 起，`0ff63dba`）：立即停止归档，不做 post-sync 内容比对、不移 `changeRoot`。一切未动，用户可修复阻塞条件或重跑 sync
 - sync 完成后对 `artifactPaths.specs.existingOutputPaths` 中**每个 capability** 重新验证：ADDED 存在、MODIFIED 含变更且其他 scenario 完整、REMOVED 消失、RENAMED 用新名
@@ -337,9 +347,11 @@ if delta specs exist:
 
 | flag | 作用 |
 |------|------|
-| `-y, --yes` | 跳过所有确认提示 |
-| `--skip-specs` | 跳过 spec 合并（只验证+移动） |
-| `--no-validate` | 跳过验证（不推荐，需要额外确认） |
+| `-y, --yes` | 跳过所有确认提示（未完成任务确认、spec 更新确认、`--no-validate` 确认） |
+| `--skip-specs` | 跳过 spec 合并（只做校验、任务检查与目录移动） |
+| `--no-validate` | 跳过验证（不推荐，需要额外确认或配合 `--yes`；且跳过验证时永不触发 capability 退役） |
+| `--json` | 输出结构化 JSON（成功返回 `{ archive, root }`，阻塞返回 `{ archive: null, root?, status: [diagnostic] }` 并退出 1；全程无交互，要求显式提供 `<change-name>` 并在需确认路径配合 `--yes`） |
+| `--store <id>` | 作用于本机已注册的独立规划 store 根而非本地仓库 `openspec/` |
 
 ---
 
@@ -419,6 +431,11 @@ archive 前置的路径检查从单一的 `assertPathWithin` 拆成按目录区�
 | 换行 scenario bullet | `specs-apply.ts` / retirement | 包裹换行的 bullet 读成一条，`+` 标记也识别 |
 | fence 内空行保真 | `specs-apply.ts` `collapseBlankRunsOutsideFences` | 只折叠 fence 外空行；YAML block scalar / Python / expected-output 样例不再被整理 |
 | unapplied 文本告警（v1.14.2 #2054） | `requirement-blocks.ts` `findUnappliedContent` / `describeUnappliedContent` | `DeltaPlan` 新增 `unappliedContent: {section, line}[]`；archive 在 `buildUpdatedSpec` 时 `warn()`，validate 报 WARNING。**搬运行为不变** |
+| 未识别 `## ... Requirements` 拒绝（#2207） | `requirement-blocks.ts` `isUnrecognizedDeltaSection` / `specs-apply.ts` | 误拼 delta 操作节下的 `### Requirement:` 在 validate 报 ERROR、在 archive 直接抛错中止，不再当作普通孤立块放过 |
+| delta YAML frontmatter 豁免（v2.1.1 #2273） | `requirement-blocks.ts` `findFrontmatterEnd` / `specs-apply.ts` | delta 顶部的 frontmatter 不计入 `unappliedContent`，`validate --strict` 放行；archive 将其留在 change 并记录说明 |
+| 新主 spec `## Purpose` 空行（v2.1.1 #2267） | `specs-apply.ts` `buildSpecSkeleton()` | `## Purpose` 标题后固定补空行，满足 Prettier 与 markdownlint `MD022` |
+| `<` 开头折行散文放行退役（v2.1.1 #2266） | `specs-apply.ts` `mayBeRawHtml()` | 仅拦截真正的 CommonMark HTML 块/独立标签，`<args> ...` 等折行散文不再卡死 `retire_capabilities` |
+| 写主 spec 前预检归档目标（v2.1.1 #2277） | `archive-change.ts` Step 4（及 `archive.ts:1677`） | 先校验 `<changesDir>/archive/<target-name>` 未占用再改主 spec，杜绝改完 spec 才撞名失败 |
 | retirement 清理错误码（v1.14.1 #1792） | `archive.ts` `toArchiveDiagnostic` | `RetirementCleanupError` → `archive_retirement_cleanup_failed`，独立 fix 文案 |
 | 三个目录允许 symlink（v1.14.2 #2052） | `archive.ts` 前置检查 + `file-system.ts` | `openspec/`、`changes/`、`specs/` 可链接；`archive/` 不可 |
 

@@ -149,10 +149,6 @@ verification blocked until tasks
 - 把 Markdown 发布到 CMS。
 - 把非 spec artifact merge 成某个正式 baseline。
 
-## OpenCode command 参数
-
-若把 workflow 同时投递为 OpenCode command，adapter 会注入 `$ARGUMENTS`，让用户输入传进生成命令。只在正文还没有该占位符时添加；自定义模板已经显式使用 `$ARGUMENTS` 时不会重复。这个占位符是 OpenCode 的 adapter 语法，不应机械复制到 Claude `/openspec-*` 或 Codex `$openspec-*` 入口。
-
 第一版应把这些写成 tasks：
 
 ```markdown

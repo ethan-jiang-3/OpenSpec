@@ -12,35 +12,37 @@
 
 先把"可行"建立在事实上：
 
-- **agent 能读你的项目**——它是 coding agent，有文件读取工具，能读 `package.json`、源码树、`README`、已有的 `openspec/specs/`。技术栈这类事实它能自己推断。
-- **agent 能看到 config 的格式**——`openspec init` 写的 stub（`src/core/config-prompts.ts:9-39`）里，`context` 和 `rules` 虽是注释，但格式例子就在那；`docs/customization.md:29-46` 也有完整例子。agent 照着填不会跑偏。
-- **agent 能看到当前 config 的状态**——它跑 `openspec instructions <artifact> --change <name> --json` 时，返回里带 `context` 和 `rules` 字段（`src/core/artifact-graph/instruction-loader.ts:335-336`）。空的就是 `undefined`，agent 能据此判断"项目还没配背景"。
+- **agent 能读你的项目来区分“可推断事实”与“需写入约束”**——它是 coding agent，有文件读取工具，能读 `package.json`、源码树、`README`、已有的 `openspec/specs/`。读代码就能看出来的客观事实不用抄进 `context`（`src/core/config-prompts.ts:25-27` 明确提醒把通用项目文档和可从代码库发现的事实留在 `context` 之外），agent 真正帮你的地方是结合项目现状帮你把**读代码推断不出来的硬约束**整理成规范 YAML。
+- **agent 能看到 config 的格式**——`openspec init` 写的 stub（`src/core/config-prompts.ts:9-61`）里，`context`、`rules` 和 `operations` 虽是注释，但格式例子就在那；`docs/customization.md:29-46` 也有完整例子。agent 照着填不会跑偏。
+- **agent 能看到当前 config 的状态**——它跑 `openspec instructions <artifact> --change <name> --json` 时，返回里带 `context` 和 `rules` 字段（`src/core/artifact-graph/instruction-loader.ts:415-416`）。空的就是 `undefined`，agent 能据此判断"项目还没配背景"。
 
-缺的只有一样：**OpenSpec 没有 skill 提示 agent "context 空就去问用户、然后改 config.yaml"**（`onboard` skill 全文不提 config）。所以这个引导得你给——但最佳引导时机其实是 Explore（见下）。
+缺的只有一样：**OpenSpec 没有 skill 提示 agent "context 空就去问用户、然后改 config.yaml"**（`onboard` skill 全文不提 config）。所以这个引导得你给——而且必须注意 **Explore 的只读护栏边界**（见下）。
 
-## 最佳入口：在 Explore 里谈项目全局，顺带长 config
+## 最佳入口：在 Explore 里梳理全局约束，退出 Explore 后再落盘写 config
 
-最顺的做法不是单独坐下来"配 config"——而是**借 Explore 谈项目全局时，让它自然冒出来**。Explore 时问 agent：
+最顺的做法是分清「思考阶段」与「编辑阶段」：
+
+1. **在 Explore 里梳理与提炼**——Explore 启动时会读取 `<root.path>/openspec/config.yaml` 的 `context` 和 `rules`（`explore.ts:156-160`），因此你可以在讨论中顺带问 agent 哪些约束属于跨所有 change 的全局原则、哪些只是当前 change 的局部事项。
+2. **退出 Explore 模式后再让普通 coding agent 写入 `openspec/config.yaml`**——**绝不要在 `/openspec-explore` 会话内直接创建或编辑 `openspec/config.yaml`！** `src/core/templates/workflows/explore.ts:361` 的 Guardrails 明确写死：
+
+   > `Workflow configuration counts too: creating or editing schemas, templates, or openspec/config.yaml is a change, not thinking. Creating or updating OpenSpec change artifacts within the confirmed scope is fine, writing anything else is not.`
 
 ```text
-你（Explore 场景）：我们这个项目，全局上有哪些东西要固定到项目层级？
-  - 技术栈 / 领域 / 质量优先级           → 该进 context
-  - 反复要遵守的约束（每次都漏的、每次都要提醒的）→ 该进 rules
-  哪些是这次 change 的局部事，哪些是跨所有 change 的全局事？
+1. Explore 阶段（只梳理，不写 config.yaml）：
+   问："结合项目现状，有哪些是读代码看不出来的跨 change 全局硬约束（该进 context），
+       有哪些是我们反复踩坑的写作/设计要求（该进 rules 或 operations.*.guidance）？"
+2. 退出 Explore（回到普通对话轮次，进入 propose 之前）：
+   让 agent 按刚才确认的清单修改 openspec/config.yaml，并跑 openspec validate 检查 YAML 语法。
 ```
 
-**为什么这条路通——四个结构原因（源码落地）：**
+**为什么“先梳理、退出 Explore 写入、再进 propose”这条链路通（源码落地）：**
 
-1. **Explore 的工作就是建项目级理解。** `explore.ts:42-46` 让 agent "Map existing architecture / Find integration points / Identify patterns already in use"。这正是 `context` 该装的（稳定的项目背景，`project-config.ts:28-32` + digested 06:244-249："context 放技术栈/领域/质量优先级"）。propose 忙着生成 artifact、apply 在实施、archive 在合并——只有 Explore 在专门建这个项目模型。
-2. **Explore 会冒出反复的模式和坑。** `explore.ts:72-73` "Identify what could go wrong"。这种"反复出错、每次都要提醒"的沉淀，正是 `rules` 该装的（digested 06:258："看 agent 反复犯什么错误，再针对性地加 rules"）。
-3. **时序闭合（最关键）。** Explore 在 propose 之前；而 `config.yaml` 每次 `openspec instructions` 都重读（`instruction-loader.ts:369-403` + digested 06:107："最新修改立即生效"）。所以你在 Explore 期间改了 config，紧接着 propose 生成 artifact 时，context/rules 已经生效（`propose.ts:64-72` 把它们当约束消费）。不用重启、不用 re-init。
-4. **Explore 无脚本、对话式——你的问题补上 skill 没写的那条路由。** `explore.ts:17` "stance, not a workflow"、`:23` "Curious, not prescriptive"。你问"什么是全局的"，就是把 global 发现路由到 `config.yaml`。
+1. **Explore 擅长暴露跨模块边界与反复踩的坑，但它严守只读配置护栏。** `explore.ts:92-96, 125-128` 让 agent 梳理既有架构、集成点与潜在风险，并在 `:156-160` 读取当前 `config.yaml`；但 `:361` 禁止在 Explore 内改 `config.yaml`，capture 表（`:197-205`）和收尾（`:330-355`）也只针对 change 级 artifacts。因此 Explore 负责“想清楚要补哪几条”，不负责动配置文件。
+2. **退出 Explore 写完即刻对后续 propose 生效。** `config.yaml` 在 `propose` 的 `openspec context --json` 预检后（`propose.ts:60-65`）以及每次 `openspec instructions` 调用时（`instruction-loader.ts:369-402`）都会实时重读，不用重启、不用 re-init。
 
-**诚实说明：这是 emergent，不是 Explore 明示的功能。** Explore 的 capture 表（`explore.ts:117-124`）和 hand-off（`:250-273`）只列 change 级 artifact（specs/design/proposal/tasks），**没有 config.yaml 这一行**。所以 agent 不会主动把全局发现写进 config——是**你的问题**激活了它。这也正是"能人"路径的价值：你知道在 Explore 里问对的问题，agent 就有足够上下文帮你落地到 config，而不必等一个还不存在的 config 编辑命令。
+## 通用补录循环（在普通 coding agent 对话中执行，不在 Explore 内）
 
-## 通用补录循环
-
-Explore 谈清楚"该改什么"之后，落地写进 config 就是这几步（不管补哪一部分）：
+谈清楚"该改什么"并退出 Explore 之后，让普通 agent 落地写进 config 就是这几步（不管补哪一部分）：
 
 ```text
 1. 让 agent 读当前 openspec/config.yaml   → 看哪些字段是空的
@@ -68,24 +70,35 @@ openspec init --language "Japanese (ja-JP)"
 
 这是 greenfield seed。已有 config 的 brownfield 项目会被拒绝覆盖，应让 agent 在现有 `context` 中手工加入同类 guidance。无论哪条路径，本地化的是 prose；Markdown 结构 heading、`SHALL`/`MUST` 规范关键词保持英文。
 
-| 谁负责 | 补什么 |
+`src/core/config-prompts.ts:25-27` 对 `context` 给出了非常关键的官方边界：
+
+```yaml
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+```
+
+因此补 `context` 的分工不是让 agent 把 `package.json` 依赖表抄进去，而是过滤掉可发现事实、只留下**读代码看不出来的全局硬约束**：
+
+| 谁负责 | 做什么 |
 |---|---|
-| **agent 自己推断** | 技术栈、语言、框架、包管理器（读 `package.json` 就有） |
-| **你必须告诉它** | 领域（产品到底是什么）、质量优先级（你优先保证什么）、兼容性约束 |
+| **agent 先读代码做减法** | 先看清仓库里已经能直接读到的目录结构、框架、脚本——**这些可推断事实不要重复塞进 `context`**（最多一行点明目标运行门槛，如跨平台支持或最低运行时版本） |
+| **你必须告诉它（真正该进 `context` 的内容）** | 读代码推断不出来的约束：业务领域边界、质量优先级（如鉴权正确性优先于吞吐）、向后兼容红线、产物语言与产品表达要求 |
 
 话术示例：
 
 ```text
-你：读一下 package.json 和 src/ 的结构，然后我告诉你这个产品的领域。
-    我这是个内部采购审批平台；我们最优先保证的是 authorization 正确性和审计可追溯；
-    所有 public API 必须向后兼容。
-    照 openspec/config.yaml 里注释的 context 格式，起草一份不超过 8 行的 context，
-    给我确认后写进去。
+你：先读一下 openspec/config.yaml 注释和项目结构，把读代码就能发现的常规事实排除掉。
+    只把下面这些读代码推断不出来的硬约束整理成不超过 8 行的 context：
+    - 这是内部采购审批平台，最优先保证 authorization 正确性和审计可追溯；
+    - 所有 public API 必须保持向后兼容；
+    - 涉及路径的设计与测试必须同时覆盖 macOS、Linux 和 Windows。
+    起草给我确认后再写进 openspec/config.yaml。
 ```
 
-要让 agent **避开**：PRD 级的详细功能、本次 change 的目标、容易变的东西——这些塞进 `context` 会污染每个 artifact 的指令。详细需求放 `openspec/specs/`。
+要让 agent **避开**：通用项目文档、读源码就能发现的目录/依赖清单、PRD 级的详细功能、本次 change 的目标、容易变的东西——这些塞进 `context` 只会浪费并稀释每个 artifact 的指令。详细需求放 `openspec/specs/`。
 
-长度红线：`context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:248`（`MAX_CONTEXT_SIZE`，超限 warn 并丢弃在 :350-353））。实践上保持在半屏以内。
+长度红线：`context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:256` `MAX_CONTEXT_SIZE`，超限 warn 并丢弃在 `:357-363`）。实践上保持在半屏以内。
 
 ## 补 `rules`（按 artifact）
 
@@ -121,7 +134,7 @@ reactive 比 proactive 靠谱——因为它是真实使用反馈沉淀的，不
 | `design` | 技术决策质量 | `Design decisions must note the rejected alternative and why.` |
 | `tasks` | 可追踪性 | `Each task group must reference the spec requirement it implements.` |
 
-**key 必须是合法 artifact ID。** 让 agent 补完 `rules` 后，对照 schema 检查 key——写成 `all` / `general` 这类，每次生成指令会 warning 且规则永不注入（`src/core/project-config.ts:469-486` 的 `validateConfigRules`，由 `instruction-loader.ts:381-385` 用**所有已安装 schema 的 artifact ID 并集**校对）。
+**key 必须是合法 artifact ID。** 让 agent 补完 `rules` 后，对照 schema 检查 key——写成 `all` / `general` 这类，每次生成指令会 warning 且规则永不注入（`src/core/project-config.ts:514-531` 的 `validateConfigRules`，由 `instruction-loader.ts:381-394` 用**所有已安装 schema 的 artifact ID 并集**校对）。
 
 ## 让 agent 用 schema 的术语
 
@@ -137,17 +150,16 @@ agent 写 config 时容易发明新词或用泛义词（把 `capability` 写成 
 
 ## 补录的节奏：什么时候做
 
-绑在 change 生命周期上，**不要一次写满**。而每个 change 本来就从 Explore 开始——所以 **Explore 就是天然的 review 时刻**：
+绑在 change 生命周期之间，**不要一次写满**，并且严格遵守“Explore 内只梳理、退出 Explore 再写文件”：
 
 ```text
-openspec init                → 不动 config（schema 一行够用）
-每个 change 的 Explore 阶段   → 顺带问："全局上这次该固定/补什么？"
-                              → 技术栈/领域/优先级补进 context；
-                                反复的坑补进 rules
-                              （不必等 archive——Explore 就是最好的 review 时机）
+openspec init                    → 不动 config（schema 一行或 --language 够用）
+Explore 阶段（只读 config.yaml） → 顺带梳理："有哪些读代码看不出的全局约束或反复踩的坑？"
+退出 Explore / 每轮归档复盘后     → 在普通 agent 对话里把确认过的约束补进 context / rules / operations，
+                                   并跑 openspec validate 确认 YAML 未写坏
 ```
 
-为什么这样可行：`config.yaml` 每次 `openspec instructions` 都重读、即时生效、写错不崩（fail-open）。所以你能靠真实使用一点点收敛，不用开局就写对。这和专家手写的纪律是同一条（见 [`answer-expert.md`](answer-expert.md)），只是这里把"写"这步交给了 agent。
+为什么这样可行：`config.yaml` 每次 `openspec instructions` 都重读、即时生效；字段级类型问题在 `status` / `instructions` 侧会逐字段 warn 降级，而文件不可读或非法 YAML 语法会被 `openspec validate`（v1.16.0 `#2127`，`readConfigParseError()`）以退出码 1 及时拦住。所以你能靠真实使用一点点收敛，不用开局就写满。这和专家手写的纪律是同一条（见 [`answer-expert.md`](answer-expert.md)），只是这里把"起草 YAML"这步交给了 agent。
 
 ## 守则
 

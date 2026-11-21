@@ -26,7 +26,7 @@
   <rect x="320" y="104" width="640" height="64" rx="5" fill="url(#agentGrad)" stroke="#93c5fd"/>
   <text x="640" y="124" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">修复原语 · delta + archive</text>
   <text x="640" y="140" text-anchor="middle" font-size="9" fill="#1d4ed8">RENAMED 改名 / REMOVED 删 / MODIFIED 换 / ADDED 补</text>
-  <text x="640" y="156" text-anchor="middle" font-size="9" fill="#1d4ed8">大量混乱、整段重写 → /opsx:sync（LLM 变体）或 核选项（再基线）</text>
+  <text x="640" y="156" text-anchor="middle" font-size="9" fill="#1d4ed8">大量混乱、整段重写 → openspec-sync-specs（LLM 变体）或 核选项（再基线）</text>
 
   <!-- Lane 2: 漏能力 -->
   <rect x="40" y="178" width="240" height="50" rx="5" fill="url(#badGrad)" stroke="#fca5a5"/>

@@ -14,7 +14,7 @@ openspec new change add-<capability>          # = propose，脚手架
 openspec archive add-<capability> -y          # archive 发现目标 spec 不存在 → buildSpecSkeleton 建第一个 spec
 ```
 
-`archive` 在 `findSpecUpdates` 时发现 `openspec/specs/<capability-path>/` 不存在，就用 `buildSpecSkeleton` 生成一个带 `## Purpose` + 你 ADDED requirements 的全新 spec（机理见 `01`）。会优先复制 delta 的 `## Purpose`；只有 delta 没有可用 Purpose 时才写 TBD placeholder。**所以"建 spec"就是"写一个全 ADDED、带 Purpose 的 change 再 archive"。**
+`archive` 在 `findSpecUpdates` 时发现 `openspec/specs/<capability-path>/` 不存在，就用 `buildSpecSkeleton`（`specs-apply.ts:1458-1464`）生成一个带 `# <name> Specification`、`## Purpose`（v2.1.1 #2267 起标题后固定带一空行，与 `templates/spec.md` 对齐）+ 你 ADDED requirements 的全新 spec（机理见 `01`）。会优先复制 delta 的 `## Purpose`；只有 delta 没有可用 Purpose 时才写 TBD placeholder。**所以"建 spec"就是"写一个全 ADDED、带 Purpose 的 change 再 archive"。**
 
 ## greenfield 采用：给已有代码库补 spec
 
@@ -60,5 +60,5 @@ greenfield 的陷阱是**野心太大**（想一次写全）和**写成愿望**�
 
 - 修复原语（ADDED/AUTHOR-NEW 是它的加法情形）：`03-手段清单-到底有多少种修法.md`
 - 信号 ②（有代码无 spec）的实证：`02-漂移与噪声-为什么主specs会失真.md`
-- 本 repo 给 context-store/initiative 补 spec 的走查：`05-走查-把手段用在自家repo上.md`（项 5）
+- 本 repo 真实漂移项与 AUTHOR-NEW 补 spec 走查：`05-走查-把手段用在自家repo上.md`（项 1–项 3，其中项 2 含 AUTHOR-NEW 示例）
 - archive 怎么建第一个 spec（机理）：`01-机理-主specs如何被delta构造.md`

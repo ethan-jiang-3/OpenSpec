@@ -33,14 +33,17 @@ sequenceDiagram
         MD->>MD: 若输入是描述而非 name：<br/>导出 kebab-case name<br/>（如 "add user auth"→add-user-auth）
     end
 
-    %% ===== Phase 1: 创建容器 =====
+    %% ===== Phase 1: 预检与创建容器 =====
     rect rgb(255, 250, 240)
-        Note over User,FS: ══════ Phase 1 · 创建 change 容器 ══════
+        Note over User,FS: ══════ Phase 1 · 预检上下文与创建 change 容器 ══════
+        MD->>TS: openspec context --json
+        TS-->>MD: 权威 root.path（若 no_openspec_root 则停下，不自动 init）
+        MD->>FS: 读 <root.path>/openspec/config.yaml 的 context
         MD->>TS: openspec new change "add-oauth-login"
+        TS->>TS: resolveRootForCommand() → toPlanningHome(root)<br/>（resolveCurrentPlanningHomeSync 仍存于 planning-home.ts）
         TS->>TS: validateChangeName()<br/>（kebab-case；允许数字前缀）
-        TS->>TS: resolveCurrentPlanningHomeSync()<br/>解析 .openspec.yaml → planning home
         TS->>TS: 选定 schema：<br/>显式 --schema → project config →<br/>planning home default
-        TS->>FS: 创建 change 目录<br/>写 .openspec.yaml<br/>（schema, created date）
+        TS->>FS: 创建 change 目录<br/>写 .openspec.yaml<br/>（schema, created date, 可选自动 skip_specs）
         FS-->>TS: 创建完成
         TS-->>MD: change 已创建<br/>（仅容器 + metadata，<br/>不含任何 artifact 文件）
     end
@@ -77,15 +80,15 @@ sequenceDiagram
         end
     end
 
-    %% ===== Phase 4: Apply Gate =====
+    %% ===== Phase 4: Required Set Gate =====
     rect rgb(245, 255, 245)
-        Note over User,FS: ══════ Phase 4 · apply gate 检查 ══════
-        MD->>MD: 检查 status JSON：<br/>applyRequires 中所有 artifact<br/>是否都是 status:"done"
+        Note over User,FS: ══════ Phase 4 · 传递闭包 required set 检查 ══════
+        MD->>MD: 沿 requires 边求 applyRequires 的传递闭包（required set）<br/>检查其中每个 artifact 是否都已 done / skipped / 条件跳过
     end
 
-    alt applyRequires 未满足
+    alt required set 仍有未满足项
         MD->>MD: 回到 Phase 3，继续生成缺失 artifact
-    else applyRequires 满足（默认：tasks done）
+    else required set 全部满足（spec-driven：proposal/specs/design/tasks 闭环）
         rect rgb(240, 255, 240)
             Note over User,FS: ══════ apply-ready · 交棒 ══════
             MD->>MD: tasks artifact done<br/>→ apply.requires 满足<br/>→ 宿主 apply workflow 可以开始
@@ -168,26 +171,24 @@ MD 在写 design.md 时：
 ```text
 MD 写完 tasks.md → openspec status --change <name> --json
 TS 扫描：tasks.md 是文件（非目录）→ tasks: done
-TS 检查 applyRequires: [tasks] → 全部 done
-TS 返回 nextSteps: "All apply requirements met."
-
-MD 看到 applyRequires 满足 → propose 完成
+MD 沿 requires 边核验传递闭包 required set（proposal, specs, design, tasks）
+→ 全部满足（done / skipped / 条件跳过）→ propose 完成
 ```
 
-MD 不能自己宣布 "我觉得可以了"。必须 TS 的 `resolveArtifactOutputs()` 确认文件存在，且 `applyRequires` 全部满足。
+MD 不能自己宣布 "我觉得可以了"，也不能只看 `applyRequires`（如提前写了 `tasks.md` 会漏掉 `specs`）：必须由 TS 的 `resolveArtifactOutputs()` 确认文件存在，且 `applyRequires` 及其传递依赖闭包的每个 artifact 都已满足。
 
 ## 和 Explore 的对比
 
 | | Explore | Propose |
 |---|---|---|
-| TS 被调用频率 | 低（主要在开头 `list`、`status`） | 高（每轮 `status` + `instructions`，紧密交替） |
+| TS 被调用频率 | 低（主要在开头 `list`、`status`） | 高（先 `context --json` 预检，再每轮 `status` + `instructions` 紧密交替） |
 | MD 主要动作 | 读代码、推理、判断 | 按操作包写 artifact 内容 |
 | TS 的角色 | 提供 planning context（路径、状态） | 精密控制 artifact 生成顺序和规则 |
 | 产物 | 问题地图 + 分流建议 | proposal.md, specs/, design.md, tasks.md |
 
 ## 参考来源
 
-源码引用基于 commit `750a03c`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

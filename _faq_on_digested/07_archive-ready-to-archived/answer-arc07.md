@@ -77,18 +77,19 @@ renamed: Array<{ from, to }>
 - `MODIFIED` 和 `RENAMED` 报错。
 - `REMOVED` 会 warning 并忽略，因为没有东西可删。
 
-delta 的 `## Purpose` 可位于 requirements 之前；会把可读 Purpose 写入新建 main spec。已有 main spec 的 Purpose 不会被 delta 覆盖。
+delta 的 `## Purpose` 可位于 requirements 之前；会把可读 Purpose 写入新建 main spec。已有 main spec 的 Purpose 不会被 delta 覆盖。若 delta 文件第 1 行存在顶部 YAML frontmatter（v2.1.1 `#2273`），`validate --strict` 对其豁免 `unappliedContent` 告警，`buildUpdatedSpec()` 则不会把 frontmatter 带入主 spec，仅输出一条提示（`<specName> - frontmatter (line 1) is not carried into the main spec. It stays with the change.`）。
 
 ## 读取或创建 main spec baseline
 
 如果目标主 spec 存在，CLI 读取它。
 
-如果不存在，CLI 创建 skeleton；可读的 delta Purpose 会代替占位文字：
+如果不存在，CLI 调用 `buildSpecSkeleton()`（`src/core/specs-apply.ts:1458-1464`）创建 skeleton；可读的 delta Purpose 会代替占位文字，且 **v2.1.1 `#2267` 起 `## Purpose` 标题后固定带一个空行**：
 
 ```markdown
 # <capability> Specification
 
 ## Purpose
+
 TBD - created by archiving change <change>. Update Purpose after archive.
 
 ## Requirements
@@ -127,9 +128,12 @@ RENAMED -> REMOVED -> MODIFIED -> ADDED
 
 ### REMOVED
 
-删除指定 requirement。
+删除指定 requirement（`src/core/specs-apply.ts:522-547`）。
 
-existing main spec 中找不到要删的 requirement 会报错。new spec 场景下，`REMOVED` 已经被 warning 并忽略。
+- **近似拼写命中（typo 保护）**：若现有 main spec 中找不到精确规范化名称，但存在仅大小写或内部空白不同的同名项（`foldRequirementName` 相同），则直接报 **ERROR** 中止（`REMOVED failed ... not found, but "### Requirement: ..." exists; fix the header to match it exactly`）。
+- **已提前移除（early-sync 幂等）**：若现有 main spec 中既无精确命中也无近似命中，说明该条目已在先前 sync 中移除，CLI 打印一条 **warning**（`REMOVED requirement "<name>" is not in the current spec; treating it as already removed.`）并按幂等 no-op 放行，不会报错中止。
+- **新建 spec 场景**：`REMOVED` 在预验证阶段已被 warning 并忽略。
+- **清空最后一个 requirement 触发退役审计**：若本次移除后 `## Requirements` 变空，只有 `.openspec.yaml` 声明可 honor 的 `retire_capabilities: true` 且全文件无 unaccounted content 时才删除主 spec（v2.1.1 `#2266` 起，以 `<` 开头的普通文本续行或比较表达式如 `<50ms` 只要 `mayBeRawHtml()` 判定不是 HTML 块/独立标签，均作为正常正文放行）。
 
 ### MODIFIED
 
@@ -204,7 +208,7 @@ CLI archive 的 merge 是 programmatic merge：
 
 ## 参考来源
 
-源码引用：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

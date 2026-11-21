@@ -17,9 +17,10 @@ continue 是**增量路径**：每次调用只推进一个 ready artifact。它�
 
 | | propose | ff | continue |
 |---|---|---|---|
-| 每次创建 | 全部 artifact | 全部剩余 artifact | **一个** artifact |
-| 停止条件 | applyRequires 满足 | applyRequires 满足 | 写完一个立即 STOP |
-| 适用 | 新 change，快速启动 | 已有 change，批量补齐 | 逐步推进，每步 review |
+| 创建 change | 是（新建） | 是（新建） | **否**（作用于已有 change） |
+| 每次创建 | 传递必需集内全部 artifact | 传递必需集内全部 artifact | **一个** artifact（或补齐一个半写 glob 产物） |
+| 停止条件 | 传递必需集满足 | 传递必需集满足 | 写完一个立即 STOP |
+| 适用 | 新 change，带 context 预检与歧义澄清 | 新 change，倾向做合理假设快速直推 | 已有 change，逐步推进、每步 review |
 
 ## 状态分支
 
@@ -28,8 +29,8 @@ continue 根据 `status --json` 的结果分成三段：一段**先于所有分�
 | 状态 | agent 行为 |
 |---|---|
 | **先于所有分支**：有读作 `done` 的 glob 工件但文件不全 | 只补写缺失文件 → STOP（算作本次调用的那一个工件） |
-| `isPlanningComplete: true`（legacy `isComplete: true`） | 祝贺 → 展示最终 status → 建议 apply 或 archive → STOP |
-| 有 `status: "ready"` 的 artifact | 取第一个 → 定并校验输出路径 → instructions → 写 → STOP |
+| `isPlanningComplete: true`（legacy `isComplete: true`） | 祝贺 → 展示含 schema 名的最终 status → **只提示进入实施（apply）**：`"Planning is complete! The plan is ready for review. When you’re ready, ask me to apply it."`（v2.1.1 **#2274**：**绝不提示 archive**，因为规划刚结束时代码尚未实施！）→ STOP |
+| 有 `status: "ready"` 的 artifact | 取第一个 → instructions（若返回 `skipped: true` 则跳过换下一个）→ 定并校验输出路径 → 写 → STOP |
 | 全部 blocked | 不应该发生 → 展示 status + 建议检查 |
 
 ## 半写工件：glob 工件的 done 不可全信
@@ -84,7 +85,7 @@ sequenceDiagram
     end
 
     alt isPlanningComplete: true（legacy isComplete: true）
-        MD-->>User: "All artifacts complete!<br/>可以 apply 或 archive。"
+        MD-->>User: "Planning is complete! The plan is ready for review.<br/>When you're ready, ask me to apply it."（#2274 仅提示 apply，不提 archive）
     else 有 ready artifact
         rect rgb(255, 240, 255)
             Note over MD,FS: Step 3 · 创建 ONE artifact
@@ -92,14 +93,14 @@ sequenceDiagram
             TS-->>MD: dependencies, template, instruction,<br/>context, rules, resolvedOutputPath
             MD->>FS: 从磁盘重读依赖文件<br/>（即使用户可能已编辑过）
             MD->>MD: 按 template + instruction 写内容<br/>context/rules 不写入！
-            MD->>FS: 写 artifact 到 resolvedOutputPath
+            MD->>FS: 写 artifact 到校验后的输出路径
         end
 
         rect rgb(240, 255, 240)
             Note over MD,FS: Step 4 · 展示进度
             MD->>TS: openspec status --change X
             TS-->>MD: 更新后状态
-            MD-->>User: "Created proposal.md<br/>Progress: 1/4 complete<br/>Unlocked: specs, design<br/>Want to continue? /openspec-continue-change"
+            MD-->>User: "Created proposal.md<br/>Progress: 1/4 complete · Unlocked: specs, design<br/>Want to continue? Just ask me to continue or tell me what to do next."
         end
     end
 ```
@@ -138,29 +139,24 @@ v1.14.3 起，continue / propose / ff 三套模板统一了创建顺序（#2104�
 | Verify artifact file exists after writing | 确认写入 |
 | Use schema's artifact sequence, don't assume names | schema-agnostic |
 
-## common artifact patterns
+## 完全去硬编码的 Artifact Creation Guidelines
 
-template 里硬编码了 spec-driven schema 的 artifact 创建指引：
-
-- **proposal.md**: 问清 change → 填 Why/What Changes/Capabilities/Impact。Capabilities 段决定后续 specs 文件数。
-- **specs/<capability-path>/spec.md**: 按 proposal 的 Capabilities 列表，每个 capability path 一个 spec 文件；nested path 可用但需团队约定。
-- **design.md**: 技术决策、架构、实现方案。
-- **tasks.md**: checkbox 任务清单。
-
-对于其他 schema，agent 应按 `instruction` field 而非硬编码规则。
+`continue-change.ts:126-130` **不再硬编码任何 `proposal.md` / `design.md` / `tasks.md` 示范规则**。相反，它专门提醒 agent：即便遇到熟悉的文件名（如 `proposal.md`、`tasks.md`），自定义 schema 也可能为其定义完全不同的内容或创建流程，因此必须始终以 `openspec instructions` 返回的 `instruction` 字段作为唯一权威指引（若 `instruction` 将创建动作委托给特定 skill/command，则在选定并校验好输出路径、且确认被委托方能写到该路径时调用它）。
 
 ## 源码锚点
 
-| 内容 | 行号范围（continue-change.ts，v1.14.3） |
+| 内容 | 行号范围（`continue-change.ts`，共 269 行） |
 |---|---|
-| `PARTIAL_ARTIFACT_CHECK` 共享片段 | 注释 L27-L31；常量 L32-L35 |
-| SkillTemplate 定义 | L37-L158 |
-| CommandTemplate 定义 | L161-L281 |
-| Step 1: 选 change | L51-L65 |
-| Step 2: status | L67-L75 |
-| Step 2.5: 半写工件检查（注入点） | L81 |
-| Step 3: 主分支三选一（含输出路径选择 L109 / L235） | L77-L129 |
-| Output 段 | L130-L138 |
-| Artifact Creation Guidelines | L139-L144 |
-| Guardrails | L145-L155 |
-| command 版对应锚点 | L177 / L193 / L203 / L235 / L256 / L265 / L271 |
+| `PLANNING_COMPLETE_HANDOFF`（#2274 规划完成交接句） | L11-L12 |
+| `PARTIAL_ARTIFACT_CHECK` 共享片段 | 注释 L14-L18；常量 L19-L22 |
+| SkillTemplate 定义 | L24-L146 |
+| CommandTemplate 定义 | L148-L269 |
+| Step 1: 选 change | L38-L52 |
+| Step 2: status | L54-L62 |
+| Step 3 前置: 半写工件检查（注入点） | L68 |
+| Step 3: 主分支三选一（含输出路径选择 L96 / L222） | L64-L111 |
+| Step 4: 展示进度 | L112-L115 |
+| Output 段 | L117-L124 |
+| Artifact Creation Guidelines | L126-L130 |
+| Guardrails | L132-L141 |
+| command 版对应锚点 | L164 / L180 / L194 / L222 / L243 / L252 / L258 |

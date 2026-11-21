@@ -1,6 +1,6 @@
 # 宿主工作流调用链（以 Claude 为例）
 
-> **入口边界（v2.1.1）。** 本篇用**技能名**描述入口，例如 `openspec-propose`。调用写法随工具而变：Claude Code 等按 `/openspec-propose`，Codex 按 `$openspec-propose`，Zed 用 `/openspec-*` 或 `@openspec-*`；也可以直接用自然语言让 agent 按技能描述自己选。**1.x 的 `/opsx:*` command 文件已在 v2.0.0 移除**，下文中出现的 `/opsx:` 只用于历史对照。下文的“模板/agent”层可跨宿主复用。
+> **入口边界。** 本篇用**技能名**描述入口，例如 `openspec-propose`。调用写法随工具而变：Claude Code 等按 `/openspec-propose`，Codex 按 `$openspec-propose`，Zed 用 `/openspec-*` 或 `@openspec-*`；也可以直接用自然语言让 agent 按技能描述自己选。**1.x 的 `/opsx:*` command 文件已在 v2.0.0 移除**，下文中出现的 `/opsx:` 只用于历史对照。下文的“模板/agent”层可跨宿主复用。
 
 这一篇专门从工作流模板的角度，反向看 `openspec` CLI 是怎样被真正使用的。
 
@@ -13,7 +13,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 最常见的链路大体是：
 
 1. 用户触发一个技能（1.x 是 `/opsx:*`，现为 `openspec-*`）。
-2. 对应 skill/command 模板开始执行。
+2. 对应工作流 skill 模板开始执行（1.x 为 command 或 skill）。
 3. 模板调用 `openspec` CLI 读取状态或说明。
 4. CLI 从项目目录和 schema 中恢复运行时语义。
 5. CLI 返回结构化信息。
@@ -120,23 +120,29 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 ### 目标
 
-完成 change 收尾，把 delta specs 纳入正式 specs 并 archive。
+在 agent 会话中完成 change 收尾、把 delta specs 合并进主 specs 并将 change 移入 archive。
 
-### 典型调用链
+### 真实调用链（`src/core/templates/workflows/archive-change.ts`）
 
-1. 检查当前 change 是否准备 archive。
-2. 调用 `openspec archive <name>`。
-3. CLI 自己完成 validate、spec 重建、写入和 archive 移动。
-4. 模板向用户报告 archive 完成或失败原因。
+> **关键勘误：`openspec-archive-change` 技能全程绝不调用 `openspec archive <name>`！** 它通过一系列只读 CLI 查询配合 agent 智能合并与 shell `mv` 完成归档：
 
-### 这里的边界
+1. **选择 change 并加载归档指引**：若有歧义先调 `openspec list --json` 让用户选择；随后运行 `openspec instructions archive --change "<name>" --json`（advisory 获取项目 `context` 与 `operationGuidance`，失败不阻断后续步骤）。
+2. **检查 artifact 完成度**：调用 `openspec status --change "<name>" --json`，读取 `schemaName`、`planningHome`、`changeRoot`、`artifactPaths` 与 `artifacts`；若有既非 `done` 也非 `skipped` 的 artifact，显示警告并请用户确认是否继续。
+3. **检查任务完成度**：调用 `openspec list --json` 精确匹配该 change 的 `totalTasks` 与 `completedTasks`；若有未勾完的任务，警告并请用户确认。
+4. **预检归档目标并评估 delta 同步状态**：计算 `<target-name>`（已有 `YYYY-MM-DD-` 前缀保持原样，否则加当日日期前缀），**在写入任何主 spec 之前先检查 `<planningHome.changesDir>/archive/<target-name>` 是否已存在**（v2.1.1 `#2277`：若已存在立即停止，保持主 specs 和 `changeRoot` 原封不动）；再对比 `artifactPaths.specs.existingOutputPaths` 与 `<planningHome.root>/openspec/specs/<capability-path>/spec.md` 评估同步状态并询问用户。
+5. **（可选）执行 inline spec 同步与校验**：用户选择同步后，再次确认归档目标不存在 → 调用一次 `openspec instructions specs --change "<name>" --json` 获取 `specs` 规则快照 → inline 运行 `openspec-sync-specs` 技能，或（若未装该技能）由 agent 自行做智能 delta 合并（此时须保留 `retire_capabilities: true` 退役护栏，并在合并后跑 `openspec validate --specs`，`#1977`）→ 对全部有 delta 的 capability 逐一复核主 spec 结构与同步结果（不一致则停止、不移动 `changeRoot`）。
+6. **执行目录移动**：再次确认目标路径不存在后，直接用 shell 执行：
+   ```bash
+   mkdir -p "<planningHome.changesDir>/archive"
+   mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
+   ```
 
-和 `continue` / `apply` 不同，`archive` 本身就已经是强执行型命令，不只是“出说明”。
+### 这里的边界：agent 归档技能 vs CLI `openspec archive`
 
-也就是说：
+务必把两条归档路径严格区分开：
 
-- `continue` 常常是 CLI 出包，AI 执行。
-- `archive` 则是 CLI 直接执行核心收尾动作。
+- **`openspec-archive-change`（agent 技能）**：靠 CLI 只读查询（`instructions archive` / `status` / `list` / `instructions specs`）+ agent 智能合并主 specs + shell `mkdir -p` / `mv` 完成，不调 `openspec archive`。
+- **`openspec archive <name>`（确定性 CLI 命令，`src/core/archive.ts`）**：面向人类终端、CI/脚本，以及 **`openspec-onboard` Phase 10**（12 个工作流模板中唯一调用 `openspec archive "<name>" --yes` 的地方），由 CLI 自己在进程内完成 parser 级 requirement-block 合并、结构校验、失败快照回滚与目录移动。
 
 ## 七、`openspec-verify-change`
 

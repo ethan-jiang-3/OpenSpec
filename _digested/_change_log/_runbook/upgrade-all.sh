@@ -35,8 +35,16 @@ while [ $# -gt 0 ]; do
     --no-backup)   NO_BACKUP=1 ;;
     --no-verify)   NO_VERIFY=1 ;;
     --restore)     if [ $# -gt 1 ] && [ "${2#-}" = "$2" ]; then RESTORE="$2"; shift; else RESTORE=latest; fi ;;
-    --only)        ONLY="${2:-}"; shift ;;
-    --skip)        SKIP="${2:-}"; shift ;;
+    --only)
+      if [ $# -lt 2 ] || [ -z "${2:-}" ] || [ "${2#-}" != "$2" ]; then
+        echo "错误: --only 需要指定项目名" >&2; exit 2
+      fi
+      ONLY="$2"; shift ;;
+    --skip)
+      if [ $# -lt 2 ] || [ -z "${2:-}" ] || [ "${2#-}" != "$2" ]; then
+        echo "错误: --skip 需要指定项目名" >&2; exit 2
+      fi
+      SKIP="$2"; shift ;;
     -h|--help)     sed -n '2,25p' "$0"; exit 0 ;;
     *) echo "未知参数: $1" >&2; exit 2 ;;
   esac
@@ -90,7 +98,7 @@ DEFAULT_PROJECTS=(
 # 判定「不属于 OpenSpec 的脏文件」数量（内嵌 python，供脏检测调用）
 read -r -d '' FOREIGN_COUNTER <<'PYCNT' || true
 import sys, re
-opsx = re.compile(r"^(\.claude|\.cursor|\.agents|\.codex|\.cline|\.clinerules|\.agent|\.opencode|\.dsh|\.pi)(/|$)|^openspec/config\.yaml$")
+opsx = re.compile(r"^(\.claude|\.cursor|\.agents|\.codex|\.cline|\.clinerules|\.agent|\.opencode|\.dsh|\.pi)(/|$)|^openspec/config\.ya?ml$")
 n = 0
 for line in sys.stdin:
     path = line.strip()
@@ -126,28 +134,48 @@ project_ok() {
   return 0
 }
 
-# 确保项目 config.yaml 有 skillsScope: project（幂等）
+# 确保项目 openspec/config.yaml（或已有的 config.yml）有 skillsScope: project（幂等）
 ensure_scope() {
-  local dir="$1" cfg="$1/$CONFIG_REL"
-  [ -f "$cfg" ] || { info "无 config.yaml，跳过作用域设置"; return 0; }
-  if grep -qE '^skillsScope:[[:space:]]*project[[:space:]]*$' "$cfg"; then
-    info "skillsScope 已是 project"
+  local dir="$1" cfg=""
+  if [ -f "$dir/openspec/config.yaml" ]; then
+    cfg="$dir/openspec/config.yaml"
+  elif [ -f "$dir/openspec/config.yml" ]; then
+    cfg="$dir/openspec/config.yml"
+  fi
+
+  if [ -z "$cfg" ]; then
+    cfg="$dir/$CONFIG_REL"
+    if [ "$APPLY" = 1 ]; then
+      mkdir -p "$(dirname "$cfg")"
+      printf 'schema: spec-driven\nskillsScope: project\n' > "$cfg"
+      ok "新建 openspec/config.yaml（schema: spec-driven, skillsScope: project）"
+    else
+      info "[plan] 将新建 openspec/config.yaml（schema: spec-driven, skillsScope: project）"
+    fi
     return 0
   fi
+
+  if grep -qE '^skillsScope:[[:space:]]*project[[:space:]]*$' "$cfg"; then
+    info "skillsScope 已是 project ($(basename "$cfg"))"
+    return 0
+  fi
+
   if [ "$APPLY" = 1 ]; then
-    if grep -qE '^skillsScope:' "$cfg"; then
-      python3 - "$cfg" <<'PYX'
+    python3 - "$cfg" <<'PYX'
 import sys, re, pathlib
 p = pathlib.Path(sys.argv[1])
-p.write_text(re.sub(r'^skillsScope:.*$', 'skillsScope: project', p.read_text(), count=1, flags=re.M))
+text = p.read_text(encoding="utf-8")
+if re.search(r'^skillsScope:', text, flags=re.M):
+    text = re.sub(r'^skillsScope:.*$', 'skillsScope: project', text, count=1, flags=re.M)
+else:
+    if text and not text.endswith('\n'):
+        text += '\n'
+    text += 'skillsScope: project\n'
+p.write_text(text, encoding="utf-8")
 PYX
-      ok "skillsScope 改为 project"
-    else
-      printf 'skillsScope: project\n' >> "$cfg"
-      ok "已写入 skillsScope: project"
-    fi
+    ok "已设置 skillsScope: project ($(basename "$cfg"))"
   else
-    info "[plan] 将写入 skillsScope: project"
+    info "[plan] 将在 $(basename "$cfg") 写入 skillsScope: project"
   fi
 }
 
@@ -188,22 +216,96 @@ restore_project() {
   if tar -xzf "$file" -C "$dir"; then ok "已恢复"; else err "恢复失败"; return 1; fi
 }
 
-# 只找「OpenSpec 自己的」残留：路径命中白名单，且内容确实是 OpenSpec 生成的。
-# 绝不按目录名一刀切——.agent/、.cline/ 里可能混着用户自己的技能。
+# 只找「OpenSpec 官方发布过且用户从未修改」的 1.x 残留文件：
+#   1. 路径只命中已退役的 1.x 命令/提示/旧独占技能路径，且文件名严格限定为 12 个官方工作流/技能名
+#      （绝不匹配 openspec-linearized、openspec-schema-authoring 等用户自定义 openspec-* 技能）
+#   2. 内容必须通过 OpenSpec 真实指纹库 isReleasedGeneratedContent() 校验——凡是用户改过哪怕一字、
+#      被 openspec update 故意保留（kept）的文件，指纹一律不匹配，绝不误删。
+SCRIPT_REPO_ROOT="$(cd "$(dirname "$0")/../../.." 2>/dev/null && pwd || true)"
 find_stale() {
-  local dir="$1"
+  local dir="$1" bin_path=""
+  bin_path="$(command -v openspec 2>/dev/null || true)"
   find "$dir" -maxdepth 5 \
-    \( -path '*/node_modules' -o -path '*/.git' -o -path '*/dist' -o -path '*/.cache' \) -prune -o \
+    \( -path '*/node_modules' -o -path '*/.git' -o -path '*/dist' -o -path '*/.cache' -o -path '*/.agents/skills' \) -prune -o \
     \( -path '*/commands/opsx/*' -o -path '*/commands/opsx/*/*' \
        -o -path '*/.clinerules/workflows/opsx-*' -o -path '*/.clinerules/workflows/openspec-*' \
        -o -path '*/.cline/skills/openspec-*/*' -o -path '*/prompts/openspec-*' \
        -o -path '*/.codex/prompts/openspec-*' -o -path '*/.github/prompts/opsx-*' \) -type f -print 2>/dev/null \
-  | while IFS= read -r f; do
-      # 内容校验：必须是 OpenSpec 生成物（含 openspec 署名或 OPSX 标记）
-      if grep -qiE 'author:[[:space:]]*openspec|name:[[:space:]]*["'"'"']?openspec-|name:[[:space:]]*["'"'"']?OPSX' "$f" 2>/dev/null; then
-        printf '%s\n' "$f"
-      fi
-    done
+  | node --input-type=module - "$bin_path" "$SCRIPT_REPO_ROOT" 2>>"$LOG" <<'NODE_EOF'
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const [, , binPath, repoRoot] = process.argv;
+const candidates = [];
+if (binPath) {
+  try {
+    const realBin = fs.realpathSync(binPath);
+    candidates.push(path.resolve(path.dirname(realBin), '..', 'dist', 'core', 'shared', 'generated-fingerprint.js'));
+  } catch {}
+}
+if (repoRoot) {
+  candidates.push(path.resolve(repoRoot, 'dist', 'core', 'shared', 'generated-fingerprint.js'));
+}
+
+let isReleasedGeneratedContent = null;
+for (const modPath of candidates) {
+  if (fs.existsSync(modPath)) {
+    try {
+      const mod = await import(pathToFileURL(modPath).href);
+      if (typeof mod.isReleasedGeneratedContent === 'function') {
+        isReleasedGeneratedContent = mod.isReleasedGeneratedContent;
+        break;
+      }
+    } catch {}
+  }
+}
+
+if (!isReleasedGeneratedContent) {
+  console.error('[find_stale] 未找到 generated-fingerprint.js，跳过额外 --clean 以保护用户改过的文件');
+  process.exit(0);
+}
+
+const WORKFLOW_IDS = new Set([
+  'explore', 'new', 'continue', 'apply', 'update', 'ff',
+  'sync', 'archive', 'bulk-archive', 'verify', 'onboard', 'propose',
+]);
+const SKILL_NAMES = new Set([
+  'openspec-explore', 'openspec-new-change', 'openspec-continue-change',
+  'openspec-apply-change', 'openspec-update-change', 'openspec-ff-change',
+  'openspec-sync-specs', 'openspec-archive-change', 'openspec-bulk-archive-change',
+  'openspec-verify-change', 'openspec-onboard', 'openspec-propose',
+]);
+
+function isOfficialLegacyTarget(filePath) {
+  const norm = filePath.split(path.sep).join('/');
+  const base = path.basename(norm);
+  const stem = base.replace(/\.(md|mdc|prompt\.md|toml)$/i, '');
+  if (norm.includes('/.cline/skills/')) {
+    const parent = path.basename(path.dirname(norm));
+    return base === 'SKILL.md' && SKILL_NAMES.has(parent);
+  }
+  if (norm.includes('/commands/opsx/')) {
+    return WORKFLOW_IDS.has(stem) || SKILL_NAMES.has(stem);
+  }
+  const stripped = stem.replace(/^(opsx-|openspec-)/, '');
+  return WORKFLOW_IDS.has(stripped) || SKILL_NAMES.has(stem);
+}
+
+const input = fs.readFileSync(0, 'utf8');
+for (const raw of input.split('\n')) {
+  const f = raw.trim();
+  if (!f || !isOfficialLegacyTarget(f)) continue;
+  try {
+    const st = fs.lstatSync(f);
+    if (!st.isFile()) continue;
+    const content = fs.readFileSync(f, 'utf8');
+    if (isReleasedGeneratedContent(content)) {
+      process.stdout.write(`${f}\n`);
+    }
+  } catch {}
+}
+NODE_EOF
 }
 
 clean_stale() {
@@ -222,36 +324,72 @@ clean_stale() {
   fi
 }
 
+# 计算当前全局 profile 预期的最少官方技能数（custom profile 允许少于 6 个工作流）
+expected_min_skills() {
+  local gcfg="${XDG_CONFIG_HOME:-$HOME/.config}/openspec/config.json"
+  [ -f "$gcfg" ] || { echo 6; return 0; }
+  python3 - "$gcfg" <<'PYMIN'
+import sys, json
+try:
+    d = json.load(open(sys.argv[1], encoding="utf-8"))
+    if d.get("profile") == "custom" and isinstance(d.get("workflows"), list):
+        print(len(d["workflows"]))
+    else:
+        print(6)
+except Exception:
+    print(6)
+PYMIN
+}
+
 # 校验一个项目升级后的形态
 verify_project() {
   local dir="$1" name="$2" problems=0
 
   # 1) CLI 能识别项目
-  if ! ( cd "$dir" && openspec list --json >/dev/null 2>&1 ); then
+  if ! ( cd "$dir" && OPEN_SPEC_INTERACTIVE=0 OPENSPEC_NO_UPDATE_CHECK=1 openspec list --json </dev/null >/dev/null 2>&1 ); then
     warn "openspec list --json 返回非零（根不存在时属正常）"; fi
 
   # 2) 共享技能真身
   local shared="$dir/.agents/skills"
+  local min_skills; min_skills=$(expected_min_skills)
   if [ -d "$shared" ]; then
     local n=0
     for k in propose explore apply-change update-change sync-specs archive-change \
              new-change continue-change ff-change verify-change bulk-archive-change onboard; do
       [ -f "$shared/openspec-$k/SKILL.md" ] && n=$((n+1))
     done
-    if [ "$n" -ge 6 ]; then ok "OpenSpec 官方技能 $n 个"; else warn "官方技能只有 $n 个（预期 ≥6）"; problems=$((problems+1)); fi
+    if [ "$n" -ge "$min_skills" ]; then
+      ok "OpenSpec 官方技能 $n 个（预期 ≥$min_skills）"
+    else
+      warn "官方技能只有 $n 个（预期 ≥$min_skills）"
+      problems=$((problems+1))
+    fi
   else
-    warn "没有 .agents/skills（该项目可能用全局作用域）"
+    warn "没有 .agents/skills（该项目可能用全局作用域或尚未配置工具）"
   fi
 
-  # 3) 命令文件应已消失
-  local cmds; cmds=$(find "$dir" -maxdepth 4 -path '*/commands/opsx*' -type f 2>/dev/null | head -5)
-  if [ -z "$cmds" ]; then ok "无 commands/opsx 残留"; else warn "仍有命令文件:"; printf '%s\n' "$cmds" | sed 's/^/      /'; problems=$((problems+1)); fi
+  # 3) 未改过的命令文件应已消失（用户改过而被 kept 的命令文件仅提示、不判失败）
+  local cmds unedited_cmds
+  cmds=$(find "$dir" -maxdepth 4 -path '*/commands/opsx*' -type f 2>/dev/null | head -5)
+  if [ -z "$cmds" ]; then
+    ok "无 commands/opsx 残留"
+  else
+    unedited_cmds=$(find_stale "$dir" | grep '/commands/opsx' || true)
+    if [ -n "$unedited_cmds" ]; then
+      warn "仍有未清理的原版命令文件:"
+      printf '%s\n' "$unedited_cmds" | sed 's/^/      /'
+      problems=$((problems+1))
+    else
+      info "保留了用户编辑过的 commands/opsx 文件（kept，符合预期）:"
+      printf '%s\n' "$cmds" | sed 's/^/      /'
+    fi
+  fi
 
-  # 4) 工具清单
+  # 4) 工具清单（每行 <id> 或 <id> own-files）
   local marker="$shared/.openspec-target"
   if [ -f "$marker" ]; then
     local m; m=$(grep -c . "$marker" || true)
-    ok ".openspec-target 有 $m 个工具"
+    ok ".openspec-target 有 $m 个工具条目"
   fi
 
   # 5) 工具目录：是链接还是拷贝
@@ -282,7 +420,8 @@ if [ "$SKIP_CLI" = 1 ]; then
   info "按参数跳过 CLI 升级"
 else
   if [ "$APPLY" = 1 ]; then
-    [ -f "$HOME/.config/openspec/config.json" ] && cp "$HOME/.config/openspec/config.json" "$HOME/.config/openspec/config.json.bak.$(date +%Y%m%d-%H%M%S)"
+    GLOBAL_CFG="${XDG_CONFIG_HOME:-$HOME/.config}/openspec/config.json"
+    [ -f "$GLOBAL_CFG" ] && cp "$GLOBAL_CFG" "${GLOBAL_CFG}.bak.$(date +%Y%m%d-%H%M%S)"
     if npm install -g @fission-ai/openspec@latest >>"$LOG" 2>&1; then
       hash -r
       ok "已升级到 $(openspec --version 2>/dev/null || echo '?')"
@@ -374,7 +513,7 @@ for name in "${DEFAULT_PROJECTS[@]}"; do
   ensure_scope "$dir"
 
   # 预演
-  plan_json=$( cd "$dir" && OPENSPEC_NO_UPDATE_CHECK=1 openspec update --dry-run --json 2>>"$LOG" )
+  plan_json=$( cd "$dir" && OPEN_SPEC_INTERACTIVE=0 OPENSPEC_NO_UPDATE_CHECK=1 openspec update --dry-run --json </dev/null 2>>"$LOG" )
   if [ -z "$plan_json" ]; then
     err "预演失败，见日志"; markfail "$name (dry-run 失败)"; continue
   fi
@@ -401,9 +540,9 @@ for f in fails:
     backup_project "$dir" "$name"
   fi
 
-  # 真跑
+  # 真跑（注入 OPEN_SPEC_INTERACTIVE=0 与 </dev/null，防止重定向 stdout 时因继承父终端 stdin.isTTY 静默挂起等待输入）
   if [ "$APPLY" = 1 ]; then
-    if ( cd "$dir" && OPENSPEC_NO_UPDATE_CHECK=1 openspec update >>"$LOG" 2>&1 ); then
+    if ( cd "$dir" && OPEN_SPEC_INTERACTIVE=0 OPENSPEC_NO_UPDATE_CHECK=1 openspec update </dev/null >>"$LOG" 2>&1 ); then
       ok "update 完成"
     else
       err "update 失败，见日志"
@@ -420,9 +559,13 @@ for f in fails:
     clean_stale "$dir" "$stale"
   fi
 
-  # 校验
+  # 校验（非零返回时阻断自动提交与 markdone，保留现场供人工复查或 --restore）
   if [ "$APPLY" = 1 ]; then
-    verify_project "$dir" "$name"
+    if ! verify_project "$dir" "$name"; then
+      err "$name 校验未通过，跳过自动提交以便人工排查（可用 --restore 恢复备份）"
+      markfail "$name (校验未通过)"
+      continue
+    fi
   fi
 
   # 提交

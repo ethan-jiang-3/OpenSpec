@@ -17,12 +17,12 @@
 
 ## 调用链
 
-源码主线：
+源码主线（CLI 入口走 store-aware 的 `resolveRootForCommand()` + `toPlanningHome(root)`，见 `src/core/root-selection.ts:576`；`resolveCurrentPlanningHomeSync()` 仍保留在 `src/core/planning-home.ts:74` 供未显式传入 `planningHome` 的编程调用回退）：
 
 ```text
 src/commands/workflow/instructions.ts
   instructionsCommand()
-    resolveCurrentPlanningHomeSync()
+    resolveRootForCommand() -> toPlanningHome(root)
     validateChangeExists()
     loadChangeContext()
     generateInstructions()
@@ -203,7 +203,7 @@ agent 不是靠猜测写 artifacts，而是每轮都从 CLI 获取当前 artifac
 
 ## 参考来源
 
-源码引用：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

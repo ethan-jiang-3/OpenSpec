@@ -19,7 +19,7 @@ guru 不只调 `config.yaml`（提示层），而是重塑工作流的**结构�
 
 ## schema 能改、config 改不了的 5 件事
 
-结构定义在 `src/core/artifact-graph/types.ts:4-31`（`ArtifactSchema`：id / generates / template / instruction / requires；`ApplyPhaseSchema`：requires / tracks / instruction；`SchemaYamlSchema` 把它们组合起来）：
+结构定义在 `src/core/artifact-graph/types.ts:29-65`（`ArtifactSchema`：id / generates / description / template / instruction / requires；`ApplyPhaseSchema`：requires / tracks / instruction；`SchemaYamlSchema` 把它们组合起来）：
 
 1. **artifact 种类**——加 / 改名 / 删。community schema `superpowers-bridge` 就加了个 spec-driven 没有的 `retrospective` artifact。config rules 再怎么写也变不出一个新 artifact。
 2. **每个 artifact 的 `instruction`**——agent 生成该 artifact 时遵循的 prompt 骨架。config 的 rules 只能**补充**它，**替换**不了。
@@ -42,13 +42,13 @@ fork 优先——它落到 `openspec/schemas/my-driven/`，跟代码一起版本
 
 ## 关键契约：config 与 schema 是 key-coupled 的
 
-你改了 artifact 集合（比如换成 `brief` / `outline` / `draft`），config.yaml 里 `rules` 的 key **必须跟着改**——`validateConfigRules`（`src/core/project-config.ts:469-486`，由 `instruction-loader.ts:381-385` 调用）会报 warning，且该条规则永不注入。真实文案是：
+你改了 artifact 集合（比如换成 `brief` / `outline` / `draft`），config.yaml 里 `rules` 的 key **必须跟着改**——`validateConfigRules`（`src/core/project-config.ts:514-531`，由 `instruction-loader.ts:381-394` 调用）会报 warning，且该条规则永不注入。真实文案是：
 
 ```text
 Unknown artifact ID in rules: "proposal". It matches no artifact in any available schema. Known artifact IDs: brief, design, draft, outline, proposal, specs, tasks
 ```
 
-**关键细节：校对用的是「所有已安装 schema 的 artifact ID 并集」，不是当前 change 的那个 schema。** `instruction-loader.ts:379-382` 的注释写得很明确——rules 表是全局的，而每个 change 可以用不同 schema，所以只有"在**任何**已安装 schema 里都找不到"的 key 才算 unknown。后果有两条，方向相反：
+**关键细节：校对用的是「所有已安装 schema 的 artifact ID 并集」，不是当前 change 的那个 schema。** `instruction-loader.ts:379-380` 的注释写得很明确——rules 表是全局的，而每个 change 可以用不同 schema，所以只有"在**任何**已安装 schema 里都找不到"的 key 才算 unknown。后果有两条，方向相反：
 
 - 你写 `rules.proposal:`，只要内置 `spec-driven` 还在，就**不会**报警——哪怕你当前用的是自己的 `my-driven`
 - 改名 artifact 后旧 key 也不会立刻变非法，它会静默留在 config 里、对什么都不生效
@@ -69,29 +69,29 @@ expert 在 rules 里磨；guru 三个都调——先 fork schema 定结构 / ins
 
 ## 粒度：per-change pin schema
 
-不必项目级切换。某个 change 需要特殊工作流，就在它的 `.openspec.yaml` 写 `schema: my-driven`，只那一个 change 用（解析序：CLI flag > change metadata > config.yaml > default，`src/utils/change-metadata.ts:155-198`）。项目默认 spec-driven，特殊 change pin 自定义。
+不必项目级切换。某个 change 需要特殊工作流，就在它的 `.openspec.yaml` 写 `schema: my-driven`，只那一个 change 用（解析序：CLI flag > change metadata > config.yaml > default，`src/utils/change-metadata.ts:260-298`）。项目默认 spec-driven，特殊 change pin 自定义。
 
 ## 缺口怎么补（再往上：改 OpenSpec 本身）
 
 连 schema 层都不够——要改的是 OpenSpec 本身（给 skill 加引导、加 CLI 命令）——那是贡献者级的事。[`answer-beginner.md`](answer-beginner.md) 的现状盘点讲过：config.yaml 没有编辑工具是个真实缺口。两个方向都建立在已有源码上，代价不大：
 
-**方向 A：让 agent 帮——给 workflow 加一句引导。** 在 `onboard` 或 `explore` skill 里加一条："如果 `openspec/config.yaml` 的 `context` 为空，用 AskUserQuestion 问用户技术栈、领域、质量优先级，然后提议（不是替用户决定）一份 `context` 和初始 `rules`，让用户确认后写入。" 复用已有的 `readProjectConfig()` 读 + 文件写入，不改 CLI。
+**方向 A：让 agent 帮——新增专门引导（如 `onboard` 或独立 config-setup skill）。** 注意现有 `explore.ts:361` 明确把编辑 `openspec/config.yaml` 划为禁止项（避免探索跑偏成实施），因此更干净的扩法是在 `onboard` 或专门的 setup skill 里加一条："如果 `openspec/config.yaml` 的 `context` 为空，询问用户读代码看不出来的领域边界、质量优先级与兼容红线，起草精炼 `context` 和初始 `rules`，经用户确认后写入。" 复用已有的 `readProjectConfig()` 读 + AST 保注释写入，不改核心 DAG。
 
-**方向 B：给 CLI 加项目级命令。** 实现 `config.ts:273-279` 那个 preAction 钩子已经在等的 `--scope project`：
+**方向 B：给 CLI 加项目级命令。** 实现 `src/cli/commands/config.ts:13-19` 那个 `preAction` 钩子已经在等的 `--scope project`：
 
 ```bash
-openspec config context set "Tech stack: ..."
+openspec config context set "Cross-platform: ..."
 openspec config rule add proposal "Include rollback plan"
 ```
 
-复用已有的 `readProjectConfig()`（`src/core/project-config.ts`，目前纯只读，需加一个 write）+ `stringifyYaml`（`schema.ts:878` 已有先例：parse-modify-restringify）。门槛低，且正好堵上那个 "not yet implemented"。
+复用已有的 `readProjectConfig()`（`src/core/project-config.ts`）+ `yaml` 的 `parseDocument` AST 保注释改写（`src/commands/schema.ts:428` 与 `src/core/project-skills-scope.ts:33` 已有先例）。门槛低，且正好堵上那个 "not yet implemented"。
 
 方向 A 让普通用户不用碰 YAML（靠对话），方向 B 给愿意用命令行的人结构化入口。两者互补。
 
 ## 守则
 
 - **fork，不改 package 内置。** 直接改内置 spec-driven，升级会被覆盖。fork 落 `openspec/schemas/` 跟代码一起版本控制。
-- **改完先 `validate` 再用。** `openspec schema validate <name>` 查语法 / 模板存在 / 循环依赖 / 合法 ID——结构层写错不像 config 的 fail-open，是硬错误。
+- **改完先 `schema validate` 再用。** `openspec schema validate <name>` 查语法 / 模板存在 / 循环依赖 / 合法 ID——结构层写错会直接阻断 `status` / `instructions`（而 `config.yaml` 在指令侧是逐字段降级，只在 `openspec validate` 下对坏 YAML 语法退出 1）。
 - **结构层一动，`rules` key 跟着对齐。** artifact 集合改了，config.yaml 里 `rules` 的 key 必须匹配新 schema 的 artifact ID（否则 `validateConfigRules` 报 warning 且规则永不注入）。
 - **per-change pin 优先于项目级切换。** 大多数 change 还用默认 spec-driven；只有特殊工作流的 change 在 `.openspec.yaml` pin 自定义 schema。
 - **三层一起调。** template（结构）+ instruction（框架）+ rules（内容约束）配合，而不是只改一层。

@@ -8,7 +8,7 @@
 
 - 对人类来说，它是一个用来初始化、查看、校验、archive change/spec 的工具。
 - 对 agent workflow 来说，它是一组稳定的本地协议端点，用来读取状态、获取模板、获取下一步说明、判断能否进入 apply/archive、以及感知 schema。
-- 对 IDE / AI 工具集成来说，它还是一个“投递目标”，`init` / `update` 会把工作流模板安装成 skills 或 commands。
+- 对 IDE / AI 工具集成来说，它还是一个“投递目标”，`init` / `update` 会把工作流模板安装成标准 skills（1.x 曾含 commands，v2.0.0 起不再生成）。
 - 对 store operator 来说，它提供跨仓库上下文引用接口，`store register`/`context`/`workset` 负责管理多仓库 spec 引用。
 
 ## 三类受众
@@ -124,7 +124,7 @@ Store 的核心设计规则：**上下文引用用 store，实现在 owning repo
 
 - 根据全局配置里的 `profile` 决定启用哪些 workflow。
 - 1.x 按 `delivery` 决定生成 skills、commands 还是两者；**v2.0.0 起 delivery 退役**，只生成 skills。
-- 根据不同 AI 工具的 adapter，把同一份工作流内容格式化成不同外壳文件。
+- 按 `skillsScope` 安装到本机全局（`~/.agents/skills/` 及各工具全局目录，新项目默认）或项目内（`.agents/skills/` 一份真身 + 工具相对链接/拷贝）；34 个旧 command adapter 仅保留用于清理 1.x 命令文件。
 
 也就是说，OpenSpec CLI 不只管理项目内容，还负责把”如何使用这些内容”的工作流安装到外部工具。
 

@@ -5,7 +5,7 @@
 EXP-04 不是“CLI 自动帮 agent 读文件”。它是一段协作协议：
 
 ```text
-skill / command prompt
+skill prompt
   告诉 agent 先运行哪些 CLI 命令
     ↓
 OpenSpec CLI
@@ -60,7 +60,7 @@ openspec list --json
 
 This tells you:
 - If there are active changes
-- Their names, schemas, and status
+- Their names and task status
 - What the user might be working on
 ```
 
@@ -69,6 +69,8 @@ This tells you:
 ```bash
 openspec list --json
 ```
+
+紧接着，同一个 skill 还要求盘点项目持久的 capability 基线（两步法）：先跑 `openspec list --specs` 看清既有 capability 清单，对可能相关的 spec 先用 `openspec show "<spec-id>" --type spec --json --no-scenarios` 取 `## Purpose` 与 requirement 文本概览（不把整份 scenarios 拉进上下文），确认要细看或准备修改前再用 `openspec show "<spec-id>" --type spec` 读完整内容；随后读取解析出的 `<root.path>/openspec/config.yaml`（`context` 与 `rules`）。
 
 同一个 skill 还规定了已有 change 场景：
 
@@ -97,7 +99,7 @@ If the user mentions a change or you detect one is relevant:
 ```text
 现在有没有 active changes？
 这些 changes 叫什么？
-它们大概是什么 schema / 状态？
+它们的任务进度状态是什么（并带上解析出的 root）？
 用户当前话题是否可能命中其中一个？
 ```
 
@@ -119,11 +121,11 @@ If the user mentions a change or you detect one is relevant:
 openspec status --change "<name>" --json
 ```
 
-源码里对应的是 `src/commands/workflow/status.ts`：
+源码里对应的是 `src/commands/workflow/status.ts`（现代支持 `--store` 的 CLI 命令走 `resolveRootForCommand(...)` + `toPlanningHome(root)`，见 `src/core/root-selection.ts:576`；而纯本地同步 helper `resolveCurrentPlanningHomeSync()` 仍保留在 `src/core/planning-home.ts:74` 并由 `src/core/index.ts` 重导出）：
 
 ```text
 statusCommand()
-  resolveCurrentPlanningHomeSync()
+  resolveRootForCommand() -> toPlanningHome(root)
   validateChangeExists()
   loadChangeContext()
   formatChangeStatus()
@@ -303,16 +305,16 @@ skill prompt 规定动作
   -> 读到的文件进入 LLM 上下文
 ```
 
-这个设计的好处是：OpenSpec 不需要嵌入某个特定 LLM 或 IDE。只要 coding agent 能读 skill/command、能运行 CLI、能读取本地文件，就能按同一套协议把 OpenSpec 状态转成自己的工作上下文。
+这个设计的好处是：OpenSpec 不需要嵌入某个特定 LLM 或 IDE。只要 coding agent 能加载 skill（v2.0.0 `#2223` 起命令文件已不再生成，仅分发 skills）、能运行 CLI、能读取本地文件，就能按同一套协议把 OpenSpec 状态转成自己的工作上下文。
 
 ## 参考来源
 
-源码引用基于 commit `2fd20d8`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/explore.ts` | Explore skill 明确要求 `openspec list --json`、相关 change 用 `status --json`，并读取 `artifactPaths.<artifact>.existingOutputPaths` |
-| `src/commands/workflow/status.ts` | `status --json` 解析 planning home、change、schema 后输出结构化 status JSON |
+| `src/core/templates/workflows/explore.ts` | Explore skill 明确要求 `openspec list --json`、`openspec list --specs`、相关 change 用 `status --json`，并读取 `artifactPaths.<artifact>.existingOutputPaths` |
+| `src/commands/workflow/status.ts` | `status --json` 经 `resolveRootForCommand` + `toPlanningHome` 解析 root、change、schema 后输出结构化 status JSON |
 | `src/commands/workflow/instructions.ts` | `instructions <artifact> --json` 输出依赖文件、输出路径、template、rules、instruction 等 agent 操作包 |
 | `src/core/artifact-graph/instruction-loader.ts` | `formatChangeStatus()` 组装 `artifactPaths`、`actionContext`、`nextSteps`；`generateInstructions()` 组装 artifact instructions |
 | `src/core/change-status-policy.ts` | `actionContext` 和 `nextSteps` 的语义 |

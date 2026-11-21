@@ -13,27 +13,27 @@
   <g font-size="12.5">
     <text x="32" y="146" font-weight="600" fill="#1f2328">cli-archive</text>
     <rect x="150" y="130" width="600" height="20" rx="4" fill="#0969da"/>
-    <text x="760" y="145" font-size="12" font-weight="700" fill="#0969da">18,013</text>
-    <rect x="150" y="154" width="95" height="20" rx="4" fill="#1a7f37"/>
-    <text x="255" y="169" font-size="12" font-weight="700" fill="#1a7f37">2,845　−84%</text>
+    <text x="760" y="145" font-size="12" font-weight="700" fill="#0969da">22,660</text>
+    <rect x="150" y="154" width="114" height="20" rx="4" fill="#1a7f37"/>
+    <text x="274" y="169" font-size="12" font-weight="700" fill="#1a7f37">4,320　−81%</text>
 
     <text x="32" y="222" font-weight="600" fill="#1f2328">artifact-graph</text>
-    <rect x="150" y="206" width="407" height="20" rx="4" fill="#0969da"/>
-    <text x="567" y="221" font-size="12" font-weight="700" fill="#0969da">12,209</text>
-    <rect x="150" y="230" width="86" height="20" rx="4" fill="#1a7f37"/>
-    <text x="246" y="245" font-size="12" font-weight="700" fill="#1a7f37">2,573　−79%</text>
+    <rect x="150" y="206" width="323" height="20" rx="4" fill="#0969da"/>
+    <text x="483" y="221" font-size="12" font-weight="700" fill="#0969da">12,209</text>
+    <rect x="150" y="230" width="68" height="20" rx="4" fill="#1a7f37"/>
+    <text x="228" y="245" font-size="12" font-weight="700" fill="#1a7f37">2,573　−79%</text>
 
     <text x="32" y="298" font-weight="600" fill="#1f2328">instruction-loader</text>
-    <rect x="150" y="282" width="140" height="20" rx="4" fill="#0969da"/>
-    <text x="300" y="297" font-size="12" font-weight="700" fill="#0969da">4,208</text>
-    <rect x="150" y="306" width="40" height="20" rx="4" fill="#1a7f37"/>
-    <text x="200" y="321" font-size="12" font-weight="700" fill="#1a7f37">1,189　−72%</text>
+    <rect x="150" y="282" width="111" height="20" rx="4" fill="#0969da"/>
+    <text x="271" y="297" font-size="12" font-weight="700" fill="#0969da">4,208</text>
+    <rect x="150" y="306" width="31" height="20" rx="4" fill="#1a7f37"/>
+    <text x="191" y="321" font-size="12" font-weight="700" fill="#1a7f37">1,189　−72%</text>
   </g>
 
   <!-- inventory -->
   <rect x="32" y="348" width="836" height="54" rx="9" fill="#f6f8fa" stroke="#d0d7de"/>
   <text x="50" y="371" font-size="12.5" font-weight="700" fill="#1f2328">更便宜的一层：全库盘点</text>
   <text x="50" y="391" font-size="12" fill="#59636e">openspec list --specs --json →</text>
-  <text x="252" y="391" font-size="12" font-weight="700" fill="#1a7f37">2,687 B</text>
-  <text x="322" y="391" font-size="12" fill="#59636e">覆盖全部 36 个 capability 的 id 与 requirement 数 —— 先盘点，再决定读哪几份全文。</text>
+  <text x="252" y="391" font-size="12" font-weight="700" fill="#1a7f37">3,289 B</text>
+  <text x="322" y="391" font-size="12" fill="#59636e">覆盖全部 44 个 capability 的 id 与 requirement 数 —— 先盘点，再决定读哪几份全文。</text>
 </svg>

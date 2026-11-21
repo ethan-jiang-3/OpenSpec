@@ -2,7 +2,7 @@
 
 这一层非常关键，因为它解释了为什么同样是 OpenSpec，在不同项目、不同 AI 工具里看到的工作流外壳会不一样。
 
-> **v2.1.1 状态注记**：本文的第三节讲 `delivery`（skills / commands / both），那是 **1.x 的机制**。**v2.0.0 起 `delivery` 退役**（#2223），一律投递 skills；配置里不再有这一项。当前的「外壳差异」只剩一件事：工具怎么读 skills（直接读 `.agents/skills/`，还是在自己的目录放一条链接）。详见 §3bis。
+> **阅读注记**：本文第三节讲 `delivery`（skills / commands / both），那是 **1.x 的机制**。**v2.0.0 起 `delivery` 退役**（#2223），一律投递 skills；配置里不再有这一项。当前的「投递差异」只剩两件事：技能装在本机全局（`~/.agents/skills/`）还是项目内（`.agents/skills/`），以及项目内工具是直接读 `.agents/skills/` 还是在自己目录放一条链接。详见 §3bis。
 
 ## 1. 为什么这层重要
 
@@ -77,32 +77,34 @@ custom 选择 `archive` 或 `bulk-archive` 时，`getProfileWorkflows()` 会确�
 
 “这些 workflow 产物最终要以什么外壳落到工具目录里？”
 
-### v1.13.x：handoff 按生成时解析（optional-workflow，v2.0.0 已删除该文件）
+### v1.13.x→v2.0.0：从按 profile 拼装 handoff 到「每个技能单一恒定文本」
 
-explore 等工作流对 `/openspec-propose`、`/openspec-apply-change` 的引用现在在**生成时**按 profile 解析（`src/core/templates/optional-workflow.ts`）：custom profile 没装 propose 时，explore 的 handoff 自动回退到自身 capture 路径或 CLI，不再指向一个不存在的命令。配套生成的 skills 只描述 profile 实际安装的 workflow（`626269ed`），且 skill description 含自然语短语（"openspec propose"、"do an openspec apply"，`5f5914e7`）；`openspec update` 这个 CLI 命令本身被刻意不归任何 workflow skill 认领。
+v1.13.1 曾引入 `src/core/templates/optional-workflow.ts`，在生成时按当前 profile 动态改写工作流间的 handoff 文案；**v2.0.0 已彻底删除 `optional-workflow.ts`**，`src/core/shared/skill-generation.ts:57-58` 现在明确保证：`workflowFilter` 只决定返回**哪些**技能，绝不改变任何技能的文本——**无论在哪个 profile 下，同一个 skill 的正文永远是完全相同的单一恒定文本**（如 `archive` / `bulk-archive` 模板内直接写明“已装 sync 技能则 inline 跑它，未装则由 agent 自行 inline 合并并跑 `openspec validate --specs`”）。配套地，每个 workflow skill 的 frontmatter `description` 含自然语短语（"openspec propose"、"opsx apply"，`5f5914e7`）；而 `openspec update` 这个 CLI 命令刻意不归任何 workflow skill 认领。
 
 ## 3bis. v2.x 接替 delivery 的两个东西
 
 `delivery` 退役后，原来由它回答的问题拆成两半：
 
-**① 装在哪一年作用域** —— `openspec/config.yaml` 的 `skillsScope`：
+**① 装在哪一层作用域（`skillsScope` 的两处配置，切勿混同）**：
+
+- **机器级默认偏好（全局 `~/.config/openspec/config.json` 的 `skillsScope: "global" | "project"`，`src/core/global-config.ts:47`）**：由 `openspec init` 在新项目尚未做出选择时读取；未配置时新项目 `init` 默认采用 `'global'`（写入 `~/.agents/skills/` 及各工具全局目录，并把 Git tree hash 记入 `$XDG_STATE_HOME/skills/.skill-lock.json` 或 `~/.agents/.skill-lock.json`）。
+- **项目级团队选择（项目 `openspec/config.yaml` 的 `skillsScope: project`，`src/core/project-skills-scope.ts:15,36`）**：当团队选择把技能留在仓库内时写入 `openspec/config.yaml`，供 **`openspec update`** 读取（`keepsProjectSkills()`）——随 Git 提交后，团队其他成员跑 `update` 不会再被重复询问；若后续切回全局，`forgetProjectSkills()` 会将该键从 `openspec/config.yaml` 移除。非交互环境（CI、agent 调用）一律不弹问题，就地刷新。
 
 ```yaml
-skillsScope: project    # 或 global
+# openspec/config.yaml（仅在技能留在仓库内时记录）
+skillsScope: project
 ```
 
-`project` 把技能放在项目里（团队共享）；`global` 放到本机全局位置（跨项目复用）。这个选择记在项目 config 里，**团队不会被重复询问**；CI 或 agent 调用等非交互环境不弹问题，就地刷新。相关源码：`src/core/project-config.ts`、`src/core/global-skills.ts`。
+**② 怎么落到每个工具** —— 全局离线安装 / 项目内一份真身 + 链接：
 
-**② 怎么落到每个工具** —— 一份真身 + 链接：
+- **离线包内安装（v2.1.1 `#2283`）**：`installReleaseSkills()`（`src/core/skill-installer.ts`）把当前 CLI 内置的技能文本（经 `stripVolatileFrontmatter()` 剥离 `generatedBy:`）先写入本地临时目录 `os.tmpdir()/openspec-skills-*`，再调用运行时依赖 `skills` 包安装，**完全离线、无需 `git` 或 GitHub 网络**。
+- **项目作用域下真身只有一份**：`.agents/skills/openspec-<workflow>/SKILL.md`（附 `.agents/skills/.openspec-target` 记录已配置工具列表）。
+- **33 个直读 vs 54 个建链**：87 个工具里，33 个 `universal: true` 工具（如 `codex`、`cursor`、`gemini`、`github-copilot`、`cline`、`opencode`、`antigravity`、`zed`、`warp`、`amp`、`gsd`、`dsh`、`agents` 等）直接读取 `.agents/skills/`，不建链接；其余 54 个 `SKILL_LINKED_TOOL_IDS` 工具在各自 `skills/` 下放一条指向真身的相对链接，建不了链接（Windows 或 `eve`）则退化为拷贝（`eve` 额外剥离 `allowed-tools`）。
+- Windows 上 checkout 提交进仓库的链接需要 `git config --global core.symlinks true` 与开发者模式，否则链接会变成普通小文件，`openspec update` 会把它替换成拷贝。
 
-- 真身只有一份：`.agents/skills/openspec-<workflow>/SKILL.md`
-- 只读自己目录的工具，在其 `skills/` 下放一条指向真身的相对链接
-- 建不了链接（文件系统或权限限制）就退化为拷贝，功能一样、只是不去重
-- Windows 上 checkout 提交进仓库的链接需要 `git config --global core.symlinks true` 与开发者模式，否则链接会变成普通小文件，`openspec update` 会把它替换成拷贝
+相关源码：`src/core/skill-installer.ts`、`src/core/global-skills.ts`、`src/core/project-skills-scope.ts`、`src/core/shared/shared-skill-install.ts`、`src/core/shared/skill-links.ts`（`SkillLinkSpot` 五态）。
 
-相关源码：`src/core/shared/shared-skill-install.ts`（安装与比对）、`src/core/shared/skill-links.ts`（链接与退化，`SkillLinkSpot` 五态）、`src/core/skill-installer.ts`（调用运行时依赖 `skills` 包）。
-
-**③ `update` 会就作用域提问**（终端里）：项目里已有自己的技能时，`openspec update` 会问「这个项目的技能放在哪」——「留在这个项目」或「切到全局」。选「留在项目」会把选择写进项目的 `openspec/config.yaml`（`skillsScope: project`）并提示你把它提交，团队就不会被重复询问；写不进去也不阻塞更新，只是下次还会问。选「切到全局」前，如果这个仓库开着 GitHub 托管的 Copilot，会再确认一次要不要关掉它（托管 agent 只读项目内的技能）。
+**③ `update` 会就作用域提问**（终端里）：项目里已有自己的技能且 `openspec/config.yaml` 未记 `skillsScope: project` 时，交互式 `openspec update` 会问「这个项目的技能放在哪」——「留在这个项目」或「切到全局」。选「留在项目」会把 `skillsScope: project` 写进 `openspec/config.yaml` 并提示提交；选「切到全局」前，若仓库开着 GitHub Copilot cloud agent，会再确认是否关闭它（云端容器只看得到仓库内的技能）。同时，**当本机已安装全局 skills 时，`openspec update` 在没有 `openspec/` 的任意目录也能直接运行并刷新全局 skills**。
 
 **两个机器级状态文件**（都在全局数据目录，从不出机器）：
 
@@ -145,19 +147,19 @@ skillsScope: project    # 或 global
 
 所以 `update` 更像“声明式同步器”。
 
-## 6. Skills 与 Commands 是同一内容的不同外壳
+## 6. Skills 与历史 Commands 的同源关系
 
-源码里的 `skill-generation` 和 `command-generation` 非常说明问题：
+源码里的 `skill-generation` 和 `command-generation` 很说明设计边界：
 
-- 系统先维护一组 workflow 模板内容。
-- 然后把这些内容映射成 skill templates 或 command contents。
-- 再通过不同 adapter 生成不同工具需要的文件格式。
+- 系统维护一组工具无关的 workflow 模板内容（`src/core/templates/workflows/`）。
+- v2.0.0 起只把模板渲染为标准 `SKILL.md`，经 `skills` 包安装到全局或项目 `.agents/skills/`（+ 建链工具的相对链接）。
+- 1.x 曾通过 34 个 command adapter 生成各工具私有的命令文件；v2.0.0 起这些 adapter 不再生成任何新文件，仅保留旧路径与格式规则供 `update` 清理历史命令文件。
 
 这说明：
 
 OpenSpec 真正稳定的资产不是某个具体工具的文件，而是“workflow 语义内容”。
 
-skill / command 只是投递载体。
+skill（以及 1.x 已退役的 command）只是投递载体。
 
 ## 7. 为什么 `propose` 很特殊
 
@@ -179,22 +181,23 @@ skill / command 只是投递载体。
 - 启用哪些 workflow。
 - 这些 workflow 怎样出现在 AI 工具里。
 
-还要补一个实现边界：
+还要补一个实现边界（两处 `skillsScope` 的分工）：
 
-- `openspec config` 改的是**全局配置**（`config --scope` 目前只接受 `global`）。
-- 但「技能装在项目还是这台机器」这件事**不是**用 `config --scope` 表达的，而是用 `init --scope <global|project>`（v2.1.0 起），或写进项目的 `openspec/config.yaml` 的 `skillsScope`，或环境变量 `OPENSPEC_SKILLS_SCOPE`。三者优先级见下。
+- `openspec config` 改的是**全局配置** `~/.config/openspec/config.json`（`config --scope` 这一 CLI flag 目前只接受 `global`，意思是“改全局配置文件”）。
+- 「新项目 `init` 把技能装在项目还是本机全局」由 `openspec init --scope <global|project>`、环境变量 `OPENSPEC_SKILLS_SCOPE`、或**全局 `config.json` 里的 `skillsScope`** 控制（见下方 `resolveSkillScope` 顺序）。
+- 而**项目 `openspec/config.yaml` 里的 `skillsScope: project`** 则是“该项目已决定保留仓库内技能”的团队标记，由 **`openspec update`**（`keepsProjectSkills()`）读取，以及通过项目内已存在的技能目录间接让 `init` 的第 3 步 `projectHasOwnSkills()` 命中 `project`——`init` 本身并不直接读 `openspec/config.yaml` 的 `skillsScope` 字段。
 
-**作用域解析顺序**（`src/core/init.ts` 的 `resolveSkillScope`）：
+**`init` 的作用域解析顺序**（`src/core/init.ts` 的 `resolveSkillScope`）：
 
 1. `--tools none` → 一律 `project`
 2. 显式 `--scope` → 用它
-3. 项目里已有自己的技能 → `project`
+3. 项目里已有自己的技能（`projectHasOwnSkills`）→ `project`
 4. `OPENSPEC_SKILLS_SCOPE` 环境变量 → 用它（取值非法会报错）
 5. 全局 `config.json` 里的 `skillsScope` → 用它
-6. 用了 `--copilot-cloud`，或所选工具里有**不支持全局技能**的 → `project`
+6. 用了 `--copilot-cloud`，或所选工具里有**不支持全局技能**的（仅 `eve`、`promptscript`）→ `project`
 7. 以上都没有 → **默认 `global`**
 
-第 7 条是最容易被忽略的：**非交互（CI、agent 调用）下不传 `--scope` 时，默认装到这台机器的全局位置**，不是装进项目。想让项目自带技能，必须显式 `--scope project` 或在项目 config 里写 `skillsScope: project`。
+第 7 条是最容易被忽略的：**全新项目在非交互（CI、agent 调用）下不传 `--scope` 时，默认装到这台机器的全局位置 `~/.agents/skills/`**，不是装进项目。想在新项目初始化时直接把技能放进仓库，必须传 `openspec init --scope project`（或设 `OPENSPEC_SKILLS_SCOPE=project` / 全局 `config.json` `skillsScope: "project"`）。
 
 所以 `config` 的影响路径通常是：
 
@@ -212,16 +215,16 @@ skill / command 只是投递载体。
 
 - 误以为只是项目脚手架命令。
 - 看不出 OpenSpec 其实还在做 AI 工具工作流投递。
-- 看不出为什么同一个 workflow 要同时存在 skill 和 command 两种形态。
+- 看不出为什么 1.x 曾同时存在 skill 与 command 两种形态、而 2.x 能收敛为单一恒定 skill 真身 + 全局/项目双作用域。
 
 但一旦理解了这一层，你就会明白：
 
 OpenSpec CLI 同时管理三种空间：
 
 - 项目内状态空间（repo-local `openspec/`）
-- 工具侧入口空间（skills/commands）
-- Workspace 协调空间（跨仓库规划层）
+- 工具侧入口空间（全局 `~/.agents/skills/` 或项目 `.agents/skills/` + 工具链接）
+- Store 跨仓库引用空间（store registry + `references:` + `openspec context` working set）
 
-而 profile 与投递机制（1.x 是 `delivery`，2.x 是 `skillsScope` + 一份真身）正是连接这些空间的桥。
+而 `profile` 与 `skillsScope`（1.x 为 `delivery`）正是连接项目工作流定义与工具侧入口空间的桥。
 
-（workspace 已被 store 模型替代。旧 workspace skills-only 投递和 `workspace_skills` drift 跟踪不再适用。store 不通过 skill/command 投递机制暴露——它通过 `openspec context` 的 working set 提供给 agent。）
+（早期 v1.4 workspace 已被 store 模型替代；store 不通过技能投递机制暴露额外命令集，而是通过 `openspec context` 的 working set 与 `--store <id>` 提供给 agent。）

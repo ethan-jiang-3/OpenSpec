@@ -6,7 +6,7 @@
 
 > **后续复核（至 v1.13.0）**：自动 retrieval / catalog 结论仍未变；v1.11.0–v1.13.0 的 `show --diff`、`status --all`、`validate --report findings` 是审阅手段，不提供自动检索。
 
-> **v1.8.0 同步（2026-08-08）**：v1.8.0 未改变本底稿的结论——main-spec retrieval / catalog 仍未解决，nested path 语义不变。链接保留指向 v1.7.0 以保持原始核验的固定锚点；当前行为以 v1.8.0 源码为准。
+> **历史快照声明（固定于 2026-07-29 `v1.7.0`）**：本文件已登记于 [`_digested/README.md`](../README.md) 的版本敏感表，正文中的「当前」均指快照当日的 `v1.7.0`。截至当前仓库基线：本地语义 catalog / 自动相关性排序仍未内置（核心结论不变），但内置 `schemas/spec-driven/schema.yaml:21-34` 与 `explore` / `propose` 模板已演进为引导两步按需读取——先 `openspec list --specs`，再 `openspec show "<spec-id>" --type spec --json --no-scenarios` 浏览 Purpose 与 requirement 文本，确认相关后再调完整 `openspec show "<spec-id>" --type spec`；跨仓 `references:` 则已提供一跳 50KB 预算的 index-then-fetch。下文 §15 对 `v1.7.0` 旧版 `schema.yaml` / `propose.ts` 的描述仅供历史对照。
 
 ## 先分开两个问题
 

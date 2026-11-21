@@ -28,6 +28,8 @@ openspec archive [change-name]
 | `-y, --yes` | 跳过确认提示。 |
 | `--skip-specs` | 不更新主 specs，只 archive change。 |
 | `--no-validate` | 跳过 validation，不推荐；没有 `--yes` 时还会额外确认。 |
+| `--json` | 输出机器可读 JSON（非交互模式；需要确认而未传 `--yes` 时返回阻塞诊断与重跑命令）。 |
+| `--store <id>` | 指定注册的独立 OpenSpec store root（另有隐藏的 `--store-path` 用于拦截并提示改用 `store register`）。 |
 
 内部 options 还支持 `validate: false`，这是 commander `--no-validate` 的语义形态，测试里也覆盖了。
 
@@ -81,17 +83,13 @@ To skip validation (not recommended), use --no-validate flag.
 validation 后，CLI 调：
 
 ```text
-getTaskProgressForChange(changesDir, changeName)
+getTaskProgressForChange(changesDir, changeName, projectRoot)
 formatTaskStatus(progress)
 ```
 
-统计来自固定文件：
+统计是 **schema-aware** 的（`src/utils/task-progress.ts:171-177` `findTrackedTasksArtifact()`）：先读该 change 绑定 schema 的 `apply.tracks` 匹配对应 artifact 的 `generates`（未配 `tracks` 时回退到 `id: "tasks"`，schema 不可解析时才兜底顶层 `tasks.md`），再用共享的 `TASK_LINE_PATTERN` 统计复选框（仅 `x`/`X` 算已完成，`[~]`/`[-]`/`[]` 等均计为未完成）。
 
-```text
-openspec/changes/<change>/tasks.md
-```
-
-如果文件不存在，结果是：
+如果没有对应的跟踪任务文件或无复选框，结果是：
 
 ```text
 total = 0
@@ -164,7 +162,7 @@ fallback 失败会清理不完整目标并恢复 active source；若 destination
 
 ## 参考来源
 
-源码引用：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

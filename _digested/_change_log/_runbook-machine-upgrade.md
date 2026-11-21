@@ -57,8 +57,9 @@
 ### 阶段 0：升级全局 CLI
 
 ```bash
-# 0.1 备份全局配置（出问题能对照）
-cp ~/.config/openspec/config.json ~/openspec-config.bak.$(date +%Y%m%d)
+# 0.1 备份全局配置（优先遵循 $XDG_CONFIG_HOME/openspec/config.json，未设时回退 ~/.config/openspec/config.json）
+GLOBAL_CFG="${XDG_CONFIG_HOME:-$HOME/.config}/openspec/config.json"
+[ -f "$GLOBAL_CFG" ] && cp "$GLOBAL_CFG" ~/openspec-config.bak.$(date +%Y%m%d)
 
 # 0.2 升级
 npm install -g @fission-ai/openspec@latest
@@ -68,9 +69,9 @@ openspec --version          # 期望 2.1.1
 openspec version --json     # 期望 scope: global, packageManager: npm
 ```
 
-> 为什么用 `npm install -g` 而不是让 `openspec update` 自升级：`canSelfUpgrade()` 要求 npm 全局 + 默认 registry + 交互 TTY，三者任一不满足就走了「只打印命令」的路径。直接 `npm install -g` 最确定。
+> 为什么用 `npm install -g` 而不是让 CLI 自升级：`canSelfUpgrade()`（`version-check.ts:825`）检查安装位置与默认 registry（排除本地依赖、源码检出、npx 临时目录以及 Homebrew/Nix 等包管理器 #2264），外层的 `shouldOfferUpgrade()`（`version-check.ts:843`）还会进一步要求交互式输入与终端 `stdout.isTTY`——任一条件不满足就退回「只打印命令」路径。直接 `npm install -g` 最确定。
 >
-> **回滚**：`npm install -g @fission-ai/openspec@1.17.0`（或 `@1.15.0`，回到升级前的状态）。
+> **回滚**：`npm install -g @fission-ai/openspec@1.17.0`（或 `@1.15.0`）。注意：**只降级全局 CLI 不会还原已升到 2.x 的项目目录**（1.x 不认识无工具专属拷贝与无命令文件的新结构），若退回 1.x，必须配合备份包或 git 同步还原对应项目的工具目录（见 §七）。
 
 ### 阶段 1：先拿一个干净项目练手
 
@@ -95,7 +96,7 @@ git diff --stat
 
 # 1.5 确认新形态
 ls -la .agents/skills | head
-cat .agents/skills/.openspec-target      # 现在是「工具清单」，每行一个 id
+cat .agents/skills/.openspec-target      # 工具清单：universal 工具写 <id>，带独立链接/文件目录的工具写 <id> own-files（如 claude own-files）
 
 # 1.6 没问题就提交
 git add -A && git commit -m "chore: upgrade OpenSpec to 2.1.1"
@@ -165,7 +166,7 @@ ls .claude/commands/opsx 2>/dev/null        # 应该不存在了
 find . -maxdepth 3 -name "commands" -path "*opsx*" 2>/dev/null   # 应为空
 ls -la .agents/skills | head -3             # 真身
 ls -la .claude/skills 2>/dev/null | head -3 # 应为链接（l 开头）
-cat .agents/skills/.openspec-target         # 工具清单
+cat .agents/skills/.openspec-target         # 工具清单（<id> 或 <id> own-files）
 openspec list                               # skills/change 仍能被读到
 openspec validate --all 2>/dev/null | tail -3   # 校验不受影响
 git status --short                          # 只看得到预期的改动
@@ -192,8 +193,8 @@ cd ~/OpenSpec/_digested/_change_log/_runbook
 | 默认只看不动 | 不加 `--apply` 只输出每个项目的计划，零写入 |
 | 幂等 / 可重跑 | 做一半坏了直接重跑：`skillsScope` 已在就跳过、update 无变化就报「计划 0 项」、没改动就不提交 |
 | 自动备份 | 每个项目先打包 `.claude .cursor .agents .cline .codex .agent .clinerules .opencode .dsh .pi openspec` 到 `~/openspec-upgrade-backups/<项目>-<时间>.tgz` |
-| 保守清理 | `--clean` 只删「路径命中白名单 + 内容确实是 OpenSpec 生成」的文件，**不按目录名一刀切**（早期版本曾误删 `.agent/skills/` 里用户自己的技能，已修） |
-| 一键恢复 | `./openspec... --apply --restore --only <项目>`，先删后解，能绕过符号链接 |
+| 保守清理 | `openspec update` 本身已通过历史产物指纹库清理原版旧命令并**故意保留（`kept`）用户改过的文件**；脚本的 `--clean` 同样直接复用 OpenSpec 的 `isReleasedGeneratedContent` 指纹库 + 12 个官方工作流/技能名白名单，**绝不误删用户修改过的 `kept` 命令/技能或自定义 `openspec-*` 技能**（如 `openspec-linearized`、`openspec-schema-authoring`） |
+| 一键恢复 | `./upgrade-all.sh --apply --restore --only <项目>`，先删后解，能绕过符号链接 |
 | 单项目定向 | `--only <项目>` / `--skip <项目>` |
 | 跳过 CLI | `--skip-cli`（已经升过、只跑项目时用） |
 
@@ -257,11 +258,22 @@ git clean -fd            # 确认后清理
 npm install -g @fission-ai/openspec@1.15.0
 ```
 
+> ⚠️ **回滚到 1.x 时别忘了项目目录备份**：1.x 期望每个工具自己的拷贝以及 `/opsx:*` 命令文件；若项目已跑过 2.x 的 `openspec update`（尤其 5 个把工具目录写进 `.gitignore` 的项目），降级 CLI 后必须一并执行 `./upgrade-all.sh --apply --restore`（或按项目 `--only <项目>`）从 `~/openspec-upgrade-backups/` 恢复升级前的 `.tgz` 备份。
+
 ### 全局技能清理（如果误装了全局作用域）
 
+2.1 的全局技能通过 `skills` 包安装到 `~/.agents/skills/` 及各非通用工具的全局技能目录（如 `~/.claude/skills/`、`~/.gemini/antigravity/skills/` 等），并写入锁文件 `${XDG_STATE_HOME:+$XDG_STATE_HOME/skills/.skill-lock.json}`（未设 `XDG_STATE_HOME` 时为 `~/.agents/.skill-lock.json`，见 `skill-installer.ts:49-53`）。优先用 `npx skills` 统一移除，避免锁文件与外围工具目录残留：
+
 ```bash
-ls ~/.agents/skills ~/.claude/skills 2>/dev/null
-rm -rf ~/.agents/skills/openspec-* ~/.claude/skills/openspec-*
+# 查看已装的全局技能
+npx skills list -g
+
+# 用 skills 包一并清理全局目录与 .skill-lock.json 记录
+npx skills remove -g \
+  openspec-explore openspec-new-change openspec-continue-change \
+  openspec-apply-change openspec-update-change openspec-ff-change \
+  openspec-sync-specs openspec-archive-change openspec-bulk-archive-change \
+  openspec-verify-change openspec-onboard openspec-propose
 ```
 
 ## 八、执行前复检（状态会变，动手前重跑）

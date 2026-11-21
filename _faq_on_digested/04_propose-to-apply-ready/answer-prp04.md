@@ -15,12 +15,12 @@ agent 接下来应该怎么行动
 
 ## 调用链
 
-源码主线：
+源码主线（`status.ts` 走 store-aware 的 `resolveRootForCommand()` + `toPlanningHome(root)`，见 `src/core/root-selection.ts:576`；`resolveCurrentPlanningHomeSync()` 仍保留在 `src/core/planning-home.ts:74` 供纯本地同步调用方使用）：
 
 ```text
 src/commands/workflow/status.ts
   statusCommand()
-    resolveCurrentPlanningHomeSync()
+    resolveRootForCommand() -> toPlanningHome(root)
     validateChangeExists()
     loadChangeContext()
     formatChangeStatus()
@@ -92,7 +92,7 @@ tasks    -> tasks.md
 `resolveArtifactOutputs(changeDir, generates)` 会检查：
 
 - 普通路径：`statSync(fullPath).isFile()` 才算输出存在。
-- glob：`fast-glob` 在 changeDir 下匹配 `onlyFiles: true`，至少一个文件匹配才算输出存在。
+- glob：由 `brace-expansion`（嵌套 ≤16 层、展开预算 ≤1024 条）+ `picomatch` + `tinyglobby` 在 changeDir 下匹配 `onlyFiles: true`，至少一个文件匹配才算输出存在。
 
 所以：
 
@@ -167,7 +167,7 @@ actionContext 约束
 
 ## 参考来源
 
-源码引用基于 commit `750a03c`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

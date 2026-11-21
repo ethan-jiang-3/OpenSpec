@@ -89,18 +89,17 @@ OpenSpec 的倾向是让关键上下文可读、可版本化、可检查，而�
 
 IDE 插件通常把工作流绑定到某个宿主：命令入口、UI、状态、执行逻辑都在插件里。OpenSpec 刻意不这么做。
 
-它把宿主工具差异压到 delivery 层：
+它把宿主工具差异压到 skill 投递层（1.x 曾另有 per-tool command adapters，v2.0.0 起不再生成）：
 
 ```text
 same workflow semantics
-  → skills
-  → commands
-  → per-tool adapters
+  → standard SKILL.md
+  → ~/.agents/skills/（global）或 .agents/skills/ + per-tool skill links（project）
 ```
 
-这意味着 Claude、Codex、Cursor、OpenCode 等工具看到的入口形态可能不同，但核心语义应该来自同一套 workflow templates 和 CLI runtime API。
+这意味着 Claude、Codex、Cursor、OpenCode 等工具唤起技能的前缀可能不同（如 `/openspec-propose`、`$openspec-propose` 或自然语言自动匹配），但底层读到的是同一份 workflow skill 文本和同一套 CLI runtime API。
 
-所以评估 OpenSpec 时，不要只看某个工具里的 slash command 长什么样。那只是外壳。更稳定的是 `status`、`instructions`、schema、templates 和文件状态。
+所以评估 OpenSpec 时，不要只看某个工具里唤起入口长什么样。那只是外壳。更稳定的是 `status`、`instructions`、schema、templates 和文件状态。
 
 ## 和 monorepo / multi-root workspace 的区别
 
@@ -147,7 +146,7 @@ archive 把 delta specs 合并回主 specs
 | Implementation checklist | `tasks.md`，同时是 apply tracking file |
 | Workflow definition | schema artifact DAG，不只是 prompt |
 | Agent prompt | workflow template + CLI instructions 输出 |
-| Tool integration | skill/command delivery |
+| Tool integration | skill delivery（global 或 project 作用域；1.x 另有 command delivery，已移除） |
 | Runtime state API | `openspec status --change <name> --json` |
 | Action instruction API | `openspec instructions <artifact> --change <name> --json` |
 | Multi-repo context | store registry + references + working set |

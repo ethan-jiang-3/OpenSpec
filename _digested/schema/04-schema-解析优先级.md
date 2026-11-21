@@ -15,7 +15,7 @@ OpenSpec 需要确定"用哪个 schema"时，走两层解析。理解这两层�
         ↓
 2. Change 元数据       openspec/changes/<name>/.openspec.yaml 的 schema 字段
         ↓
-3. 项目 config         openspec/config.yaml 的 schema 字段
+3. 项目 config         openspec/config.yaml（或回退 config.yml）的 schema 字段
         ↓
 4. 硬编码默认          spec-driven
 ```
@@ -37,13 +37,14 @@ schema: rapid
 created: 2026-04-20
 ```
 ```bash
-openspec continue my-feature
+openspec status --change my-feature
+# 或 openspec instructions proposal --change my-feature
 # → 用 rapid（从 .openspec.yaml 读）
 ```
 
 **情况 3：只用项目 config**
 ```yaml
-# openspec/config.yaml
+# openspec/config.yaml（若不存在则回退读取 openspec/config.yml，见 resolveConfigFilePath）
 schema: spec-driven
 ```
 ```bash
@@ -64,9 +65,11 @@ openspec new change my-feature
 确定 schema 名字后（比如 `my-workflow`），按以下优先级查找实际文件：
 
 ```
-1. 项目级        openspec/schemas/my-workflow/schema.yaml
+1. 项目级        <projectRoot>/openspec/schemas/my-workflow/schema.yaml
        ↓
-2. 用户级        ~/.local/share/openspec/schemas/my-workflow/schema.yaml
+2. 用户级        $XDG_DATA_HOME/openspec/schemas/my-workflow/schema.yaml
+                 （未设 XDG_DATA_HOME 时：Unix/macOS 为 ~/.local/share/openspec/schemas/，
+                   Windows 为 %LOCALAPPDATA%\openspec\schemas\）
        ↓
 3. 包内置        <npm-package>/schemas/my-workflow/schema.yaml
 ```
@@ -110,8 +113,8 @@ openspec schema which spec-driven --json
 
 来源有三种标签：
 - **project** — `openspec/schemas/<name>/`
-- **user** — `~/.local/share/openspec/schemas/<name>/`
-- **package** — npm 包内置
+- **user** — `$XDG_DATA_HOME/openspec/schemas/<name>/`（Unix/macOS 默认 `~/.local/share/openspec/schemas/<name>/`，Windows 默认 `%LOCALAPPDATA%\openspec\schemas\<name>\`）
+- **package** — npm 包内置（或 standalone 二进制内嵌提取目录）
 
 ---
 
@@ -130,7 +133,7 @@ openspec schema which spec-driven --json
 | 你的场景 | 推荐做法 |
 |---------|---------|
 | 整个团队统一工作流 | 放在项目级 `openspec/schemas/`，随 git 版本化 |
-| 个人偏好、跨项目复用 | 放在用户级 `~/.local/share/openspec/schemas/` |
+| 个人偏好、跨项目复用 | 放在用户级 `$XDG_DATA_HOME/openspec/schemas/`（默认 `~/.local/share/openspec/schemas/`，Windows 为 `%LOCALAPPDATA%\openspec\schemas\`） |
 | 贡献回社区 | 发 PR 到 OpenSpec 的 `schemas/` 目录 |
 
 ---

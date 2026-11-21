@@ -23,7 +23,7 @@
 | 1 | `01-系统心智模型.md` | specs/changes 的主轴、OpenSpec 的本质、LLM 与 CLI 的边界 |
 | 2 | `02-目录与状态边界.md` | repo-local、store、global data/config、agent 集成目录分别保存什么 |
 | 3 | `03-planning-home-与-store-模型.md` | `PlanningHome` 简化与 v1.5.0 store 模型 |
-| 4 | `04-agent-contract-与工具投递.md` | init/update/profile/delivery/skills/commands/adapter 的整体契约 |
+| 4 | `04-agent-contract-与工具投递.md` | init/update/profile/skillsScope/skills 投递与旧 command 清理的整体契约 |
 | 5 | `05-lifecycle-总览.md` | OPSX workflow 生命周期总览，以及和现有专题的链接 |
 | 6 | `06-源码地图与扩展点.md` | 当前源码模块职责和扩展点，使用路径 + 函数/类名作为锚点 |
 | 7 | `07-OpenSpec-工程思想.md` | 给熟悉 SDD/AI Coding 的读者提炼 OpenSpec 的工程取舍 |

@@ -23,7 +23,7 @@ FAQ 里已有三个 schema 示例覆盖三种产出物（只有 `spec-driven` �
 
 - **3 个 artifact**：`proposal → specs → tasks`（和 spec-driven 同框架，去掉了 `design`——需求工程不需要"实现方案"）
 - **proposal 合并了 discovery + needs**：问题域探索、利益相关者分析、原始需求草图全部在 proposal 中完成
-- **specs = PRD**：FR-N 功能需求（MoSCoW）、NFR、用户故事、验收标准、Approval 章节、Developer Handoff Notes
+- **specs = PRD**：FR-N 功能需求（MoSCoW）、NFR、用户故事、验收标准、Approval 章节、Developer Handoff Notes（保留 `id: specs` 与 `template: spec.md`，但 `generates: "requirements/**/*.md"` 避开保留给 delta spec 合并校验的 `specs/` 前缀）
 - **迭代沟通在 apply**：审查、沟通、修改、签收、交接——所有重沟通的工作在 apply 阶段通过 tasks.md 驱动
 
 详见 [`answer.md`](answer.md) 和 [`schema-package/`](schema-package/)。

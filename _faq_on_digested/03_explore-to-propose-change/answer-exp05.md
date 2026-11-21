@@ -149,7 +149,7 @@ OpenSpec change 的边界通常对应用户可观察行为、能力协议或 wor
 
 这一步会直接影响是否拆 change。
 
-如果一个目标要同时改 parser、schema、command runtime、adapter、，它可能不是一个简单 feature，而是跨层机制变化，需要 design 或拆分。
+如果一个目标要同时改 parser、schema、command runtime、adapter，它可能不是一个简单 feature，而是跨层机制变化，需要 design 或拆分。
 
 ## 第五类入口：测试
 
@@ -269,7 +269,7 @@ EXP-05 不应该输出：
 
 ## 参考来源
 
-源码引用基于 commit `970cb44`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

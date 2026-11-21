@@ -17,7 +17,7 @@
 
 - [`../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md`](../../_openspec_handbook/22-高级-项目级全局约束到底放哪.md) 讲三层模型（config / specs / changes 各放什么）。
 - [`../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md) 是一份完整的"怎么把 config.yaml 写好"指南（强规则公式、4 类规则、bad smell、4 种项目 sample）。
-- [`../../_digested/internal-spec-driven/06-config-yaml-机制与约束.md`](../../_digested/internal-spec-driven/06-config-yaml-机制与约束.md) 讲透了机制（Zod、读取时机、注入格式、50KB、fail-open）。
+- [`../../_digested/internal-spec-driven/06-config-yaml-机制与约束.md`](../../_digested/internal-spec-driven/06-config-yaml-机制与约束.md) 讲透了机制（Zod、读取时机、注入格式、50KB、指令侧逐字段降级与 `validate` 对坏 YAML 退出 1）。
 
 但这些都没回答：**不熟细节的普通程序员，第一步该怎么把 config.yaml 弄出来、之后怎么一点点长——有没有工具或 agent 帮他？**
 

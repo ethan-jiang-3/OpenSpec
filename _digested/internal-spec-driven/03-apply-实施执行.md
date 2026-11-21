@@ -80,43 +80,54 @@ apply 不是"用户说 apply 就开始写代码"。它有一个**gate 机制** �
 - **`progress`**：total/complete/remaining 计数
 - **`tasks`**：解析后的 checkbox 列表，每项带 `id`、`description`、`done`，以及 v1.14.0 起的来源定位 **`sourcePath` + 1-based `line`**（`e7a9512d`；实现在 `src/commands/workflow/instructions.ts` 的 `LocatedTask`/`parseLocatedTasks`——只在共享 parser 结果上补位置，不改任务解析本身）。无描述文本的 checkbox 不进列表但仍计入 progress，所以列表可比 total 短
 - **`taskTrackingConfigured`** / **`unavailableTrackingFiles`**：schema 是否配置了任务追踪；追踪文件存在但读不到时逐个列出 path 与原因（verify 用它判 "not verified"，不在 verify 语境下对 apply 只是信息）
-- **`missingArtifacts`**（仅缺少 required artifact 时）：哪些 artifact 还没创建。注意：tracks 文件缺失或 tasks.md 没有 checkbox 也会 `blocked`，但不一定有 `missingArtifacts`
+- **`missingArtifacts` / `missingPrerequisites`**（缺前置产物时）：`missingArtifacts` 列出 `apply.requires` 的直接缺口；`missingPrerequisites`（`collectMissingPrerequisites`，`instructions.ts:437-465`）则沿 `requires` 边传递收集并按拓扑构建序排列整条缺失链路（防 #834/#869 看到只缺 `tasks` 就跨过 `specs` 直接手写 `tasks.md`）。注意：tracks 文件缺失或 `tasks.md` 没有任何有文本的 checkbox 时也会 `blocked`，但此时没有 `missingArtifacts`
+- **`warnings`**（非 `blocked` 时按需附带，`collectApplyWarnings`）：例如 change 未声明 `skip_specs: true` 却没有 delta spec，或 `specs/` 下放了合并路径不会读的非 `<capability>/spec.md` 文件，或 `.openspec.yaml` 含未知键
+- **`context` / `operationGuidance`**（可选）：来自 `<root.path>/openspec/config.yaml` 的项目背景与 `operations.apply.guidance` 建议性指导
 
 ---
 
-## 3. Checkbox 解析机制
+## 3. Checkbox 与多行任务解析机制
 
-### 3.1 正则
+### 3.1 正则与单字符标记规则
 
-计数器仍在 `src/utils/task-progress.ts`（`parseTaskLines` / `getTaskProgressDetailForChange`），`list` / `view` / `instructions apply` / `validate --archived` / archive 共享同一判断；v1.13.1 起认全 CommonMark 标记（`-`/`*`/`+`/有序 `1.`/`1)`，最多九位数字）。另注意：新模块 `src/core/validation/task-checkboxes.ts` 职责不同——它只做「tasks 文件有列表项但一个 checkbox 都没有」的检测，供 validate 警告（`09984b8`）：
+计数器位于 `src/utils/task-progress.ts`（`parseLocatedTaskLines` / `parseTaskLines` / `getTaskProgressDetailForChange`），`list` / `view` / `instructions apply` / `validate --archived` / `archive` 共享同一套解析器；另注意 `src/core/validation/task-checkboxes.ts` 职责不同——它只做「tracked tasks 文件有列表项但一个 checkbox 都没有」的检测，供 `validate` 报 WARNING（`09984b8`）：
 
 ```typescript
 const TASK_LINE_PATTERN = /^\s*(?:[-*+]|\d{1,9}[.)])\s*\[(?:\s*([^\]\s]?)\s*\](?![([])|\s+\])\s*(.*)/;
+// done = (match[1] ?? '').toLowerCase() === 'x'
 ```
 
-三个关键点（v1.8.0 放宽/修正）：
+四个关键点：
 
-- **列表标记** — v1.13.1 起 `-`/`*`/`+` 与有序标记（`1.`、`1)`，最多九位数字）都算（`8fc65b7f`）；此前有序/`+` 前缀下的 checkbox 对全部共享消费者不可见——含未完成有序任务的 change 曾报 "✓ Complete" 并被 archive 静默收掉。允许前导缩进，**缩进的子任务照常计数**。
-- **`\[([\sxX])\]`** — 方括号内认 `\s`（空格/制表符/不间断空格，都是"未完成"）、`x`/`X`（完成，大小写不敏感）。
-- **`\s*(.*)`** — 尾部不锚定 `$`，描述可为空；`\r` 不会被 `.` 吞掉，CRLF 的 tasks.md 也能解析。
+- **列表标记与缩进** — `-`、`*`、`+` 与有序标记（`1.`、`1)`，最多九位数字）都算（v1.13.1 `8fc65b7f`）；允许前导缩进，**缩进的子任务（如 `  - [ ] 1.1.1`）照常计数**。
+- **任意单非空白字符或空框均匹配（#1761）** — 方括号内**不再局限于空白与 `x`/`X`**，而是匹配「至多一个非 `]` 非空白字符（两侧允许空白）」或「纯空白 `\s+`」。其中**只有 `x`/`X` 计为完成（`done: true`），其余一切单字符标记（如 `[~]`、`[-]`、`[?]`、`[1]`）与空框 `[]` 全部计入分母且算作未完成（`done: false`）**！这样把进行中任务标成 `- [~]` 不会静默掉出分母、让 `archive` 误报 "✓ Complete"。
+- **单字符 Markdown 链接守卫 `(?![([])`** — 闭合 `]` 后不能紧跟 `(` 或 `[`，把 `- [A](https://example.com)` 与 `- [1][ref]` 这类单字符标签的链接列表项排除在外（纯空白框 `- [ ](...)` 例外，仍保守算作未完成任务）。
+- **`\s*(.*)`** — 尾部不锚定 `$`，描述可为空（空描述行计入 `progress` 总数但被 `toTaskItems` 过滤出待办列表）；`\r` 不会被 `.` 吞掉，CRLF 的 `tasks.md` 也能正常解析。
 
 ### 3.2 什么算 checkbox
 
-- `- [ ] Task` → 未完成
-- `- [x] Task` / `- [X] Task` → 完成（大小写不敏感，`- [ x]` 这种带空格的也算完成）
-- `* [ ]`、`+ [ ]`、`1. [ ]`、`1) [ ]` → 均支持（v1.13.1 起全 CommonMark 标记）
-- 空格数量灵活（`-  [ ]` 和 `- [ ]` 都可以）
-- `  - [ ] 1.1.1 子任务` → **算**（v1.8.0 起前导缩进不再隐藏它）
-- `- [~]`、`- [-]`、空 `- []` → **未完成**（方括号内只有空白或 x/X 才有意义）
+- `- [ ] Task` → 未完成（`done: false`）
+- `- [x] Task` / `- [X] Task` / `- [ x] Task` → 完成（`done: true`）
+- `- [~] Task`、`- [-] Task`、`- [?] Task`、空 `- [] Task` → **均算 checkbox，且全部为未完成（`done: false`）**
+- `* [ ]`、`+ [ ]`、`1. [ ]`、`1) [ ]` → 均支持（全 CommonMark 列表标记）
+- `  - [ ] 1.1.1 子任务` → **算**（允许任意前导缩进）
 
 ### 3.3 什么不算 checkbox
 
-- 没有方括号的 `- Task` → 不算
-- `- [?] Task` → 不算（方括号内只认空白与 x/X）
-- 非列表项中的 `[ ]` → 不算（必须以列表标记开头，开头前允许缩进）
-- **整份 tasks 文件只有列表项、一个 checkbox 都没有** → v1.13.1 起 `validate` 会警告并指出第一处 offending line（`09984b8`）；此前 `list`/`status` 报 "No tasks"、archive 无从警告未完成工作
+- 没有方括号的普通列表项 `- Task` → 不算
+- **多字符方括号**如 `- [WIP] Task` → 不算（保持单字符宽度，防止吞掉普通 Markdown 链接列表）
+- **单字符 Markdown 链接**如 `- [A](url)` / `- [1][id]` → 不算（被 `(?![([])` 拦截）
+- 非列表项中的 `[ ]` → 不算（必须以列表标记开头）
+- **整份 tasks 文件只有列表项、一个 checkbox 都没有** → v1.13.1 起 `validate` 会报 WARNING 并指出第一处 offending line（`09984b8`）
 
-### 3.4 编号约定
+### 3.4 多行折行任务合并（v2.0.0 #2228）
+
+早期实现只取匹配 `TASK_LINE_PATTERN` 的那一行文本，导致按列宽折行的长任务在第一个换行符处被截断，`instructions apply` 交到 agent 手里的只有半句话。v2.0.0（#2228，`parseLocatedTaskLines` in `src/utils/task-progress.ts:83-150`）改为读取列表项的**完整首段落**：
+
+- 紧跟在任务行之后、凡**未命中 `TASK_TEXT_BREAK_PATTERN`**（空行、ATX `#` 标题、` ``` `/`~~~` 围栏、`>` 引用、`<!--`/`<!`/`<?`、setext `===`/`---` 下划线或分隔线、任何新的无序/有序列表项）的续行，都会 trim 后以单个空格拼接到当前任务的 `description` 末尾（若上一行末尾有奇数个 `\` Markdown 硬换行符，先剥除末尾 `\` 再拼接）。
+- `line` 仍记录 checkbox 所在的 1-based 起始行号；续行本身不会额外增加任务计数。
+
+### 3.5 编号约定
 
 `X.Y` 格式（如 `1.1`、`2.3`）纯粹是约定，解析器不强求。建议 agent 使用它来保持可读性，但 `- [ ] Do the thing` 同样能正常被追踪。
 
@@ -126,25 +137,25 @@ const TASK_LINE_PATTERN = /^\s*(?:[-*+]|\d{1,9}[.)])\s*\[(?:\s*([^\]\s]?)\s*\](?
 
 > **机制 vs 行为**：下面描述的 7 步流程来自 skill 模板（`src/core/templates/workflows/apply-change.ts`）——它告诉 AI agent "应该怎么做"，而非 CLI 硬编码的执行逻辑。CLI 负责的是第 2 节的 apply gate（状态判定、checkbox 解析），agent 负责的是执行这些步骤。agent 理论上可以不按这 7 步走，但模板的设计意图就是引导 agent 遵循这个流程。
 
-来自 skill 模板 `apply-change.ts`（`instructions` 字段；编号步骤实际位于 `:50 / :59 / :68 / :105 / :115 / :123 / :141`）。
+来自共享生成函数 `getApplyInstructions()` in `src/core/templates/workflows/apply-change.ts`（234 行；顶部 `:30-32` 注入 `STORE_SELECTION_GUIDANCE` + `PROJECT_ROOT_GUARD`，7 个编号步骤位于 `:38 / :47 / :56 / :93 / :103 / :111 / :129`）。
 
-### Step 1：选定 change
+### Step 1：选定 change（`:38`）
 
 优先级：
 1. 用户提供的 change name（如 `/openspec-apply-change add-dark-mode`）
 2. 从对话上下文推断
 3. 如果只有一个活跃 change，自动选中
-4. 如果有多个，运行 `openspec list --json` 并用 AskUserQuestion 让用户选
+4. 如果有多个，运行 `openspec list --json` 并让用户选择
 
-### Step 2：获取 schema 信息
+### Step 2：获取 schema 信息（`:47`）
 
 ```bash
 openspec status --change "<name>" --json
 ```
 
-目的：了解 schemaName、planningHome、actionContext。
+目的：了解 `schemaName`、`planningHome`、`changeRoot`、`actionContext`。
 
-### Step 3：获取 apply 指令
+### Step 3：获取 apply 指令（`:56`）
 
 ```bash
 openspec instructions apply --change "<name>" --json
@@ -154,9 +165,9 @@ openspec instructions apply --change "<name>" --json
 
 | state | agent 行为 |
 |-------|----------|
-| `"blocked"` | 显示阻塞原因；缺 artifact、缺 tracks 文件或 tasks.md 没有 checkbox 时，建议用 `openspec-continue-change` 技能（Claude Code 里 `/openspec-continue-change`）补全或修复 planning artifact |
-| `"all_done"` | 报「跟踪任务已完成」，建议归档前先复核或 verify；不直接建议 archive |
-| `"ready"` | 继续到 Step 4 |
+| `"blocked"` | 暂停实施并展示阻塞信息。若 `missingArtifacts` 非空，展示缺失产物与 CLI `instruction` 字段给出的 CLI 恢复命令——即 **`openspec instructions <artifact> --change <name>`**（配合 `openspec status --change <name>` 查看剩余项，并保持 `--store`；注意 `describeArtifactRemedy` in `instructions.ts:397-414` **不再推荐 `openspec-continue-change`**，因为默认 `core` profile 根本不安装 `continue` 技能！）；若只是追踪文件缺失或无有效 checkbox，按 CLI 指令基于既有规划产物创建或修复追踪文件 |
+| `"all_done"` | 报告所有被追踪任务已完成，建议**在归档前按需复核或验证改动**（`Review or verify the change as appropriate before archiving`） |
+| `"ready"` | 继续到 Step 4（同时读取可选的 `context` 与 `operationGuidance` 作为实施约束，但绝不把它们当成任务已完成的证据或绕过 `blocked` 的许可） |
 
 ### Step 4：读 context files
 
@@ -191,9 +202,9 @@ v1.14.0 起（`e7a9512d`）这个循环是围绕 `sourcePath`/`line` 设计的�
 - 遇到错误或阻塞 → 报告并等待指导
 - 用户中断
 
-### Step 7：完成或暂停
+### Step 7：完成或暂停（`:129`）
 
-- **全部完成**：展示汇总，建议 `/openspec-archive-change`
+- **全部完成**：展示汇总，报告所有被追踪任务已完成，提示**归档前先复核或验证改动**（`Review or verify the change as appropriate before archiving. Review the completed work, then ask to archive this change.`）
 - **暂停了**：解释为什么停，等待指导
 
 ---

@@ -143,8 +143,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 
 这个文件有三个事实：
 
-1. **`program.parse()` 在 `runCli()` 函数体里**（`index.ts:848`），**不在模块顶层**。模块顶层只有命令注册 + 一个"被直接运行时才执行"的守卫
-2. **模块显式导出 `program` 和 `runCli`**（`:845`、`:847`），导入方解构使用
+1. **`program.parse()` 在 `runCli()` 函数体里**（`index.ts:905`），**不在模块顶层**。模块顶层只有命令注册 + 一个"被直接运行时才执行"的守卫（`:908-910`）
+2. **模块显式导出 `program` 和 `runCli`**（`:902`、`:904`），导入方解构使用
 3. **`bin/openspec.js` 调它**：
 
 ```js

@@ -92,9 +92,9 @@
   <path d="M905,380 C905,335 590,335 590,313" class="loop"/>
 
   <rect x="400" y="535" width="380" height="92" class="box" fill="url(#gate)" stroke="#facc15"/>
-  <text x="590" y="565" text-anchor="middle" class="label">PRP-10 applyRequires gate</text>
-  <text x="590" y="590" text-anchor="middle" class="small">schema.apply.requires 全部 done?</text>
-  <text x="590" y="608" text-anchor="middle" class="tiny">spec-driven 默认 requires: [tasks]</text>
+  <text x="590" y="565" text-anchor="middle" class="label">PRP-10 required set gate</text>
+  <text x="590" y="590" text-anchor="middle" class="small">applyRequires 及其传递依赖全部满足?</text>
+  <text x="590" y="608" text-anchor="middle" class="tiny">done / skipped / 条件跳过</text>
 
   <path d="M905,464 C905,510 590,510 590,535" class="arrow"/>
 
@@ -112,7 +112,7 @@
 
   <rect x="890" y="700" width="230" height="74" class="box" fill="#f0fdf4" stroke="#86efac"/>
   <text x="1005" y="728" text-anchor="middle" class="label">PRP-14 apply-ready handoff</text>
-  <text x="1005" y="752" text-anchor="middle" class="small">/opsx:apply 可以开始</text>
+  <text x="1005" y="752" text-anchor="middle" class="small">openspec-apply-change 可开始</text>
 
   <path d="M590,627 C590,668 195,668 195,700" class="arrow"/>
   <path d="M310,737 L350,737" class="arrow"/>

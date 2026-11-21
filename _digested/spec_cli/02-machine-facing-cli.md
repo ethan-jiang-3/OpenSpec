@@ -36,7 +36,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 - 它并不理解 artifact 依赖。
 - 它不能替代 `status`。
 
-> **别和已弃用的 `openspec change list --json` 混用——两者 JSON 结构完全不同。** 名词优先的 `change ...` / `spec ...` 命令仍有实现，但会往 stderr 打 `Warning: The "openspec change ..." commands are deprecated. Prefer verb-first commands`（`src/cli/index.ts:549-550` 的 `preAction` 钩子，退出码不受影响），而且返回的是**另一种形状**：
+> **别和已弃用的 `openspec change list --json` 混用——两者 JSON 结构完全不同。** 名词优先的 `change ...` / `spec ...` 命令仍有实现，但会往 stderr 打 `Warning: The "openspec change ..." commands are deprecated. Prefer verb-first commands`（`src/cli/index.ts:551-553` 的 `preAction` 钩子，退出码不受影响），而且返回的是**另一种形状**：
 >
 > | | `openspec list --json`（推荐） | `openspec change list --json`（已弃用） |
 > |---|---|---|
@@ -119,7 +119,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 
 ### `openspec instructions archive --change <name> --json`
 
-作用：为 archive workflow 提供只读 operation input，包括已解析的 project `context` 和 `operations.archive.guidance`。它不执行 archive；真正合并和移动仍由 `openspec archive` 完成。
+作用：为 archive workflow 提供只读 operation input，包括已解析的 project `context` 和 `operations.archive.guidance`。它不执行 archive；人类/脚本的确定性合并与移动由 CLI `openspec archive` 完成，而宿主 `openspec-archive-change` 技能本身不调用 `openspec archive`，而是由 agent inline 合并主 specs 后用 `mkdir -p` + `mv` 移动目录。
 
 ### `openspec schemas --json`
 
@@ -163,15 +163,15 @@ v1.14.0 新增的自述端点。JSON 契约：
 {
   "schemaVersion": 1,
   "version": "<installed>",
-  "install": { "location": "...", "packageManager": "npm|pnpm|bun|yarn|volta|null", "scope": "global|project|temporary|source|standalone|null" },
+  "install": { "location": "...", "packageManager": "npm|pnpm|bun|yarn|volta|homebrew|nix|null", "scope": "global|project|temporary|source|standalone|null" },
   "update": { "status": "available|current|disabled|offline", "latest": "...|null", "command": "...|null", "canSelfUpgrade": false }
 }
 ```
 
 （上面的 `update` 只是**形状示意**：不带 `--check` 时该键整体不存在；且 `latest` / `command` 都可能为 `null`，`canSelfUpgrade` 也常常是 `false`——别把 `true` 当默认值。）
 
-- `install` 描述当前安装的形态（`getCliInstallInfo`）；standalone 安装时 `packageManager` 为 `null`、`scope` 为 `standalone`。`update` 只在 `--check` 时出现——不带 `--check` 完全不发网络请求。
-- `update.command` 仅在 `status: "available"` 且安装归属明确（global + 已识别包管理器，或 standalone）时非空；standalone 给 `openspec install`（PATH 上第一个副本不同时给带全路径的重装命令）；`canSelfUpgrade` 由 `canSelfUpgrade()` 判定，非默认 registry 等不确定归属会返回 false。
+- `install` 描述当前安装的形态（`getCliInstallInfo`，`src/core/version-check.ts:605-709`）；standalone 安装时 `packageManager` 为 `null`、`scope` 为 `standalone`；v2.1.1（`#2264`）新增 `homebrew`（Cellar 路径）与 `nix`（`/nix/store`）识别，避免二者内部的 `lib/node_modules/` 布局被误判为 npm 全局安装。`update` 只在 `--check` 时出现——不带 `--check` 完全不发网络请求。
+- `update.command` 仅在 `status: "available"` 且有单一确定升级命令时非空：standalone 给 `openspec install`（PATH 上第一个副本不同时给带全路径的重装命令）；`homebrew` 给 `"brew upgrade openspec"`；**`nix` 的 `update.command` 恒为 `null`**（人类输出打印 `Update OpenSpec through Nix, the way you installed it.`，因具体命令取决于 `nix profile` / flake / home-manager / NixOS 配置，`version-check.ts:642-652,793-795`）；`canSelfUpgrade` 由 `canSelfUpgrade()` 判定（仅 npm 归属明确且默认 registry 的全局安装可能为 `true`）。
 - `disabled`/`offline` 是显式状态而非错误，agent 应按“无法确认更新”处理而不是重试。
 
 对机器的意义：

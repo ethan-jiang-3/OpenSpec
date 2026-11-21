@@ -62,7 +62,7 @@ delta 与 main spec 都通过 `discoverSpecFiles()` 递归发现：`specs/auth/s
 重要细节：
 
 - requirement header 匹配大小写不敏感。
-- `normalizeRequirementName()` 只做 trim + 剥离尾部 ATX 结尾 `#` 串（`requirement-blocks.ts:22`：`name.replace(/[ \t]+#+[ \t]*$/, '').trim()`），不 lower-case。
+- `normalizeRequirementName()` 只做 trim + 剥离尾部 ATX 结尾 `#` 串（`requirement-blocks.ts:30-33`，调用 `:23-25` 的 `stripClosingSequence()`：`title.replace(/[ \t]+#+[ \t]*$/, '').trim()`），不 lower-case。
 - REMOVED 支持 `### Requirement:` header，也支持 bullet list header。
 - RENAMED 用 FROM/TO pair。
 - UTF-8 BOM 会被剥离，fenced code block 中的 header 不参与 section/requirement 识别。

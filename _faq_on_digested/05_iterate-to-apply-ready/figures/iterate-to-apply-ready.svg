@@ -69,7 +69,7 @@
 
   <rect x="920" y="240" width="200" height="92" class="box" fill="url(#gate)" stroke="#facc15"/>
   <text x="1020" y="268" text-anchor="middle" class="label">ITR-06 修 gap</text>
-  <text x="1020" y="292" text-anchor="middle" class="small">直接编辑 / continue</text>
+  <text x="1020" y="292" text-anchor="middle" class="small">直接编辑 / update / continue</text>
   <text x="1020" y="310" text-anchor="middle" class="tiny">回 explore / 拆 change</text>
 
   <path d="M950,171 C950,205 250,205 250,240" class="arrow"/>
@@ -89,7 +89,7 @@
 
   <rect x="880" y="410" width="240" height="88" class="box" fill="#f0fdf4" stroke="#86efac"/>
   <text x="1000" y="440" text-anchor="middle" class="label">ITR-09 交棒 apply</text>
-  <text x="1000" y="464" text-anchor="middle" class="small">/opsx:apply 可以开始</text>
+  <text x="1000" y="464" text-anchor="middle" class="small">openspec-apply-change 可开始</text>
   <text x="1000" y="482" text-anchor="middle" class="tiny">真正可实施的 artifacts</text>
 
   <!-- Loop arrow from ITR-06 back to ITR-03 -->

@@ -35,7 +35,7 @@ artifactOutputExists(changeDir, generates)
 | `generates` 类型 | done 条件 |
 |---|---|
 | 普通路径，例如 `proposal.md` | `statSync(fullPath).isFile()` 为 true |
-| glob，例如 `specs/**/*.md` | `fast-glob` 在 changeDir 下 `onlyFiles: true` 匹配到至少一个文件 |
+| glob，例如 `specs/**/*.md` | `brace-expansion`（嵌套 ≤16、展开 ≤1024）+ `picomatch` + `tinyglobby` 在 changeDir 下 `onlyFiles: true` 匹配到至少一个文件 |
 
 因此：
 
@@ -59,14 +59,15 @@ specs/auth/spec.md 存在 -> specs done
 }
 ```
 
-propose skill 的循环终止条件是：
+propose skill（`propose.ts:130-139`，并在创建前先跑 `openspec context --json` 预检权威 `root.path` 与 `config.yaml`）的循环终止条件不是只看 `applyRequires` 本身，而是看**传递闭包 required set**：
 
 ```text
-每个 applyRequires 里的 artifact
-在最新 status JSON 中都是 status: "done"
+required set = applyRequires ∪ 沿 status JSON 中每个 artifact 的 requires 边传递可达的全部上游 artifacts
+终止条件：required set 中每个 artifact 都为 status: "done"、status: "skipped"（skip_specs: true），
+         或因其自身 instruction 标明条件可选而被显式记录跳过（如 spec-driven 的 design.md）
 ```
 
-这就是 apply-ready 的第一层定义。
+之所以必须沿 `requires` 走传递闭包，是因为 `status` 只检查文件是否存在：若提前写了 `tasks.md`，`tasks` 会直接变成 `done`，只看 `applyRequires` 就会漏写 `specs`。这就是 propose 层（第一层）的终止定义。
 
 ## apply-ready 不等于所有事情都正确
 
@@ -181,7 +182,7 @@ PRP-10 有两层：
 
 ```text
 Propose 层：
-  applyRequires 中的 artifacts 都 done
+  applyRequires 及其传递依赖闭包（required set）中的 artifacts 全部满足（done / skipped / 条件跳过）
 
 Apply 层：
   instructions apply 返回 state: ready
@@ -192,7 +193,7 @@ Apply 层：
 
 ## 参考来源
 
-源码引用基于 commit `750a03c`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

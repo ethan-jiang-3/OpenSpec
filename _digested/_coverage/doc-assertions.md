@@ -21,17 +21,17 @@
 >
 > **口径反转（v2.1.1 轮）**：上面那条「不得写已移除」是 **v1.17.0 轮**的口径，**已经作废**。v2.0.0 起 command 文件真的不再生成，所以现行口径相反：`_digested`、`_faq_on_digested`、handbook 里凡以现在时描述 command 文件，必须写「**已移除 / 不再生成**」；只有明确标注为历史溯源（「v1.17.0 起标记弃用」）的语句可以写「弃用」。
 >
-> **v2.1.1 增量（2026-11-21）**：本轮对比的区间是 `579fcac5`（v1.17.0）→ `0c737dc1`（v2.1.1），共 23 提交。三套资料回填按 [plan-13](./../_change_log/_plan-13-v2.1.1-full-sync.md) 推进；全库链接与 sha 复跑留到 Phase E。
+> **v2.1.1 增量与二轮全库精校（2026-11-21）**：对比区间为 `579fcac5`（v1.17.0）→ `0c737dc1`（v2.1.1），共 23 提交。继 [plan-13](./../_change_log/_plan-13-v2.1.1-full-sync.md) / [plan-14](./../_change_log/_plan-14-v2.1.1-doc-complete-sync.md) 首轮回填后，按 `v2.1.1` 真实源码对三套资料共 243 个 Markdown 与 24 个 SVG 做全量逐行核验，清零全部批量替换残留、跨目录断链、越界行号与过期实测数字。下表已刷新为全库实测值。
 
 | # | 断言类型 | 判定方法 | 当前 |
 |---|---------|---------|------|
-| 1 | commit sha | 后引号内的 7–40 位十六进制，逐个 `git cat-file -t` 必须返回 `commit` | 189 个，0 无效 |
-| 2 | sha ↔ PR 配对 | 形如 `` `sha`（#NNNN） ``，`git log -1 --format=%s%n%b <sha>` 必须含该 PR | 56 组，0 不符 |
-| 3 | 版本归因 | 形如 `` `sha`（vX.Y.Z） ``，`git tag --contains` 的**最小** tag 必须等于 X.Y.Z | 5 处，0 不符 |
-| 4 | 行号锚点 | `` `src/...:N` `` 的 N 不得超过文件行数，且该行内容需与上下文描述相符 | 33 处，全部命中 |
-| 5 | 相对链接 | 剥掉围栏代码块后匹配 markdown 链接语法（方括号文字紧跟圆括号目标），按文件所在目录解析，须存在 | 217 文件，0 失效 |
-| 6 | 锚点 fragment | `#frag` 需存在于目标文件的标题 slug 集合中 | 同上，0 失效 |
-| 7 | 代码围栏 | 每文件 ``` 计数为偶数 | 0 未配平 |
+| 1 | commit sha | 后引号内的 7–40 位十六进制，逐个 `git cat-file -t` 必须返回 `commit` | 150 个唯一值，0 无效 |
+| 2 | sha ↔ PR 配对 | 形如 `` `sha`（#NNNN） ``，`git log -1 --format=%s%n%b <sha>` 必须含该 PR | 42 组，0 不符 |
+| 3 | 版本归因 | 形如 `` `sha`（vX.Y.Z） ``，`git tag --contains` 的**最小** tag 必须等于 X.Y.Z | 4 处，0 不符 |
+| 4 | 行号锚点 | `` `(src\|schemas\|scripts\|test)/...:N` `` 的 N 不得超过文件行数，且该行内容需与上下文描述相符 | 132 处（含 40 个唯一反引号锚点），0 越界 |
+| 5 | 相对链接 | 剥掉围栏代码块与行内代码后匹配 markdown 链接语法，按文件所在目录解析，须存在 | 243 文件，0 失效 |
+| 6 | 锚点 fragment | `#frag`（含同文件 `#frag`）需存在于目标文件的标题 slug 集合中 | 同上，0 失效 |
+| 7 | 代码围栏与 SVG | 每文件 ``` 计数配平；全部 `.svg` 通过 XML 解析 | 243 MD / 24 SVG，0 异常 |
 
 ### 误判排除
 
@@ -55,7 +55,7 @@ import re,glob,subprocess
 # 记录"旧值→真值"的行天然含无效 sha：更正对照表、以及正文里的纠错说明
 EXEMPT_LINE = re.compile(r'更正对照|文档原值|转录错误|→|^\|\s*`[0-9a-f]{7,40}`\s*\|')
 bad=0
-for f in glob.glob('_digested/**/*.md',recursive=True)+glob.glob('_faq_on_digested/**/*.md',recursive=True)+glob.glob('_openspec_handbook/*.md'):
+for f in glob.glob('_digested/**/*.md',recursive=True)+glob.glob('_faq_on_digested/**/*.md',recursive=True)+glob.glob('_openspec_handbook/**/*.md',recursive=True):
     for i,line in enumerate(open(f,encoding='utf-8'),1):
         if EXEMPT_LINE.search(line): continue
         for x in set(re.findall(r'`([0-9a-f]{7,40})`',line)):
@@ -82,12 +82,12 @@ fs=[f for f in glob.glob('_digested/**/*.md',recursive=True)+glob.glob('_faq_on_
 an={os.path.abspath(f):{slug(m.group(1)) for m in re.finditer(r'^#{1,6}\s+(.+)$',strip(open(f,encoding='utf-8').read()),re.M)} for f in fs}
 bad=[]
 for f in fs:
-    for m in re.finditer(r'!?\[[^\]]*\]\(([^)\s]+)\)',strip(open(f,encoding='utf-8').read())):
+    txt = re.sub(r'`[^`\n]+`', '', strip(open(f,encoding='utf-8').read()))
+    for m in re.finditer(r'!?\[[^\]]*\]\(([^)\s]+)\)', txt):
         t=m.group(1)
-        if t.startswith(('http','mailto:','#')): continue
+        if t.startswith(('http','mailto:')): continue
         p,_,fr=t.partition('#')
-        if not p: continue
-        tg=os.path.normpath(os.path.join(os.path.dirname(f),p))
+        tg=os.path.abspath(f) if not p else os.path.normpath(os.path.join(os.path.dirname(f),p))
         if not os.path.exists(tg): bad.append((f,t))
         elif fr and os.path.abspath(tg) in an and fr not in an[os.path.abspath(tg)]: bad.append((f,t,'frag'))
 print("失效:",len(bad))
@@ -99,6 +99,7 @@ PY
 | 轮次 | 修掉 | 提交 |
 |------|------|------|
 | 0012 收尾 | 5 个转录错误的 sha（跨 7 文件 4 目录）、`$openspec-propose-change` 残留 3 处、虚构子命令 `workset save` | `e5f66e0f`、`10c62a4e` |
+| 0015 二轮全库精校 | 批量替换导致的 `/opsx:*`→`/openspec-*` 反义污染与步骤重编号误伤（`第 50..54 步` / `00–26 / 50–19`）、`0015` 漏记第 9 组修复 `#2266`、`#2265` 增长判据误译、`10_schema-requirement` 占用 `specs/` 导致 `validate` 硬败、`53-实战` 4 份 delta spec 误用 `## Requirements`、`18_` 过期 `v1.17.0` 实测数字与缺失 CLI/config 字段、`_coverage/*` 14 个源文件与 7 个 capability 缺口、`_runbook/upgrade-all.sh` 非交互挂起与 `--clean` 指纹误删风险 | 见 git log |
 
 已知的 sha 更正对照：
 

@@ -36,7 +36,7 @@ OpenSpec 主干
   spec-driven core workflows
 
 补充机制
-  workspace coordination     多 repo/folder 的本机协调视图
+  store coordination         多 repo 的全局注册、reference 与本机工作视图
   tool delivery              workflow 语义投递到不同 agent 外壳
   spec model                 Markdown → parser → schema → validator
   workflow templates          agent 操作手册源码
@@ -47,7 +47,7 @@ OpenSpec 主干
 
 ## 读这些机制时要守住的边界
 
-- workspace 是本机视图，不是把多个 repo 合成一个新的 source of truth。
+- store / workset 只提供跨仓库 spec 索引与个人本机打开视图，不是把多个 repo 合成一个新的 source of truth。
 - tool delivery 投递的是 workflow 入口，不是业务事实。
 - spec model 解释 Markdown，不决定 workflow 顺序。
 - workflow templates 约束 agent 行为，不等于 CLI 硬编码执行。

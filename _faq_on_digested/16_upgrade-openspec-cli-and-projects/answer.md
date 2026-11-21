@@ -6,7 +6,7 @@
 
 ## 一句话结论
 
-**OpenSpec 没有 `openspec upgrade` 命令。升级是两步：① 用你当初的安装方式升级全局 CLI（交互式 npm 全局、默认 registry 下 `openspec update` 可以替你升级并重跑；standalone 用 `openspec install`）；② 对每个项目先 `openspec update --dry-run` 预演，再跑 `openspec update`，让新 CLI 用自己的模板重新生成该项目的 skills/commands、迁移旧目录、清理旧托管文件。顺序不能反——先升 CLI，再 update 项目；用旧 CLI 跑 update 只会重新生成旧的投递文件。**
+**OpenSpec 没有 `openspec upgrade` 命令。升级是两步：① 用你当初的安装方式升级全局 CLI（交互式 npm 全局、默认 registry 下 `openspec update` 可以替你升级并重跑；standalone 用 `openspec install`）；② 对每个项目先 `openspec update --dry-run` 预演，再跑 `openspec update`，让新 CLI 用自己的模板重新生成该项目的 skills、迁移旧目录、清理 1.x 遗留的命令文件与旧托管文件。顺序不能反——先升 CLI，再 update 项目；用旧 CLI 跑 update 只会重新生成旧的投递文件。**
 
 ---
 
@@ -18,7 +18,7 @@
    ```bash
    openspec version --json      # 看 install.scope 与 install.location
    ```
-   `scope` 是 `global`（npm 等包管理器）、`standalone`、`local`（项目依赖）还是 `source`（源码）。
+   `install.scope`（`src/core/version-check.ts:606` 的 `getCliInstallInfo()`）只会是 `global`（npm/pnpm/bun/yarn/volta/homebrew/nix 等全局安装）、`standalone`（单文件二进制）、`project`（项目本地 `node_modules` 依赖）、`temporary`（npx/dlx/bunx 等临时缓存）或 `source`（git clone 源码；无法判定归属时为 `null`——注意**没有 `local` 这个值**）。
 
 2. **把项目状态提交干净**（不是 `stash`，原因见下）：
    ```bash
@@ -78,11 +78,11 @@ CLI 会识别自己是**怎么被装的**（`getCliInstallInfo()` 的 scope/pack
 | git clone 源码 | 没有升级建议——版本就是分支说的，`git pull`/切 tag 即可 |
 | standalone 单文件（v1.15.0+） | `openspec install`（原地重装；`version --check` 会给出这条命令） |
 
-v1.15.0 起 CLI 也可能是 standalone 安装：`openspec version` 会标 `(standalone)`，`--json` 的 `install.scope` 为 `standalone`，升级命令是 `openspec install`（若 PATH 上的 `openspec` 是别的副本，会给带全路径的重装命令）。standalone 不需要 Node.js；npm 等包管理器方式需要 Node.js **22.20.0+**（v2.1.1 起；v1.16.0–v2.1.0 是 22.12.0；Node 20 已 EOL，且只有 Node 20 上的 npm 安装受影响）。
+v1.15.0 起 CLI 也可能是 standalone 安装：`openspec version` 会标 `(standalone)`，`--json` 的 `install.scope` 为 `standalone`，升级命令是 `openspec install`（若 PATH 上的 `openspec` 是别的副本，会给带全路径的重装命令）。standalone 不需要 Node.js；npm 等包管理器方式需要 Node.js **22.20.0+**（**v2.1.0** #2241 起；v1.16.0–v2.0.0 是 22.12.0；Node 20 已 EOL，且只有 Node 20 上的 npm 安装受影响）。
 
 ### 交互式 npm 全局：`openspec update` 可以替你升级
 
-在**npm 全局安装 + 交互终端（stdout 是 TTY）**下，`openspec update` 检测到新版本时会直接**询问是否先升级**，确认后它替你跑 `npm install -g @fission-ai/openspec@latest`，成功后**用新 CLI 重跑 update**（`rerunUpdateWithUpgradedCli`，见 `src/core/version-check.ts:936`；调用点在 `src/cli/index.ts:413`）。这样本轮生成的投递文件就是新 CLI 的，不用你手工分两步。非 npm 全局（pnpm/bun/yarn/volta）、项目本地依赖、npx 缓存、源码 clone 都不会触发；**`npm_config_registry` 指向非官方源时也不会**（`canSelfUpgrade()` 里的 `isDefaultRegistry()` 检查）——企业私有镜像/npmrc 场景下别等这个提示这个自升级，只打印命令。
+在**npm 全局安装 + 交互终端（stdout 是 TTY）**下，`openspec update` 检测到新版本时会直接**询问是否先升级**，确认后它替你跑 `npm install -g @fission-ai/openspec@latest`，成功后**用新 CLI 重跑 update**（`rerunUpdateWithUpgradedCli`，见 `src/core/version-check.ts:1029`；调用点在 `src/cli/index.ts:415`）。这样本轮生成的投递文件就是新 CLI 的，不用你手工分两步。非 npm 全局（pnpm/bun/yarn/volta/homebrew/nix）、项目本地依赖（`project`）、npx 缓存（`temporary`）、源码 clone（`source`）都不会触发；**`npm_config_registry` 指向非官方源时也不会**（`canSelfUpgrade()` 里的 `isDefaultRegistry()` 检查）——企业私有镜像/npmrc 场景下不会触发交互自升级，只打印命令。
 
 ---
 
@@ -90,21 +90,24 @@ v1.15.0 起 CLI 也可能是 standalone 安装：`openspec version` 会标 `(sta
 
 ### 为什么项目还要再动一次
 
-skills/commands 是 CLI **用自己当前版本的模板生成**的，生成文件里嵌入了 `OPENSPEC_VERSION`。旧 CLI 生成的文件只描述旧工具、旧 workflow、旧语义——例如 v1.9.0 的 Command Code / `validate --archived`，或 v1.8.0 的 `--tools agents`（`.agents/skills/`）、GitHub Copilot cloud 文件、`.openspec-target` ownership marker，旧 CLI 根本不知道。所以「升级全局 CLI」≠「项目自动跟上」。
+投递到仓库或用户级目录的 `SKILL.md`（以及 1.x 曾生成的命令文件）是 CLI **用自己当前版本的模板生成**的。0.x/1.x 生成的 `SKILL.md` 在 frontmatter 里带 `generatedBy: "<version>"`；当前实现里 `expectedSkillContents()` 调用 `stripVolatileFrontmatter()`（`src/core/skill-installer.ts:16`、`src/core/shared/skill-generation.ts:75`）**剥掉了 `generatedBy:` 行**，安装出的 `SKILL.md` 与仓库内发布的文本逐字节一致。旧 CLI 留下的文件只描述旧工具、旧 workflow、旧语义——例如 v1.9.0 的 Command Code / `validate --archived`，或 v1.8.0 的 `--tools agents`（`.agents/skills/`）、GitHub Copilot cloud 文件、`.openspec-target` 清单，旧 CLI 根本不知道。所以「升级全局 CLI」≠「项目和本机技能自动跟上」。
 
-### `openspec update` 在项目里做了什么（`src/core/update.ts` 的 `UpdateCommand`）
+### `openspec update` 做了什么（`src/core/update.ts` 的 `UpdateCommand`）
 
-1. **先查 CLI 更新**（见上）。
-2. **迁移 legacy 工具目录**：`migrateLegacyToolDirs`（如 `.kimi` → `.kimi-code`）。
-3. **迁移已安装工具**：`migrateIfNeededShared`——v1.8.0 里最典型的就是 **Codex 的 `.codex` skill 树原地迁到共享的 `.agents/skills/`**，保留用户定制文件。
-4. **智能检测哪个工具该重生成**：比较项目里已生成文件的版本戳与当前 CLI 版本，只重生成过期的；全部 up-to-date 且没新工具时输出「All tools are up to date」并收工。
-5. **按 delivery 重新生成**（1.x）：`skills` / `commands` / `both` 由全局 config 的 `delivery` 决定。**v2.0.0 起 `delivery` 退役**（#2223）：一律装 skills，配置里不再有这一项，command 文件不再生成。
-6. **处理共享根 ownership**：**1.x** 里 `.agents/skills` 被多个工具共用，靠 `.openspec-target` marker 记「谁是 active writer」来避免互相覆盖。**2.x 不需要仲裁了**——`.agents/skills/` 是唯一真身，`.openspec-target` 改成「这个项目配了哪些工具」的清单（每行一个 id），`update` 靠它知道要照顾哪些工具。调用形式一律走技能名：Claude Code 等用 `/openspec-<name>`，Zed 用 `/openspec-*` 或 `@openspec-*`，Codex 用 `$openspec-*`，不要混写。
-7. **legacy 清理**：删掉 OpenSpec 历史上留的托管文件（v1.8.0 修了 CoStrict/Junie 目录误删 bug，现在只删 `openspec-*.md` 这类可识别托管文件，**永不删用户内容**）。**v1.17.0 起判据升级为内容指纹**：只有“内容等于某个已发布版本原样写出过”的文件才会被当作无主旧产物；路径上任何一段是链接就完全不碰，即使加 `--force`。
-8. **清扫旧版本产物**（v1.17.0）：删掉“当前版本根本不会写”的路径上、且没人编辑过的文件（同一套指纹判据），并回收留下的空目录。这一步让 `update` 能从 **0.12 以来任意版本一次跑完**。
-9. **命令弃用提示**（v1.17.0，历史形态；该函数在 2.0 已删除）：若某个已配置工具仍会得到 command 文件，打印一条「2.0 移除，建议现在切 skills」的提示。
-9b. **移除 command 文件**（v2.0.0 #2223）：不再生成，按指纹清理早期版本留下的——没人改过的删掉，改过的保留并列出。skills 收成 `.agents/skills/` 单份真身，其他工具目录放链接（建不了链接退化为拷贝）。
-10. **Copilot cloud 文件**：`openspec update` 从不提示——只刷新「已 opt-in」或「旧项目已存在 managed cloud 文件（视为隐含 opt-in）」的 Copilot 项目；用户自己改过的文件永不覆盖/删除；opt-out 只删 managed 文件。
+1. **先查 CLI 更新**（`src/cli/index.ts:386-423`，见上；`--dry-run` 跳过网络检查）。
+2. **记录已知项目与检查本机全局技能**：非 `--dry-run` 时把当前项目绝对路径记入 `<globalDataDir>/projects.json`（`rememberProject`，`src/core/known-projects.ts`；写失败静默忽略）；同时用 `readGlobalSkills()` 检查本机是否已装有全局技能（若有，在**没有 `openspec/` 的目录**直接跑 `openspec update` 也合法，会走第 12 步刷新全局技能）。
+3. **交互式技能作用域询问**（v2.1.0，`src/core/update.ts:220-253`，仅交互终端、非 `--dry-run`、非 `--force`）：
+   - 若项目自己装有技能（`projectHasOwnSkills`）且未在 `openspec/config.yaml` 记录 `skillsScope: project`，询问 `"Where should OpenSpec keep this project’s skills?"`：选 **`Keep in this project`** 会把 `skillsScope: project` 写入 `openspec/config.yaml`（提交后全队不再被问），继续项目内更新；选 **`Switch to global`**（若开启了 Copilot cloud 会先确认是否关闭）直接委派给 `InitCommand({ scope: 'global', ... })` 安装本机全局技能并移除仓库内的旧技能/命令文件后返回。
+   - 若项目内和本机都没有技能、且 `OPENSPEC_SKILLS_SCOPE !== 'project'`，询问 `"Set up OpenSpec skills for your coding tools on this machine?"`，确认后同样委派 `InitCommand({ scope: 'global' })`。
+4. **迁移 legacy 工具目录与一次性 profile 迁移**：`migrateLegacyToolDirs`（如 `.kimi` → `.kimi-code`）+ `migrateIfNeededShared`（如 1.8.0 把 **Codex 的 `.codex` skill 树迁到共享 `.agents/skills/`**，保留用户定制文件；并按已装工作流做一次性全局 `config.json` profile 迁移）。
+5. **清理已退役工具**（`cleanUpRetiredTools`，`src/core/retired-tools.ts`）：对 `RETIRED_TOOLS` 中的 **Amazon Q Developer（`amazon-q` / `.amazonq`）** 移除早期版本生成的未改动文件，用户改过的文件保留并列出，提示改用 Kiro。
+6. **检测哪些工具过期或正文漂移**：`getToolVersionStatus()`（`src/core/shared/tool-detection.ts:297`）对 0.x/1.x 技能读 `extractGeneratedByVersion()`，对无 `generatedBy:` 的共享技能比对归一化文本与 `expectedSkillContents(currentVersion)`（1.x 纯命令安装永远视为过期）；同时 `findToolsWithDriftedSkills()`（`src/core/update.ts:898`）逐文件比对 `SKILL.md` 正文与当前模板，揪出版本号没变但正文被外部篡改的技能。全部一致且无遗留清理项时输出「All tools are up to date」。
+7. **只装 skills（`delivery` 已退役）**：1.x 曾按全局 `delivery`（`skills` / `commands` / `both`）分流；**v2.0.0 起 `delivery` 退役**（#2223，`config set delivery` 仅作兼容空操作保留），一律通过 `skills` 包从本地 npm 包离线安装 skills（#2283），**命令文件已移除、不再生成**。
+8. **单份共享根 + 链接/拷贝**：**1.x** 靠 `.openspec-target` 做多工具写者仲裁；**2.x** 里 `.agents/skills/` 是项目内唯一真身（#2269 起也识别并刷新 `npx skills add` 装入项目的技能），其他工具目录放相对链接（无法建链接或 Windows `--scope project` 下用拷贝），`.agents/skills/.openspec-target` 改为记录该项目已配置工具 ID 的清单。调用形式一律走技能名：Claude Code 等用 `/openspec-<name>`，Zed 用 `/openspec-*` 或 `@openspec-*`，Codex 用 `$openspec-*`。
+9. **按内容指纹清理 legacy 与 1.x 命令文件**（v1.17.0 + v2.0.0 #2223）：只有内容匹配已发布版本指纹（`isReleasedGeneratedContent`）的无主旧文件与 1.x 命令文件才会被自动删除；用户改过的保留并列出；路径上任何一段是 symlink 就完全不碰（即使加 `--force`）。
+10. **清扫旧版本残留路径**（`released-output-sweep.ts`）：清掉当前版本不再写入路径上未改动的历史产物并回收空父目录，使 `update` 能从 **0.12 以来任意版本一次跑完**。（1.17.0 短暂存在过的命令弃用提示已在 2.0 删除。）
+11. **Copilot cloud 文件**：`openspec update` 从不弹窗询问它——只刷新「`openspec/config.yaml` 已 `githubCopilot.cloudAgent: true`」或「旧项目已存在 managed cloud 文件」的 Copilot 项目；用户改过的文件永不覆盖/删除；显式 opt-out 只删 managed 文件。
+12. **刷新本机全局技能**（`refreshGlobalSkills`，`src/core/update.ts:297`）：只要本机已装有全局技能（`this.hasGlobalSkills`），无论本次是否在项目内运行、甚至项目内更新报错后，都会把 `~/.agents/skills/`、各工具全局技能目录及 `.skill-lock.json` 刷新到当前 CLI 版本与生效 profile。
 
 ### 先预演：`openspec update --dry-run`
 
@@ -178,7 +181,7 @@ openspec install 1.17.0                  # 再决定要不要回退 CLI（按安
 
 ### 第 2 层：回退项目里的改动
 
-`openspec update` **只写当前项目内的文件**，所以 git 就是你的撤销工具：
+`openspec update` 除了改当前项目内的文件，还可能写**仓库之外**的四处位置：① 全局 `config.json`（一次性 profile 迁移）；② `<globalDataDir>/projects.json`（本地已知项目列表）；③ `~/.codex/prompts/`（仅在确认或 `--force` 清理旧全局 Codex prompt 时）；④ 本机已装全局技能时的 `~/.agents/skills/`、各工具全局技能目录以及 `~/.agents/.skill-lock.json`（若设了 `XDG_STATE_HOME` 则为 `$XDG_STATE_HOME/skills/.skill-lock.json`）。**仓库内的改动**直接用 git 撤销，仓库外的全局技能见第 3 层：
 
 ```bash
 git diff --stat                 # 先看它到底改了什么
@@ -193,13 +196,17 @@ git clean -fd                   # 确认无误后再删
 
 ### 第 3 层：清理全局技能
 
-全局技能在仓库之外，git 完全管不到：
+全局技能与锁文件都在仓库之外，git 完全管不到。优先用 `skills` 包一次清干净（会同步更新全局目录、各 agent 专属全局目录以及 `.skill-lock.json`）：
 
 ```bash
-ls ~/.agents/skills ~/.claude/skills 2>/dev/null   # 看有哪些 openspec-*
-rm -rf ~/.agents/skills/openspec-*                 # 只删 OpenSpec 装的
-rm -rf ~/.claude/skills/openspec-*                 # 按你的工具改路径
+npx skills list -g                                 # 查看已注册的全局技能
+npx skills remove -g openspec-explore openspec-propose openspec-apply-change \
+  openspec-update-change openspec-sync-specs openspec-archive-change \
+  openspec-new-change openspec-continue-change openspec-ff-change \
+  openspec-verify-change openspec-bulk-archive-change openspec-onboard
 ```
+
+若手工删除，除了 `~/.agents/skills/openspec-*` 与各工具自己的全局技能目录（如 `~/.claude/skills/openspec-*`、Antigravity 等非通用全局目录），还要同步清掉锁文件 `~/.agents/.skill-lock.json`（或 `$XDG_STATE_HOME/skills/.skill-lock.json`）里的 `openspec-*` 条目，避免残留锁记录。
 
 删掉不影响任何项目的 `openspec/` 目录——技能只是让 agent 知道怎么用 OpenSpec，项目真相在仓库里。
 
@@ -248,14 +255,24 @@ rm -rf ~/.claude/skills/openspec-*                 # 按你的工具改路径
 
 ### 想彻底隔离就选项目作用域
 
+注意 `openspec init` 与 `openspec update` 读取的作用域配置位置**不同**（`src/core/init.ts:373-396` vs `src/core/project-skills-scope.ts:15`）：
+
 ```bash
-openspec init --scope project          # 装进当前项目
-# 或写进 openspec/config.yaml：skillsScope: project
+# 新建/初始化项目时写入仓库内技能（三选一）：
+openspec init --scope project                        # 1) 显式传 --scope project
+OPENSPEC_SKILLS_SCOPE=project openspec init          # 2) 环境变量
+openspec config set skillsScope project              # 3) 全局 config.json 的默认偏好
+
+# 已有仓库内技能的项目，让后续 openspec update 不再弹窗询问切全局：
+# 在 openspec/config.yaml 写入：
+#   skillsScope: project
 ```
 
-项目作用域的技能只在这个仓库生效，别处看不见，也不会因为别处跑 `update` 而被改。
+- **`openspec init` 不读 `openspec/config.yaml` 的 `skillsScope`**：`InitCommand.resolveSkillScope()` 只看 `--tools none`、`--scope`、项目是否已有仓库内技能（`projectHasOwnSkills`）、`OPENSPEC_SKILLS_SCOPE`、**全局 `config.json` 的 `skillsScope`**，以及 `--copilot-cloud` 或不支持全局技能的工具（`eve`、`promptscript`）。
+- **`openspec/config.yaml` 的 `skillsScope: project` 是给 `openspec update` 读的**（`keepsProjectSkills`），用来记录「本团队已决定把技能留在这个仓库里，别再每次交互提示切全局」。
+- **注意新项目默认值**：在还没有项目内技能的新仓库里跑 `openspec init`，**无论交互还是非交互（CI、agent 调用），默认作用域都是 `global`**（除非命中上述 `eve` / `promptscript` 或 `--copilot-cloud`）。想让新仓库把技能装进项目目录，必须显式传 `--scope project`（或设 `OPENSPEC_SKILLS_SCOPE=project` / 全局 `config.json` `skillsScope`）。
 
-> **注意默认值**：非交互（CI、agent 调用）下不传 `--scope` 时**默认是 global**。想让技能跟仓库走，必须显式指定。
+项目作用域的技能只在这个仓库生效，别处看不见，也不会因为别处跑 `update` 而被改。
 
 ## 版本细节（按版本拆到独立文件）
 

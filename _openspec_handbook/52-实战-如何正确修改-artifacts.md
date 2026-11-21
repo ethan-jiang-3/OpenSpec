@@ -1,24 +1,23 @@
 # 52 · 实战：如何正确修改 Artifacts
 
-> 这一篇解决新手最困惑的问题：**OpenSpec 的 artifacts 到底该怎么改？** 和别的 SDD 工具不同，OpenSpec 是**弱约束**——artifacts 归你所有，可以手改、可以让 AI 重写、改完跑 `validate`。本文教你在这个自由度下，按文件类型安全地改、不踩格式坑。core profile 是默认前提，见下方专节。
+> 这一篇解决新手最困惑的问题：**OpenSpec 的 artifacts 到底该怎么改？** 和别的 SDD 工具不同，OpenSpec 是**弱约束**——artifacts 归你所有，可以手改、可以让 AI 重写、改完跑 `validate`（适用 openspec 2.1.1）。本文教你在这个自由度下，按文件类型安全地改、不踩格式坑。core profile 是默认前提，见下方专节。
 
 ---
 
 ## 重要前提：Profile 说明
 
-OpenSpec 有两种 profile（配置模式）：
+**OpenSpec 的所有 artifacts 都是受结构化规则保护的普通文本文件：只要守住各文件的语法骨架并在改后跑通 `openspec validate`，手改、AI 局部修订与整份重建可以随时切换。**
 
-这里列出的 `/openspec-*` 是 Claude 的 OpenSpec workflow command，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`；Codex v1.8.0 使用 `$openspec-*` skills。下文命令表要按宿主 adapter 理解，不能把 slash 语法推广到所有工具。
+OpenSpec 有两种 profile（工作流配置模式）。这里列出的 `/openspec-*` 是 Claude Code 等宿主里调用 OpenSpec **skill（技能）** 的写法（Codex 用 `$openspec-*`，也可以直接用自然语言描述任务由 agent 自动选用），不是另一套叫 OPSX 的独立工具，也不是宿主 adapter 命令文件（1.x 的 `/opsx:*` 命令文件已在 v2.0.0 移除）。终端里的底层运行时始终是 `openspec ...` CLI。
 
-> **v1.13.1 artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的 metadata。每条 task 自带 verification；capability 退役若仍有未归属内容会被阻止。配置方面，artifact `rules` 只影响 artifact 生成，Apply/Archive 读 project `context` 与对应 operation guidance。
-> **v1.13.1 update 守卫。** `/opsx:update` 现在先起草修订（step 4），经你确认后才写入文件（step 5）——与 explore 的 capture 确认同属「写前确认」护栏。
+> **artifact 与 update 边界。** specs 支持嵌套 capability path；`skip_specs: true` 用于声明“本次 change 无 spec 级行为变化”。每条 task 在同一行 checkbox 内写明 verification；capability 退役若仍有未归属内容会被阻止。配置上，artifact `rules` 只注入对应 artifact 生成，Apply/Archive 读取项目的 `context` 与 `operations.apply/archive.guidance`。调用 `/openspec-update-change` 时，agent 会先起草修订方案并经你确认后才落盘写入——与 `explore` 的 capture 确认同属“写前确认”护栏。
 
-> **升级 OpenSpec 后先跑一次 `openspec update`（v1.17.0 起更省事）。** 你用来改 artifacts 的 workflow（skills / 命令文件）是 CLI 用**自己当前版本的模板**生成的；旧 CLI 生成的那份描述的是旧语义。所以升级 CLI 之后要跑一次 `openspec update` 让工具侧跟上。v1.17.0 起这一步能从 **0.12 以来任意版本一次跑完**，且**不再需要 `--force`**：没人编辑过的旧 OpenSpec 文件会被清掉（靠内容指纹证明），你改过的保留并列出，路径上有符号链接的一概不碰。升级后第一次 `validate` 若报出新错误，见 [99 FAQ Q27i](99-FAQ-常见问题.md#q27i-升级后-validate-突然报错了是回归吗)。
+> **升级 OpenSpec CLI 后先跑一次 `openspec update`。** 你用来改 artifacts 的工作流技能是由 CLI 按**当前版本内置模板**离线安装的；升级 CLI 后跑一次 `openspec update` 才能让本机或项目里的 `openspec-*` 技能同步跟上。这一步能从 **0.12 以来任意旧版本一次升级到位**，不再需要 `--force`：未改动过的 1.x 旧命令文件靠历史内容指纹自动清理，你手改过的旧命令文件保留并列出；清理流程绝不跨符号链接误删项目外目标，而在 `--scope project` 模式下则会安全维护各工具目录指向 `.agents/skills/` 的相对技能链接（保留用户自改拷贝或自定义链接）。升级后第一次 `validate` 若报出新错误，见 [99 FAQ Q27i](99-FAQ-常见问题.md#q27i-升级后-validate-突然报错了是回归吗)。
 
-| Profile | 命令数量 | 适用场景 | 是否默认 |
+| Profile | 技能数量 | 适用场景 | 是否默认 |
 |---------|---------|---------|---------|
-| **core** | 6 个命令（v1.6.0 起） | 快速开发，简单场景 | 是（默认） |
-| **custom** | 12 个命令 | 复杂项目，需要更多控制 | 否 |
+| **core** | 6 个技能 | 日常快速迭代，覆盖完整主线 | 是（默认） |
+| **custom** | 最多 12 个技能 | 复杂项目，按需开启细粒度动作 | 否 |
 
 ### 检查你当前的 Profile
 
@@ -30,26 +29,26 @@ openspec config profile
 # profile: core
 ```
 
-### Core Profile 的 6 个命令
+### Core Profile 的 6 个技能
 
-```bash
-/openspec-propose <name>   # 创建 change + 生成所有 artifacts
-/openspec-explore          # 探索/调研模式
-/openspec-apply-change [name]     # 实现 tasks
-/openspec-update-change           # 更新现有 artifact（v1.6.0 纳入 core）
-/openspec-sync-specs             # 同步 delta specs（v1.4.0 从 custom 移入 core）
-/openspec-archive-change [name]   # 归档 change
+```text
+/openspec-propose <name>          # 创建 change + 生成规划 artifacts
+/openspec-explore                 # 探索/调研模式
+/openspec-apply-change [name]     # 按 tasks 推进实现
+/openspec-update-change [name]    # 自洽更新已有 planning artifacts
+/openspec-sync-specs [name]       # 提前同步 delta specs 到主 specs/
+/openspec-archive-change [name]   # 校验、合并 specs 并归档 change
 ```
 
-### Custom Profile 的额外命令
+### Custom Profile 的额外可选技能
 
-```bash
-/openspec-new-change <name>       # 只创建 change 目录
-/openspec-continue-change         # 逐个生成 artifact
-/openspec-ff-change               # 快速生成所有 artifacts
-/openspec-verify-change           # 验证实现与 specs 一致性
-/openspec-bulk-archive-change     # 批量归档
-/openspec-onboard          # 新成员快速了解项目
+```text
+/openspec-new-change <name>       # 只创建 change 目录脚手架
+/openspec-continue-change         # 按依赖图逐个生成下一个 ready artifact
+/openspec-ff-change               # 一次快进生成所有剩余规划 artifacts
+/openspec-verify-change           # 验证代码实现与 specs 一致性
+/openspec-bulk-archive-change     # 批量归档多个 changes
+/openspec-onboard                 # 引导新成员快速走通首个小练习
 ```
 
 ### 如何切换到 Custom Profile
@@ -57,24 +56,22 @@ openspec config profile
 ```bash
 # 步骤 1：切换 profile
 openspec config profile
-# 选择 "custom" 或输入你想启用的 workflows
+# 选择 "custom" 并勾选你想启用的 workflows
 
-# 步骤 2：更新 AI 工具的 skills（v1.15.0+ 可先预演）
+# 步骤 2：更新 AI 工具的 skills（可先 --dry-run 预演）
 openspec update --dry-run   # 只报告会 add/update/delete 哪些文件，不落盘
 openspec update
 
-# 步骤 3：只在 update 实际刷新了 IDE 驻留的 commands/skills 且 CLI 给出提示时重启
+# 步骤 3：只在 update 实际刷新了 IDE 驻留工具的 skills 且 CLI 给出提示时重启 IDE
 ```
 
-`openspec update` 的重启提示是条件性的：Cursor、Cline 等 IDE 驻留 surface 实际生成了新 commands/skills 时才提示；Claude Code、Codex、OpenCode 等 CLI-only 工具通常会立即读文件，不应笼统要求重启所有 AI 工具。
+`openspec update` 的重启提示是条件性的：Cursor、Cline、Kiro 等 IDE 驻留入口实际更新了技能文件时才提示重启；Claude Code、Codex、OpenCode 等 CLI 宿主重开会话或直接读取即可，不必笼统重启所有工具。
 
-`--dry-run` 和真实 `openspec update` 走同一条写入路径（`UpdateFileOps`：真实用 `realFileOps`，预演用 `UpdatePlanRecorder`），所以计划里的 `add` / `update` / `delete` 就是非交互真跑会做的（交互式运行还会问 `notes` 里的步骤）；它只是不落盘，不是另一套“少写一部分”的逻辑。
+`--dry-run` 和真实 `openspec update` 走同一条写入路径（`UpdateFileOps`：真实运行走 `realFileOps`，预演走 `UpdatePlanRecorder`），所以计划里的 `add` / `update` / `delete` 就是非交互真跑会执行的动作（交互式运行还会有 `notes` 里列出的确认项）。
 
 ### 本文档的假设
 
-**本文档中的某些示例使用 custom profile 的命令**（如 `/openspec-continue-change`）。
-
-如果你使用 **core profile**（默认），请参考每个场景下的"Core Profile 替代方案"。
+**本文档中的部分重生成示例会提到 custom profile 的 `/openspec-continue-change`**。如果你使用默认的 **core profile**，请直接参考每个场景下的“Core Profile 替代方案”（或使用 `/openspec-update-change` 修订已有文件）。
 
 ## 改 spec 前的第一步：先定位 capability path，再动 requirement
 
@@ -190,8 +187,8 @@ Users want to export data.
 
 # 手动改成
 ## Why
-Customer service team needs to export filtered order data to CSV 
-for offline reconciliation and sharing with the finance department.
+Project managers and site supervisors need to export filtered construction task records to CSV
+for offline milestone reconciliation and weekly progress reviews with client representatives.
 ```
 
 #### 方式 2：AI 辅助编辑
@@ -216,7 +213,7 @@ for offline reconciliation and sharing with the finance department.
 # 场景：specs 里的 scenarios 不够完整
 
 # 在 Claude Code 里说：
-"请帮我在 specs/orders/spec.md 的 'Task CSV Export' requirement 里，
+"请帮我在 specs/task-tracking/spec.md 的 'Filtered Task CSV Export' requirement 里，
 添加以下 scenarios：
 1. 导出空列表时的处理
 2. 导出超过 10000 条记录时的限制
@@ -284,7 +281,7 @@ rm -rf openspec/changes/add-task-csv-export/
 
 `/openspec-update-change` 读一遍 change 的全部已有 artifact，按你的意图改目标文件，然后**检查并修复其他 artifact 的一致性**。它不创建新 artifact（那是 `/openspec-continue-change` 的事），也不改代码（那是 `/openspec-apply-change` 的事）——它的边界就是"planning artifact 内部的自洽"。
 
-```
+```text
 propose 产出第一版 → explore 发现漏洞 → update 修 proposal + specs + design + tasks
                                                       ↓
                                           全部一致了才 apply
@@ -471,7 +468,7 @@ context: |
 vim openspec/config.yaml
 ```
 
-改完后用 `openspec schemas` 确认 schema 能被解析（`openspec validate` 主要验证 change/spec 结构，不是 config.yaml 专用校验器）。
+改完后先运行 `openspec validate --all` 检查 `config.yaml` 的可读性与 YAML 语法（损坏会直接以退出码 `1` 报错），再运行 `openspec schemas` 核对 `schema:` 解析来源。
 
 **方式 2：让 AI 帮你改**
 ```markdown
@@ -483,7 +480,7 @@ vim openspec/config.yaml
 
 #### 真实场景 2：添加回归测试要求
 
-**场景**：团队决定，所有涉及订单的 change 都必须保证回归测试通过。
+**场景**：团队决定，所有涉及施工任务与工序验收的 change 都必须保证回归测试通过。
 
 **修改前**：
 ```yaml
@@ -497,8 +494,8 @@ rules:
 rules:
   tasks:
     - Write tests for new features
-    - Changes touching task domain must preserve order creation regression tests
-    - Changes touching inspection flow must preserve payment authorization tests
+    - Changes touching task domain must preserve task creation regression tests
+    - Changes touching inspection flow must preserve inspection approval authorization tests
 ```
 
 **效果**：AI 生成的 tasks.md 会包含"运行回归测试"的任务。
@@ -585,35 +582,36 @@ rules:
 
 #### 验证 config.yaml 的修改
 
-**步骤 1：检查 schema 解析**
+**步骤 1：检查 `config.yaml` 语法与 schema 解析**
 
-`openspec validate` 不是 `config.yaml` 专用校验器，它主要验证 change/spec。改完 `config.yaml` 后，如果你改过 `schema:`，先确认 schema 能被解析：
+自 v1.16.0（`#2127`）起，**`openspec validate` 是唯一对坏配置硬失败的 CLI 命令**——如果 `openspec/config.yaml`（或 `.yml`）不可读或 YAML 语法损坏，`openspec validate` 会直接以退出码 `1` 失败（`--json` 下返回 `unreadable_config` 或 `unparseable_config`）；而 `openspec schemas` 等其他命令遇到坏配置只会打印警告并回退默认值。因此改完 `config.yaml` 后，按这个顺序检查：
 
 ```bash
+# 1) 先抓 config.yaml 可读性与 YAML 语法错误（坏配置直接退出 1）
+openspec validate --all
+
+# 2) 若改过 schema:，再确认 schema 存在且来自预期层级（project/user/package）
 openspec schemas
 openspec schema which <schema-name>
 ```
 
-如果 YAML 解析失败、schema 名不存在，后续创建 change 或读取 instructions 时会暴露问题。
-
-**注意**：这只能证明配置能被读取、schema 能被解析，不等于证明配置内容质量高。
+此外，`rules` 若写了任何可用 schema 里都不存在的未知 artifact ID，首次运行 `openspec instructions` 时会在 stderr 打印告警。
 
 **它能帮你发现**：
-- YAML 无法解析
-- `schema` 指向不存在的 schema
-- schema 解析来源不是你以为的 project/user/package 层
+- `config.yaml` / `config.yml` 无法读取或 YAML 语法损坏（`openspec validate --all` 退出 1）
+- `schema` 指向不存在的 schema，或解析来源不是你预期的层级（`openspec schema which`）
+- `rules.<artifact>` 写错了 artifact ID（`openspec instructions` 告警）
 
 **它不会检查**：
-- rules 是否合理
-- context 是否完整
-- 约束是否有效
+- rules 文案本身是否合理、粒度是否合适
+- context 背景是否完整
 
-**步骤 2：检查 context/rules 是否生效**
+**步骤 2：检查 context/rules 是否真正注入到运行时指令**
 
-先创建一个临时 change，再查看 artifact instructions：
+创建一个临时 change（或指定已有活跃 change），用 `openspec instructions <artifact> --change <name>` 查看实际注入结果：
 
 ```bash
-# 查看 AI 会收到什么指令
+# 查看 AI 生成 proposal 时实际收到的 context 与 rules
 openspec new change test-config-runtime
 openspec instructions proposal --change test-config-runtime --json | jq '.context, .rules'
 
@@ -700,7 +698,7 @@ openspec/changes/<change-name>/proposal.md
 **原始内容**：
 ```markdown
 ## Why
-Users want to export orders.
+Users want to export tasks.
 ```
 
 **问题**：
@@ -711,41 +709,31 @@ Users want to export orders.
 **修改方式 1：手动编辑**（推荐）
 ```markdown
 ## Why
-Customer service team needs to export filtered order data to CSV for:
-1. Offline reconciliation with payment records
-2. Sharing with finance department for monthly reporting
-3. Investigating customer complaints with detailed order history
+Project managers and site supervisors need to export filtered construction task records to CSV for:
+1. Offline progress reconciliation against milestone schedules
+2. Sharing weekly progress tables with client representatives
+3. Auditing delayed work zones with complete status history
 
-Current pain point: They have to manually copy-paste data from the UI, 
-which is error-prone and time-consuming (30+ minutes per report).
+Current pain point: staff have to manually copy-paste rows from the UI,
+which is error-prone and time-consuming (30+ minutes per weekly report).
 ```
 
 **修改方式 2：让 AI 辅助**
 
-**Custom Profile**：
+**Custom Profile / Core Profile（操作相同）**：
 ```markdown
 # 在 Claude Code 里说：
 "请帮我扩展 proposal.md 的 Why 部分，补充以下信息：
-- 用户是客服团队
-- 用途是对账、报告、调查投诉
-- 当前痛点是手动复制粘贴，耗时 30 分钟"
-```
-
-**Core Profile（相同）**：
-```markdown
-# 在 Claude Code 里说（操作相同）：
-"请帮我扩展 proposal.md 的 Why 部分，补充以下信息：
-- 用户是客服团队
-- 用途是对账、报告、调查投诉
-- 当前痛点是手动复制粘贴，耗时 30 分钟"
+- 用户是项目经理与现场监理团队
+- 用途是里程碑进度核对、甲方周报同步、延期工区排查
+- 当前痛点是手动逐页复制粘贴，每份周报耗时 30 分钟以上"
 ```
 
 **完整操作步骤**：
-1. 在 Claude Code 的聊天框里输入上述指令
-2. AI 会读取当前的 proposal.md
-3. AI 会分析并扩展 Why 部分
-4. 检查 AI 的修改是否符合预期
-5. 如果不满意，继续给出更具体的指令
+1. 在 Claude Code 的聊天框里输入上述指令（或调用 `/openspec-update-change`）
+2. AI 会读取当前的 proposal.md 并先给出起草修改
+3. 确认无误后写回文件
+4. 检查修改是否符合预期；如果不满意，继续给出更具体的指令
 
 #### 真实场景 2：Out of Scope 不够明确
 
@@ -766,7 +754,7 @@ which is error-prone and time-consuming (30+ minutes per report).
 - Scheduled/automated exports (manual only)
 - Background export jobs (synchronous only)
 - Email delivery of exported files
-- Custom column selection (export all columns)
+- Custom column selection (export fixed columns)
 - Export history tracking
 ```
 
@@ -777,21 +765,21 @@ which is error-prone and time-consuming (30+ minutes per report).
 
 #### 真实场景 3：发现需求变了，需要调整 What Changes
 
-**场景**：实现过程中，产品经理说"还要支持导出 PDF"。
+**场景**：实现过程中，产品经理说"还要支持导出带签章排版的 PDF"。
 
 **原始内容**：
 ```markdown
 ## What Changes
-- Add CSV export button to Orders page
-- Export filtered order data
+- Add CSV export button to Construction Tasks page
+- Export filtered construction task data
 ```
 
 **选择 1：扩大 scope（不推荐）**
 ```markdown
 ## What Changes
-- Add export button to Orders page
-- Support CSV and PDF formats
-- Export filtered order data
+- Add export button to Construction Tasks page
+- Support CSV and signed PDF formats
+- Export filtered construction task data
 ```
 
 **问题**：scope 变大了，可能影响工期。
@@ -800,11 +788,11 @@ which is error-prone and time-consuming (30+ minutes per report).
 ```markdown
 # 保持当前 proposal 不变
 ## What Changes
-- Add CSV export button to Orders page
-- Export filtered order data
+- Add CSV export button to Construction Tasks page
+- Export filtered construction task data
 
 # 创建新的 change
-/openspec-propose add-task-pdf-export
+/openspec-propose add-signed-task-pdf-export
 ```
 
 **为什么推荐选择 2**：
@@ -814,7 +802,7 @@ which is error-prone and time-consuming (30+ minutes per report).
 
 #### 真实场景 4：Approach 部分需要调整
 
-**场景**：实现过程中发现同步导出会阻塞，需要改成异步。
+**场景**：实现过程中发现超大型工地同步导出会阻塞，需要改成异步任务。
 
 **原始内容**：
 ```markdown
@@ -833,8 +821,8 @@ Generate CSV on demand and return as file download.
 - Download link available when complete
 - Job timeout: 5 minutes
 
-**Reason for change**: 
-Synchronous generation blocks the UI for large datasets (10k+ orders).
+**Reason for change**:
+Synchronous generation blocks the UI for mega-project datasets (10k+ tasks).
 Background job provides better UX.
 ```
 
@@ -845,83 +833,81 @@ Background job provides better UX.
 # 直接编辑文件
 vim openspec/changes/add-task-csv-export/proposal.md
 
-# 用删除线标记旧内容，添加新内容
+# 用删除线标记旧内容，添加新内容（同时记得用 /openspec-update-change 同步检查 design.md 与 tasks.md）
 ```
 
 **方式 2：让 AI 帮你更新**
 ```markdown
-# 在 Claude Code 里说：
-"我发现同步导出会阻塞 UI，请帮我更新 proposal.md 的 Approach，
-改成异步后台任务，包括：
+# 在 Claude Code 里说（推荐触发 /openspec-update-change）：
+"我发现超大型工地同步导出会阻塞 UI，请帮我更新 proposal.md（并同步检查 design/tasks），
+把导出方案改成异步后台任务：
 - 后台任务生成 CSV
 - 显示进度条
 - 完成后提供下载链接
 - 超时 5 分钟
 
-并说明原因：同步方式在大数据集时会阻塞 UI"
+并说明原因：10k+ 施工任务时同步生成会阻塞 UI"
 ```
 
 #### 完整示例：一个好的 proposal.md
 
+注意这里完整保留了上文要求的 **`## Why`、`## What Changes`、`## Capabilities`、`## Impact`** 四大标准段落，并在其基础上补充了 `## Out of Scope` 与 `## Approach`：
+
 ```markdown
-# Proposal: Add Task CSV Export
+# Proposal: Add Construction Task CSV Export
 
 ## Why
-Customer service team needs to export filtered order data to CSV for:
-1. Offline reconciliation with payment records
-2. Sharing with finance department for monthly reporting
-3. Investigating customer complaints with detailed order history
+Project managers and site supervisors need to export filtered construction task records to CSV for:
+1. Offline progress reconciliation against milestone schedules
+2. Sharing weekly progress tables with client representatives
+3. Auditing delayed work zones with complete status history
 
-**Current pain point**: 
-They have to manually copy-paste data from the UI, which is error-prone 
-and time-consuming (30+ minutes per report).
-
-**Business impact**: 
-- Save 2 hours/week per CS agent (5 agents = 10 hours/week)
-- Reduce reconciliation errors
-- Faster response to customer complaints
+**Current pain point**:
+Staff manually copy-paste rows page by page from the UI, which is error-prone
+and time-consuming (30+ minutes per weekly report).
 
 ## What Changes
-- Add "Export CSV" button to Orders page (next to filter controls)
-- Export currently filtered order data
-- Include columns: Order ID, Date, Customer, Amount, Status, Payment Method
-- Restrict to authorized staff users only
+- Add an "Export CSV" button to the Construction Tasks page next to filter controls
+- Export all construction task rows matching the active filter criteria
+- Include columns: Task ID, Work Zone, Assignee, Planned Date, Status, Inspection Stage
+- Restrict CSV export to authorized project staff
+
+## Capabilities
+
+### New Capabilities
+<!-- None -->
+
+### Modified Capabilities
+- `task-tracking`: Add filtered construction task CSV export for authorized project staff
+
+## Impact
+- Frontend: `src/tasks/TaskListPage.tsx`, `src/tasks/api/exportTasksCsv.ts`
+- Backend: `src/tasks/server/exportTasksCsvHandler.ts`
 
 ## Out of Scope
-- XLSX export (only CSV in this change)
-- Scheduled/automated exports (manual only)
-- Background export jobs (synchronous only, <1000 orders)
+- XLSX export (CSV only in this change)
+- Scheduled/automated exports (manual trigger only)
+- Background export jobs (synchronous streaming up to 1,000 tasks)
 - Email delivery of exported files
-- Custom column selection (export all columns)
-- Export history tracking
+- Custom column selection (fixed column set)
 
 ## Approach
-Generate CSV on demand from the filtered order query and return as file download.
-
-**Technical constraints**:
-- Limit to 1000 orders per export (prevent timeout)
-- Use streaming to avoid memory issues
-- Sanitize data to prevent CSV injection
-
-## Success Criteria
-- CS team can export filtered orders in <5 seconds
-- Exported CSV matches UI filter exactly
-- No performance impact on Orders page load
+Stream CSV rows on demand from the filtered task query and return as a file download, sanitizing cell values against spreadsheet formula injection.
 ```
 
 #### 常见错误和修复
 
 **错误 1：删除了必需的标题**
 ```markdown
-# 错误：删除了 ## Why
+# 错误：删除了 ## Why 与 ## Capabilities
 This change adds CSV export.
 ```
 
 **修复**：
 ```markdown
-# 正确：保留标题
+# 正确：保留 ## Why、## What Changes、## Capabilities、## Impact
 ## Why
-This change adds CSV export to help CS team with reporting.
+This change adds CSV export so project managers can reconcile weekly task schedules.
 ```
 
 **错误 2：Out of Scope 太模糊**
@@ -950,10 +936,10 @@ This change adds CSV export to help CS team with reporting.
 
 **修复**：
 ```markdown
-# 正确：What Changes 写"做什么"，Approach 写"怎么做"
+# 正确：What Changes 写"做什么"，Approach（或 design.md）写"怎么做"
 ## What Changes
-- Add CSV export button
-- Export filtered order data
+- Add CSV export button on the Construction Tasks page
+- Export filtered construction task data
 
 ## Approach
 Use streaming CSV generation with Papa Parse library.
@@ -1100,3 +1086,14 @@ openspec status --change <change-name> --json
 前者检查 change/spec 结构，后者检查当前 artifact 状态和下一步运行时上下文。
 
 ---
+
+## 最该带走的 7 句话
+
+1. **Artifacts 归你支配**：小措辞直接手改，跨文件联动交给 `/openspec-update-change`，方向全偏再删文件重建。
+2. **改 spec 先认准 capability path**：先用 `openspec list --specs` 与 `openspec show <spec> --type spec` 查准既有合同，不要随手造近义目录。
+3. **改 `config.yaml` 后先跑 `openspec validate --all`**：它会硬拦不可读或 YAML 语法损坏的配置文件（退出码 `1`），再用 `openspec instructions` 核对 `context` 与 `rules` 是否如期注入。
+4. **`proposal.md` 守住四大标准段**：保留 `## Why`、`## What Changes`、`## Capabilities`、`## Impact`，新冒出的旁支需求优先拆成新 change。
+5. **delta spec 严守四类操作标题**：只用 `ADDED` / `MODIFIED` / `REMOVED` / `RENAMED Requirements`，每条 scenario 写清 `WHEN`/`GIVEN` 触发步与 `THEN` 结果步。
+6. **`tasks.md` 既要可追踪也要可验证**：每条实现 checkbox 内嵌验证标准，并留意缩进子任务同样计入完成进度。
+7. **升级 CLI 后跑一次 `openspec update`**：让本机或项目内的 `openspec-*` 技能跟上当前 CLI 版本（可先 `--dry-run` 预演）。
+

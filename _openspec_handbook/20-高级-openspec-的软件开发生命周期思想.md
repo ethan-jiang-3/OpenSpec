@@ -3,7 +3,7 @@
 > 这一篇不再讲"按钮在哪""命令怎么敲"，而是讲 OpenSpec 对软件开发这件事本身的理解。
 > 它放在高级区最前面，因为先理解这套生命周期思想，后面的 config、schema、store 才不会变成孤立机制。
 
-> **现实边界。** 主 specs 可以按嵌套 capability path 切分，却不会自动检索“当前相关”的 specs；agent 仍需按 change scope 选择上下文。本文 `/openspec-*` 为 Claude 示例；tasks 的逐项 verification 是 v1.10.0 引入的 schema instruction 合同（v1.14.3 起计数语义更新，见 25 篇）。
+> **现实边界。** 主 specs 可以按嵌套 capability path 切分，却不会自动检索“当前相关”的 specs；agent 仍需按 change scope 选择上下文。本文 `/openspec-*` 为 Claude Code 等宿主的技能调用示例；tasks 的逐项 verification 是内置 schema 的生成指令合同（checkbox 计数语义见 [25](25-高级-自定义-schema-创建自己的工作流.md)）。
 
 ---
 
@@ -262,7 +262,7 @@ OpenSpec 的做法，本质上是在降低混乱。
 > - `design`：选 OIDC——甲方已有 Identity Provider，比 SAML 轻
 > - `tasks`：先接 IdP → 做角色映射 → 补监理界面 → 写验收测试
 
-> **v1.14.3 tasks 契约**：内置 schema 要求每个 checkbox task 在同一条描述中声明 verification（test、command、可观察行为或交付 artifact）；只有横跨多个 implementation tasks 的集成验证才适合单列。这是 agent 的 schema instruction / 生成契约，不是 `openspec validate` 新增的语义质量硬校验。可复制的 bad/good 对照见 [52](52-实战-如何正确修改-artifacts.md)。
+> **tasks 验证契约**：内置 schema 要求每个 checkbox task 在同一条描述中声明 verification（test、command、可观察行为或交付 artifact）；只有横跨多个 implementation tasks 的集成验证才适合单列。这是 agent 的 schema instruction / 生成契约，不是 `openspec validate` 的语义质量硬校验。可复制的 bad/good 对照见 [52](52-实战-如何正确修改-artifacts.md)。
 
 ### explore：change 出来后，反复打磨它的手段
 
@@ -277,7 +277,7 @@ explore  →  propose  →  apply  →  archive
 
 动手前探一下现状，只是 `explore` 的用法之一；它更大的价值在 `change` 出来**之后**——`change` 一成形（propose 生成了初稿），你就可以**反复 explore 这个 change、打磨它**。原因很实在：
 
-- **初稿几乎一定有内部自洽性问题**。proposal 说"这次只改导出过滤"，可 delta spec 的 scenario 却写成"导出全部订单"——前后对不上。这种裂缝很常见，因为 LLM 生成有概率出幻觉，多个 artifact 一起生成时，接缝处最容易错。
+- **初稿几乎一定有内部自洽性问题**。proposal 说"这次只改导出过滤"，可 delta spec 的 scenario 却写成"导出全部施工日志"——前后对不上。这种裂缝很常见，因为 LLM 生成有概率出幻觉，多个 artifact 一起生成时，接缝处最容易错。
 - **change 本身就是 explore 的围栏**。`change` 一旦成形，就约定了上下文（proposal + specs + design + tasks 这一圈）。你在这个有限空间里反复 explore，核对一致性、查矛盾、补漏的 scenario——比漫无边际地探整个 codebase 准得多。
 - 所以 `explore` 的真正价值，是在 change 出来**之后**才解锁的：**change 既是产物，也是 explore 的围栏**。
 
@@ -327,7 +327,7 @@ gantt
 
 ### 一个典型现实场景
 
-你在做"订单导出优化"时，先写了 proposal、specs、design、tasks。
+你在做"施工日志导出优化"时，先写了 proposal、specs、design、tasks。
 
 开始实现后发现：
 

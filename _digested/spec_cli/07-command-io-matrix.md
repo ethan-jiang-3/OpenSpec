@@ -24,12 +24,12 @@
 
 | 命令 | 主要受众 | 输入来源 | 直接输出 | 间接影响 | 是否改状态 |
 | --- | --- | --- | --- | --- | --- |
-| `init` | 人类 + 工具集成 | 项目路径、global config、工具目录、可选 `--language` | `openspec/` 基础设施、skills/commands、安装报告；greenfield language context | 决定外部工具能否使用 OpenSpec 工作流；已有 config 不被 language flag 覆盖 | 是 |
-| `update` | 人类 + 工具集成 | 当前版本、配置、已配置工具、可选 `--dry-run`/`--json` | 更新后的 skills/commands、同步报告；dry-run 时为计划（`add/update/delete` + `notes` + `failures`），不落盘 | 决定工具侧工作流是否与配置一致 | 是（dry-run 否） |
+| `init` | 人类 + 工具集成 | 项目路径、global config（`profile`/`workflows`/`skillsScope`）、已检测工具目录、可选 `--tools` / `--scope <global\|project>` / `--profile` / `--language` / `--force` / `--no-animation` / `--copilot-cloud` / `--no-copilot-cloud` | `openspec/` 基础设施、全局 `~/.agents/skills/`（新项目默认）或项目 `.agents/skills/` + 工具链接的 `SKILL.md`（v2.0+ 不再生成 commands）、可选 Copilot cloud 文件、`<globalDataDir>/projects.json` 记录与安装报告 | 决定外部工具能否使用 OpenSpec 技能；`--copilot-cloud` 要求 `project` 作用域；已有 config 不被 `--language` 覆盖 | 是 |
+| `update` | 人类 + 工具集成 | 可选路径（已装全局 skills 时无需 `openspec/`）、当前版本、global `profile`/`workflows`、项目 `openspec/config.yaml` `skillsScope`、可选 `--force` / `--dry-run` / `--json`（`--json` 必须配 `--dry-run`） | 刷新后的全局与项目 skills（v2.0+ 仅 skills）、清理未编辑的 1.x commands 与退役工具残留、同步报告；dry-run 时输出计划（`add/update/delete` + `notes` + `failures`），不落盘 | 决定本机全局与项目工具侧技能是否与当前版本及 profile 一致 | 是（dry-run 否） |
 | `install [version]` | 人类 | 版本号（可选）、官方安装脚本、`OPENSPEC_INSTALL_DIR` | standalone 单文件装到 `~/.local/bin`（Windows：`%LOCALAPPDATA%\Programs\openspec`）；PATH 检查与移除旧副本的命令 | 切换 CLI 安装形态；不改项目内容 | 是（本机安装） |
-| `version` | 人类 + 机器 | 当前安装（location/packageManager/scope，standalone 时为 `standalone`）；`--check` 时 registry | 版本报告，或 `{ schemaVersion, version, install, update? }` JSON（`update` 仅 `--check` 时出现） | 提示用户是否/如何升级 CLI；standalone 的升级命令是 `openspec install` | 否 |
+| `version` | 人类 + 机器 | 当前安装（`location` / `packageManager`: `npm\|pnpm\|bun\|yarn\|volta\|homebrew\|nix\|null` / `scope`）；`--check` 时查 registry | 版本报告，或 `{ schemaVersion, version, install, update? }` JSON（`update` 仅 `--check` 时出现；`homebrew` 升级命令为 `brew upgrade openspec`，`nix` 的 `update.command` 为 `null`） | 提示用户是否/如何升级 CLI；standalone 的升级命令是 `openspec install` | 否 |
 | `list` | 人类 + 机器 | changes/specs 目录（`--archived/--all` 含 `changes/archive/`）、task progress、mtime | 列表或 JSON 索引；归档浏览时条目带 `archived: true/false` | 帮助选择目标 change/spec | 否 |
-| `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard；active change 行带 `└─ [schemaName]` workflow status 行；**不含归档 change**（v1.14.1 #2031 `2500d6da` 起 dashboard 只显示当前工作，归档改用 `openspec list --archived`） | 改善浏览体验 | 否 |
+| `view` | 人类 | resolved root 中的 changes/specs（可 `--store`） | 交互式 dashboard：展示 Draft、Active（带 `└─ [schemaName]` workflow status 行）、Completed changes 与 Specifications；**不含归档 change**（v1.14.1 #2031 起移除归档分区，归档改用 `openspec list --archived`） | 改善浏览体验 | 否 |
 | `show` | 人类 + 机器 | 指定 change/spec 及其内容 | 对象展示或 JSON（requirement = `{ name, text, scenarios: [{ name, rawText }] }`） | 帮助人工审阅和调试解析结果；JSON 读者可按 `name` 引用 requirement | 否 |
 | `validate` | 人类 + 机器 | change delta specs、正式 specs；`--archived` 时为 archive 目录的 tasks；bulk scope 可 `--report findings`（v1.12.0） | 合法性报告、退出码；findings 精简报告（JSON 标识 report/scope） | 决定是否需要修复、是否适合 archive；`--archived` 给 CI 抓未勾完的归档工作；merge-conflict 标记作为 informational findings 报告 | 否 |
 | `archive` | 人类 + OPSX | change 内容、主 specs、validate 结果 | 更新后的 specs、archive 目录、报告 | 结束 change 生命周期 | 是 |
@@ -42,13 +42,16 @@
 | `instructions archive` | agent workflow + 高级用户 | change、project context、`operations.archive.guidance` | archive operation input | 为 archive skill 提供只读指引 | 否 |
 | `templates` | 高级用户/工具 | schema 解析路径、artifact templates | 模板路径与来源 | 帮助调试模板覆盖与解析 | 否 |
 | `schemas` | 高级用户/工具 | project/user/package schemas（canonical root；可 `--store`） | schema 列表与来源 | 帮助发现可用 workflow 模型 | 否 |
-| `store register` | 人类 | 本地路径、store id、remote（可选） | `<globalDataDir>/stores/registry.yaml`、`.openspec-store/store.yaml` | 全局注册仓库 checkout | 是 |
-| `store list` | 人类 + 机器 | registry | store 列表及 backend | 发现已注册的 store | 否 |
-| `store unregister` | 人类 | store id | 从 registry 删除条目 | 注销不再需要的 store | 是 |
-| `context` | 人类 + 机器 | root + references | working set（human/JSON/.code-workspace） | 查看当前上下文引用的仓库 | 否 |
-| `workset create` / `list` / `open` / `remove` | 人类 | name、选中的文件夹/root、opener | 保存的 workset 定义（本地） | 保存与恢复多仓库打开视图 | 是（create/remove）/ 否（list/open 之外的开窗） |
-| `workset open` | 人类 + editor | workset name、opener | 在 editor 中打开多仓库视图 | 一键恢复开发环境 | 是 |
-| `doctor` | 人类 | root、references、store registry | 诊断报告 | 排查 store 注册/引用/checkout 健康 | 否 |
+| `store setup` | 人类 + 机器 | 可选 `[id]`、`--path <path>`、可选 `--remote <url>`、`--init-git`/`--no-init-git`、`--json` | 本地 store 目录（`openspec/` + `.openspec-store/store.yaml`，含可选 `remote` 元数据，默认首次 Git 提交）并写入 `<globalDataDir>/stores/registry.yaml` | 在本地新建并注册 store（**绝不执行 `git clone`**） | 是 |
+| `store register` | 人类 + 机器 | 可选本地 `[path]`、可选 `--id <id>`、`--yes`、`--json`（**无 `--remote`/`--branch`**） | `<globalDataDir>/stores/registry.yaml` 条目、必要时补写 `.openspec-store/store.yaml` | 全局注册已有的本地 store checkout | 是 |
+| `store list`（`ls`） | 人类 + 机器 | `registry.yaml`、可选 `--json` | store 列表及 backend | 发现本机已注册的 store | 否 |
+| `store unregister` | 人类 + 机器 | `<id>`、可选 `--json` | 从 `registry.yaml` 删除条目（保留本地文件） | 注销不再需要的 store 注册 | 是 |
+| `store remove` | 人类 + 机器 | `<id>`、`--yes`、可选 `--json` | 从 `registry.yaml` 注销并删除本地 store 文件夹（拒绝删含嵌套已注册 store 的目录） | 彻底移除本机 store 注册与目录 | 是 |
+| `store doctor` | 人类 + 机器 | 可选 `[id]`、可选 `--json` | 本地 store 注册表、目录与 `.openspec-store/store.yaml` 健康诊断 | 排查单个或全部本地注册 store 的状态问题 | 否 |
+| `context` | 人类 + 机器 | root + `references` | working set（human / `--json` / `--code-workspace`） | 查看当前上下文引用的仓库 spec 索引 | 否（`--code-workspace` 写视图文件） |
+| `workset create` / `list` / `remove` | 人类 + 机器 | `name`、`--member`（可重复）、`--tool <id>`、`--yes`（remove）、`--json` | `<globalDataDir>/worksets/worksets.yaml` 的增删查（绝不触碰 member 目录） | 保存、查看与删除个人本地多仓库视图定义 | 是（create/remove）/ 否（list） |
+| `workset open` | 人类 + editor | `<name>`、可选 `--tool <id>`（**拒绝 `--json`**，报 `workset_open_json_unsupported`） | 重新生成 `<globalDataDir>/worksets/<name>.code-workspace` 并拉起 opener（`code`/`cursor` 默认启用；`claude`/`codex` 需 `OPENSPEC_ENABLE_CLI_AGENT_OPENERS=1`） | 一键在编辑器或会话中恢复多仓库工作视图 | 是（重生成 `.code-workspace`） |
+| `doctor` | 人类 + 机器 | root、`references`、store registry | 项目级 store 引用与 root 诊断报告 | 排查项目 `references:` 到 store checkout 的健康度 | 否 |
 
 ## workflow 命令简表
 

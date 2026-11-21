@@ -105,8 +105,8 @@ created: 2026-10-18
 ## 守则
 
 - **fork 优先、不改内置**。直接改 `node_modules` 里的 schema 会被覆盖。
-- **每次改完先 `validate`**。schema.yaml 写错不像 config.yaml 那样 fail-open——硬错误会阻止指令生成。
-- **`apply.tracks` 要精确等于某个 artifact 的 `generates`**。进度计数不认文件名，认的是这个映射：`task-progress.ts:106-112` 先取 `schema.apply.tracks`，再找 `generates` 等于它的 artifact（没设 tracks 时才回退到 id === `tasks`）。所以改名完全可行——只要 `apply.tracks` 同步改成新值。真正的坑是 **`tracks` 必须与 `generates` 字符串完全相等**，写成 glob 或目录永远匹配不上，那时才会退回按 `tasks.md` 计数并给 warning（`schema.ts:122-133`）。
+- **每次改完先 `schema validate`**。`schema.yaml` 写错会直接阻止 `openspec status` / `openspec instructions` 生成指令（注：自 v1.16.0 `#2127` 起，`openspec validate` 遇到不可读或非法 YAML 的 `openspec/config.yaml` 也会通过 `readConfigParseError()` 退出 1，不再全局静默放行，只有 `status` / `instructions` 里的 `readProjectConfig()` 仍按 warn + 忽略降级）。
+- **`apply.tracks` 要精确等于某个 artifact 的 `generates`**。进度计数（覆盖 `list`、`status`、`archive`）不认死文件名，认的是这个映射：`src/utils/task-progress.ts:171-177` 的 `findTrackedTasksArtifact()` 先取 `schema.apply.tracks`，再找 `generates` 等于它的 artifact（没设 tracks 时才回退到 id === `tasks`）。所以改名完全可行——只要 `apply.tracks` 同步改成新值。真正的坑是 **`tracks` 必须与 `generates` 字符串完全相等**，写成 glob 或目录永远匹配不上，那时才会退回按顶层 `tasks.md` 计数并给 warning（`src/core/artifact-graph/schema.ts:122-133`）。
 - **artifact 名和 DAG 尽量对齐 spec-driven**。除非你的领域确实需要不同的 artifact 结构——否则只改 instruction 内容就够了。
 
 ---

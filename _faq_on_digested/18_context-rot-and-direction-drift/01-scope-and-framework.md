@@ -35,10 +35,10 @@
 | 排除项 | 为什么不算 | 证据 |
 |---|---|---|
 | `openspec/work/**`<br>（goal / roadmap / slices / capstone / runbook） | 上游团队管理**自己项目**的产物，零 CLI 支持 | `openspec/work/` 在 `src/` 中引用数 **0**【实测】；`openspec/work/README.md` 自称 experimental，并明说 *"Current OpenSpec CLI validation, archive, and spec update behavior still centers on `openspec/changes/` and `openspec/specs/`."*【文档】 |
-| `openspec/initiatives/**`<br>+ `.initiative.yaml` | 运行时实现**已被删除** | PR #1190 `a0decbe3 feat(stores)!: replace workspaces and initiatives with stores` 删掉 `src/commands/initiative.ts` 与 `src/core/collections/`【实测：`git log --diff-filter=D`】；`src/cli/index.ts:888` 现为 `new Option('--initiative <id>', 'No longer supported').hideHelp()`【代码】 |
+| `openspec/initiatives/**`<br>+ `.initiative.yaml` | 运行时实现**已被删除** | PR #1190 `a0decbe3 feat(stores)!: replace workspaces and initiatives with stores` 删掉 `src/commands/initiative.ts` 与 `src/core/collections/`【实测：`git log --diff-filter=D`】；`src/cli/index.ts:890` 现为 `new Option('--initiative <id>', 'No longer supported').hideHelp()`【代码】 |
 | `openspec/explorations/**` | 纯目录约定，无工具链 | `src/` 里唯一一次提及是 `src/core/github-copilot/cloud-agent.ts:257-258`，标签为 `'legacy exploration directory'`【代码】 |
 | `test/vocabulary-sweep.test.ts`<br>（词表守卫） | 守的是 **OpenSpec 自己的 `src/`**，跑在它的 CI 上；你装了 openspec **零收益** | `SWEEP_ROOTS = ['src','test','docs','scripts','.codex']`（该文件 `:16`），是它仓库自己的目录【代码】 |
-| `openspec/changes/add-change-stacking-awareness/` | **已提案未落地** | `dependsOn`/`provides`/`requires`/`touches`/`parent` 在 `src/` **0 命中**【实测】；`openspec change graph` **不存在**（`change` 只有 `show\|list\|validate`）【实测】；该 change 卡在 3/4 artifacts【实测】 |
+| `openspec/changes/add-change-stacking-awareness/` | **曾提案但未落地（已被上游清理删除）** | `dependsOn` 在 `src/` **0 命中**，`provides`/`touches`/`parent` 也均非 change 元数据字段【实测】；`openspec change graph` **不存在**（`change` 只有 `show\|list\|validate`）【实测】；上游已在 PR #2128（`ebdd9a53`）将该未实现提案目录直接删除【实测】 |
 
 **一句话**：这些是"上游怎么管自己"，不是"你装上能得到什么"。前者可以学它的做法，但不能指望工具替你执行。
 
@@ -67,13 +67,13 @@
 - apply 的范围漂移守卫（`do not absorb it silently`）【文档】
 - explore 的"永不写代码"【文档】
 
-它们确实会随包投递到你的项目（`openspec init` 生成 skills/commands），**性质是建议而非闸门**。模型听话时它们很有效——这也正是"写小的没问题、思路连贯没问题"的原因；模型不听话或上下文被压缩时，它们**不会报错、不会失败、不会提醒你**。
+它们确实会随包投递到你的项目或本机（`openspec init` / `update` 投递 skills；1.x 曾生成的命令文件在 2.0 已移除），**性质是建议而非闸门**。模型听话时它们很有效——这也正是"写小的没问题、思路连贯没问题"的原因；模型不听话或上下文被压缩时，它们**不会报错、不会失败、不会提醒你**。
 
 > 后面每一章都会标注它站在哪一侧。**线 A 的机制几乎全是硬的；线 B 的机制一半是软的**——这个不对称，就是"规格层有闸门护着、方向层没有"的技术根因。
 
 ---
 
-## 1.4 本篇纠正过的三处错误
+## 1.4 本篇纠正过的四处错误
 
 记录在此以免被后续笔记复用：
 

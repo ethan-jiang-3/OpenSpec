@@ -1,8 +1,8 @@
 # 24 · 高级：Store（可选的跨仓库 OpenSpec 引用）
 
-> **Store 是可选的跨仓库 OpenSpec 引用机制：声明哪些已 checkout 的 OpenSpec root 与当前项目相关，并给人或 agent 一个按需读取它们的入口。** 它不是多仓库协调层，也不是本地 main specs 变大后的默认解法；单仓库项目通常不需要它。
-
-> **v1.13.1 root 边界。** `defaultStore` 是机器级、低优先级 fallback，不会覆盖已解析的项目 root，也不会让 referenced specs 自动内联或同步。specs artifact instruction 现在显式返回 `planningHome.root`，agent 必须以它定位 main spec。
+> **Store 是可选的跨仓库 OpenSpec 引用机制（适用 openspec ≥ 1.5，当前对齐 2.1.1）：声明哪些已 checkout 的 OpenSpec root 与当前项目相关，并给人或 agent 一个按需读取它们的入口。** 它不是多仓库协调层，也不是本地 main specs 变大后的默认解法；单仓库项目通常不需要它。
+>
+> **Root 解析总纲。** `defaultStore` 只是机器级低优先级兜底，不会覆盖已解析的本地 root，也不会让 referenced specs 自动内联或同步；specs artifact 指令显式返回 `planningHome.root`，agent 必须以它定位 main spec。
 
 ---
 
@@ -31,7 +31,7 @@ flowchart LR
 
 产品需求同时砸在 API、Web、Mobile 三个 repo 上——每个 repo 各自的 spec-driven 流程管好自己的代码没问题，但 agent 在做 API 的 change 时，如果能看一眼 Web 和 Mobile 的 specs，方案会考虑得更周全。
 
-在 store 模型（v1.5.0）出现之前，OpenSpec 的所有操作都是 repo-local 的：
+在没有引入 store 时，OpenSpec 的所有操作都是 repo-local 的：
 
 ```text
 my-project/
@@ -81,17 +81,25 @@ references:
 
 ## 四、核心命令
 
-### store：注册仓库
+### store：注册与创建仓库
 
 ```bash
-openspec store register /path/to/checkout --id platform-api   # 注册已有 checkout
-openspec store setup platform-api --path /path/to/new          # 从零创建并注册
+openspec store register /path/to/checkout --id platform-api          # 注册已有 checkout
+openspec store setup platform-api --path /path/to/new                # 从零创建并注册（默认 git init + 首提）
+openspec store setup platform-api --remote git@github.com:org/s.git  # 记录克隆源到 store.yaml
+openspec store setup platform-api --no-init-git                      # 在已有 Git 仓库（如 dotfiles）内创建
 openspec store list
-openspec store unregister platform-api                         # 取消注册，保留本地文件
-openspec store remove platform-api                             # 取消注册并删除本地文件夹
+openspec store unregister platform-api                               # 取消注册，保留本地文件
+openspec store remove platform-api --yes                             # 取消注册并删除本地文件夹
 ```
 
-`register` 指向已有目录，不 clone、不 init；`setup` 创建新目录并同时注册。`unregister` 只忘掉注册信息，`remove` 连本地文件一起删。
+几条关键边界：
+
+- `register` 指向已有目录，不 clone、不 init；`setup` 创建新目录并同时注册。
+- `setup --remote <url>` **只把克隆地址写入 `.openspec-store/store.yaml`**（供引用方在 `openspec context` / `doctor` 缺失提示里展示 clone 命令），**绝不会运行 `git remote add origin`**。如果目标目录已有 `.openspec-store/store.yaml`，传 `--remote` 会以 `store_remote_requires_hand_edit` 拒绝覆盖，要求手动编辑 `store.yaml` 并提交。
+- `setup` 默认初始化 Git 仓库并生成首提，因此拒绝嵌套在已有 Git 仓库内；确实要在 dotfiles 等现有仓库里放 store 时显式传 `--no-init-git`。
+- `unregister` 只忘掉注册表项，`remove` 连本地目录一起删除；但若目标目录下嵌套了其他已注册的 store，`store remove` 会直接拒绝并点名需要先 `openspec store unregister` 的子 store。
+- 命名边界：即使把 store 放在推荐路径 `~/openspec/specs` 或 `~/openspec/changes`（即 store ID 叫 `specs` 或 `changes`），只要里面带有 `.openspec-store/store.yaml`，父目录判别器就不会把它误当成 `$HOME/openspec/` 的本地规划子目录。
 
 ### context：查看工作上下文
 
@@ -103,7 +111,7 @@ openspec context --code-workspace ./related-specs.code-workspace  # 写出 VS Co
 
 不带 `--code-workspace` 时，输出只是 working set：当前 root、`references:` 中声明的 store、本地路径和按需读取入口；它不列出 spec 索引，也不写文件。带该 flag 时会显式写出指定的 workspace 文件。
 
-### workset：个人工作视图
+### workset：个人工作视图与护栏
 
 ```bash
 openspec workset create my-session \
@@ -115,39 +123,59 @@ openspec workset list
 openspec workset remove my-session --yes
 ```
 
-workset 是你手工选择的任意目录视图，不从 `references:` 推导，也不要求成员都是 store；第一个 `--member` 是主目录。它纯本地、不共享、不提交；状态在全局数据目录的 `worksets/worksets.yaml`。
+workset 是你手工选择的任意目录视图，不从 `references:` 推导，也不要求成员都是 store；第一个 `--member` 是主目录。它纯本地、不共享、不提交；状态保存在全局数据目录的 `worksets/worksets.yaml`。
 
-### doctor：健康检查
+两条安全护栏必须清楚：
+
+- **CLI agent opener 默认关闭**：内置 opener 分 IDE 类 `workspace-file`（`code`、`cursor`，打开生成的 `.code-workspace`）和终端类 `attach-dirs`（`claude`、`codex`，以 `--add-dir` 挂载各目录）。因 CLI agent 在单一主目录启动时容易混淆变更落点，`claude` 与 `codex` opener **默认禁用**（报 `workset_cli_opener_disabled`），仅在设置环境变量 `OPENSPEC_ENABLE_CLI_AGENT_OPENERS=1` 时才启用。
+- **`workset open` 不支持 `--json`**：`open` 会接管当前终端或拉起外部 IDE，传入 `openspec workset open <name> --json` 会直接返回 `workset_open_json_unsupported` 诊断并以非零退出。
+
+### `openspec doctor` vs `openspec store doctor`
+
+两条体检命令视角不同，都是纯只读检查（从不自动 clone、同步或改写文件）：
 
 ```bash
-openspec doctor
-openspec store doctor platform-api
+openspec doctor [--store <id>] [--json]
+openspec store doctor [id] [--json]
 ```
 
-前者检查当前 root 的引用关系；后者检查某个已注册 store 的元数据和本地 root 健康度。
+| 命令 | 检查视角 | 具体查什么 |
+|---|---|---|
+| `openspec doctor` | **当前工作 root 的关系健康度** | 当前解析出的 root 是否完整、是否存在指针误配（如本地已有 `specs/`/`changes/` 却写了被忽略的 `store:`，或在 pointer 配置里写了不会生效的 `references:`），以及 `references:` 声明的各个上游 store 在本机是否可用、Git 远端是否漂移 |
+| `openspec store doctor [id]` | **本机 store 注册表与仓库本体** | 遍历全部（或指定 `id`）已注册 store，核对注册表项、`.openspec-store/store.yaml` 身份一致性、`openspec/` 目录完整性，以及 Git 仓库是否有提交、未提交改动与 `origin` |
 
-### view：先确认你到底在看哪个 root
+### Root 解析的完整 5 步优先级
 
-v1.8.0（v1.7.0 起）的一个容易误会点是：store 注册、项目 `references:`、机器级 `defaultStore` 都存在，但它们不是同一件事。`defaultStore` 只是本机低优先级 fallback；只要当前项目有可解析的 local planning root，它不会把该项目悄悄切到另一个 store。
+`new change`、`status`、`instructions`、`list`、`show`、`validate`、`view`、`archive` 等常规命令统一按以下 **5 步顺序**解析唯一生效的 OpenSpec root（传已废弃的 `--store-path` 会直接报 `store_path_not_supported`）：
+
+1. **显式 `--store <id>`**（`source: "store"`）：直接选中该已注册 store 的 root，优先级最高。
+2. **最近祖先中的合格 `openspec/` 目录**：
+   - 若含有真实的 `specs/` 或 `changes/` 规划目录，本地 root 直接胜出（`source: "nearest"`）；即使该目录的 `config.yaml` 同时写了 `store:`，也会被忽略并在 `stderr` 打警告。
+   - 若只是不含 `specs/`、`changes/` 的 config-only 指针目录且声明了合法 `store: <id>`，则解析到该已注册 store（`source: "declared"`）。
+3. **机器级全局 `defaultStore`**（`source: "global_default"`）：仅当前两步均未命中时，作为本机低优先级兜底查询全局配置中的 `defaultStore`。
+4. **已注册 store 候选提示（报错不自动选）**：无本地 root 且无 `defaultStore`、但本机注册表非空时，抛出 `no_root_with_registered_stores`。若当前仓库 Git `origin` 的仓库名（转 kebab-case 后）恰好匹配某个已注册 store ID，错误信息会点名该候选并给出 `--store <id>` 与 `store: <id>` 两种选中写法——但**绝不按名字自动选中**，因为不同组织的仓库完全可能重名。
+5. **隐式当前目录或无 root 报错**：本机未注册任何 store 时，允许隐式 root 的命令回退到当前目录（`source: "implicit"`）；`doctor` 及批量 `validate --all/--changes/--specs` 等要求真实 root 的命令则报 `no_openspec_root` 退出 1。
+
+用 `view` 可以直观验证当前到底落在了哪个 root：
 
 ```bash
-openspec view                     # 按当前解析出的 root 查看
-openspec view --store platform-api # 明确查看指定 store
+openspec view                     # 按上述 5 步解析出的当前 root 查看
+openspec view --store platform-api # 显式查看指定 store
 ```
 
 当“我明明改了 config，为什么 instructions / view 看到的不是它”时，先确认 root，而不是先往 `context` 追加内容：
 
 | 情形 | 优先相信什么 | 下一步 |
 |---|---|---|
-| 项目内存在 `openspec/` | 项目的 local root | 检查该 root 的 `config.yaml` / `references:` |
-| 项目只是 config-only pointer 或没有 local planning shape | resolver 可能使用 store / global default | 用 `view --store <id>` 显式核对 |
+| 项目内存在带 `specs/` 或 `changes/` 的 `openspec/` | 项目的 local root（`nearest`） | 检查该 root 的 `config.yaml` / `references:` |
+| 项目只是 config-only pointer 或没有 local planning shape | 已声明的 `store:` 或全局 `defaultStore` | 用 `doctor` 或 `view --store <id>` 显式核对 |
 | 想看其他仓库的行为合同 | 被引用 store 的 main specs | `context` 取得 store id/路径，再 `show <spec-id> --type spec --store <id>` 按需读取 |
 
 无论最后解析到哪一个 root，store 都仍是发现与只读引用机制：它不会把远端 main specs 自动内联进本次 proposal、不会替你创建跨仓库 change，也不会替你决定哪些 capability 相关。
 
-### `store:` pointer 的严格边界：别在错误 root 里改 guidance
+### `store:` pointer 仓库的严格边界、装技能与编辑范围
 
-`openspec/config.yaml` 里的 `store:` 不是“把本地 config 和远端 config 合并”的开关。它只有在当前 `openspec/` 是**config-only** 目录、没有 `specs/` 和 `changes/` planning shape 时，才作为 pointer 选择已注册 store。若本地已有 planning shape，本地 root 必然胜出，`store:` 会被忽略并给 warning；pointer 目录里的 `context`、`rules`、`references` 等也不会成为被选中项目的有效 guidance。
+`openspec/config.yaml` 里的 `store:` 不是“把本地 config 和远端 config 合并”的开关。它只有在当前 `openspec/` 是**config-only** 目录、没有 `specs/` 和 `changes/` planning shape 时，才作为 pointer 选择已注册 store。pointer 目录里的 `context`、`rules`、`references` 等不会成为被选中项目的有效 guidance——真正的项目配置必须写在最终被解析为 planning root 的 store 里。
 
 遇到“我改了 config，instructions 为什么没变化”时，先按这四步排：
 
@@ -156,22 +184,14 @@ openspec view --store platform-api # 明确查看指定 store
 3. 用代表性 change 运行 `openspec instructions <artifact-id> --change <change> --json`，确认 context/rules 是否出现。
 4. 需要 operation guidance 时，再分别检查 `instructions apply` / `instructions archive`；不要期待 artifact rules 自动进入这两个 operation。
 
-这也是为什么 store 不适合作为“多处 guidance 拼装器”：真正的项目配置必须写在最终被解析为 planning root 的位置。
+如果代码仓库采用这种 config-only pointer 模式（规划放在独立 store，代码留在当前仓库），日常有两件配套能力直接可用：
 
-### “找不到 root”：v1.16.0 起会点名候选 store
-
-当一条命令找不到 OpenSpec root、但你已注册了 store 时（v1.16.0 起，#2077），错误信息不再只说“没找到”，而是点名**哪个 store 的 id 和你仓库 `origin` remote 里的仓库名对得上**，并给出选中它需要的两种写法：
-
-```text
---store <id>          # 命令行标志
-store: <id>           # 或写进 openspec/config.yaml
-```
-
-**它只提示，从不按名字自动选中。** 这不是过度保守——不同组织的仓库完全可以重名，按名字猜等于让一条命令替你决定读哪个组织的 specs。看到提示后，你自己确认那是不是对的仓库，再显式传 `--store`。
+- **在 pointer 仓库根目录运行 `openspec init` 安装技能**：在代码仓库 root（子目录运行会被拒绝）执行 `openspec init --tools claude`，CLI 会原样保留本地 `openspec/config.yaml`（含 `store:` 行），**不会**在本地创建 `openspec/specs/` 或 `openspec/changes/`（同时拒绝通过 `--language` 跨指针改写远端 store）。它只安装 AI 工具的 **skills**（无命令文件），且遵循 2.1 作用域规则：**默认安装到本机 `global` 全局目录**（`~/.agents/skills/` 及各工具全局目录）；若需把 `.agents/skills/` 与工具链接写进当前代码仓库，显式加上 `--scope project`。
+- **store-only 场景下 apply 的编辑范围（`allowedEditRoots`）**：当 change 位于 store、且当前代码仓库通过 `store:` 声明了该 store 时，`openspec status --change <name> --store <id> --json` 的 `actionContext.allowedEditRoots` 会同时列出 `[声明项目的 root, store root]`，提示实现代码落回声明项目、跨其他仓库前先询问用户；若无法确定实现仓库，则仅含 `store root` 并要求先向用户确认。
 
 ### MODIFIED delta：不要把 cwd 当成 main-spec root
 
-v1.10.0 修复的是 **specs instruction 给 agent 的路径合同**，不是新增自动 spec retrieval。一个 change 在 store 中时，当前 shell 的仓库与 main spec 所在 root 可能不同：
+当 change 存放在 store 中时，当前 shell 所在的代码仓库与 main spec 所在的 planning root 往往不同，agent 必须以 `instructions` 返回的 `planningHome.root` 定位主 spec：
 
 ```text
 错误：<当前工作目录>/openspec/specs/identity/session/spec.md
@@ -258,56 +278,23 @@ store 不改变核心流程——它只是在 agent 探索时多了一个「可�
 
 不要因为“仓库多”或“spec 多”自动启用它。store 的收益来自已有 checkout 之间的明确引用；它不会减少本地 capability 的建模成本，也不会取代本章开头列出的 catalog、impact matrix 或团队协作纪律。
 
-## v1.13.x 行为修正
+### 替代方案对比：只想在本机挪目录位置，用 symlink 而不是 store
 
-- `store remove` 拒绝删除包含其他注册 store 的目录（报错会点名要先 `openspec store unregister` 的嵌套 store）。
-- 名为 `specs`/`changes` 的 store 不再被误当 root。
-- `store setup --no-init-git` 可以在已有 git 仓库（如 dotfiles 仓库）内创建 store；默认/显式 init-git 仍拒绝嵌套仓库。
+store 是“引用另一个已 checkout 仓库的 specs”的正式机制，需要在目标目录建立 `.openspec-store/store.yaml` 并注册。如果只是想**把当前项目的 `openspec/`、`changes/`、`specs/` 或某份 `spec.md` 物理放在别处**，可以直接使用符号链接，但必须遵守目录级与文件级的不同边界：
 
-## v1.14.0 行为修正
-
-### store-only apply 不再被 edit scope 卡住
-
-`openspec status --change <name> --json` 的 `actionContext.allowedEditRoots` 旧版只指向 project root；当 change 实际放在声明的 store 里时，agent 会在"改实现要去哪个仓库"上无所适从。现在 CLI 会把**当前路径上声明该 store 的项目 root** 一并列入 `allowedEditRoots`：
-
-- change 位于 store、且当前项目声明了它：`allowedEditRoots = [声明项目的 root, store root]`，constraint 明示"实现编辑落在声明项目，动其他仓库前先问用户"。
-- 无法确定哪个仓库实现该 change：仍只有 store root，constraint 要求 agent 先问用户。
-
-也就是说，store-only 场景的 apply 不再因为 edit scope 只有 store root 而被卡住。
-
-### store-only 仓库可在 root 跑 init 装集成
-
-代码仓库只作为 config-only pointer（`openspec/config.yaml` 里写 `store:`）时，以前在它 root 上跑 `openspec init` 会试图把 planning 搬回本地。现在可以直接装 AI 工具集成而不动 store 配置：
-
-```bash
-# 在代码仓库 root 上
-openspec init --tools claude
-```
-
-- 集成文件（skills/commands）写入当前仓库；
-- `openspec/config.yaml` 逐字节保留，包括 `store:` 行；
-- 不会在本地创建 `openspec/specs/` 与 `openspec/changes/`，planning 仍留在 store。
-
-## v1.14.x 行为修正
-
-### 不想用 store，也可以把 `openspec/changes` 链到别处
-
-store 是"另一个已 checkout 仓库的 specs"的正式机制，但它要在目标仓库里跑 `store setup` 并注册。如果只是想**把本项目的 `openspec/`、`changes/` 或 `specs/` 目录物理放在其他地方**，v1.14.2 起可以直接用符号链接：
-
-| 可以链接 | 不可以 |
+| 可以链接 | 不可以链接 |
 |---|---|
-| `openspec/` 本身、`openspec/changes/`、`openspec/specs/` | `changes/archive/`（它必须真的在所属 changes 目录里） |
-| 单条 `specs/<capability>/spec.md`，可指向项目内任意位置 | 指向项目外、或悬空的链接 |
+| `openspec/` 本身、`openspec/changes/`、`openspec/specs/` 顶层目录（父目录须在受管范围内，链接目标须存在，可指向项目外） | `changes/archive/`（必须真实位于所属 `changes/` 目录内，不得逃逸）以及单个活跃 `changes/<name>/` 目录（`archive` 会以 `archive_change_symlink` 拒绝） |
+| 单个文件 `specs/<capability>/spec.md`，可做成指向**项目内**任意既有文件的符号链接 | `specs/<capability>/` 子目录做成符号链接（递归发现器 `discoverSpecFiles` 不穿透符号链接子目录，该 capability 会被跳过），以及指向项目外的 `spec.md` 链接或悬空链接 |
 
-判定口径是"叶子可以是链接，它的**父目录**仍必须在受管范围内，且链接必须解析到既有路径"。写侧在写入前后各校验一次 canonical path，链接在写前被换向会直接拒绝而不是写到未校验的文件。
+写侧在写入前后各校验一次 canonical path，若链接在写前被换向会直接拒绝，不会写到未校验的文件。
 
-和 store 的分工：**store 是跨仓库的 spec 发现与引用**，symlink 只是**本仓库内的目录摆放**——它不带来 `store list` 索引、不展开 references、也不让别的仓库发现你。多人协作时注意：一个被链出去的 `specs/` 目录若在仓库外，clone 下来就是断链，通常只适合单人开发机或已统一的团队布局。
+和 store 的分工：**store 是跨仓库的 spec 发现与只读引用**，symlink 只是**单项目内的物理摆放**——它不带来 `store list` 索引、不展开 `references:`、也不让别的仓库发现你。多人协作时注意：若顶层 `specs/` 链接到了仓库外部目录，队友 clone 下来就是断链，通常只适合个人开发机或团队统一挂载的目录布局。
 
 ## 压缩结论
 
-1. Store 是可选的跨仓库 spec **发现索引**，不是本地 spec scaling、自动 retrieval 或协调层。
-2. 单仓库不需要；本地 specs 变大先用 capability taxonomy、catalog 和按需读取。
-3. Store 不改 change 生命周期——所有 change 仍在具体 repo 下，用 `spec-driven`。
-4. Store 不创建跨 repo change、协调视图或 initiative；它只是“注册 + 引用 + 查询”。
-5. Workset 是个人本地视图，不共享。
-6. store-only pointer 仓库可在 root 跑 `openspec init` 装集成：planning 仍留在 store，本地 `store:` 配置逐字节保留。
+1. Store 是可选的跨仓库 spec **发现与只读引用机制**，不是本地 spec 扩容方案、自动检索器或多仓协调层。
+2. Root 解析严格按 **5 步顺序**执行：`--store <id>` → 最近合格 `openspec/`（含本地规划目录优先，config-only `store:` 指针次之）→ 全局 `defaultStore` → 已注册 store 提示（匹配 `origin` 仓库名时点名建议但绝不自动选中）→ 隐式 root / 报错。
+3. `store setup --remote <url>` 只写 `.openspec-store/store.yaml`，绝不改 Git remote（已有 `store.yaml` 时报 `store_remote_requires_hand_edit`）；`doctor` 查当前 root 关系链，`store doctor` 查本机注册表与 store 本体。
+4. Workset 是纯本地个人目录视图：`open` 不支持 `--json`（`workset_open_json_unsupported`），`claude`/`codex` 等 CLI agent opener 默认关闭（需 `OPENSPEC_ENABLE_CLI_AGENT_OPENERS=1`）。
+5. config-only pointer 仓库可在根目录跑 `openspec init` 安装 skills（默认装入本机 `global` 目录，传 `--scope project` 才写入当前仓库），本地 `store:` 配置原样保留，planning 仍留在 store。

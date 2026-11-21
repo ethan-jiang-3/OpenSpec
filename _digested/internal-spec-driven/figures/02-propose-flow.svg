@@ -47,15 +47,15 @@
 
   <!-- User trigger + Agent + CLI + FS 水平一行 -->
   <rect x="20" y="92" width="135" height="38" rx="4" fill="url(#userGrad)" stroke="#d1d5db"/>
-  <text x="87" y="107" text-anchor="middle" font-size="9" fill="#666">/opsx:propose</text>
+  <text x="87" y="107" text-anchor="middle" font-size="9" fill="#666">/openspec-propose</text>
   <text x="87" y="121" text-anchor="middle" font-size="8" fill="#999">add-dark-mode</text>
 
   <line x1="155" y1="111" x2="178" y2="111" stroke="#555" marker-end="url(#arrowR)"/>
 
   <rect x="185" y="88" width="290" height="46" rx="4" fill="url(#agentGrad)" stroke="#93c5fd"/>
-  <text x="330" y="104" text-anchor="middle" font-size="9" fill="#2563eb">1. 从用户输入导出 kebab-case name</text>
-  <text x="330" y="118" text-anchor="middle" font-size="9" fill="#2563eb">2. openspec new change "add-dark-mode"</text>
-  <text x="330" y="131" text-anchor="middle" font-size="8" fill="#888">（--schema 可显式指定）</text>
+  <text x="330" y="103" text-anchor="middle" font-size="8.5" fill="#2563eb">1. 澄清歧义 + openspec context --json + config.yaml</text>
+  <text x="330" y="117" text-anchor="middle" font-size="9" fill="#2563eb">2. openspec new change "add-dark-mode"</text>
+  <text x="330" y="130" text-anchor="middle" font-size="8" fill="#888">（--schema / --store 可显式指定）</text>
 
   <line x1="475" y1="111" x2="498" y2="111" stroke="#555" marker-end="url(#arrowR)"/>
 
@@ -135,22 +135,23 @@
   <text x="855" y="426" text-anchor="middle" font-size="9" fill="#ea580c">&lt;artifact&gt;.md 写入 change 目录</text>
 
   <!-- Step B4: check condition -->
-  <rect x="185" y="450" width="290" height="26" rx="4" fill="#fef3c7" stroke="#f59e0b"/>
-  <text x="330" y="467" text-anchor="middle" font-size="9" fill="#92400e">applyRequires 中的 artifact 全部 done?</text>
+  <rect x="185" y="450" width="290" height="28" rx="4" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="330" y="463" text-anchor="middle" font-size="8.5" fill="#92400e">applyRequires + requires 传递闭包全部满足?</text>
+  <text x="330" y="474" text-anchor="middle" font-size="7.5" fill="#92400e">（done / skipped / 条件跳过）</text>
 
   <!-- Loop back -->
   <path d="M185,463 L160,463 L160,216 L185,216" stroke="#f59e0b" fill="none" stroke-width="1.2" stroke-dasharray="5,2" marker-end="url(#arrowLoop)"/>
   <text x="148" y="340" text-anchor="middle" font-size="8" fill="#f59e0b" transform="rotate(-90,148,340)">否 · 继续循环</text>
 
   <!-- Exit label -->
-  <text x="340" y="495" text-anchor="middle" font-size="9" fill="#16a34a">是 → 退出循环</text>
+  <text x="340" y="495" text-anchor="middle" font-size="9" fill="#16a34a">是 → 退出循环（严守规划边界，不写业务代码）</text>
 
   <!-- DAG info box (bottom of loop) -->
   <rect x="185" y="506" width="520" height="58" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="0.8"/>
   <text x="195" y="520" font-size="8" fill="#16a34a">spec-driven 的 artifact DAG：proposal (入度0) → specs / design (入度1) → tasks (入度2, apply gate)</text>
-  <text x="195" y="534" font-size="8" fill="#16a34a">getBuildOrder() 用 Kahn 算法对 requires 做拓扑排序，确定创建顺序</text>
-  <text x="195" y="548" font-size="8" fill="#16a34a">getNextArtifacts(completed) 运行时判断哪些 artifact 的 requires 已满足</text>
-  <text x="195" y="560" font-size="8" fill="#16a34a">applyRequires: [tasks] 意味着 tasks artifact "done"（文件存在）才能进入 apply 阶段</text>
+  <text x="195" y="534" font-size="8" fill="#16a34a">getBuildOrder() 用 Kahn 算法对 requires 做拓扑排序，确定推荐创建顺序</text>
+  <text x="195" y="548" font-size="8" fill="#16a34a">propose 循环终止判定：沿 artifacts[].requires 展开 applyRequires 传递闭包（#2089）</text>
+  <text x="195" y="560" font-size="8" fill="#16a34a">applyRequires: [tasks] 意味着 tasks 文件存在即解锁 apply gate；design 不满足条件时可条件跳过</text>
 
   <!-- ========== PHASE C: DONE ========== -->
   <rect x="10" y="585" width="980" height="58" rx="4" fill="none" stroke="#e5e7eb" stroke-dasharray="4,2"/>

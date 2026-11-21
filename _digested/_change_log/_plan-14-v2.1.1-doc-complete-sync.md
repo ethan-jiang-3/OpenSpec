@@ -34,7 +34,7 @@
 | 4 | skills **单一真身**在 `.agents/skills/` | `src/core/shared/shared-skill-install.ts` |
 | 5 | 其他工具目录放**指向真身的链接**，建不了链接退化为拷贝 | `src/core/shared/skill-links.ts`（`SkillLinkSpot` 五态） |
 | 6 | **`delivery` 退役**：配置里不再有，写入不改变行为 | `src/core/command-surface.ts` 三条判定只剩 skills/reconcile |
-| 7 | 技能作用域写作 **`skillsScope: project \| global`**，记在 `openspec/config.yaml` | `src/core/project-config.ts:92,454` |
+| 7 | 技能作用域写作 **`skillsScope: project \| global`**：项目级记在 `openspec/config.yaml`（或 `config.yml`），机器级默认记在全局 `config.json`，环境变量 `OPENSPEC_SKILLS_SCOPE` 可覆盖 | `src/core/project-config.ts:92,454`、`src/core/global-config.ts:47`、`src/core/init.ts:380-388` |
 | 8 | **Amazon Q Developer 已退役**，指向 Kiro；`init --tools amazon-q` 报错 | `src/core/retired-tools.ts` + `RETIRED_TOOLS` |
 | 9 | 安装层用**运行时依赖 `skills@1.8.1`**；`init`/`update` 从 **npm 包**装，不 clone | `package.json`、`src/core/skill-installer.ts` |
 | 10 | `engines.node` = **`>=22.20.0`** | `package.json` |
@@ -232,7 +232,7 @@ grep -rhoE '`(src|test|scripts)/[^`]+:[0-9]+`' _digested _faq_on_digested _opens
 | 情形 | 处理 |
 |---|---|
 | 历史溯源（`v1.17.0 起 …`） | **不改**。这是不可变事实 |
-| `_change_log/` 下所有文件 | **一律不改**（历史记录） |
+| `_change_log/` 下 `0001`–`0014` 与 `_plan-1`–`_plan-12` | **一律不改**（历史归档记录；仅维护本轮 `0015`、`_plan-13`、`_plan-14`、`README.md` 与 `_runbook*`） |
 | `_faq/18_...` 的 SVG/图表 | 若图内文字含 `/opsx:`，优先改图注而非重画 SVG |
 | 概念页（`specs_truth/`、`schema/` 多数） | 2.x 未改 spec 语义，预期零改动；仍需过扫描 |
 | 宪章约束的措辞 | handbook 改动若触发风格问题，以宪章为准 |
@@ -256,7 +256,11 @@ grep -rhoE '`(src|test|scripts)/[^`]+:[0-9]+`' _digested _faq_on_digested _opens
   - 93 行 `现行` 的 `/opsx:` 示例批量转成技能名，剩余全部为「新旧对照」且带历史标记。
   - Phase E：handbook 命令引用清零，宪章检查通过（无风险灯、`✅/❌` 均 ≤10）。
   - Phase F：F1/F2/F3 均为 0；F6 断链 0；F7 56 个源码锚点 0 越界；F8 实测 249 个测试文件、与文档一致。
-- **结论**：DoD 的六条已有五条满足，剩「提交」一步按用户要求暂缓。
+- **结论**：首轮回填与账本已提交（`9e4b0dc5`、`91314d4a`、`0e80f66b`）。
+- **二轮全库源码精校（2026-11-21）**：对照 `@fission-ai/openspec@2.1.1`（`0c737dc1`）源码逐行复核三套资料与本机升级 runbook：
+  - `0015` / `_plan-13` / `README.md`：补齐遗漏的第 9 组修复 `#2266`（`mayBeRawHtml` 放行退役 spec 中 `<` 开头的普通折行正文），将 `#2265` 精确修正为 `nextText.length > 500 && nextText.length > currentTextLength`（正文总长 >500 字符且长于主 spec 基线），补齐 `skillsScope` 的项目级与全局双层持久化说明。
+  - `_digested/`、`_faq_on_digested/`、`_openspec_handbook/`：对齐全部行号锚点、CLI/JSON 契约、`.openspec.yaml` 7 个已知顶层键、SVG 流程图与内部断链，清除分篇遗留的版本头标记。
+  - `_runbook-machine-upgrade.md` 与 `_runbook/upgrade-all.sh`：为 `openspec update` 注入 `OPEN_SPEC_INTERACTIVE=0` 与 `</dev/null` 防止后台 TTY 挂起；`--clean` 改为复用真实 `isReleasedGeneratedContent` 指纹库 + 12 个官方技能白名单，杜绝误删用户改过的 `kept` 文件或自定义 `openspec-*` 技能；修复 `ensure_scope` 对 `config.yml` / 缺失文件 / 无尾换行文件的处理，以及 `verify_project` 失败阻断提交与 `--only`/`--skip` 参数校验。
 
 ## 十、完成定义（DoD）
 

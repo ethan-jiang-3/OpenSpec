@@ -290,10 +290,11 @@ openspec schema validate my-workflow --json
 
 会检查：
 - `schema.yaml` YAML 语法
-- 所有必需字段（name, version, artifacts）
-- 所有 `template` 引用的文件是否存在
-- 依赖图是否有循环依赖
-- artifact id 是否合法
+- 所有必需字段（name, version, artifacts）及无重复 artifact id
+- 所有 `template` 引用的文件是否存在且未逃逸出 schema 的 `templates/` 目录
+- 依赖图是否有循环依赖、`requires` 引用是否均指向已声明的 artifact id
+- **`apply.requires` 合法性（`validateApplyReferences`，`artifact-graph/schema.ts:95-107`）**：`apply.requires` 引用的每个 id 都必须在 `artifacts` 中声明，否则作为 error 拒绝加载（防止拼写错误使门控静默失效）
+- **`apply.tracks` 匹配告警（`findApplyTracksWarning`，`artifact-graph/schema.ts:122-133`）**：若 `apply.tracks` 非 `null` 且与所有 `artifacts[].generates` 字符串都不完全相等（例如手写 `TODO.md`、`task.md` 笔误，或 `generates: tasks/*.md` 配了具体路径 `tracks: tasks/main.md`），加载不会报错（`apply` 仍直接按该路径/glob 读取），但 `openspec schema validate` 会报 `warning`——提示 `openspec list` 与 `openspec status` 无法定位对应的进度 artifact，将回退统计顶层 `tasks.md`
 
 ### 查看解析来源
 
@@ -319,7 +320,7 @@ openspec instructions proposal --change my-feature --json | jq '.'
 | 位置 | 路径 | 适用场景 |
 |------|------|---------|
 | 项目级 | `openspec/schemas/<name>/` | 团队共享、需要版本控制（推荐） |
-| 用户级 | `~/.local/share/openspec/schemas/<name>/` | 个人跨项目复用 |
+| 用户级 | `$XDG_DATA_HOME/openspec/schemas/<name>/`（默认 `~/.local/share/openspec/schemas/<name>/`，Windows 为 `%LOCALAPPDATA%\openspec\schemas\<name>\`） | 个人跨项目复用 |
 
 ---
 
@@ -329,11 +330,11 @@ openspec instructions proposal --change my-feature --json | jq '.'
 # 方法 1：CLI flag（优先级最高）
 openspec new change feature --schema my-workflow
 
-# 方法 2：在 config.yaml 设为项目默认
+# 方法 2：在 openspec/config.yaml（或 config.yml）设为项目默认
 # schema: my-workflow
-
-# 方法 3：在 workspace 中显式指定
 ```
+
+> 注：当前包内置（`package` 来源）的 schema 只有 `spec-driven`（早期出现过的内置 `workspace` 已移除）。
 
 创建 change 后，子目录里会自动写 `.openspec.yaml` 绑定这个 schema：
 

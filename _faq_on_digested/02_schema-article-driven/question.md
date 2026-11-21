@@ -11,6 +11,6 @@ OpenSpec 的 schema 系统能不能脱离代码实现，用来管理内容/文�
 可以。本目录就是一个概念验证：定义了一套 `article-driven` schema，把 OpenSpec 的流水线套用在文章生产上：
 
 - **7 个 artifact**（注意是 DAG，不是一条直线）：`brief` 同时分出 `outline` 与 `research`；两者都齐了才解锁 `tasks` 与 `draft`（这两个是**兄弟**）；然后 `draft → edit → publish`。`apply` 门槛是 `[tasks, draft]`，`tracks: tasks.md`
-- **兼容策略**：保留 `tasks.md` 文件名（因为 OpenSpec 的 archive 逻辑对它有硬编码检查），不做源码改动
+- **兼容策略**：沿用默认 `tasks.md` 文件名与 `apply.tracks: tasks.md`（OpenSpec 的 `list` / `status` / `archive` 均通过 `findTrackedTasksArtifact()` 读取 `schema.apply.tracks`，并非硬编码 `tasks.md`，沿用默认名只是少维护一处精确匹配），不做源码改动
 
 详见 `answer.md`（综合回答）和 `schema-package/`（schema 定义 + 各阶段模板）。

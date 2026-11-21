@@ -5,19 +5,20 @@
 `openspec archive` 是 change 生命周期的收束动作。它不实施业务代码，而是把已经完成的 change 从“增量工作区”吸收到“正式 capability 基线”：
 
 ```text
-选择 active change
+选择 active change（解析 store-aware root）
   -> 验证 change 目录存在
   -> 验证 proposal / delta specs
-  -> 检查 tasks 进度并必要时确认
-  -> 查找 change/specs 下的 delta specs
-  -> 构建 rebuilt main specs
-  -> 写回 openspec/specs/
+  -> 按 schema apply.tracks 检查 tasks 进度并必要时确认
+  -> 预检 archive 目标目录可用，查找 change/specs 下的 delta specs
+  -> 在内存中预构建全部 rebuilt main specs（RENAMED → REMOVED → MODIFIED → ADDED）
+  -> 展示预演告警并请求确认（除非 --yes）
+  -> 在写任何文件前校验全部 rebuilt main specs
+  -> 复检并独占声明 archive 目标目录，捕获 captureSpecSnapshots
+  -> 写回或退役 openspec/specs/（失败走 restoreSpecSnapshots 回滚）
   -> 移动 change 到 openspec/changes/archive/YYYY-MM-DD-<name>/
 ```
 
-主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。
-
-> **当前边界**；以下这段描述的是 v1.10.0 时的边界，v1.11–v1.14 的补充见本文件后段。v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/openspec-archive-change` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
+主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。capability 支持嵌套相对路径（如 `identity/session`），根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。宿主侧仅投递 skill（Claude 等写作 `/openspec-archive-change`，Codex 写作 `$openspec-archive-change`），归档工作流会先尝试读取 `openspec instructions archive --change <name> --json` 注入的 project `context` 与 `operations.archive.guidance`。
 
 ![Archive-ready 到 archived 的流程](figures/archive-ready-to-archived.svg)
 
@@ -26,17 +27,17 @@
 | 编号 | 名称 | 在流程里做什么 |
 |---|---|---|
 | ARC-01 | select change | 用户传入 change name，或 CLI 交互选择 active change。 |
-| ARC-02 | verify change dirs | 检查 `openspec/changes/` 和目标 change 目录存在。 |
+| ARC-02 | verify change dirs | 检查 `<changesDir>` 和目标 change 目录存在。 |
 | ARC-03 | validation pass | 验证 `proposal.md` 和 delta specs；delta spec ERROR 会阻塞 archive。 |
-| ARC-04 | task progress warning | 读取 `tasks.md`，统计 checkbox；未完成 tasks 会 warning 并要求确认。 |
-| ARC-05 | find spec updates | 递归扫描 `change/specs/<capability-path>/spec.md`，映射到主 `openspec/specs/<capability-path>/spec.md`。 |
-| ARC-06 | confirm spec updates | 如果有 spec updates，除 `--yes` 外会询问是否更新主 specs。 |
-| ARC-07 | prepare rebuilt specs | 对所有 delta specs 先调用 `buildUpdatedSpec()`，写入前完成预构建。 |
-| ARC-08 | apply delta operations | 按 RENAMED → REMOVED → MODIFIED → ADDED 合并 requirement blocks。 |
-| ARC-09 | validate rebuilt specs | 写入前调用 `validateSpecContent()` 验证 rebuilt 主 spec。 |
-| ARC-10 | write main specs | 把 rebuilt 内容写回 `openspec/specs/<capability-path>/spec.md`。 |
-| ARC-11 | archive target check | 生成 `YYYY-MM-DD-<change>`，检查目标 archive 目录是否已存在。 |
-| ARC-12 | move change dir | 创建 archive 目录并移动 active change；EPERM/EXDEV 时走复制回退（复制后删源），复制窗口内的写入中断由 fingerprint 检测并可用 snapshots 回滚。 |
+| ARC-04 | task progress warning | 通过 `getTaskProgressForChange` 按 schema `apply.tracks` 统计 checkbox；未完成 tasks 会 warning 并要求确认。 |
+| ARC-05 | precheck & find specs | 先调用 `assertArchiveDestinationAvailable()` 预检归档目标目录未冲突，再扫描 `change/specs/<capability-path>/spec.md` 映射到主 `openspec/specs/<capability-path>/spec.md`。 |
+| ARC-06 | prepare rebuilt specs | 在提问确认前对全部 delta specs 先调用 `buildUpdatedSpec()` 完成内存预构建与丢弃内容告警收集。 |
+| ARC-07 | apply delta operations | 按 RENAMED → REMOVED → MODIFIED → ADDED 在内存中合并 requirement blocks。 |
+| ARC-08 | confirm spec updates | 预演完成后（除 `--yes` 外）询问是否应用主 specs 更新；确认后复核输入 fingerprint 未变。 |
+| ARC-09 | validate all rebuilt | 写任何文件前，遍历全部待写 rebuilt specs 调用 `validateSpecContent()`；任一失败全部不写。 |
+| ARC-10 | claim dest & snapshots | 首次写主 spec 前再次 `assertArchiveDestinationAvailable()` + `claimArchiveDestination()`，并调 `captureSpecSnapshots()` 留快照。 |
+| ARC-11 | write / retire specs | 把 rebuilt 内容写回 `openspec/specs/<capability-path>/spec.md` 或按授权退役删除；任一后续失败由 `restoreSpecSnapshots()` 回滚。 |
+| ARC-12 | move change dir | 移动 active change 到归档目录；EPERM/EXDEV 时走复制回退（复制后删源），复制窗口内的写入中断由 fingerprint 检测并可用 snapshots 回滚。 |
 | ARC-13 | archive summary | 输出 change 已归档和 spec update totals。 |
 | ARC-14 | archived handoff | change 不再 active；主 specs 成为新的 formal baseline。 |
 
@@ -131,21 +132,14 @@ Validation failed. Please fix the errors before archiving.
 
 ## Step 4：检查 tasks 完成度
 
-archive 会读取：
+archive 会通过 `getTaskProgressForChange()`（`src/utils/task-progress.ts:171-177` `findTrackedTasksArtifact()`）按该 change 绑定的 schema `apply.tracks` 解析跟踪任务文件（默认 `openspec/changes/<change>/tasks.md`，也支持自定义文件名或 glob，并非硬编码 `tasks.md`），再用共享的 `TASK_LINE_PATTERN` 统计复选框进度：
 
 ```text
-openspec/changes/<change>/tasks.md
+- [x] / - [X] 完成（支持 -/*/+ 与 1./1) 及缩进子任务）
+- [ ] / - [~] / - [-] / - [] 等其他复选框标记均计为未完成
 ```
 
-然后用 checkbox 统计进度：
-
-```text
-- [ ] 未完成
-- [x] 完成
-- [X] 完成
-```
-
-如果没有 `tasks.md`，进度是 `No tasks`，不会阻止 archive。
+如果没有配置或没有找到对应的跟踪任务文件（或文件中无复选框），进度是 `No tasks`，不会阻止 archive。
 
 如果还有未完成 tasks：
 
@@ -282,12 +276,30 @@ Aborted. No files were changed.
 
 这是尽力事务式回滚，不是数据库事务。若并发进程在 archive 期间改了同一目标，CLI 会拒绝覆盖不匹配的 fingerprint；若这同时阻止安全恢复，会显式报告 `Rollback also failed` 并保留现场供人工处理。
 
-## Step 10：写回主 specs
+## Step 10：生成并独占声明 archive 目标（先于主 spec 写入！）
 
-单个 rebuilt spec 验证通过后，CLI 写入：
+CLI 生成 archive 名（已有 `YYYY-MM-DD-` 前缀时不重复叠加）：
 
 ```text
-openspec/specs/<capability>/spec.md
+YYYY-MM-DD-<changeName>
+```
+
+例如 `2026-06-14-add-oauth-login`，目标路径为 `<changesDir>/archive/YYYY-MM-DD-<changeName>/`。
+
+注意执行时序：`ArchiveCommand.execute()` 在查找/合并 specs **之前**（`archive.ts:1677`）就先调用一次 `assertArchiveDestinationAvailable()`，并在全部 rebuilt specs 内存校验通过后、**写入任何主 spec 之前**（`archive.ts:1975-1977`）再次调用 `assertArchiveDestinationAvailable()` + `claimArchiveDestination()`，紧接着才执行 `captureSpecSnapshots()` 与主 spec 写入/退役。因此如果目标归档目录已存在，archive 会在**动任何主 spec 之前**直接中止：
+
+```text
+Archive 'YYYY-MM-DD-<changeName>' already exists.
+```
+
+绝不会留下“主 specs 已写、change 却因目标冲突没移走”的半截状态。
+
+## Step 11：写回或退役主 specs
+
+目标目录独占声明与快照捕获完成后，CLI 才遍历 prepared 列表写回：
+
+```text
+openspec/specs/<capability-path>/spec.md
 ```
 
 并输出每个 capability 的统计：
@@ -302,37 +314,9 @@ Applying changes to openspec/specs/user-auth/spec.md:
 
 多 capability change 会输出 totals。
 
-这一步之后，`openspec/specs/` 代表新的 formal baseline。对新 capability，delta 中可读的 `## Purpose` 会随 archive 写入新 main spec；只有缺失或不可读时才回退 TBD placeholder，既有 main spec 的 Purpose 不会被 delta 覆盖。
+这一步之后，`openspec/specs/` 代表新的 formal baseline。对新 capability，delta 中可读的 `## Purpose` 会随 archive 写入新 main spec（v2.1.1 `#2267` 起 `buildSpecSkeleton()` 在 `## Purpose` 标题后固定输出一个空行，与标准 Markdown 排版一致）；只有缺失或不可读时才回退 TBD placeholder，既有 main spec 的 Purpose 不会被 delta 覆盖。
 
-**v1.11.0 起**：`openspec validate` 会检测这个 archive 写入的 placeholder（`TBD - created by archiving change ...`），默认给出 WARNING。`--strict` 下报 error。检测使用与 writer 相同的定义常量（`PURPOSE_PLACEHOLDER_PREFIX` + `PURPOSE_PLACEHOLDER_SUFFIX`），所以 spelling 不会漂移。fence 内的引用不计，`TBD`/`TODO` 在 Purpose 开头也匹配，在句子中间则视为有效 Purpose。后续 explore/propose 都应该以这里为当前 capability 基线。
-
-## Step 11：生成 archive 目标并检查冲突
-
-CLI 生成 archive 名：
-
-```text
-YYYY-MM-DD-<changeName>
-```
-
-例如：
-
-```text
-2026-06-14-add-oauth-login
-```
-
-目标路径：
-
-```text
-openspec/changes/archive/YYYY-MM-DD-<changeName>/
-```
-
-如果目标已经存在，archive 会失败：
-
-```text
-Archive 'YYYY-MM-DD-<changeName>' already exists.
-```
-
-这时不会覆盖已有 archive。
+**v1.11.0 起**：`openspec validate` 会检测这个 archive 写入的 placeholder（`TBD - created by archiving change ...`），默认给出 WARNING，`--strict` 下报 error。检测使用与 writer 相同的定义常量（`PURPOSE_PLACEHOLDER_PREFIX` + `PURPOSE_PLACEHOLDER_SUFFIX`），所以 spelling 不会漂移。fence 内的引用不计，`TBD`/`TODO` 在 Purpose 开头也匹配，在句子中间则视为有效 Purpose。后续 explore/propose 都应该以这里为当前 capability 基线。
 
 > **v1.8.0 归档/同步边界。** 完全一致的 early-synced ADDED、MODIFIED、REMOVED、RENAMED 会作为幂等 no-op 被接受；近似命中（大小写、空白或不同内容）仍是错误。archive JSON 也可返回 warnings。已有日期前缀的 change 不会被再次叠加日期。
 >
@@ -340,10 +324,10 @@ Archive 'YYYY-MM-DD-<changeName>' already exists.
 >
 > **v1.9.0 追加。** 非 TTY（stdout 或 stdin 不是终端）时 confirm 走纯文本、不写 ANSI；无 change 名时要求先传入名字，不画交互菜单。重建 spec 保留 `## Requirements` 周围空行，文件末尾恰好一个 LF。
 >
-> **v1.10.0 退役三分支。** REMOVED 清空最后一个 requirement 时，不要把 “加 marker” 当万能修复：
+> **v1.10.0 退役三分支（含 v2.1.1 `#2266` 精确判定）。** REMOVED 清空最后一个 requirement 时，不要把 “加 marker” 当万能修复：
 >
 > 1. **仅缺授权 marker**：main spec 除可理解的 Purpose/Requirements 外没有残留内容，错误才建议在 `.openspec.yaml` 加 `retire_capabilities: true`。
-> 2. **存在 unaccounted content**：例如 `## Notes`、orphan text 或残余 `###` heading。archive 会列出 blocking lines；必须先迁移、删除或归位这些内容。此时 marker 也无效，提示不会误导你去加 marker。
+> 2. **存在 unaccounted content**：例如 `## Notes`、orphan text、真 HTML 块或残余 `###` heading（注：v2.1.1 `#2266` 起，requirement 正文或列表续行里以 `<` 开头的普通文本——如 `<50ms` 或 `<capability>` 占位符——只要 `mayBeRawHtml()` 判定不是 HTML 块起始或独立标签，均作为正常正文放行，不再误判为 unaccounted content 阻断退役）。archive 会列出真正无法归属的 blocking lines；必须先迁移、删除或归位这些内容。此时 marker 也无效，提示不会误导你去加 marker。
 > 3. **marker 存在但不可 honor**：YAML 形状、boolean 类型或 schema resolution 无效时，archive 同时报告具体 reason；不会把无效 metadata 当删除授权。
 >
 > blocking content 输出会移除控制字符、每行最多展示 200 字符，只列前三行并报告剩余数量；marker reason 也会清理控制字符，避免终端注入。修好内容与 metadata 后再重跑，`--no-validate` 仍不会触发退役。
@@ -380,16 +364,15 @@ openspec/changes/archive/YYYY-MM-DD-<change>/
 
 ## Step 14：为什么 `/openspec-archive-change` 看起来不一样
 
-Claude 的 `/openspec-archive-change` 是 agent 模板，不是 `ArchiveCommand.execute()` 的逐字封装；Codex 的对应入口是 `$openspec-archive-change`。
-
-模板会先做：
+Claude 的 `/openspec-archive-change`（Codex 写作 `$openspec-archive-change`）是宿主 skill 操作手册，**绝不调用 `openspec archive` CLI**，而是独立跑完一套 agent 驱动流程：
 
 ```text
-openspec status --change "<name>" --json
-artifact completion check
-
-delta spec sync assessment
-openspec instructions archive --change "<name>" --json
+1. 选择 change + openspec instructions archive --change "<name>" --json（读取 context / operationGuidance）
+2. openspec status --change "<name>" --json（检查 artifact 完成度）
+3. openspec list --json（读取 schema-aware 的 totalTasks / completedTasks 检查未完任务）
+4. 先预检 <planningHome.changesDir>/archive/<target-name> 不存在（v2.1.1 #2277，写主 spec 前硬拦冲突！）
+5. delta spec sync assessment → 用户确认后拉取 instructions specs 规则快照 → inline 同步主 specs 并全量校验
+6. mkdir -p "<planningHome.changesDir>/archive" + 再次检查目标不存在 + mv "<changeRoot>" ...
 ```
 
 它还可能调用 `openspec-sync-specs` 做 agent-driven sync。这个 sync 路径和 CLI 的 programmatic `buildUpdatedSpec()` 不同：agent 会读 delta spec 和 main spec，然后智能合并。
@@ -488,11 +471,13 @@ openspec instructions archive --change "<name>" --json
 
 所以看到这个错误码不要"再 archive 一次"，去 `openspec/changes/archive/` 确认结果，再按 recovery path 处理残留。
 
-### 2. 文本被 delta 合并丢掉（v1.14.2，#2054）
+### 2. 文本被 delta 合并丢掉与顶部 YAML frontmatter（v1.14.2 `#2054`，v2.1.1 `#2273`）
 
-`openspec archive` 的 programmatic merge 只搬 delta 段里的 requirement。三类文本永远进不了主 spec：第一个 `## ` 之前的正文、`## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文、Purpose 与四类 delta 段之外的任何 `##` 段（`## Notes` 之类）。现在它们会触发 WARNING（`... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.`），正常归档通过、`--strict` 失败。
+`openspec archive` 的 programmatic merge 只搬 delta 段里的 requirement。三类文本永远进不了主 spec：第一个 `## ` 之前的正文、`## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文、Purpose 与四类 delta 段之外的任何 `##` 段（`## Notes` 之类）。它们在 `validate` 中触发 WARNING（`--strict` 失败），在 `archive` 中打印丢弃告警。
 
-**搬运结果没变**，只是丢失不再无声。真想让内容留下：挪进 requirement，或挪进 proposal/design。
+**v2.1.1 `#2273` 例外**：位于 delta 文件第 1 行的顶部 **YAML frontmatter** 在 `openspec validate --strict` 下被豁免（不作为 `unappliedContent` 报错），方便团队在 delta 文件头挂自定义元数据；`openspec archive` 合入时仍不把 frontmatter 带入主 spec，仅输出一条明确提示（`<specName> - frontmatter (line 1) is not carried into the main spec. It stays with the change.`）。
+
+**搬运结果没变**，只是丢失不再无声。真想让内容进主 spec：挪进 requirement（或新 capability 的 `## Purpose`）；只服务本次变更的说明则留在 proposal/design 或 frontmatter。
 
 ### 3. 归档时的 symlink 边界（v1.14.2，#2052）
 

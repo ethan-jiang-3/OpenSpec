@@ -158,23 +158,24 @@ profile 决定启用哪些 workflows。
 
 它回答的是“系统装哪些工作流”。
 
-## delivery
+## delivery（v2.0.0 已退役）
 
-delivery 决定 workflow 以什么形式投递到 AI 工具中。
+1.x 时期的全局配置项（`skills` / `commands` / `both`），曾决定把 workflow 以哪种文件形态安装到 AI 工具目录。**v2.0.0（#2223）起该配置项已退役**，OpenSpec 一律只投递标准 skills；旧 `config.json` 中残留的 `delivery` 字段读取时不报错，但不再改变任何安装行为。
 
-它回答的是“系统怎么把这些工作流交给工具消费”。
+## skillsScope
+
+控制 OpenSpec 技能安装在哪一层作用域（`'global'` 或 `'project'`）：
+
+- **全局配置 `~/.config/openspec/config.json` 的 `skillsScope`**：新项目跑 `openspec init` 时的机器级默认偏好（未设置且未传 `--scope` 时，新项目默认采用 `'global'`，装入 `~/.agents/skills/` 及各工具全局目录供本机所有项目共享）。
+- **项目配置 `openspec/config.yaml` 的 `skillsScope: project`**：记录团队将该项目的技能保留在仓库内（`.agents/skills/`），供 `openspec update` 读取而不再重复询问团队成员。
 
 ## skill
 
-skill 是某些 AI 工具可消费的一种工作流文件形态。
+OpenSpec 当前**唯一**的工作流投递文件形态（遵循 Agent Skills 规范的标准 `SKILL.md`）。每个工作流无论在何种 `profile` 下都产出同一份恒定文本：全局作用域离线装入 `~/.agents/skills/` 及工具全局目录；项目作用域在 `.agents/skills/openspec-<workflow>/SKILL.md` 保存唯一真身，33 个 `universal` 工具直读该目录，其余 54 个工具在各自目录下建相对链接（Windows 或 `eve` 退化为拷贝）。
 
-OpenSpec 会把 workflow 语义内容生成 skill 文件，安装到对应工具目录。
+## command（v2.0.0 已移除）
 
-## command
-
-command 是另一种工具可消费的工作流文件形态，通常表现为 slash command 或命令文件。
-
-skill 和 command 通常表达的是同一 workflow 语义，只是外壳不同。
+1.x 时期生成的工具私有斜杠命令或提示词文件（如 `.claude/commands/opsx/<id>.md`，通常写作 `/opsx:*`）。它与 skill 表达相同的 workflow 语义，仅外壳不同。**v2.0.0 起不再生成任何 command 文件**；源码保留 34 个 command adapter 仅用于在 `openspec update` 时按内容指纹识别并清理未编辑过的历史命令文件。
 
 ## ready / blocked / done
 

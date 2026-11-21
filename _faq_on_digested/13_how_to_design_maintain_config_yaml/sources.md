@@ -6,8 +6,8 @@
 
 | 来源 | 支撑的结论 |
 |---|---|
-| [`src/core/project-config.ts`](../../src/core/project-config.ts) | 解析的 `schema`、`context`、`rules`、`operations`、`references`、`store`；`config.yaml` 优先于 `.yml`；50 KiB context；逐字段 fail-open；未知顶层字段不会进入返回 config。 |
-| [`src/core/artifact-graph/instruction-loader.ts`](../../src/core/artifact-graph/instruction-loader.ts) | `generateInstructions()` 读取 project config，只取全局 context 与当前 `rules[artifactId]`，并校验 rules key。 |
+| [`src/core/project-config.ts`](../../src/core/project-config.ts) | 解析的全部 8 个 `ProjectConfig` 顶层字段（`schema`、`context`、`rules`、`operations`、`references`、`store`、`githubCopilot`、`skillsScope`）；`config.yaml` 优先于 `.yml`；50 KiB context；逐字段 fail-open；未知顶层字段不会进入返回 config；`readConfigParseError()` 供 `openspec validate` 对不可读/非法 YAML 直接退出 1（#2127）。 |
+| [`src/core/artifact-graph/instruction-loader.ts`](../../src/core/artifact-graph/instruction-loader.ts) | `generateInstructions()` 读取 project config，只取全局 context 与当前 `rules[artifactId]`，并按全部可用 schema 的 artifact ID 并集校验 rules key。 |
 | [`src/commands/workflow/instructions.ts`](../../src/commands/workflow/instructions.ts) | artifact instructions 的渲染顺序；Apply/Archive instructions 使用 schema/artifacts 与 operation input：project context、`operations.apply/archive.guidance`；artifact rules 仍只属于 artifact instructions。 |
 | [`schemas/spec-driven/schema.yaml`](../../schemas/spec-driven/schema.yaml) | 默认 artifact DAG、artifact instruction、dependencies、template 与 `apply` 的结构。 |
 | [`src/core/templates/workflows/explore.ts`](../../src/core/templates/workflows/explore.ts) | Explore 是 stance；其常规路径使用 `list/status` 和按需 artifact 读取，同时读取 project context/rules；没有 Explore operation guidance。 |
@@ -51,3 +51,4 @@
 | Deep Research Tool | 证据支撑、多波次、带 Gate 的 Agentic research framework；Agent/Markdown flow 负责研究与语义判断，JavaScript Engine 负责 schema、状态、receipt 和确定性 Gate。 | `/Users/bowhead/ai_tool_deepresearch/openspec/config.yaml`；[`10-deep-research-tool-config-audit.md`](project-cases/10-deep-research-tool-config-audit.md) |
 | Agentic PPT workflow | Agent/Markdown controller 负责演示文稿的内容、视觉判断和流程推进，JavaScript/CLI 负责解析、校验、状态、证据与 Gate；包含 framework maintenance 和 run-bundle production。 | `/Users/bowhead/ai_tool_ppt_maker/openspec/config.yaml`；[`11-agentic-ppt-workflow-config-audit.md`](project-cases/11-agentic-ppt-workflow-config-audit.md) |
 | DeerFlow Deep Research | 基于 DeerFlow 2.1 的下游深度研究产品；`agent/` 为主要实现，Python `StateGraph`、typed state 和 node contract 拥有主要运行时控制边界。 | `/Users/bowhead/ai_deerflow_deep_research/openspec/config.yaml`；[`12-deerflow-deep-research-config-audit.md`](project-cases/12-deerflow-deep-research-config-audit.md) |
+| Agentic Business Simulation | 商业决策模拟 framework；Agent 按 Markdown charter/ops/playbook 与 H/A/T 节点推进工作，Human H 节点保留业务决策，Node checker 只做只读诊断。 | `/Users/bowhead/ai_tool_bsimulation/openspec/config.yaml`；[`13-business-simulation-config-audit.md`](project-cases/13-business-simulation-config-audit.md) |

@@ -20,13 +20,14 @@
   <text x="285" y="93" text-anchor="middle" font-size="9" fill="#1d4ed8">成功后 move → changes/archive/&lt;日期&gt;-&lt;id&gt;/</text>
 
   <rect x="550" y="46" width="330" height="58" rx="5" fill="url(#agentGrad)" stroke="#93c5fd" stroke-dasharray="5,3"/>
-  <text x="715" y="64" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">入口 B：/opsx:sync</text>
-  <text x="715" y="79" text-anchor="middle" font-size="9" fill="#1d4ed8">LLM 再对齐 · 非确定 · 幂等</text>
-  <text x="715" y="93" text-anchor="middle" font-size="9" fill="#1d4ed8">只改 spec · 不移动 change</text>
+  <text x="715" y="64" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">另一路：openspec-sync-specs 技能</text>
+  <text x="715" y="79" text-anchor="middle" font-size="9" fill="#1d4ed8">LLM 读 delta + 主 spec 直接编辑主 spec · 幂等</text>
+  <text x="715" y="93" text-anchor="middle" font-size="9" fill="#1d4ed8">不经 buildUpdatedSpec() · 不移动 change</text>
 
-  <!-- converge arrows -->
-  <line x1="285" y1="104" x2="420" y2="130" stroke="#1d4ed8" marker-end="url(#arrowB)"/>
-  <line x1="715" y1="104" x2="580" y2="130" stroke="#1d4ed8" stroke-dasharray="5,3" marker-end="url(#arrowB)"/>
+  <!-- entry arrows: archive enters buildUpdatedSpec(); sync bypasses it directly to main spec -->
+  <line x1="285" y1="104" x2="420" y2="132" stroke="#1d4ed8" marker-end="url(#arrowB)"/>
+  <path d="M 880,75 L 935,75 L 935,327 L 702,327" fill="none" stroke="#1d4ed8" stroke-dasharray="5,3" marker-end="url(#arrowB)"/>
+  <text x="818" y="319" text-anchor="middle" font-size="8" fill="#1d4ed8">agent 直写 + validate --specs</text>
 
   <!-- buildUpdatedSpec engine -->
   <rect x="120" y="132" width="760" height="150" rx="6" fill="url(#engineGrad)" stroke="#22c55e" stroke-width="1.5"/>
@@ -71,7 +72,7 @@
   <text x="140" y="390" font-size="11" font-weight="bold" fill="#b91c1c">身份枢纽（整件事的支点）</text>
   <text x="140" y="410" font-size="9" fill="#4b5563">· requirement 没有稳定 ID</text>
   <text x="140" y="426" font-size="9" fill="#4b5563">· 身份 = "### Requirement: &lt;Name&gt;" 标题原文</text>
-  <text x="140" y="442" font-size="9" fill="#4b5563">· normalizeRequirementName() 仅 .trim()    ⇒  大小写敏感：Login ≠ login</text>
+  <text x="140" y="442" font-size="9" fill="#4b5563">· normalizeRequirementName() 剥收尾 # run 后 .trim()  ⇒  大小写敏感：Login ≠ login</text>
   <text x="140" y="458" font-size="9" fill="#4b5563">· 段头 ## ADDED Requirements 却用 getSectionsCaseInsensitive    ⇒  大小写不敏感</text>
   <text x="140" y="480" font-size="9" font-weight="bold" fill="#b91c1c">★ 这个不对称 = ⑥ 身份脆弱性的根源：改个大小写，后续 delta 默默失配。</text>
   <text x="140" y="494" font-size="8" fill="#9ca3af">源码：requirement-blocks.ts（normalizeRequirementName / getSectionsCaseInsensitive）、specs-apply.ts（buildUpdatedSpec）</text>

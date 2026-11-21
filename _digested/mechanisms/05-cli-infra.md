@@ -8,7 +8,7 @@ CLI infra 的定位是 **周边但全局**：它不定义 `specs/`、`changes/`�
 
 ```text
 core mechanisms
-  artifact graph / runtime API / archive / workspace
+  artifact graph / runtime API / archive / store
 
 CLI infra
   completion / telemetry / feedback / prompts / utils / converter
@@ -33,7 +33,7 @@ COMMAND_REGISTRY
 openspec __complete <type>          # 顶层命令，不是 completion 的子命令
 ```
 
-给 shell script 动态获取 change/spec/schema 等候选。注意 `openspec completion __complete changes` 会报 `error: unknown command '__complete'`——`__complete` 直接挂在 program 下（`src/cli/index.ts:123` 的 `commandPath === '__complete'`）。
+给 shell script 动态获取 change/spec/schema 等候选。注意 `openspec completion __complete changes` 会报 `error: unknown command '__complete'`——`__complete` 直接挂在 program 下（`src/cli/index.ts:122,130` 的 `commandPath === '__complete'`）。
 
 `src/core/completions/command-registry.ts` 手写维护 command name、description、positional 参数、flags、subcommands、flag value candidates。风险也在这里：CLI 新增/改名时，如果 registry 不同步，completion 会漂移。
 
@@ -85,10 +85,10 @@ CI 的 OS 矩阵每格现在显式钉 Node 版本：Linux/macOS/Windows 全跑**
 
 > **下限变过两次**：v1.16.0 从 `>=20.19.0` 抬到 **`>=22.12.0`**，v2.1.1 再抬到 **`>=22.20.0`**（现值）。以下记录的是 v1.16.0 那次：`engines.node` 从 `>=20.19.0` 抬到 **`>=22.12.0`**（#2159，CHANGELOG 标 Breaking），`@types/node` 20→22。原因写在发布说明里：Node 20 于 2026-04-30 EOL。影响面很窄——**只有 Node 20 上的 npm 安装**；standalone 二进制不用 Node（自 v1.15.0 起是默认安装方式），Homebrew 会自己管 Node 依赖。CI 矩阵随之以 22.12 为最老受支持版本。
 
-### npm git 安装免 pnpm + Node 20 chalk 兼容
+### npm git 安装免 pnpm + 1.x 时期的 Node 20 chalk 兼容
 
 - **git 安装免 pnpm**（#792）：`npm install github:...` 这类 git 安装时，package `prepare` 脚本改为 `node build.js`（不再假设 pnpm 在场）。此前 pnpm 是构建前置依赖，git 安装会因缺 pnpm 失败；现在 install scripts 测试（`test/package-install-scripts.test.ts`）覆盖了这条路径。
-- **Node 20 chalk 兼容**（#1747）：依赖解析保持 Node 20 LTS 可用的 chalk 版本，避免新依赖树把 chalk 解析到 Node 22+ 才能用的版本。安装面（npm/pnpm/bun/yarn/volta）对 Node 20 用户都保持可用。
+- **Node 20 chalk 兼容（1.x 历史，v1.16.0 起已随 Node 20 EOL 退役）**（#1747）：1.x 支持 Node 20 时曾锁定兼容 Node 20 LTS 的 chalk 版本；自 v1.16.0 抬升至 `>=22.12.0`、v2.1.1 再抬升至 `>=22.20.0` 后，`package.json` 已升级至 `chalk@^6.0.1`（不再兼容 Node 20）。
 
 ## telemetry：低信息量、低阻塞
 
@@ -228,9 +228,9 @@ Windows 上 staging rename 遇 EPERM/EXDEV 不再直接失败：
 
 非 EPERM/EXDEV 的 staging 失败仍保持源 change 不动。
 
-### version-check 扩展与 `openspec version` 命令（v1.14.0）
+### version-check 扩展与 `openspec version` 命令（v1.14.0 起，v2.1.1 补齐 Homebrew/Nix）
 
-`src/core/version-check.ts` 扩展出四个导出：`getCliInstallInfo`（安装方式与位置）、`checkForCliUpdate`（查 registry，仅 `--check` 时调用）、`canSelfUpgrade`（判定能否自行升级）、`buildVersionReportLines`（人类可读输出）。`openspec version [--json] [--check]` 输出 `{ schemaVersion: 1, version, install, update? }`，`update` 含 `command` 与 `canSelfUpgrade`。
+`src/core/version-check.ts` 扩展出四个导出：`getCliInstallInfo`（安装方式与位置）、`checkForCliUpdate`（查 registry，仅 `--check` 时调用）、`canSelfUpgrade`（判定能否自行升级）、`buildVersionReportLines`（人类可读输出）。`openspec version [--json] [--check]` 输出 `{ schemaVersion: 1, version, install, update? }`，`update` 含 `command` 与 `canSelfUpgrade`。v2.1.1（`#2264`）将 `PackageManager` 枚举扩充为 `'npm' | 'pnpm' | 'bun' | 'yarn' | 'volta' | 'homebrew' | 'nix'`（`version-check.ts:605-652,793-795`）：Cellar 路径识别为 `homebrew`（升级命令 `brew upgrade openspec`），`/nix/store` 识别为 `nix`（`update.command` 为 `null`，人类输出提示通过 Nix 原安装方式升级），避免它们因内部 `lib/node_modules/` 布局被误判成 npm 全局安装。
 
 ### 依赖钉版
 
@@ -354,7 +354,7 @@ test/fixtures/released-output/** linguist-generated=true
 
 ## 测试锚点补充（v1.14.1–v1.15.0）
 
-- `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs`：记录并断言启动时加载的模块数（防止按需加载被无意退回）
+- `test/cli-e2e/startup-modules.test.ts` + `test/helpers/record-loaded-modules.mjs`：记录启动时加载的模块并断言仅加载 `commander` 且零命令实现模块（防止按需加载被无意退回）
 - `test/utils/interactive.test.ts`：零宽 TTY 下 spinner 被拒绝
 - `test/utils/spec-path-containment.test.ts`、`test/cli-e2e/spec-symlink-into-project.test.ts`：symlink 包含边界
 - `test/core/templates/glob-path-bounding.test.ts`：propose/ff/continue 的 glob 路径边界
@@ -367,5 +367,5 @@ test/fixtures/released-output/** linguist-generated=true
 测试锚点补充（v1.16.0–v1.17.0）：
 
 - `test/cli-e2e/upgrade-from-releases.test.ts`：**最有价值的一个**——装真实 npm 发布版（0.14.0 / 0.23.0 / 1.0.0 / 1.2.0 / 1.10.0 / 1.16.0）到临时项目，用当前构建 `update` 升级，断言“不需要 `--force`、没留下任何未编辑的旧产物、用户编辑过的保留、第二次运行无事可做”。需要网络，所以只在 `OPENSPEC_RELEASE_UPGRADES=1` 时跑
-- `test/fixtures/released-output/`：6 个真实发布产物（v0.23.0 / v1.0.0 的 CLAUDE.md、命令、prompt），按字节校验指纹
+- `test/fixtures/released-output/`：37 个真实发布产物文件（覆盖 v0.23.0 / v1.0.0 / v1.6.0 / v1.9.0 / v1.10.0 / v1.16.0 / v1.17.0 / v2.0.0 的 CLAUDE.md、命令、prompt 与 skills），按字节校验指纹与退役清理
 - `test/core/update-dry-run*.test.ts`：清扫与 reconcile 在 dry-run 下的计划正确性

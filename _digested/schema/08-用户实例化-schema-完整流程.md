@@ -28,7 +28,7 @@ research（调研收集）
                             └──→ 发布
 ```
 
-5 个 artifact，串行依赖。
+4 个 artifact（`research` → `outline` → `draft` → `review`），串行依赖，最后进入 `apply`（发布阶段）。
 
 ---
 
@@ -242,29 +242,25 @@ rm proposal.md spec.md design.md tasks.md
 *初稿 · [日期] · 待审核*
 ```
 
-创建 `review.md` 模板：
+创建 `review.md` 模板（注意：因为 `schema.yaml` 配置了 `apply.tracks: review.md`，`review.md` 必须包含至少一条 `- [ ]` 复选框供 `apply` 追踪进度，否则 `openspec instructions apply` 会因追踪文件无 checkbox 而进入 `blocked` 状态）：
 
 ```markdown
 ## 技术审核
 
-| 检查项 | 状态 | 备注 |
-|--------|------|------|
-| 代码可运行 | ⬜ |      |
-| 概念准确 | ⬜ |      |
-| 版本时效 | ⬜ |      |
+- [ ] 代码可运行（备注：）
+- [ ] 概念准确（备注：）
+- [ ] 版本时效（备注：）
 
 ## 可读性审核
 
-| 检查项 | 状态 | 备注 |
-|--------|------|------|
-| 逻辑自洽 | ⬜ |      |
-| 过渡自然 | ⬜ |      |
-| 术语一致 | ⬜ |      |
+- [ ] 逻辑自洽（备注：）
+- [ ] 过渡自然（备注：）
+- [ ] 术语一致（备注：）
 
 ## 修改建议
 
 ### 必须修改
-- 
+- [ ] 
 
 ### 建议修改
 - 
@@ -306,14 +302,14 @@ openspec schema init writing-pipeline --no-default
 
 > **不要写 `openspec config set schema <name>`** —— `config set` 操作的是*全局*配置（`~/.config/openspec/config.json`，见下），顶层没有 `schema` 这个 key，会直接报错：
 > `Error: Invalid configuration key "schema". Unknown top-level key "schema".`
-> `Use "openspec config list" to see available keys.`（`openspec config list` 里的 key 是 `featureFlags` / `profile` / `delivery` / `workflows` / `defaultStore` / `openers` / `telemetry` / `completionTipSeen`，`global-config.ts:25-38`。）
+> `Use "openspec config list" to see available keys.`（`GlobalConfig` 里的顶层字段为 `featureFlags` / `profile` / `delivery`（已退役但兼容保留） / `workflows` / `defaultStore` / `openers` / `telemetry` / `completionTipSeen` / `standaloneTipSeen` / `skillsScope`，`global-config.ts:25-48`。）
 
 > **别再混淆这两个目录**（这是本资料反复踩过的坑）：
 >
 > | 用途 | 路径 | 解析函数 |
 > |------|------|---------|
-> | 机器级**配置**（`config set/list/get`） | `$XDG_CONFIG_HOME/openspec/config.json`，Unix 回退 `~/.config/openspec/config.json`（Windows `%APPDATA%\openspec\`） | `getGlobalConfigDir()`，`global-config.ts:58` |
-> | 机器级**数据**（store 注册表、worksets、用户级 schema） | `$XDG_DATA_HOME/openspec`，Unix 回退 `~/.local/share/openspec` | `getGlobalDataDir()`，`global-config.ts:101` |
+> | 机器级**配置**（`config set/list/get`） | `$XDG_CONFIG_HOME/openspec/config.json`，Unix 回退 `~/.config/openspec/config.json`（Windows `%APPDATA%\openspec\`） | `getGlobalConfigDir()`，`global-config.ts:63` |
+> | 机器级**数据**（store 注册表、worksets、用户级 schema） | `$XDG_DATA_HOME/openspec`，Unix 回退 `~/.local/share/openspec`（Windows `%LOCALAPPDATA%\openspec\`） | `getGlobalDataDir()`，`global-config.ts:106` |
 >
 > 两者目录名相同（都叫 `openspec`）但父目录不同；配置是 **JSON**（`config.json`），项目级才是 **YAML**（`openspec/config.yaml`）。用 `openspec config path` 可直接打印真实路径，不要靠猜。
 
@@ -370,25 +366,26 @@ openspec instructions research --change intro-to-rust-async --json | jq '.'
 
 现在可以用这个 schema 工作了：
 
-> **前提**：`/openspec-continue-change` 与 `/openspec-ff-change` 不在默认的 `core` profile 里（`CORE_WORKFLOWS` 只有 `propose` / `explore` / `apply` / `update` / `sync` / `archive`，`src/core/profiles.ts:14`）。要一次只推进一个 artifact，先 `openspec config profile` 选上 expanded 流程并 `openspec update` 重新生成命令，否则敲 `/openspec-continue-change` 不会有这个命令。
+> **前提**：`/openspec-new-change`、`/openspec-continue-change` 与 `/openspec-ff-change` 不在默认的 `core` profile 里（`CORE_WORKFLOWS` 只有 `propose` / `explore` / `apply` / `update` / `sync` / `archive`，`src/core/profiles.ts:14`）。若想逐个推进 artifact，先运行 `openspec config profile` 勾选 custom 工作流并执行 `openspec update` 刷新技能（skills）；若保持默认 `core` profile，则使用 `/openspec-propose` 一次性生成 apply 所需的全部规划产物。
 
 ```bash
-# AI 通过 skill 命令触发
-/openspec-propose intro-to-rust-async
-# → 生成 research.md
+# 路线 A：逐步推进（需在 custom profile 中启用 new-change 与 continue-change 技能）
+/openspec-new-change intro-to-rust-async
+# → 创建空 change 骨架
+
+/openspec-continue-change
+# → 生成第 1 个就绪产物 research.md
 
 # 编辑 research.md，补充更多材料...
 
 /openspec-continue-change
-# → 生成 outline.md
+# → 生成第 2 个产物 outline.md
 
-# 调整 outline.md...
+# 调整 outline.md，继续 /openspec-continue-change 依次生成 draft.md → review.md...
 
-/openspec-continue-change
-# → 生成 draft.md
-
-# 或者一次性生成所有 artifact
-/openspec-ff-change
+# 路线 B：一次性生成全部规划产物（research → outline → draft → review）
+# 默认 core profile 用 /openspec-propose（遇关键歧义会先提问），custom profile 也可用 /openspec-ff-change（合理假设、直推到底）
+/openspec-propose intro-to-rust-async
 ```
 
 ---

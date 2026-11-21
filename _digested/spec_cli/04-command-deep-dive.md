@@ -7,19 +7,19 @@
 ### `init`
 
 - 角色：工作流投递器。
-- 核心对象：AI 工具目录、global config、skills/commands 模板。
+- 核心对象：AI 工具目录（87 个可选工具）、global config（`profile` / `skillsScope`）、skills 模板（1.x 另有 commands，v2.0.0 起不再生成）。新项目默认装到本机全局 `~/.agents/skills/`，传 `--scope project` 才装入项目 `.agents/skills/` + 工具链接。
 - 改变项目状态：会。
-- 改变工具状态：会。
-- 主要风险：误以为只是在本地建目录，实际上它会生成工具侧产物并可能清理旧产物。
+- 改变工具状态：会（全局或项目侧 skills）。
+- 主要风险：误以为只是在本地建目录，实际上它会生成全局/项目工具侧技能并按指纹清理未修改的旧产物。
 - `--language` 边界：flag 只负责 greenfield config seed；生成的三行 context 才是后续 artifact instructions 的输入，结构约束仍由 schema 提供。已有 config 不覆盖，应手工编辑 `context`。
 
 ### `update`
 
 - 角色：工作流同步器。
-- 核心对象：已配置工具、OpenSpec 版本、profile/delivery 差异。
-- 改变项目业务内容：通常不会。
-- 改变工具工作流外壳：会。
-- 主要风险：用户以为不会删除内容，但它会清理被取消选中的 workflow 产物。
+- 核心对象：已配置工具、OpenSpec 版本、`profile` 与 `skillsScope` 差异（本机已安装全局 skills 时无需当前目录存在 `openspec/` 即可刷新全局 skills；1.x 的 `delivery` 已退役）。
+- 改变项目业务内容：通常不会（交互选择留在项目内时会在 `openspec/config.yaml` 记录 `skillsScope: project`）。
+- 改变工具工作流外壳：会（同步 skills，并按内容指纹清理未编辑的 1.x command 文件与退役工具残留）。
+- 主要风险：用户以为不会删除内容，但它会清理被取消选中的 workflow 产物与未编辑的历史命令文件。
 - v1.10.0 的 restart 提示是条件性的：只有本次实际影响了 registry 中标记 `requiresIdeRestart` 的 IDE surface 才显示；仅更新 CLI/即时加载 skills 的工具不提示。
 - v1.15.0 起支持 `--dry-run`（只报告计划）与 `--json`（仅配 dry-run）；预演与真实更新共用同一条 `UpdateFileOps` 写入路径，报告含 `add/update/delete`、`notes`、`failures`。
 
@@ -33,9 +33,9 @@
 
 ### `version`
 
-- 角色：安装自述端点（v1.14.0 新增）。
-- 核心对象：当前版本、安装形态（`location`/`packageManager`/`scope`）、可选的 registry 更新检查。
-- 输出语义：`--json` 输出 `{ schemaVersion: 1, version, install, update? }`；`update.status` 为 `available/current/disabled/offline`。只要跑过 `--check`，`update` 对象就**恒带** `command` 与 `canSelfUpgrade` 两个键——`command` 仅在 `status === "available"` 时非 `null`（否则为 `null`），`canSelfUpgrade` 仅在 `available` 时按 `canSelfUpgrade(location, cwd)` 计算（否则为 `false`）。所以别把"键不存在"当成判断依据，要看值。
+- 角色：安装自述端点（v1.14.0 新增，v2.1.1 `#2264` 补齐 `homebrew` / `nix`）。
+- 核心对象：当前版本、安装形态（`location` / `packageManager`: `npm|pnpm|bun|yarn|volta|homebrew|nix|null` / `scope`）、可选的 registry 更新检查。
+- 输出语义：`--json` 输出 `{ schemaVersion: 1, version, install, update? }`；`update.status` 为 `available/current/disabled/offline`。只要跑过 `--check`，`update` 对象就**恒带** `command` 与 `canSelfUpgrade` 两个键——`command` 仅在 `status === "available"` 且有单一确定升级命令时非 `null`（例如 `homebrew` 给 `"brew upgrade openspec"`，而 **`nix` 恒为 `null`** 并在文本输出提示按 Nix 原方式升级；`project`/`temporary`/`source` 或非 `available` 状态也为 `null`，见 `src/core/version-check.ts:605-652,712-716,793-795`），`canSelfUpgrade` 仅在 `available` 时按 `canSelfUpgrade(location, cwd)` 计算（否则为 `false`）。所以别把"键不存在"当成判断依据，要看值。
 - 边界：只读；不做升级动作，也不改项目状态。默认不访问网络，`--check` 才查 registry。
 
 ## 二、发现与浏览类
@@ -56,7 +56,7 @@
 - 角色：交互式仪表盘；v1.7.0 按 resolved root 读取，并支持 `--store`，不是硬编码当前 cwd 的 specs。
 - 核心对象：聚合浏览。
 - active change 行下有 `└─ [schemaName]` workflow status 行，逐 artifact 标 done/ready/blocked/skipped（workflow 加载不出时保留任务进度）。
-- v1.14.0 曾在末尾加过灰色的 "Archived Changes" 分区；**v1.14.1 起已移除**（#2031），dashboard 只显示 active changes 与 specs。看归档用 `list --archived`/`--all`。
+- v1.14.0 曾在末尾加过灰色的 "Archived Changes" 分区；**v1.14.1 起仅移除了该归档分区**（#2031），dashboard 仍完整展示 **Draft Changes**（无任务项，`src/core/view.ts:29`）、**Active Changes**（任务进行中，`:38`）、**Completed Changes**（任务全勾完但尚未归档，`:63`）与 **Specifications**（`:73`）。看已归档 change 用 `list --archived`/`--all`。
 - 更偏人类，不偏自动化。
 
 ### `show`
@@ -134,8 +134,8 @@
 ### `config`
 
 - 角色：全局工作流配置器。
-- 核心对象：profile、delivery、workflow selection。
-- 影响：下次 `init` / `update` 如何生成工具侧工作流。
+- 核心对象：`profile`、`workflows`、`skillsScope`、`defaultStore`、`openers`、`telemetry`（1.x 的 `delivery` 已在 v2.0.0 退役）。
+- 影响：下次 `init` / `update` 如何生成工具侧 skills 及本机默认行为。
 
 ### `feedback`
 
@@ -152,12 +152,12 @@
 ## 六、store / context / workset / doctor 命令族
 
 
-### `store register`
+### `store setup` / `store register`
 
-- 角色：全局注册一个仓库 checkout。
-- 核心对象：store id、backend（git type + `local_path` + 可选 `remote` / `branch`）。注意 `branch` 虽是 `store.yaml` 的合法字段（`store/foundation.ts:41`），但**没有任何 `store` 子命令带 `--branch` 选项**——它只能手工写进 store 元数据。`register` 只接受 `--id` / `--yes` / `--json`；`--remote <url>` 属于 `store setup`。
-- 产出：在 `<globalDataDir>/stores/registry.yaml` 中写入条目，在 checkout 下创建 `.openspec-store/store.yaml`。
-- 边界：只记录已有目录，不 clone、不 init。
+- 角色：创建并注册本地新 store（`setup`），或把已有本地 checkout 注册进全局表（`register`）。
+- 核心对象：store id、本机注册表 backend（git `type` + `local_path` + 可选 `remote` / `branch`）与仓库内身份元数据 `.openspec-store/store.yaml`。**务必区分两份 YAML 的严格边界**：`src/core/store/foundation.ts:41` 的 `branch` 属于本机 `<globalDataDir>/stores/registry.yaml` 里的 `StoreGitBackendConfig`（`GitBackendConfigSchema`，`:140-145`），**绝不属于 `.openspec-store/store.yaml`**！`MetadataStateSchema`（`foundation.ts:159-163`）带 `.strict()`，只允许 `{ version: 1, id, remote? }`——一旦手工往 `store.yaml` 加 `branch` 字段，会直接抛 `invalid_store_metadata`。（同时也没有任何 `store` 子命令带 `--branch` 选项。）
+- 选项边界：`store setup [id]` 接受 `--path <path>`、`--init-git`/`--no-init-git`、`--remote <url>`、`--json`（只初始化本地目录并将 `remote` 写入 `store.yaml`，**绝不执行 `git clone`**）；`store register [path]` 只接受 `--id <id>`、`--yes`、`--json`。
+- 产出：在 `<globalDataDir>/stores/registry.yaml` 中写入条目，必要时在 store 根下创建 `.openspec-store/store.yaml`。
 
 ### `store list` / `unregister` / `remove` / `doctor`
 
@@ -175,9 +175,9 @@
 ### `workset create` / `open` / `list` / `remove`
 
 - 角色：个人本地多仓库视图管理。
-- 核心对象：workset（name + members + optional tool）。
-- 产出：`<globalDataDir>/worksets/worksets.yaml` + `.code-workspace` 文件。
-- 边界：纯本地，不共享，不提交。
+- 核心对象：workset（`name` + `members` + optional `tool`）与 opener 表（`src/core/openers.ts`）。
+- 产出：`workset create` 写入 `<globalDataDir>/worksets/worksets.yaml`；`workset open <name>` 每次运行时重新生成 `<globalDataDir>/worksets/<name>.code-workspace` 后拉起外部工具。
+- 边界：纯本地，不共享，不提交。`workset open` 因把当前终端交给外部工具而显式拒绝 `--json`（报 `workset_open_json_unsupported`）；内置 `workspace-file` opener（`code`、`cursor`）默认启用，而 CLI-agent `attach-dirs` opener（`claude`、`codex`）默认被门禁关闭，需设 `OPENSPEC_ENABLE_CLI_AGENT_OPENERS=1` 才可打开。
 
 ### `doctor`
 

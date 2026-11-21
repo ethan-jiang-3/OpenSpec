@@ -112,7 +112,7 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 - `blocked`: 依赖未满足，暂时不应创建。
 - `skipped`: change metadata 里 `skip_specs: true` 时，**`generates` 路径落在 `specs/` 下的 artifact**（按路径前缀判定，**不是按 artifact id 叫 `specs`**）被显式跳过。该标记只适用于没有 spec-level 行为变化的 change，且不得与任何非隐藏 delta spec 文件共存（validate 会报错，`validation/constants.ts:39`）。
 
-`skip_specs` 有两种来源：作者为纯重构/工具/文档 change 手工声明；或 v1.10.0 在 `new change` 解析到一个不产生 specs artifact 的 schema 时自动写入。后者的判定就是「该 schema 没有任何 artifact 的 `generates` 落在 `specs/` 下」（`change-utils.ts:190-192`），`isSpecsArtifactPath()` 本身容得下 `./specs/`、`specs/` 与 Windows 分隔符——**并没有一个单独的"归一化"步骤**；两种来源进入 status 后的 `skipped` 语义相同。
+`skip_specs` 有两种来源：作者为纯重构/工具/文档 change 手工声明；或 v1.10.0 在 `new change` 解析到一个不产生 specs artifact 的 schema 时自动写入。后者的判定就是「该 schema 没有任何 artifact 的 `generates` 落在 `specs/` 下」（`change-utils.ts:171-173`），`isSpecsArtifactPath()` 本身容得下 `./specs/`、`specs/` 与 Windows 分隔符——**并没有一个单独的"归一化"步骤**；两种来源进入 status 后的 `skipped` 语义相同。
 
 ### 它影响谁
 
@@ -229,13 +229,13 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 2. 确认 apply 前置要求需要哪些 artifacts。
 3. 检查这些 prerequisite artifacts 是否已经产生输出。
 4. 收集所有现存 artifact 输出文件作为 context files。
-5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器为 `src/utils/task-progress.ts` 的 `parseTaskLines`，与 `list`/`view`/`validate --archived`/archive 共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。v1.14.0 起，解析出的每个任务项还带 `sourcePath` 与 1-based `line`——但注意 `LocatedTask`/`parseLocatedTasks` **不在** `task-progress.ts` 里，而是 apply instruction 构造器的本地实现（`src/commands/workflow/instructions.ts:358`/`:364`），它内部仍调用 `parseTaskLines`，不改任务解析本身；apply workflow 据此直接定位到 tracking file 的该行勾选。
+5. 如果配置了 tracking file，则解析 tasks 内容和完成状态（计数器为 `src/utils/task-progress.ts` 的 `parseTaskLines` / `parseLocatedTaskLines`，与 `list`/`view`/`validate --archived`/archive 共享；v1.13.1 起认所有 CommonMark 列表标记——`+` 与有序标记 `1. [ ]`、`1) [ ]` 与 `-`/`*` 同等计数，未识别的标记算未完成）。v1.14.0 起，解析出的每个任务项还带 `sourcePath` 与 1-based `line`——但注意 `LocatedTask`/`parseLocatedTasks` **不在** `task-progress.ts` 里，而是 apply instruction 构造器的本地实现（`src/commands/workflow/instructions.ts:358`/`:364`），它内部调用 `parseLocatedTaskLines` 附加 `sourcePath`，不改任务解析本身；apply workflow 据此直接定位到 tracking file 的该行勾选。
 6. v1.13.0 起，change 无任何 spec delta 时在结果中附带警告（写 specs 或 `skip_specs: true`），text 与 `--json` 均有。
 7. 归纳当前 apply state，并给出 instruction。
 
 ### 输出包含什么
 
-JSON 是 `{ ...instructions, root }`（`instructions.ts:765`），`instructions` 里固定带：
+JSON 是 `{ ...instructions, root }`（`instructions.ts:759`），`instructions` 里固定带：
 
 - `changeName` / `changeDir` / `schemaName`
 - `contextFiles`
@@ -316,7 +316,7 @@ JSON 是 `{ ...instructions, root }`（`instructions.ts:765`），`instructions`
 
 ## 5. `openspec instructions archive`
 
-v1.7.0 新增的 archive instruction endpoint 也遵循“编译而非执行”的边界：它读取当前 change、解析项目 `context` 和 `operations.archive.guidance`，把 archive workflow 应读的 operation input 交给宿主。它不调用 `archive()`、不写 main specs、也不移动 change。执行动作仍是 `openspec archive <name>` 或宿主 archive skill 在确认后的调用。
+v1.7.0 新增的 archive instruction endpoint 也遵循“编译而非执行”的边界：它读取当前 change、解析项目 `context` 和 `operations.archive.guidance`，把 archive workflow 应读的 operation input 交给宿主。它不调用 `archive()`、不写 main specs、也不移动 change。执行动作分别由 CLI `openspec archive <name>`（确定性合并与移动）或宿主 `openspec-archive-change` 技能（agent inline 智能合并主 specs + shell `mv` 移动目录，不调用 `openspec archive`）完成。
 
 ## 6. `openspec templates`
 
@@ -355,7 +355,7 @@ v1.7.0 新增的 archive instruction endpoint 也遵循“编译而非执行”�
 
 ### 输出
 
-text 形态（`schemas.ts:42-60`）：
+text 形态（`schemas.ts:41-55`）：
 
 - schema 名称，**仅当来自 project 或 user 覆盖时才带来源标注**——` (project)` / ` (user override)`；来自 package 的 schema **没有任何标注**（不要指望"来源信息"一定存在）
 - 描述

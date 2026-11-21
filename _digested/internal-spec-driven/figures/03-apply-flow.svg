@@ -49,8 +49,8 @@
   <text x="880" y="51" text-anchor="middle" font-size="10" fill="#ea580c">文件系统</text>
 
   <!-- Step 1: Trigger apply -->
-  <rect x="40" y="70" width="175" height="30" rx="4" fill="url(#userGrad)" stroke="#d1d5db"/>
-  <text x="127" y="89" text-anchor="middle" font-size="9" fill="#666">/opsx:apply add-dark-mode</text>
+  <rect x="35" y="70" width="185" height="30" rx="4" fill="url(#userGrad)" stroke="#d1d5db"/>
+  <text x="127" y="89" text-anchor="middle" font-size="8" fill="#666">/openspec-apply-change add-dark-mode</text>
 
   <line x1="215" y1="85" x2="260" y2="85" stroke="#555" marker-end="url(#arrow)"/>
 
@@ -95,14 +95,14 @@
   <!-- Branch 1: blocked -->
   <rect x="275" y="278" width="220" height="48" rx="4" fill="#fee2e2" stroke="#fca5a5"/>
   <text x="385" y="294" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626">state: "blocked"</text>
-  <text x="385" y="308" text-anchor="middle" font-size="8" fill="#991b1b">展示阻塞原因</text>
-  <text x="385" y="320" text-anchor="middle" font-size="8" fill="#991b1b">→ 建议 /opsx:continue 修复</text>
+  <text x="385" y="308" text-anchor="middle" font-size="8" fill="#991b1b">展示缺失链路与阻塞原因</text>
+  <text x="385" y="320" text-anchor="middle" font-size="8" fill="#991b1b">→ 用 openspec instructions &lt;id&gt; 补齐</text>
 
   <!-- Branch 2: all_done -->
   <rect x="505" y="278" width="220" height="48" rx="4" fill="#d1fae5" stroke="#6ee7b7"/>
   <text x="615" y="294" text-anchor="middle" font-size="10" font-weight="bold" fill="#16a34a">state: "all_done"</text>
   <text x="615" y="308" text-anchor="middle" font-size="8" fill="#14532d">所有 checkbox 已打勾</text>
-  <text x="615" y="320" text-anchor="middle" font-size="8" fill="#14532d">→ 建议 /opsx:archive</text>
+  <text x="615" y="320" text-anchor="middle" font-size="8" fill="#14532d">→ 归档前先复核 / verify 改动</text>
 
   <!-- Branch 3: ready -->
   <rect x="735" y="278" width="225" height="48" rx="4" fill="#dbeafe" stroke="#93c5fd"/>
@@ -148,7 +148,7 @@
   <text x="230" y="515" text-anchor="middle" font-size="8" fill="#f59e0b" transform="rotate(-90,230,515)">是</text>
 
   <!-- All done -->
-  <text x="390" y="615" text-anchor="middle" font-size="9" fill="#16a34a">否 → 全部完成 ✓ → 建议 /opsx:archive</text>
+  <text x="390" y="615" text-anchor="middle" font-size="9" fill="#16a34a">否 → 全部完成 ✓ → 先复核 / verify，再归档</text>
 
   <!-- Legend -->
   <rect x="30" y="635" width="940" height="38" rx="4" fill="#f9fafb" stroke="#e5e7eb"/>

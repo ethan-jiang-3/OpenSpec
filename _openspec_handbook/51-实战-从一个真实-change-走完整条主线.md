@@ -1,24 +1,21 @@
 # 51 · 实战：从一个真实 change 走完整条主线
 
-> 前面的几篇已经把概念一层层拆开了。
-> 这一篇不再单独讲概念，而是用一个完整案例，把 `propose → apply → archive` 整条线真正走一遍。
-
-> **v1.13.1 实战校正。** 下文 `/openspec-*` 为 Claude 示例。每条 tasks checkbox 都把 verification 写在同一条内；单列 Integration Verification 只覆盖跨任务行为。这个要求来自 schema instruction，不是 validate 新硬校验。
+> 前面的几篇已经把概念一层层拆开了。这一篇不再单独讲概念，而是用一个完整的 BuildFlow 案例，把 `explore → propose → apply → archive` 整条主线真正走一遍（适用 openspec 2.1.1；下文以 Claude Code 的 `/openspec-*` 作为技能触发示例）。
 
 ---
 
 ## 开始前的准备：这个案例假设你已经...
 
 **必须先读过的**：
-- `01` 初级篇 - 知道几个基本命令
-- `10` 中级篇 - 理解 specs/changes/artifact/delta spec
+- `01` 初级篇 —— 知道几个基本动作
+- `10` 中级篇 —— 理解 `specs/`、`changes/`、artifact 与 delta spec
 
 **如果没读过上面两篇**：
 - 你会不理解"为什么要有这么多文件"
 - 你会不理解"delta spec 是什么"
 - 你会不理解"archive 在干什么"
 
-**建议**：如果你是直接跳到这篇的，先回去读 01 和 10，会顺很多。
+**建议**：如果你是直接跳到这篇的，先回去读 `01` 和 `10`，会顺很多。
 
 ---
 
@@ -37,41 +34,41 @@
 - `apply` 时，到底是在"执行任务"，还是在"继续完善 change"？
 - `archive` 到底只是挪文件，还是一种"正式沉淀"？
 
-这篇就是把这些问题放到一个真实感足够强的案例里，一次讲透。
+**在真实棕地项目里，OpenSpec 管的从来不是“写几份文档”，而是“从正式基线出发、把一次有边界的增量变化安全地落回正式基线”。**
 
 ---
 
 ## 这次案例选什么
 
-这里不用特别大的系统，就用一个非常典型、但又足够真实的例子：
+这里不用特别大的系统，就用工程项目管理系统 BuildFlow 里一个非常典型、但又足够真实的增量需求：
 
-> **给一个已有 Web 应用新增"导出施工任务 CSV"能力。**
+> 以 BuildFlow 为例——**给已有 Web 应用新增“导出筛选后施工任务 CSV”能力，并顺手退役没人用的旧单页 PDF 导出。**
 
 为什么选这个例子？
 
-因为它刚好具备 OpenSpec 很典型的几种特征：
+因为它刚好具备 OpenSpec 最典型的几种特征：
 
-- 不是从零做系统，而是在已有系统上增量开发
-- 会涉及已有行为的修改，而不是纯新增页面
+- 不是从零做系统，而是在已有系统上增量开发（brownfield）
+- 同时涉及新增能力（`ADDED`）、修改已有行为（`MODIFIED`）与淘汰旧能力（`REMOVED`）
 - 会同时碰到产品意图、行为 spec、技术方案和实施拆解
-- 很适合展示 delta spec 的价值
+- 实现到一半还会撞上“列表分页 vs 全量导出”的真实设计反咬
 
 ---
 
 ## 先给出项目背景
 
-假设项目目录是这样：
+假设 BuildFlow 当前目录结构是这样：
 
 ```text
 buildflow/
 ├── src/
-│   ├── orders/
+│   ├── tasks/
 │   ├── auth/
 │   └── ui/
 ├── tests/
 └── openspec/
     ├── specs/
-    │   ├── orders/
+    │   ├── task-tracking/
     │   │   └── spec.md
     │   └── auth/
     │       └── spec.md
@@ -79,28 +76,37 @@ buildflow/
     └── config.yaml
 ```
 
-而当前 `openspec/specs/orders/spec.md` 里，已经存在一些正式 spec，比如：
+而当前 `openspec/specs/task-tracking/spec.md` 里，已经存在正式基线 spec：
 
 ```markdown
-# Orders Specification
+# Task Tracking Specification
+
+## Purpose
+
+Tracks construction tasks across BuildFlow projects so site managers and engineers can inspect progress, filter schedules, and export task records.
 
 ## Requirements
 
 ### Requirement: Task List Visibility
-The system SHALL allow authorized staff users to view the order list.
+The system SHALL allow authorized project staff to view the construction task list.
 
-#### Scenario: Staff user opens order list
-- GIVEN an authenticated staff user
-- WHEN the user opens the Orders page
-- THEN the system displays recent orders
+#### Scenario: Staff user opens task list
+- **WHEN** an authenticated project staff user opens the Construction Tasks page
+- **THEN** the system displays recent construction tasks for the project
 
 ### Requirement: Task Filtering
-The system SHALL allow filtering by date range and status.
+The system SHALL allow authorized project staff to filter construction tasks by date range and status.
 
-#### Scenario: Filter orders by status
-- GIVEN a staff user on the Orders page
-- WHEN the user selects status = Paid
-- THEN only paid orders are shown
+#### Scenario: Filter tasks by status
+- **WHEN** a project staff user on the Construction Tasks page selects status = Completed
+- **THEN** only completed construction tasks are shown
+
+### Requirement: Legacy Task PDF Export
+The system SHALL allow authorized project staff to download the current task page as a static PDF snapshot.
+
+#### Scenario: Export current page as PDF
+- **WHEN** an authorized project staff user clicks Export PDF
+- **THEN** the system downloads a static PDF snapshot of the visible page
 ```
 
 注意这里的意思是：
@@ -116,12 +122,12 @@ The system SHALL allow filtering by date range and status.
 
 产品同学提了一个需求：
 
-> 项目经理希望把筛选后的施工任务导出成 CSV，方便线下核对和发给甲方。
+> 项目经理和现场监理希望把筛选后的施工任务导出成 CSV，方便线下核对进度并定期发给甲方代表；旧的单页 PDF 截图导出没人用且经常漏掉翻页数据，准备一并下线。
 
 这时最容易犯的错误，是直接让 AI 去改代码：
 
 ```text
-"帮我给施工任务页加一个导出按钮，并导出 CSV。" 
+"帮我给施工任务页加一个导出 CSV 按钮，顺便把旧 PDF 按钮删掉。"
 ```
 
 OpenSpec 的思路不是这样。
@@ -134,28 +140,30 @@ OpenSpec 的思路不是这样。
 
 所以第一步不是改代码，而是发起 change。
 
-在发起 change 之前，你可以先 `/openspec-explore` 探一下现状——施工任务页现有 spec 写了什么、过滤逻辑在哪、谁有导出权限。这是选做，但能让 proposal 的 Scope 写得更准。
+在发起 change 之前，你可以先 `/openspec-explore` 探一下现状——施工任务页现有 spec 写了什么、过滤逻辑在哪、谁有导出权限。这是选做，但能让 `proposal.md` 的 `What Changes` 和 `Capabilities` 写得更准。
 
-## 第 0.5 步：先证明该改 `orders`，而不是临时造一个 `export` capability
+---
+
+## 第 0.5 步：先证明该改 `task-tracking`，而不是临时造一个 `export` capability
 
 “CSV 导出”听起来像一个新功能，但 capability 的切分不是按按钮、接口或代码目录决定的。这里先做一次很小的 discovery：
 
 ```bash
 openspec list --specs --json
-openspec show orders --type spec --json --requirements
+openspec show task-tracking --type spec --json --requirements
 ```
 
-读到 `orders` 已有“任务列表可见”和“筛选”两个 requirement 后，可以做出可 review 的判断：本次导出复用当前订单/任务过滤语义，只是在同一份可观察合同上新增一种输出。因此它是 **Modified `orders`**，不是新建 `export`、`csv` 或 `ui/export-button` capability。
+读到 `task-tracking` 已有 `Task List Visibility`、`Task Filtering` 和 `Legacy Task PDF Export` 三个 requirement 后，可以做出可审查的判断：本次导出完全复用当前施工任务的筛选与可见性语义，只是在同一份行为合同上新增 CSV 导出并替换掉旧的单页 PDF 导出。因此它是 **Modified `task-tracking`**，不是新建 `export`、`csv` 或 `ui/export-button` capability。
 
-如果项目有 catalog，这个判断应该在 catalog 和 proposal 中都留下简短证据：
+如果项目维护了 capability catalog，这个判断应该在 catalog 和 proposal 中都留下简短证据：
 
 | candidate path | 判断 | 原因 |
 |---|---|---|
-| `orders` | Modified | 导出继承现有筛选、权限与订单语义 |
-| `auth` | verify only | 需确认导出权限，但不改变认证合同 |
-| `data-export` | excluded | 项目当前没有独立的通用导出合同；本次不创建近义 path |
+| `task-tracking` | Modified | 导出继承现有施工任务筛选、可见性与权限语义，并下线旧 PDF 导出 |
+| `auth` | verify only | 需核对导出权限校验，但不改变认证合同本身 |
+| `data-export` | excluded | 项目当前没有跨模块通用导出引擎；本次不新建近义 path |
 
-这一步不会由 nested directory 自动完成。它的价值是：后面 delta、archive、未来 agent 的阅读范围都会稳定地落在 `orders`，而不是把同一行为散到近义目录。
+这一步不会由嵌套目录自动完成。它的价值是：后面 delta、archive、未来 agent 的阅读范围都会稳定地落在 `task-tracking`，而不是把同一行为散到近义目录。
 
 ---
 
@@ -178,77 +186,71 @@ openspec show orders --type spec --json --requirements
 ```text
 openspec/
 ├── specs/
-│   └── orders/spec.md
+│   └── task-tracking/spec.md
 └── changes/
     └── add-task-csv-export/
+        ├── .openspec.yaml
         ├── proposal.md
         ├── design.md
         ├── tasks.md
         └── specs/
-            └── orders/
+            └── task-tracking/
                 └── spec.md
 ```
 
 这个时刻非常关键。
 
-因为从现在起，"导出 CSV"不再只是一个聊天里的念头，而是一个有名字、有目录、有内部结构的正式 change。
+因为从现在起，"导出施工任务 CSV"不再只是一个聊天里的念头，而是一个有名字、有目录、有内部结构的正式 change。
 
-而 change 一成形，就该轮到 `explore` 上场了——注意，这和第 0 步探 codebase 现状不同：这里的 explore 探的是 change 内部四份 artifact 是否自洽。
+而 change 一成形，就该轮到 `explore` 上场了——注意，这和第 0 步探代码库现状不同：这里的 `explore` 探的是 **change 内部四份 artifact 是否自洽**。
 
-AI 首次生成的初稿，几乎一定有内部自洽性问题。最常见的：proposal 的 Out of Scope 明明写了"不做 XLSX"，可 tasks.md 里却冒出一个"支持 XLSX 导出"的任务——前后打架。这种裂缝很常见，因为 LLM 生成有概率出幻觉，几份 artifact 一起生成时，接缝处最容易错。
+AI 首次生成的初稿，几乎一定有内部自洽性问题。最常见的：`proposal.md` 的 `Out of Scope` 明明写了"不做 XLSX"，可 `tasks.md` 里却冒出一个"支持 XLSX 导出"的任务——前后打架。这种裂缝很常见，因为 LLM 多份文件连写时接缝处最容易漂移。
 
-这时不要急着 `/openspec-apply-change`，而是对这个 change **反复 explore**：在 change 约定的上下文里（proposal + delta spec + design + tasks 这一圈）核对一致性、查矛盾、补漏的 scenario。change 把探索框在了一个有限空间里，所以探得比漫无边际地翻 codebase 准得多。（后面第 2 到第 5 步展示的是已经对齐的初稿；真实场景里这一步往往要反复几轮，第 8 步会集中演示一次。）
+这时不要急着 `/openspec-apply-change`，而是对这个 change **反复 `explore`**：在 change 约定的上下文里（proposal + delta spec + design + tasks 这一圈）核对一致性、查矛盾、补漏掉的 scenario。change 把探索框在了一个有限空间里，所以探得比漫无边际地翻代码库准得多。（后面第 2 到第 5 步展示的是已经对齐的初稿；真实场景里这一步往往要反复几轮，第 8 步会集中演示一次。）
 
 ---
 
-## 第 2 步：先看 `proposal.md`，这一步在钉边界
+## 第 2 步：先看 `proposal.md`，这一步在钉边界与影响域
 
-一个合理的 `proposal.md` 可能会长这样：
+内置 `spec-driven` schema 要求 `proposal.md` 具备 `## Why`、`## What Changes`、`## Capabilities` 和 `## Impact` 四个核心段落（`ChangeParser` 会直接校验 `## Why` 与 `## What Changes` 是否存在）；需要防膨胀时，可以再补一节 `## Out of Scope`：
 
 ```markdown
-# Proposal: Add Order Task CSV Export
+# Proposal: Add Construction Task CSV Export
 
-## Intent
-Support customer service and finance workflows by allowing staff users
-to export filtered order data as CSV.
+## Why
+Project managers and site supervisors need to export filtered construction task records as CSV for offline reconciliation and client weekly progress reviews.
 
-## Scope
-- Add an Export CSV action on the Orders page
-- Export only the currently filtered result set
-- Restrict export to authorized staff users
+## What Changes
+- Add an Export CSV action on the Construction Tasks page
+- Export all construction tasks matching the active filter criteria
+- Restrict CSV export to authorized project staff
+- **BREAKING**: Remove deprecated single-page PDF snapshot export
+
+## Capabilities
+
+### New Capabilities
+<!-- None -->
+
+### Modified Capabilities
+- `task-tracking`: Add filtered construction task CSV export, expose export actions on the task list, and remove legacy single-page PDF export
+
+## Impact
+- Frontend: `src/tasks/TaskListPage.tsx`, `src/tasks/api/exportTasksCsv.ts`
+- Backend: `src/tasks/server/exportTasksCsvHandler.ts`
 
 ## Out of Scope
 - XLSX export
 - Scheduled exports
 - Background export jobs
-
-## Approach
-Generate CSV on demand from the filtered order query and return it as a file download.
 ```
 
-这一步最重要的，不是文笔，而是边界。
+这一步最重要的，不是文笔，而是边界和契约：
 
-### `proposal` 在这里做了什么
+- `## Why` / `## What Changes` 把立项动机与变更清单钉死
+- `## Capabilities` 明确声明这次只改 `task-tracking` 一份 spec（后续生成 specs 时就严格写 `specs/task-tracking/spec.md`）
+- `## Out of Scope` 挡住 XLSX、邮件发送、定时生成、大表异步任务这些范围蔓延
 
-- 把"为什么要做"讲清楚
-- 把"做到哪儿为止"讲清楚
-- 把"这次不做什么"讲清楚
-
-这会直接影响后面所有东西。
-
-### 一个特别典型的价值
-
-如果没有 `Out of Scope`，后面很容易一路膨胀成：
-
-- CSV 导出
-- XLSX 导出
-- 邮件发送
-- 定时生成
-- 大数据量异步导出
-
-而这已经不是同一个 change 了。
-
-所以 `proposal` 的真正价值，是控制 change 的身份和边界。
+如果没有这层边界，一个半天能做完的 CSV 导出，很容易一路膨胀成整套报表中心。
 
 ---
 
@@ -257,83 +259,59 @@ Generate CSV on demand from the filtered order query and return it as a file dow
 接着看 change 里的：
 
 ```text
-openspec/changes/add-task-csv-export/specs/orders/spec.md
+openspec/changes/add-task-csv-export/specs/task-tracking/spec.md
 ```
 
-一个合理的 delta spec 可能是：
+一份能直接通过 `openspec validate --strict` 与 `openspec archive` 的 delta spec 长这样：
 
 ```markdown
-# Delta for Orders
+# Spec Delta: Task Tracking
 
 ## ADDED Requirements
 
-### Requirement: Order Task CSV Export
-The system SHALL allow authorized staff users to export the currently filtered order list as a CSV file.
+### Requirement: Filtered Task CSV Export
+The system SHALL allow authorized project staff to export all construction tasks matching the active filter criteria as a CSV file.
 
-#### Scenario: Export filtered orders
-- GIVEN an authenticated staff user viewing the Orders page
-- AND a filter is applied for status = Paid
-- WHEN the user clicks Export CSV
-- THEN the system downloads a CSV file containing only the filtered orders
+#### Scenario: Export filtered tasks
+- **WHEN** an authorized project staff user filters the Construction Tasks page by status = Completed and clicks Export CSV
+- **THEN** the system downloads a CSV file containing all completed tasks matching that filter
 
-#### Scenario: Export uses current filters
-- GIVEN an authenticated staff user viewing the Orders page
-- AND filters are applied for date range and status
-- WHEN the user exports orders
-- THEN the exported CSV reflects the same filter criteria shown in the UI
+#### Scenario: Export reflects combined filters
+- **WHEN** an authorized project staff user applies both date range and status filters and clicks Export CSV
+- **THEN** the exported CSV reflects the exact same filter criteria shown in the UI across all matching rows
 
 ## MODIFIED Requirements
 
 ### Requirement: Task List Visibility
-The system SHALL allow authorized staff users to view and export the order list.
+The system SHALL allow authorized project staff to view and export the construction task list.
 
-#### Scenario: Staff user opens order list
-- GIVEN an authenticated staff user
-- WHEN the user opens the Orders page
-- THEN the system displays recent orders
-- AND export actions are available when the user has export permission
+#### Scenario: Staff user opens task list
+- **WHEN** an authenticated project staff user opens the Construction Tasks page
+- **THEN** the system displays recent construction tasks for the project
+- **AND** CSV export actions are available when the user holds export permission
 
 ## REMOVED Requirements
 
-### Requirement: PDF Export (deprecated)
-**原因**：PDF 导出功能使用率低（过去3个月仅2次使用），维护成本高，决定移除。
-**影响**：现有使用 PDF 导出的少数用户需要改用 CSV 或 XLSX。
-**迁移**：在 UI 上提示用户使用 CSV 替代，功能上完全覆盖。
+### Requirement: Legacy Task PDF Export
+**Reason**: Legacy PDF snapshot only exported the first paginated screen (used twice in the past quarter) and cannot support client spreadsheet reconciliation.
+**Migration**: Use Export CSV on the Construction Tasks page, which exports all filtered records.
 ```
 
-这一步的关键是：
+这一步有三个非常关键的格式细节：
 
-- `proposal` 讲的是变更意图
-- delta spec 讲的是行为合同
+1. **改已有 capability 时不写 `## Purpose`**：`task-tracking` 主 spec 已经有 `## Purpose`，delta spec 里只写四类操作段（`ADDED` / `MODIFIED` / `REMOVED` / `RENAMED`）。
+2. **`MODIFIED` 必须带完整 requirement 块（含原有 scenario）**：archive 用整块替换语义更新主 spec；漏掉原有 `Staff user opens task list` scenario 会被 `validate` 和 `archive` 的 scenario-loss 闸门直接拦下。
+3. **`REMOVED` 的标题必须精确匹配主 spec 基线**：主 spec 里叫 `### Requirement: Legacy Task PDF Export`，delta 里也必须写一模一样的规范化名称，并附上 `**Reason**` 与 `**Migration**`。
 
-### 新手最常问：REMOVED 标记什么时候用？
+### 为什么这里不能只改代码
 
-**什么时候用 REMOVED**：
-- 删除一个已经不需要的功能
-- 废弃一个过时的 API
-- 移除一个被替代的能力
+因为"导出按钮出现"只是界面现象。真正的行为承诺是：
 
-**REMOVED 要写什么**：
-- **原因**：为什么要删除（使用率低、维护成本高、被更好的方案替代）
-- **影响**：删除后会影响谁（现有用户、依赖系统）
-- **迁移**：用户应该怎么办（用什么替代、如何迁移）
+- 哪些角色能导出
+- 导出的数据范围是否覆盖筛选后的全部记录
+- 旧的单页 PDF 导出是否正式退场
 
-**例子**：上文的 PDF Export 就是一个典型的 REMOVED 案例。
-
-### 为什么这里不用只改代码
-
-因为"导出按钮出现"只是界面现象。
-
-真正的行为承诺其实是：
-
-- 哪些人能导出
-- 导出的数据范围是什么
-- 是否必须和当前过滤条件一致
-- UI 上何时可见、何时不可见
-
-这些才是系统行为变化。
-
-所以 OpenSpec 要求这一步先落到 delta spec 上。
+这些外部可观察行为，必须先落到 delta spec 上。
 
 ---
 
@@ -342,61 +320,52 @@ The system SHALL allow authorized staff users to view and export the order list.
 接下来，一个典型的 `design.md` 可能是：
 
 ```markdown
-# Design: Add Order Task CSV Export
+# Design: Add Construction Task CSV Export
 
-## Technical Approach
-Add an Export CSV action to the Orders page.
-Reuse the existing order filter parameters and call a new backend export endpoint.
+## Context
+The Construction Tasks page (`src/tasks/TaskListPage.tsx`) already filters tasks by status and date range via a shared query parameter object.
 
 ## Decisions
 
-### Decision: Reuse current filter query
-Export should use the same filter object already used by the order list API
-to avoid divergence between UI results and exported content.
+### Decision: Share the task filter query model
+Export will reuse the same filter schema used by the task list API so UI filter state and exported CSV criteria never drift apart.
 
 ### Decision: Generate CSV on demand
-Initial implementation will generate CSV synchronously because expected export
-size is small for the current staff workflow.
+Initial implementation generates CSV synchronously on demand because project task volume per filter window stays under a few thousand rows.
 
-## Risks
-- If the result set becomes too large, synchronous export may become slow
-- Column formatting must remain stable for finance workflows
+## Risks / Trade-offs
+- [Large project datasets may slow synchronous generation] -> Stream rows from PostgreSQL query cursor and cap initial synchronous path if needed
+- [Client progress templates depend on column stability] -> Lock column order with a snapshot test
 
 ## File Changes
-- `src/orders/OrdersPage.tsx`
-- `src/orders/api/exportOrdersCsv.ts`
-- `src/orders/server/exportOrdersCsvHandler.ts`
+- `src/tasks/TaskListPage.tsx`
+- `src/tasks/api/exportTasksCsv.ts`
+- `src/tasks/server/exportTasksCsvHandler.ts`
 ```
 
 这一步和 spec 的差别一定要抓住：
 
-- spec 关心"用户和系统行为怎么变"
-- design 关心"实现方式怎么选，为什么这么选"
+- **spec** 关心"用户和系统行为怎么变"
+- **design** 关心"实现方式怎么选，为什么这么选"
 
-### 一个很容易混淆的例子
-
-"导出使用同步方式还是异步 job" 不应该先写进 spec。
-
-因为这不是用户行为合同，而是技术实现决策。
-
-它应该在 `design.md` 里出现。
+例如“同步流式返回还是投递异步后台任务”不属于用户行为合同，而是技术实现决策，应该放在 `design.md`。
 
 ---
 
 ## 第 5 步：看 `tasks.md`，这一步在钉实施顺序
 
-然后一个合理的 `tasks.md` 可能是：
+内置 `spec-driven` 的 tasks 生成契约要求**每条任务在同一行 checkbox 内写明验证方式（verify）**；只有跨多个实现任务的端到端检查才单独放进末尾的 `Integration Verification`：
 
 ```markdown
 # Tasks
 
 ## 1. Backend export support
-- [ ] 1.1 Add export endpoint for filtered orders — verify: endpoint integration test returns a CSV response
-- [ ] 1.2 Reuse existing order filter parsing — verify: filter parity test covers status and date range
-- [ ] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the finance column order
+- [ ] 1.1 Add export endpoint for filtered construction tasks — verify: endpoint integration test returns a CSV response
+- [ ] 1.2 Reuse existing task filter parsing — verify: filter parity test covers status and date range
+- [ ] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the client report column order
 
 ## 2. Frontend integration
-- [ ] 2.1 Add Export CSV button on the Orders page — verify: component test finds the action for authorized staff
+- [ ] 2.1 Add Export CSV button on the Construction Tasks page and remove legacy Export PDF button — verify: component test finds Export CSV for authorized staff and confirms Export PDF is absent
 - [ ] 2.2 Send current filter state to export endpoint — verify: UI test asserts the request query equals visible filters
 - [ ] 2.3 Handle loading and error states — verify: component tests observe disabled/loading and error feedback states
 
@@ -405,22 +374,9 @@ size is small for the current staff workflow.
 - [ ] 3.2 Exercise the unauthorized flow — verify: e2e request returns 403 and no file downloads
 ```
 
-这一步的作用非常实际：
+如果说 `proposal` 是立项边界、`specs` 是行为边界、`design` 是方案边界，那么 `tasks` 就是施工边界。
 
-- 让 change 从"说得清楚"变成"做得下去"
-- 让 `/openspec-apply-change` 有东西可以跟着推进
-
-如果说：
-
-- `proposal` 是立项边界
-- `specs` 是行为边界
-- `design` 是方案边界
-
-那么：
-
-- `tasks` 就是施工边界
-
-> **v1.8.0 任务计数**：上面这种 `- [ ] 1.1` 顶层 checkbox 一定被追踪；若你把子任务写成**缩进的** `  - [ ] 1.1.1`，v1.8.0 起也计入进度（旧版会漏掉，导致 status 显示 "✓ Complete"、archive 也不警告却带着半截活收档）。`list` / `view` / `instructions apply` / `archive` 用同一个解析器，口径一致。
+> **checkbox 计数规则**：无论是顶层 `- [ ] 1.1` 还是缩进子任务 `  - [ ] 1.1.1`，都会被同一个进度解析器计入任务总数（`list` / `view` / `instructions apply` / `archive` 口径完全一致）。注意这种 `— verify: ...` 是 schema instruction 层面的质量约定，`openspec validate` 只检查 checkbox 格式与编号，不强制硬检 `verify:` 字样。
 
 ---
 
@@ -431,18 +387,7 @@ size is small for the current staff workflow.
 - `propose` 只是准备工作
 - 真正的 change 要到写代码才开始
 
-这其实不对。
-
-从 OpenSpec 视角看，到 `proposal/specs/design/tasks` 都基本成形时，这个 change 已经是一个正式工作单元了。
-
-它已经具备：
-
-- 明确目标
-- 明确行为变化
-- 明确技术方案
-- 明确实施步骤
-
-这时才进入：
+从 OpenSpec 视角看，当 `proposal / specs / design / tasks` 都成形并通过 `openspec validate add-task-csv-export --strict` 时，这个 change 已经是一个边界清晰的工作单元了。这时才进入：
 
 ```text
 /openspec-apply-change add-task-csv-export
@@ -452,120 +397,63 @@ size is small for the current staff workflow.
 
 ## 第 7 步：`/openspec-apply-change`，不是机械执行，而是带反馈的实施
 
-`apply` 最容易被误解成：
+`apply` 最容易被误解成"照着 tasks 机械打勾"。更准确地说，`apply` 是：
 
-- "照着 tasks 打勾"
-
-它当然有这一面，但不止这一面。
-
-更准确地说，`apply` 是：
-
-> **在已有 change artifact 约束下，推进实现，并在必要时修正前面的理解。**
+> **在已有 change artifact 约束下推进实现，并在代码现实与原方案冲突时修正前面的理解。**
 
 ### 一次理想的推进
 
-比如先完成：
-
-- `1.1 Add export endpoint`
-- `1.2 Reuse existing order filter parsing`
-
-然后把 task 勾掉：
+比如先完成 `1.1` 和 `1.2`，`tasks.md` 同步勾掉：
 
 ```markdown
-- [x] 1.1 Add export endpoint for filtered orders — verify: endpoint integration test returns a CSV response
-- [x] 1.2 Reuse existing order filter parsing — verify: filter parity test covers status and date range
-- [ ] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the finance column order
+- [x] 1.1 Add export endpoint for filtered construction tasks — verify: endpoint integration test returns a CSV response
+- [x] 1.2 Reuse existing task filter parsing — verify: filter parity test covers status and date range
+- [ ] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the client report column order
 ```
 
-这时 `tasks.md` 本身就成了 change 的实施状态记录。
+此时 `tasks.md` 本身就是这次 change 实时可查的实施进度账本。
 
 ---
 
 ## 第 8 步：现实会反咬设计，这正是 OpenSpec 想处理的事
 
-现在出现一个非常现实的问题：
+现在出现一个非常现实的问题——工程师实现到一半时发现：
 
-工程师实现到一半时发现：
+- 当前施工任务列表接口默认强制带 `LIMIT 20` 分页
+- 项目经理给甲方导出的周报必须包含**当前筛选条件下的全部施工任务**
+- 如果直接调列表查询函数，只会导出第一页 20 条，严重漏数据
 
-- 当前施工任务列表接口只返回分页结果
-- 财务要求导出"当前过滤条件下的全部结果"
-- 如果直接复用现有列表接口，会只导出当前页，不符合预期
+传统做法很容易变成"先偷偷改代码，文档以后再说"。OpenSpec 更鼓励你当场修正 change。
 
-这时怎么办？
-
-传统做法很容易变成：
-
-- 先偷偷改代码
-- 文档以后再说
-
-OpenSpec 更鼓励你当场修正 change。
-
-不过修正前，先对这个 change 再 `/openspec-explore` 一轮：确认"分页 vs 全量"这个矛盾在 delta spec 和 design 里到底是怎么承诺的、还有没有别处也藏着旧的"导出当前页"说法——避免只改了一处、另一处还留着对不上的承诺。
+修正前，可以先对这个 change 再跑一轮 `/openspec-explore` 或直接运行 `/openspec-update-change`：确认"分页 vs 全量"在 delta spec、`design.md` 和 `tasks.md` 里分别怎么写的，避免只改一处、另一处还留着旧假设。
 
 ### 这时需要改哪些 artifact
 
-#### 1. 改 `design.md`
-
-把原来"复用当前列表接口"的设计，修正如下：
-
-- 复用过滤模型
-- 但后端单独提供完整结果导出逻辑
-
-#### 2. 如果行为承诺受影响，改 delta spec
-
-比如你发现：
-
-- 导出不再是"当前页结果"
-- 而是"当前过滤条件下的全部结果"
-
-那么 spec 必须跟着澄清。
-
-#### 3. 改 `tasks.md`
-
-新增一个任务，比如：
+1. **改 `design.md`**：明确复用筛选条件解析模型，但后端导出走独立的不分页流式查询路径。
+2. **核对 delta spec**：确认 `Filtered Task CSV Export` 已经写明导出 `all construction tasks matching the active filter criteria`；若原先写得含糊，一并澄清。
+3. **补 `tasks.md`**：新增一条可验证任务：
 
 ```markdown
 - [ ] 1.4 Add non-paginated export query path — verify: integration test exports rows beyond the first UI page
 ```
 
-### 这一步非常能体现 OpenSpec 的设计思想
-
-因为它在承认：
-
-- 你一开始不会把所有东西都想对
-- 代码现实会反过来修正规划
-- 规划 artifact 不是一次性写完的 PPT，而是活文档
-
-这就是前面讲过的：
-
-> **Actions, not phases**
+这就是前面讲过的核心节奏：**Actions, not phases**——规划产物不是写完锁死的历史审批单，而是随实现认知同步演进的活契约。
 
 ---
 
 ## 第 9 步：实现完成以后，change 现在处于什么状态
 
-假设最后代码和任务都做完了，目录和状态大概是这样：
-
-```text
-openspec/changes/add-task-csv-export/
-├── proposal.md
-├── design.md
-├── tasks.md
-└── specs/
-    └── orders/spec.md
-```
-
-而 `tasks.md` 已经变成：
+当所有实现与集成验证都跑通后，`tasks.md` 全部打勾：
 
 ```markdown
 ## 1. Backend export support
-- [x] 1.1 Add export endpoint for filtered orders — verify: endpoint integration test returns a CSV response
-- [x] 1.2 Reuse existing order filter parsing — verify: filter parity test covers status and date range
-- [x] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the finance column order
+- [x] 1.1 Add export endpoint for filtered construction tasks — verify: endpoint integration test returns a CSV response
+- [x] 1.2 Reuse existing task filter parsing — verify: filter parity test covers status and date range
+- [x] 1.3 Generate CSV response with stable column ordering — verify: snapshot asserts the client report column order
 - [x] 1.4 Add non-paginated export query path — verify: integration test exports rows beyond the first UI page
 
 ## 2. Frontend integration
-- [x] 2.1 Add Export CSV button on the Orders page — verify: component test finds the action for authorized staff
+- [x] 2.1 Add Export CSV button on the Construction Tasks page and remove legacy Export PDF button — verify: component test finds Export CSV for authorized staff and confirms Export PDF is absent
 - [x] 2.2 Send current filter state to export endpoint — verify: UI test asserts the request query equals visible filters
 - [x] 2.3 Handle loading and error states — verify: component tests observe disabled/loading and error feedback states
 
@@ -574,17 +462,13 @@ openspec/changes/add-task-csv-export/
 - [x] 3.2 Exercise the unauthorized flow — verify: e2e request returns 403 and no file downloads
 ```
 
-这时从 change 管理角度说，它已经准备进入 closing 阶段。
-
-但这里还有最后一个极其关键的问题：
-
-- 这些变化什么时候才算正式进入项目基线？
+这时代码与测试都到位了，但还有一个关键收口问题：**这些行为变化什么时候才算正式进入项目基线？**
 
 答案就是：archive。
 
 ---
 
-## 第 50 步：`/openspec-archive-change`，不是"收起来"，而是"正式沉淀"
+## 第 10 步：`/openspec-archive-change`，不是"收起来"，而是"正式沉淀"
 
 现在执行：
 
@@ -592,7 +476,7 @@ openspec/changes/add-task-csv-export/
 /openspec-archive-change add-task-csv-export
 ```
 
-宿主 archive workflow 在真正移动目录前，应先读取当前项目输入并核对磁盘状态：
+宿主 archive 技能在真正执行归档前，会先拉取项目归档输入并核对磁盘与校验状态：
 
 ```bash
 openspec instructions archive --change add-task-csv-export --json
@@ -600,30 +484,28 @@ openspec status --change add-task-csv-export --json
 openspec validate add-task-csv-export --type change --strict
 ```
 
-第一条会给 workflow project `context` 与 `operations.archive.guidance`；它们是项目级提醒，不会替代 delta、tasks 或 validator。最后一条通过后，archive 才有一个确定的 `orders` delta 可以同步。若团队已通过独立 sync 把**完全一致**的 delta 写入 `orders` main spec，v1.8.0（v1.7.0 起）会把它视作 no-op；只要 requirement 标题、正文或 scenario 有差异，仍必须先重新核对，而不会被静默吞掉。
+第一条返回项目的 `context` 与 `operations.archive.guidance`；第三条通过后，CLI 才会把 `task-tracking` 的 delta 合并进主基线。如果团队此前已经用 `/openspec-sync-specs` 把**完全一致**的 delta 提前写进了主 spec，archive 会将其识别为幂等 no-op；只要标题、正文或 scenario 仍有差异，archive 都会先拦住要求核对，绝不静默吞掉差异。
 
-这一步最核心的事，不是挪目录，而是两件事：
+archive 核心做两件事：
 
-1. 把 delta spec merge 回主 `openspec/specs/orders/spec.md`
-2. 把 change 文件夹移入 `openspec/changes/archive/`
+1. 按 `ADDED` / `MODIFIED` / `REMOVED` 把 delta spec 合并回 `openspec/specs/task-tracking/spec.md`
+2. 把整个 change 目录移入 `openspec/changes/archive/YYYY-MM-DD-add-task-csv-export/`
 
-所以 archive 的真正含义是：
-
-> **这次 change 结束了，而且其结果现在已经成为正式基线的一部分。**
+所以 archive 的真正含义是：**这次 change 结案了，它交付的行为变化已经正式成为系统当前基线的一部分。**
 
 ---
 
-## 第 51 步：archive 前后，项目到底发生了什么变化
+## 第 11 步：archive 前后，项目到底发生了什么变化
 
 ### archive 之前
 
 ```text
 openspec/
 ├── specs/
-│   └── orders/spec.md             ← 旧基线
+│   └── task-tracking/spec.md             ← 旧基线（含旧 PDF 导出，无 CSV 导出）
 └── changes/
     └── add-task-csv-export/
-        └── specs/orders/spec.md   ← 本次 change 的 delta
+        └── specs/task-tracking/spec.md   ← 本次 change 的增量 delta
 ```
 
 ### archive 之后
@@ -631,171 +513,93 @@ openspec/
 ```text
 openspec/
 ├── specs/
-│   └── orders/spec.md             ← 已包含 CSV 导出能力
+│   └── task-tracking/spec.md             ← 新基线（已含 CSV 导出，已移除旧 PDF 导出）
 └── changes/
     └── archive/
-        └── 2026-04-20-add-task-csv-export/
+        └── 2026-11-21-add-task-csv-export/
+            ├── .openspec.yaml
             ├── proposal.md
             ├── design.md
             ├── tasks.md
-            └── specs/orders/spec.md
+            └── specs/task-tracking/spec.md
 ```
 
-这里最容易忽略的一点是：
-
-- change 没消失
-- 它被保存成历史
-
-所以以后你不仅能看到"系统现在怎么工作"，还能回看：
-
-- 当时为什么加这个功能
-- 当时怎么做的技术取舍
-- 当时分了哪些任务
-
-这就是 OpenSpec 把"过程"也保留下来的价值。
+这里最容易忽略的一点是：**change 没消失，它被完整保存成了工程历史**。半年后接手的同事既能看 `openspec/specs/task-tracking/spec.md` 了解“系统现在承诺什么”，也能翻 `changes/archive/` 查清“当初为什么下线 PDF、为什么后端单独开了不分页查询路径”。
 
 ---
 
-## 第 52 步：这个案例里，前面几篇的概念分别落在哪
+## 第 12 步：这个案例里，前面几篇的概念分别落在哪
 
-为了帮助你把前面几篇串起来，我们现在回看这次案例。
+回看整条流水线，前面各篇的概念都在这里严丝合缝地咬合在了一起：
 
-### 对应 `01` 初级篇
-
-你已经看到了最小主线：
-
-```text
-/openspec-propose → /openspec-apply-change → /openspec-archive-change
-```
-
-### 对应 `10` 中级篇
-
-你已经看到了：
-
-- `openspec/specs/` 是当前正式基线
-- `changes/` 是 change 工作区
-- `artifact` 是 change 内部的四类 artifact
-- delta spec 是"增量变化"表达层
-
-### 对应 `20` 生命周期思想篇
-
-这整个案例本身就在体现那套思想：
-
-- 先围绕 change 组织工作
-- 在正式基线上做增量变化
-- 用多层 artifact 拆开不同类型的信息
-- 在实现过程中允许回头修改前面的 artifact
-- 最后通过 archive 把变化沉淀回正式基线
-
-### 对应 `21` config/schema 边界篇
-
-虽然这次案例没重点展开，但它背后默认已经在工作：
-
-- `config.yaml` 可能在注入项目 context
-- schema 在决定这次 change 的 artifact 结构
-- `.openspec.yaml` 记录 change 绑定的 schema
-
-### 对应 `50` Claude Code 实战篇
-
-如果你是在 Claude Code 中敲命令，那么：
-
-- `.claude/skills/` 是入口层（`.claude/commands/opsx/` 是 1.x 的命令文件，2.0 起已移除）
-- 真正的项目事实仍然沉淀在 `openspec/`
-
----
-
-## 一个"反例"会更能看出 OpenSpec 的价值
-
-我们再看同一个需求，如果不用 OpenSpec，常见会怎么发生。
-
-### 常见无结构做法
-
-```text
-1. 产品说：加个导出吧
-2. 工程师说：好，我先写
-3. AI/工程师直接开始改代码
-4. 做到一半发现过滤条件语义没想清
-5. 又补需求，又改代码
-6. 最后代码能跑，但没人说得清行为边界
-7. 三周后另一个人再加 XLSX，完全不知道之前的设计考虑
-```
-
-### OpenSpec 做法
-
-```text
-1. 先开 change
-2. 先把 intent / scope / behavior / design / tasks 分层写出来
-3. 再开始实现
-4. 发现理解有误时，回头修改 artifact
-5. 完成后 merge 回正式 spec
-6. 把整次 change 保留为历史
-```
-
-两者最大的差别，不是"文档多不多"。
-
-而是：
-
-- 前者只有代码结果
-- 后者同时留下行为结果、设计理由和变更轨迹
+- **对应 `01` 初级篇**：`/openspec-propose → /openspec-apply-change → /openspec-archive-change` 三步主干跑通闭环。
+- **对应 `10` / `11` 中级篇**：`openspec/specs/` 守住当前基线，`changes/` 承载增量工作包，实施中遇到分页陷阱时随时回改 `design.md` 与 `tasks.md`（Actions, not phases）。
+- **对应 `20` / `26` 高级篇**：先按行为合同锁定 `task-tracking` capability path，避免新建近义 `export` 目录；`MODIFIED` 完整保留原有 scenario，`REMOVED` 精确对齐基线标题，顺利通过归档机器闸门。
+- **对应 `50` Claude Code 实战篇**：`/openspec-*` 只是宿主里的技能触发入口，所有长期资产全部沉淀在仓库的 `openspec/` 目录中。
 
 ---
 
 ## 这个场景最容易踩的 5 个坑
 
 | 坑 | 表现 | 为什么错 | 正确做法 |
-|-----|------|---------|---------|
-| **边界不清** | proposal 里写"优化导出功能"，但没说清楚做到哪里 | 后面会不断膨胀，从 CSV 变成 XLSX、邮件、定时任务 | 明确写 Out of Scope |
-| **delta spec 写成全量** | 把整个施工任务系统的所有能力都重写一遍 | 审查者看不出这次改了什么，并行开发容易冲突 | 只写 ADDED/MODIFIED/REMOVED |
-| **design 和 spec 混淆** | 把"用同步方式导出"写进 spec | 这是实现决策，不是用户行为合同 | 实现方式放 design，行为承诺放 spec |
-| **发现问题不回头修正** | 实现时发现设计有误，但只改代码不改文档 | 文档和代码脱节，后人看不懂当时的真实决策 | 回头修正 design/spec，保持一致 |
-| **忘记 archive** | 代码写完就算完成，不执行 archive | specs/ 基线没更新，下一个 change 没有正确的参考基线 | 必须 archive 才算闭环 |
+|---|---|---|---|
+| **边界不清，标题缺失** | `proposal.md` 只写 `## Intent` / `## Scope`，漏掉 `## Why`、`## What Changes`、`## Capabilities` | 既破坏 `ChangeParser` 与 `spec-driven` 契约，又容易一路膨胀出 XLSX、邮件、定时任务 | 保留 `Why` / `What Changes` / `Capabilities` / `Impact` 四大标准段，并用 `Out of Scope` 钉死不做项 |
+| **`REMOVED` 标题与主 spec 对不上** | 主 spec 叫 `Legacy Task PDF Export`，delta 里随手写成 `PDF Export (deprecated)` | `archive` 按精确规范化名称匹配待删 requirement，名字对不上会直接拒绝归档 | 先用 `openspec show <spec> --type spec` 查准原名，原样写入 `### Requirement:` |
+| **delta spec 写成全量或乱加 `## Purpose`** | 把整份 `task-tracking` 重抄一遍，或在已有 capability 的 delta 里加 `## Purpose` | 审查者看不出增量变化，且修改既有 spec 时的 `## Purpose` 会被报未应用内容警告 | 只写 `ADDED` / `MODIFIED` / `REMOVED` / `RENAMED`（仅新建 capability 才写 `## Purpose`） |
+| **发现问题只改代码不改 artifact** | 实现时发现分页漏数据，改了后端接口却不更新 `design.md` 和 `tasks.md` | 代码与设计记录脱节，后人复盘时被旧文档误导 | 用 `/openspec-update-change` 或手改同步修正 `design.md` / `tasks.md` |
+| **代码合入后忘记 archive** | 功能上线了，change 一直挂在 `changes/` 里不归档 | `openspec/specs/` 基线停留在旧状态，下一个改 `task-tracking` 的人拿到过时基线 | 验证通过后立即执行 `/openspec-archive-change` 闭环 |
 
-### 典型踩坑案例：边界失控
+### 典型正反对照：立项边界失控 vs 受控收敛
 
-**错误做法**：
+**失控做法**：
+
 ```text
 用户：给施工任务页加个导出功能
-AI：好的，我来做 CSV、XLSX、PDF 三种格式，还加上邮件发送和定时导出
+AI：好的，我来做 CSV、XLSX、PDF 三种格式，再顺手加上邮件发送和每周定时导出
+→ 第一周纠结排版，第二周卡在邮件服务配置，第三周异步任务撞上权限模型，一个月还没上线
 ```
 
-结果：
-- 第一周还在纠结 PDF 格式
-- 第二周发现邮件服务没配置
-- 第三周定时任务和现有架构冲突
-- 一个月后还没上线
+**OpenSpec 受控做法**：
 
-**OpenSpec 做法**：
 ```markdown
-# Proposal: Add Order Task CSV Export
+# Proposal: Add Construction Task CSV Export
 
-## Scope
-- CSV export only
-- On-demand download
-- Current filter results
+## Why
+Project managers need filtered construction task CSV exports for weekly client progress reviews.
+
+## What Changes
+- Add on-demand CSV export for currently filtered construction tasks
+- Restrict export to authorized project staff
+
+## Capabilities
+
+### New Capabilities
+<!-- None -->
+
+### Modified Capabilities
+- `task-tracking`: Add on-demand filtered CSV export for authorized project staff
+
+## Impact
+- `src/tasks/TaskListPage.tsx`, `src/tasks/server/exportTasksCsvHandler.ts`
 
 ## Out of Scope
-- XLSX/PDF formats (future change)
+- XLSX formats (future change)
 - Email delivery (future change)
-- Scheduled exports (future change)
+- Scheduled background exports (future change)
 ```
 
-结果：
-- 第一周完成 CSV 导出
-- archive 后立即可用
-- 后续再开新 change 加其他格式
+先把 CSV 导出在几天内做完并 archive 成正式基线，后续格式或异步能力再各自开独立的小 change 推进。
 
 ---
 
-## 这篇案例最该带走的 9 句话
+## 最该带走的 9 句话
 
-1. 一个 change 的起点不是代码，而是让变更先成形
-2. `proposal` 的核心价值是控制边界
-3. delta spec 的核心价值是表达行为变化
-4. `design` 讲的是技术选型，不是行为合同
-5. `tasks` 让 change 从"说得清楚"进入"做得下去"
-6. 初稿几乎一定有自洽裂缝——用 `explore` 在 change 上下文里反复核对，比人眼翻文档准
-7. `apply` 不是机械执行，而是带反馈的实施
-8. `archive` 不是收纳动作，而是正式沉淀动作
-9. OpenSpec 真正管理的是"基线 + 增量变化 + 历史闭环"
-
----
+1. 一个 change 的起点不是写代码，而是先把模糊需求收束成边界清晰的工作包。
+2. `proposal.md` 守住 `Why`、`What Changes`、`Capabilities`、`Impact` 四段骨架，并用 `Out of Scope` 挡住范围蔓延。
+3. 动手写 delta 前先核对已有 capability path，能复用 `task-tracking` 就绝不随手新建近义 `export` 目录。
+4. delta spec 只表达行为合同的增量变化，`MODIFIED` 带全量块、`REMOVED` 精确对齐主 spec 标题。
+5. `design.md` 承载同步/异步、分页/流式等技术选型，不要把实现手段塞进 spec。
+6. `tasks.md` 让每条任务自带验证标准，把“说得清楚”真正变成“做得下去”。
+7. 初稿接缝处最容易出幻觉——进入 `apply` 前先用 `explore` 核对四份 artifact 的内部自洽。
+8. `apply` 不是盲目打勾，代码现实反咬原方案时要当场回修 `design` / `specs` / `tasks`。
+9. `archive` 不是把旧文档塞进抽屉，而是通过机器校验闸门把本次增量正式合入系统基线。

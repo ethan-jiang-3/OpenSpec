@@ -19,7 +19,7 @@ workflow template
 
 ## 当前 profile workflows
 
-下面这些 workflow id 来自 `src/core/profiles.ts` 的 `ALL_WORKFLOWS`，会被 profile/delivery 机制选择并投递成 skill/command。
+下面这些 workflow id 来自 `src/core/profiles.ts` 的 `ALL_WORKFLOWS`，会被 `profile` 机制选择并投递成标准 skill（1.x 曾同时经 `delivery` 投递成 command，v2.0.0 起已移除）。
 
 | workflow | 模板文件 | 角色 |
 |----------|----------|------|
@@ -40,9 +40,9 @@ workflow template
 
 ## planning 模板：动作而非阶段
 
-`propose` 是默认 quick path：创建 change，并持续生成 artifact，**直到 `applyRequires` 及其整个 `requires` 依赖闭包都存在**（`propose.ts:146` 明确写着 "not just `apply.requires`"）——只满足 apply 的前置不够，因为 `status` 只看文件是否存在。它适合用户已经有比较明确意图，想快速得到完整规划。
+`propose` 是默认 quick path：创建 change，并持续生成 artifact，**直到 `applyRequires` 及其整个 `requires` 依赖闭包都存在**（`propose.ts:130` 明确写着 "not just `apply.requires`"；保留的 1.x command 模板对应 `:296`）——只满足 apply 的前置不够，因为 `status` 只看文件是否存在。它适合用户已经有比较明确意图，想快速得到完整规划。
 
-`new` 只创建 change scaffold，不生成 artifact 内容。它把“创建实例”和“生成内容”拆开，适合先占位、手动推进、显式选择 schema 或 initiative linkage。
+`new` 只创建 change scaffold，不生成 artifact 内容。它把“创建实例”和“生成内容”拆开，适合先占位、手动推进或显式选择 schema（注：早期 `--initiative` 选项已在 v1.5.0 移除，传入会报 `initiative_option_removed`）。
 
 `continue` 是 incremental path：每次只推进一个 ready artifact。它体现 artifact DAG 的增量工作流：先 `status --json` 找 ready artifact，再 `instructions <artifact> --json` 获取执行包。
 
@@ -77,9 +77,16 @@ workflow template
 
 `verify` 用来检查实现是否与 proposal/specs/design/tasks 一致。它不是 `validate` 的替代：`validate` 检查 OpenSpec 文档结构，`verify` 让 agent 审查代码实现、测试、任务完成度和 artifact coherence。
 
-`archive` 模板是 agent 层的收尾操作手册。它先读取 `openspec instructions archive --json`（project `context` 与 `operations.archive.guidance`），检查是否需要 sync、是否完成 tasks、是否适合调用 CLI archive；sync 必须 inline 完成并对全部 capability 重新验证后才移动 change。正确 early-sync 的完全一致 delta 会在 archive 中保持幂等 no-op，仍需阻断近似匹配或真实 drift；归档无法交互提问时会给出可重跑命令，change 移除某 capability 最后一个 requirement 时可声明 `retire_capabilities: true`。CLI archive 源码机制见 `../internal-spec-driven/04-archive-归档合并.md`。
+`archive` 模板（`src/core/templates/workflows/archive-change.ts`）是 agent 层的收尾操作手册——**它绝不调用 `openspec archive <name>` CLI 命令**，而是由 agent 串联查询、智能合并与目录移动：
 
-不要把 agent template 的通用 guardrails 和 CLI 的 content-specific refusal 混为一谈。真正分析空 capability 的 orphan/Notes、列 blocking lines、清理控制字符并判断 marker 能否 honor 的是 `src/core/archive.ts`；template 负责指导 agent 调用和响应结果，不自行复刻该 parser/判定。
+1. 调用 `openspec instructions archive --change "<name>" --json`（advisory 读取项目 `context` 与 `operationGuidance`，失败不阻塞归档）。
+2. 调用 `openspec status --change "<name>" --json` 检查 artifact 完成度，拿到 `planningHome`、`changeRoot`、`artifactPaths`。
+3. 调用 `openspec list --json` 核验 schema 追踪任务的 `totalTasks` / `completedTasks`。
+4. **在写入任何主 spec 之前**预检 `<planningHome.changesDir>/archive/<target-name>` 是否已存在（v2.1.1 `#2277`；冲突则立即停止，不写主 specs、不移动 `changeRoot`），并基于 `artifactPaths.specs.existingOutputPaths` 评估每个 capability 的 delta 同步状态（移除某 capability 最后一个 requirement 时需 `.openspec.yaml` 声明 `retire_capabilities: true`）。
+5. 如用户选择同步：先再次检查归档目标目录未冲突，调一次 `openspec instructions specs --change "<name>" --json` 获取 `specs` 规则快照，随后 inline 执行 `openspec-sync-specs` 技能或由 agent 自行做智能 delta 合并（若因未安装 sync 技能而 inline 自合并，须遵守其退役护栏并在合并后跑 `openspec validate --specs`，`#1977`），再逐个 capability 复核主 spec 结构与同步完整性。
+6. 最终在再次确认目标目录不存在后，用 shell `mkdir -p "<planningHome.changesDir>/archive"` + `mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"` 完成移动。
+
+务必区分两条归档路径：`openspec archive <name>`（`src/core/archive.ts`）是人类/脚本直接运行的确定性 CLI 命令（12 个工作流模板里只有 `onboard.ts` Phase 10 会运行 `openspec archive "<name>" --yes`）；`archive-change.ts` 正文提到 `openspec archive` 仅用于说明日期前缀与空 capability 规则同 CLI 对齐。真正做程序化 requirement-block 解析、分析空 capability 的 orphan/Notes、列 blocking lines 的是 `src/core/archive.ts`（详见 `../internal-spec-driven/04-archive-归档合并.md`）。
 
 `bulk-archive` 面向多个 completed changes。它的风险不在单个 merge 算法，而在选择和确认：哪些 changes 完成、哪些跳过、是否逐个验证、失败时如何报告 partial results。
 
@@ -93,20 +100,20 @@ workflow template
 
 - CLI 提供 deterministic runtime API，template 提供 agent 操作策略，两者分层让行为可解释但不完全硬编码。
 - expanded workflows 不是新状态机，而是围绕同一套 status/instructions API 的不同操作粒度。
-- template 是跨工具复用的 workflow 语义；tool delivery 再把它投递成不同 agent 的 skill/command 外壳。
+- template 是跨工具复用的 workflow 语义；tool delivery 再把它投递成不同 agent 的 skill 外壳（1.x 另有 command 外壳，已于 v2.0.0 移除）。
 - 修改 template 会改变 agent 行为，即使 TypeScript 源码没有变化，也应当视为产品行为变更。
 - **当前模板契约**：① propose/continue/ff 写完 artifact 后从磁盘重读依赖文件；② 同级 ready artifact 的推荐顺序由 schema 声明顺序决定（内置为 specs 后 design，二者仍可并行）；③ schema artifact `instruction` 是生成时的权威指令；④ `skip_specs: true` 会把 specs 设为显式 skipped，不再把无 spec-level 变化的 change 卡住（①②③④）；⑤ propose 聚焦 planning，澄清 material ambiguity 后再建 change，实现交给 apply。
 - **引导补强**：propose/ff 起草 artifact 前先检查相关项目代码、测试、文档——计划反映现有实现，而不是把发现推迟成实施任务；explore 的提问依赖感知（先查代码库，再问 repo 自己答不了的事实，并推荐默认值）。
-- **spec-inventory guidance**：`openspec list --specs` 此前没有出现在任何生成的 skill/command/artifact 指令里——agent 被要求「先读现有 specs」时却枚举了 changes。现在 explore skill 与 command 同时列出 spec inventory 与 change list 并区分二者；proposal/specs 指令里「研究现有能力」「delta 路径匹配现有 spec」两步带 `--store "<id>"`；capability 读取用 `openspec show "<spec-id>" --type spec --json --no-scenarios`。filtered read 只是概览——agent 决策前仍需读完整 spec（含 scenarios）。
+- **spec-inventory guidance**：`openspec list --specs` 此前没有出现在任何生成的 skill/artifact 指令里——agent 被要求「先读现有 specs」时却枚举了 changes。现在 explore 模板（含 skill 与保留供清理比对的 1.x command 模板）同时列出 spec inventory 与 change list 并区分二者；proposal/specs 指令里「研究现有能力」「delta 路径匹配现有 spec」两步带 `--store "<id>"`；capability 读取用 `openspec show "<spec-id>" --type spec --json --no-scenarios`。filtered read 只是概览——agent 决策前仍需读完整 spec（含 scenarios）。
 
 ## 源码锚点
 
 | 机制 | 路径 |
 |------|------|
 | workflow 模板（含 `update-change.ts`） | `src/core/templates/workflows/` |
-| skill/command template facade | `src/core/templates/skill-templates.ts` |
+| skill template facade（及旧 command 模板兼容导出） | `src/core/templates/skill-templates.ts` |
 | template 类型 | `src/core/templates/types.ts` |
-| template 到 skill/command content | `src/core/shared/skill-generation.ts` |
+| template 到 skill content（及旧 command 比对） | `src/core/shared/skill-generation.ts` |
 | workflow profile | `src/core/profiles.ts` |
 | runtime API | `src/commands/workflow/` |
 

@@ -51,12 +51,12 @@
 
   <!-- numbers -->
   <rect x="32" y="326" width="836" height="92" rx="10" fill="#f6f8fa" stroke="#d0d7de"/>
-  <text x="50" y="352" font-size="13.5" font-weight="700" fill="#1f2328">本仓实测：闸门确实在拦人（66 个 item）</text>
+  <text x="50" y="352" font-size="13.5" font-weight="700" fill="#1f2328">本仓实测：闸门状态（48 个 item：44 份主 spec + 4 个活跃 change）</text>
   <rect x="50" y="366" width="250" height="26" rx="5" fill="#dafbe1"/>
-  <text x="62" y="384" font-size="12" fill="#1a7f37">非严格　60 passed / 6 failed</text>
+  <text x="62" y="384" font-size="12" fill="#1a7f37">非严格　48 passed / 0 failed</text>
   <rect x="312" y="366" width="250" height="26" rx="5" fill="#fff8c5"/>
-  <text x="324" y="384" font-size="12" fill="#9a6700">严格　　53 passed / 13 failed</text>
-  <rect x="574" y="366" width="282" height="26" rx="5" fill="#ffebe9"/>
-  <text x="586" y="384" font-size="12" fill="#cf222e">scenario 丢失 10 条，跨 5 个 change</text>
-  <text x="50" y="410" font-size="11.5" fill="#59636e">ERROR 11 ｜ WARNING 12 ｜ INFO 2　——　--strict 把 warning 也算失败，所以多翻 7 项。</text>
+  <text x="324" y="384" font-size="12" fill="#9a6700">严格　　42 passed / 6 failed</text>
+  <rect x="574" y="366" width="282" height="26" rx="5" fill="#ddf4ff"/>
+  <text x="586" y="384" font-size="12" fill="#0969da">归档预检 INFO 2 条实时命中</text>
+  <text x="50" y="410" font-size="11.5" fill="#59636e">WARNING 12 ｜ INFO 2　——　--strict 把超长 warning 算失败（多翻 6 项）；4 份旧 scenario 丢失已在 #2128 重基线归档。</text>
 </svg>

@@ -118,7 +118,7 @@ instruction: |
     multiple implementation tasks.
 ```
 
-（v1.13.1 起计数语义：方括号内只有 `x`/`X`（含 `- [ x]` 这类带空格）算完成，`- [~]`/`- [-]`/空 `- []` 算未完成；无 checkbox 的行不追踪。）
+（checkbox 计数语义：方括号内只有 `x`/`X`（含 `- [ x]` 这类带空格）算完成，`- [~]`/`- [-]`/空 `- []` 算未完成；无 checkbox 的行不追踪。）
 
 如果 fork 仍生成 `- [ ] Implement X` 这类无 verification 的 task，它不会因为 `schema validate` 通过就自动变好；该命令校验 schema 结构，不审查每条任务是否具体可验证。
 
@@ -238,6 +238,7 @@ artifacts:                      # artifact 列表——定义 DAG
 
   - id: specs
     generates: "specs/**/*.md"
+    description: 定义本次变更需要交付的行为或需求契约
     template: spec.md
     instruction: |
       在这里写你希望 agent 怎么生成 spec 文档。
@@ -247,6 +248,7 @@ artifacts:                      # artifact 列表——定义 DAG
 
   - id: tasks
     generates: tasks.md
+    description: 可逐项勾选并带完成验证条件的实施任务清单
     template: tasks.md
     instruction: |
       在这里写你希望 agent 怎么生成任务清单。
@@ -270,26 +272,31 @@ apply:                          # apply 阶段配置
 |------|------|------|------|
 | `name` | string | 是 | 唯一，用 `--schema` 时指定 |
 | `version` | integer | 是 | 正整数 |
+| `description` | string | 否 | 对整个工作流 schema 的一句话说明，`openspec schemas` 列表会展示 |
+| `artifacts` | Artifact[] | 是 | 至少 1 个、**最多 1000 个** artifact（防止环检测 DFS 超出调用栈） |
 | `artifacts[].id` | string | 是 | 唯一，DAG 节点标识 |
-| `artifacts[].description` | string | 是 | 对 artifact 的一句话说明 |
-| `artifacts[].generates` | string | 是 | 输出文件，支持 glob（如 `specs/**/*.md`），也认 brace expansion/extglob；brace 展开的路径限制在 change 目录内。**有预算**：brace/括号嵌套 ≤16 层、展开 ≤1024 个模式（v1.14.3），超了在任何匹配发生前就报错，报错会点名上限 |
-| `artifacts[].template` | string | 是 | 必须对应 `templates/` 下的真实文件 |
+| `artifacts[].description` | string | 是 | 对该 artifact 的一句话说明（区别于顶层可选的 `description`，此处每个条目必填） |
+| `artifacts[].generates` | string | 是 | 相对输出路径，支持 glob（如 `specs/**/*.md`），也认 brace expansion/extglob；路径限制在 change 目录内。**有预算**：brace/括号嵌套 ≤16 层、展开 ≤1024 个模式，超限在任何匹配发生前直接报错并点名上限 |
+| `artifacts[].template` | string | 是 | 必须对应 `templates/` 下的真实相对路径文件 |
 | `artifacts[].instruction` | string | 否 | agent 生成此 artifact 时的完整提示 |
 | `artifacts[].requires` | string[] | 否 | 依赖的 artifact id 列表，空 = DAG 起点 |
-| `apply.requires` | string[] | 是 | 至少一个 artifact id |
-| `apply.tracks` | string/null | 否 | 进度追踪文件，**强烈推荐 `tasks.md`**（偏离需自行保证 artifact `generates` 一致） |
+| `apply.requires` | string[] | 是 | 若声明 `apply` 段则必填，至少包含一个本 schema 已声明的 artifact id |
+| `apply.tracks` | string/null | 否 | 进度追踪文件，**强烈推荐 `tasks.md`**（若不与某个 `artifacts[].generates` 字面量相等，`schema validate` 会发 warning） |
 | `apply.instruction` | string | 否 | apply 阶段的 agent 提示 |
 
 ---
 
 ## 部署与验证
 
-### 装在哪里
+### 装在哪里（三层 Schema 解析顺序）
 
-| 位置 | 可见范围 | 适用场景 |
-|------|---------|---------|
-| `openspec/schemas/<name>/` | 当前项目 | **推荐**——团队共享、跟代码版本控制 |
-| `~/.local/share/openspec/schemas/<name>/` | 当前用户所有项目 | 个人用、跨项目复用 |
+按名字查找 schema 时，CLI 严格按以下**三层顺序**由近及远覆盖（可用 `openspec schema which <name>` 查看当前命中的具体路径与覆盖关系）：
+
+| 优先级 | 来源（`source`） | 目录位置 | 可见范围与用途 |
+|------|------|---------|---------|
+| 1（最高） | `project` | `<projectRoot>/openspec/schemas/<name>/` | 当前项目——**推荐**，随 Git 提交、全员一致 |
+| 2 | `user` | `$XDG_DATA_HOME/openspec/schemas/<name>/`（未设 `XDG_DATA_HOME` 时，macOS/Linux 回退 `~/.local/share/openspec/schemas/<name>/`，Windows 回退 `%LOCALAPPDATA%\openspec\schemas\<name>\`；**绝不是 `~/.openspec/schemas/`**） | 当前用户所有项目——个人跨项目复用或覆盖同名内置 schema |
+| 3（兜底） | `package` | `<package>/schemas/<name>/`（standalone 单文件按需解包内置目录） | 上游包自带基线（如 `spec-driven`）——只读，定制请走 `fork` |
 
 ```bash
 # 项目级安装

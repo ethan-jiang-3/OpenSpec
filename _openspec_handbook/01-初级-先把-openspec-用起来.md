@@ -2,7 +2,7 @@
 
 > 目标不是研究源码，而是先把它当工具用顺手。如果第一反应是"改个功能干嘛这么折腾"——很正常，这一篇先帮你把这股别扭解开。
 
-> **宿主入口提示。** 本章用 `/openspec-*` 作为 Claude 的示例写法（1.x 的 `/opsx:*` command 文件入口已在 v2.0.0 移除）；Codex 使用 `$openspec-*`，Zed Agent 使用 `/openspec-*`，DeepSeek Harness（`--tools dsh`）也是 skills-only、装进 `.dsh/skills/` 后用 `/openspec-*` 直呼。Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，都是宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
+> **宿主入口提示。** OpenSpec 统一通过 **skills**（技能）向各 AI 工具投递工作流（1.x 的 `/opsx:*` 命令文件已在 2.0 移除）。本章用 `/openspec-*` 作为 Claude Code、Cursor、Zed、DeepSeek Harness（`dsh`）等工具的示例写法；Codex 使用 `$openspec-*`，也可以直接用自然语言唤起。新项目运行 `openspec init` 默认把 skills 装到本机全局目录（`~/.agents/skills/` 及各工具全局目录）；若传 `--scope project` 留在仓库内，所有工具共享同一份 `.agents/skills/` 真身（`dsh` 等通用工具直读 `.agents/skills/`，不写 `.dsh/skills/`）。所有宿主背后都在驱动同一套 `openspec` CLI 与文件状态。
 
 ---
 
@@ -67,7 +67,7 @@ OpenSpec 做的事，就是给"改代码"也加上装修那套**"先想清楚，
 
 这里的 `/openspec-*` 不是另一套叫 OPSX 的工具，而是 Claude 等宿主里**技能**的调用写法（1.x 的 `/opsx:*` command 入口已被 2.0 移除）。你在终端里直接运行的是 `openspec ...` CLI；在 agent 对话里触发工作流要使用宿主安装的入口（Codex 为 `$openspec-*` skills）。
 
-> **v2.1.1 状态注记**：`/openspec-*` 这类**命令文件**已移除，OpenSpec 2.0 起不再生成；同一份工作流的 **skill**（如 `openspec-propose`）保留下来，两者本来就是同一份模板的两种包装。**现在唯一形态是 skill**：Claude Code 等工具里按 `/openspec-propose` 调用，Codex 用 `$openspec-propose`，也可以直接用自然语言让 agent 自己选。CLI 本身（`openspec validate` / `archive` / `update` …）一个子命令都没少。详见 [99 FAQ Q27h](99-FAQ-常见问题.md)。
+> **1.x 升级提示**：1.x 时代的 `/opsx:*` **命令文件**已在 OpenSpec 2.0 移除，不再生成；同一份工作流现在**唯一形态是 skill**（如 `openspec-propose`）：Claude Code、Cursor、Zed 等工具里按 `/openspec-propose` 调用，Codex 用 `$openspec-propose`，也可以直接用自然语言让 agent 自己选。CLI 本身（`openspec validate` / `archive` / `update` …）一个子命令都没少。详见 [99 FAQ（Q27h）](99-FAQ-常见问题.md)。
 
 ---
 
@@ -191,7 +191,7 @@ my-project/
 
 ### 但在 propose 前，要先判断“这次碰的是哪份行为合同”
 
-不要从代码目录或页面名字直接猜 spec 文件。一个 **capability** 是能独立解释、独立修改、独立验证的行为合同；它往往跨 UI、服务和存储。v1.8.0（v1.7.0 起）允许把这种合同放在嵌套 path：
+不要从代码目录或页面名字直接猜 spec 文件。一个 **capability** 是能独立解释、独立修改、独立验证的行为合同；它往往跨 UI、服务和存储，并支持放在嵌套 path 下：
 
 ```text
 openspec/specs/
@@ -217,7 +217,7 @@ skip_specs: true
 
 ### 新手最常问：openspec init 之后会发生什么？
 
-运行 `openspec init` 后，你会得到：
+运行 `openspec init` 后，仓库内会搭好 `openspec/` 骨架，同时默认把工作流 skills 装到你这台机器的**全局目录**（`~/.agents/skills/` 及所选工具的全局技能目录，以后本机其他项目可以直接共用；如果团队希望把技能一起提交进当前仓库，初始化时加 `--scope project` 即可）：
 
 ```text
 my-project/
@@ -261,15 +261,7 @@ Add the language instruction to its context field instead.
 
 此时手工把同样三行加入现有 `context: |`，保留项目已有技术栈和规则。空字符串、多行值、控制字符/不可见格式字符或超出 context 大小限制的值也会被拒绝。完整判断与 YAML 写法只在 [23](23-高级-config-yaml-怎么写到真正好用.md) 展开。
 
-上面的 `--tools zed` 会生成 `.agents/skills/openspec-*/SKILL.md`。Zed Agent 是 skills-only，不会生成 `opsx-*` command；需 Zed ≥ 1.4.2，并先信任当前 worktree。用 `/openspec-propose` 调用（以生成文件中的拼法为准）。
-
-其他宿主换 `--tools` 的值即可，投递形态由各自 adapter 决定。比如 DeepSeek Harness 是 skills-only 的一等目标：
-
-```bash
-openspec init --tools dsh
-```
-
-它只写 `.dsh/skills/openspec-*/SKILL.md`，不生成 command 文件；dsh 把项目级 `.dsh/skills/` 当最高优先级 skill root，装好后 skill 会进入其 catalog，直接 `/openspec-propose` 这类拼法就能呼出。完整的目标列表（含 Claude、Cursor、Codex、Warp、Grok Build 等）以 `openspec init` 的选择器为准。
+无论 `--tools` 传 `claude`、`cursor`、`zed` 还是 `dsh`（DeepSeek Harness），OpenSpec 安装的都是同一套 **skills**，没有单独的命令文件分流：默认装到本机全局技能目录；加 `--scope project` 留在仓库内时，所有工具统一共享 `.agents/skills/openspec-*/SKILL.md` 一份真身（`zed`、`dsh`、`cursor`、`codex` 等直接读取 `.agents/skills/`，不会生成 `.dsh/skills/`；`claude` 等独立目录工具自动建好链接）。Zed Agent 需 Zed ≥ 1.4.2 并先信任当前工作树，用 `/openspec-propose` 调用。完整的支持工具列表可在终端运行 `openspec init --help` 或打开交互选择器查看。
 
 ### 新手最常问：为什么要有这么多文件？
 
@@ -341,7 +333,7 @@ openspec init --tools dsh
 
 ---
 
-## 第一次用 OpenSpec 的 5 个常见误区
+## 第一次用 OpenSpec 的常见误区
 
 | 误区 | 实际情况 |
 |------|---------|
@@ -397,19 +389,10 @@ openspec completion uninstall        # 移除补全
 - **change 名**——所有活跃 change 的 ID
 - **spec 名**——所有 capability path
 - **schema 名**——所有可用 schema
-- **归档名**——已归档 change 的 ID
 
 支持 zsh、bash、fish、powershell。为什么值得装？OpenSpec 的命令行参数经常要填 change 名或 spec 路径，靠记忆或 `ls` 去找远不如敲两三个字母按 Tab 快。
 
-v1.10.0 不再通过 npm `postinstall` 打提示；registry 安装没有 install lifecycle script。首次**可读、且 action 到达 root `postAction`**的交互式 CLI 运行会在 stderr 一次性显示：
-
-```text
-Tip: Run 'openspec completion install' for shell completions
-```
-
-JSON、非 TTY、`openspec completion ...` 会 defer 而不消费这次提示；CI、已安装 completions、不可支持的 shell 或 `OPENSPEC_NO_COMPLETIONS=1` 会抑制或静默消费 completion 提示。失败 action 若只设置 `process.exitCode` 仍会进入 hook；直接调用 `process.exit(1)` 则跳过 hook且不消费提示。记录 one-shot 状态时只增量写 raw global config，不会顺手把默认 profile/delivery 固化进去。通过 git/directory 安装包时 package manager 仍可能运行 `prepare`，这与已移除的 registry `postinstall` 不是一回事。
-
-首次 telemetry disclosure 同样写 stderr；`--json` 会 defer，因此机器消费 stdout 时不会混入提示文本。两种 notice 都不是 command 的业务输出。
+首次在终端交互运行 `openspec` 命令时，CLI 会在 `stderr` 一次性提示你安装补全（`Tip: Run 'openspec completion install' for shell completions`）以及匿名遥测说明；`--json` 或管道调用时会自动延后显示，不会污染命令的标准输出。若不想看到补全提示，设置环境变量 `OPENSPEC_NO_COMPLETIONS=1` 即可。
 
 ### `openspec feedback`：从终端直接反馈
 
@@ -417,17 +400,18 @@ JSON、非 TTY、`openspec completion ...` 会 defer 而不消费这次提示；
 openspec feedback "archive 报了一个看不懂的错" --body "在 archive add-dark-mode 时出现的，日志如下：..."
 ```
 
-这条命令会用 `gh` CLI 把反馈作为 GitHub issue 提交到 `Fission-AI/OpenSpec` 仓库。如果没装 `gh` 或没登录，它会给你一个预填好的 GitHub issue URL，复制到浏览器里就能提交。
+这条命令会用 `gh` CLI 把反馈作为 GitHub issue 提交到 `Fission-AI/OpenSpec` 仓库。如果没装 `gh` 或没登录，它会给你一个指向 bug 表单（`template=bug_report.yml`）并预填好字段的 GitHub issue URL，复制到浏览器里就能提交。
 
-长消息会把折叠空白后的摘要截成最多 72 code points 的 issue title，但 `## Summary` 中保留原始完整 message（包括换行和空白）；可选 `--body` 仍完整放入 `## Details`。所以 title 变短不代表反馈正文丢失。
+长消息会把折叠空白后的摘要截成最多 72 个字符的 issue 标题（加 `Feedback: ` 前缀），同时把原始完整消息保留在正文的 `### What happened` 下；可选 `--body` 完整放入 `### Details`，并附上 `### Minimal steps to reproduce` 复现步骤提示。所以标题变短不代表反馈正文丢失。
 
 它自动在 issue body 末尾附带元数据：
 
 ```text
+---
 Submitted via OpenSpec CLI
-- Version: 1.7.0
+- Version: 2.1.1
 - Platform: darwin
-- Timestamp: 2026-07-29T...
+- Timestamp: 2026-11-21T...
 ```
 
 为什么要用它而不是手动开 issue？**结构化反馈附带版本和环境信息**，维护者不用来回追问"你用的哪个版本"——这对开源工具的迭代速度很重要。而且不用离开终端，不会打断工作流。
@@ -441,8 +425,7 @@ Submitted via OpenSpec CLI
 - `schema`
 - `.openspec.yaml`
 - `workflow profile`
-- `skill`
-- `command adapter`
+- `skillsScope`
 - `instructions JSON`
 
 它们都是真的，也都重要。
@@ -450,3 +433,11 @@ Submitted via OpenSpec CLI
 但如果你在还没把主流程走通前就钻进去，很容易越看越乱。
 
 ---
+
+## 最该带走的 5 句话
+
+1. **先把改动讲清楚再动手**：OpenSpec 管的是一个个增量 `change`，不是让 AI 在聊天框里盲目改代码。
+2. **日常先抓牢 3 个动作**：发起规划（`propose`）→ 按任务实现（`apply`）→ 合并基线归档（`archive`）。
+3. **两个目录各司其职**：`openspec/changes/` 是当前施工区，`openspec/specs/` 是每次 `archive` 后沉淀下来的正式行为底账。
+4. **`specs/` 一开始为空很正常**：不需要先把老系统全写成 spec，每做完并归档一个 change，基线就自然长出一块。
+5. **拿不准状态就查终端 CLI**：agent 对话里的技能负责推进工作流，`openspec status` / `show` / `validate` 随时帮你核对磁盘上的真实状态。

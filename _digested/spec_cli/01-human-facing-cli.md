@@ -11,23 +11,25 @@
 本质目标：
 
 - 在项目里建立 OpenSpec 运行基础设施。
-- 识别/配置 AI 工具目录。
-- 根据 profile 和 delivery 生成对应 skills/commands。
+- 识别/配置 AI 工具（87 个可选工具）。
+- 按 `profile` 与 `skillsScope` 安装对应的标准 skills（新项目默认安装到本机全局 `~/.agents/skills/`；v2.0.0 起不再生成 commands）。
 - 在需要时创建 `openspec/config.yaml`。
 
 输入：
 
 - 目标项目路径。
-- 可选 `--tools`，用于非交互指定配置哪些 AI 工具（v1.9.0 起含 `command-code`）。
-- 可选 `--profile`，覆盖全局配置中的 profile。
+- 可选 `--tools <all|none|ids>`，用于非交互指定配置哪些 AI 工具（支持 `windsurf → devin` 别名；传入退役工具如 `amazon-q` 会报错并指路 `kiro`）。
+- 可选 `--scope <global|project>`：技能装在本机全局（默认，供本机所有项目使用）还是当前项目仓库内（`.agents/skills/` + 工具链接）；也可由环境变量 `OPENSPEC_SKILLS_SCOPE` 或全局 `config.json` 的 `skillsScope` 指定。
+- 可选 `--profile <core|custom>`，覆盖全局配置中的 profile。
 - 可选 `--language <language>`：只在 greenfield 初始化时为新 `openspec/config.yaml` 种下 `context`，要求 artifact prose 使用该语言，同时保留英文结构 headings 与 `SHALL/MUST`。它不是持续的语言开关。
-- 全局配置中的 `profile`、`workflows`（1.x 还有 `delivery`，v2.0.0 起退役）。
+- 可选 `--force`（免确认清理旧文件）、`--no-animation`（静态欢迎屏）、`--copilot-cloud` / `--no-copilot-cloud`（非交互显式启用/跳过 GitHub Copilot 云端 agent 文件；启用云端文件要求 `--scope project`）。
+- 全局配置中的 `profile`、`workflows`、`skillsScope`（1.x 还有 `delivery`，v2.0.0 起退役）。
 - （v1.2.0+）自动检测项目目录中已存在的 AI 工具目录（如 `.claude/`、`.cursor/`），预选检测到的工具。
 
 输出：
 
-- 项目中的 `openspec/` 目录及配置文件。
-- 对应 AI 工具目录中的 skills/commands 文件。
+- 项目中的 `openspec/` 目录及配置文件，项目路径记入 `<globalDataDir>/projects.json`。
+- 全局（`~/.agents/skills/` 及各工具全局目录 + `.skill-lock.json`）或项目内（`.agents/skills/` 真身 + 工具相对链接/拷贝）的 `SKILL.md` 文件（1.x 的 commands 文件自 v2.0.0 起不再生成）。
 - 控制台上的“已创建 / 已刷新 / 已跳过 / 已删除”的安装报告。
 
 影响：
@@ -43,30 +45,29 @@
 - 若已有 config，`--language` 拒绝覆盖并要求手工把语言说明加入 `context`；空值、多行、控制/不可见格式字符以及导致 context 超过 50KB 的值会在写文件前失败。
 - v1.12.0 起 init 给空的 openspec/ 子目录写 `.gitkeep`，空目录会被 Git 跟踪；重跑 init 会安全恢复缺失的 marker 文件。
 - v1.13.0 起 init/update 会点名 profile 没装的 workflow（如 core 之外的 new/continue/ff 等），不再让缺失的 `/opsx:` 命令读起来像安装坏了。
-- v1.14.0 起 `--tools` 目标大幅扩容：新增 dsh（skills-only，`.dsh/skills/`）、codestudio（`.prompt.md` 命令）、gigacode（Markdown 命令 `opsx-<id>.md`）、atomcode（Markdown 命令，`args: optional/none`）、easycode（TOML 命令 `/opsx:<id>`，序列化在共享模块 `command-generation/toml.ts`）、gsd 与 amp（共享 `.agents` 根，detection 分别为 `.gsd`/`.amp`）、grok、warp（skills-invocable，与 codex 同类，可自然语言+斜杠调用）、veai。"Bob Shell" 更名为 "IBM Bob"（tool id `bob` 与 `.bob` 路径不变）；Kilo Code 的命令目录为 `.kilo/command/`。共享 `.agents` 根的成员变为 Codex、Zed、Antigravity、Amp、GSD 加 vendor-neutral `agents` 六方。
+- v1.14.0 曾新增 10 个 `--tools` 目标（`dsh`、`codestudio`、`gigacode`、`atomcode`、`easycode`、`gsd`、`amp`、`grok`、`warp`、`veai`），并将 "Bob Shell" 更名为 "IBM Bob"（tool id `bob` 不变）；Kilo Code 1.x 命令目录修正为 `.kilo/command/`。**注意 v2.x 演进**：v2.0.0 起已全面移除 command 文件生成；v2.1 接入 `skills@1.8.1` 包后，`AI_TOOLS` 共 **87 个工具**（49 个 `existingTools` + 38 个从 `skills` 包自动追加；33 个 `universal` 工具直读 `.agents/skills/`，54 个工具建相对链接/拷贝），其中 `atomcode`、`costrict`、`dsh`、`easycode`、`gigacode`、`gsd`、`oh-my-pi`、`codeassistant`、`veai` 9 个工具回退到 `'universal'` `.agents/skills/`（不再创建 `.dsh/skills/` 或 `.veai/skills/`），仅 `eve` 与 `promptscript` 不支持全局技能。
 
 ### `openspec update`
 
 本质目标：
 
-- 将已配置工具中的 OpenSpec 工作流文件更新到当前版本和当前配置。
-- 同步 profile/delivery 变化，删除已取消的 workflow 产物。
-- 从任意旧版本（0.12 起）一次升级到位，并清扫旧版本留在项目里、**没人编辑过**的 OpenSpec 文件。
+- 将本机全局与项目内已配置工具的 OpenSpec skills 更新到当前版本和当前配置。
+- 同步 `profile` 与作用域变化，删除已取消的 workflow 技能（1.x 的 `delivery` 已于 v2.0.0 退役）。
+- 从任意旧版本（0.12 起）一次升级到位，并清扫旧版本留在项目里、**没人编辑过**的 OpenSpec 文件（含 1.x command 文件与退役工具残留）。
 
 输入：
 
-- 项目路径。
-- 现有工具配置状态。
+- 可选项目路径（**当本机已安装全局 skills 时，`openspec update` 不要求当前目录存在 `openspec/`**，在任意目录运行都能刷新全局 skills）。
+- 现有全局与项目工具配置状态（含项目 `openspec/config.yaml` 的 `skillsScope: project`）。
 - 当前 OpenSpec 版本。
-- 全局配置中的 profile/delivery/workflows。
-- 可选 `--dry-run` / `--json`；`--json` 只能与 `--dry-run` 同用。
+- 全局配置中的 `profile` / `workflows`。
+- 可选 `--force`（已是最新也强制重写）、`--dry-run`、`--json`（`--json` 只能与 `--dry-run` 同用）。
 
 输出：
 
-- 更新后的 skills/commands 文件。
-- 删除不再需要的产物，包括旧版本写在“当前版本根本不会写”的路径上、且内容仍是某发布版原样输出的文件（清扫只回收空目录，不碰非空目录）。
+- 更新后的全局和/或项目 skills 文件（及各工具目录链接/拷贝）。
+- 删除不再需要的产物，包括未选中的 workflow skills、未编辑过的 1.x command 文件，以及旧版本写在“当前版本根本不会写”的路径上且内容仍是某发布版原样输出的文件（清扫只回收空目录，不碰非空目录）。
 - 控制台上的更新计划与结果；清扫过时会单独一行说明删了几个旧文件。
-- 仍会得到命令文件的工具会看到一条弃用提示（见下）。
 - `--dry-run` 时只报告计划：`add` / `update` / `delete`、每个文件归属的 tool、交互式运行会问的步骤（`notes`）、以及会失败的工具（`failures`，不中断其余计划）；不写任何文件。
 - **`notes[].code` 是稳定代号，v2.x 从 2 个增到 6 个**（`src/core/update-plan.ts` 的 `UpdatePlanNoteCode`）：
   - 1.x 就有：`legacy-tool-directories`（要迁移的旧工具目录）、`legacy-artifacts`（要清理的旧产物）
@@ -86,14 +87,14 @@
 - v1.8.0 起，`update` 会把旧 `.codex` skill 树原地迁移到共享的 `.agents/skills/`（Codex 与 vendor-neutral `agents` 目标共用根，`.openspec-target` marker 记录归属），并保留用户定制文件。v1.9.0 起，若 `.agents` 已被 `agents` 目标占用，遗留 Codex 升级不会劫持该树。
 - v1.10.0 起该共享根由 Codex、Zed Agent 与 vendor-neutral `agents` 三方协调；Zed 的 tool id 是 `zed`。`update` 只有实际更新带 `requiresIdeRestart` 的 IDE-resident surface 才提示重启；CLI-only/skills 即时加载工具通常不提示。
 - v1.13.0 起 `update` 会刷新内容已 drift 的生成文件（不只看版本戳，`d9e1a28c`）；v1.13.1 起与 init 共享同一套 IDE restart 提示逻辑，workflow 被移除时也准确提示。
-- v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；`resolveSharedSkillWriters()` 通用仲裁取代了硬编码的三方排序。init/update 均使用同一仲裁函数决定每个物理 root 的 active writer。（详见 `mechanisms/02-tool-delivery.md`。）
+- v1.11.0 起 Antigravity 从 `.agent` 迁入共享 `.agents/` 根；1.x 时期曾用 `resolveSharedSkillWriters()` 仲裁每个物理 root 的 active writer（v2.0.0 已删除该函数，改由 `.agents/skills/` 单一真身 + `.openspec-target` 工具列表替代，详见 `mechanisms/02-tool-delivery.md`）。
 - v1.15.0 起，预演和真实更新走同一条写入路径（`src/core/update-plan.ts` 的 `UpdateFileOps` 接缝：真实运行用 `realFileOps`，预演用 `UpdatePlanRecorder`）；它不是“少写一部分”的另一套逻辑。`--json` 单独使用会报 `--json is only available with --dry-run.`。
 - v1.15.0 起，全局包管理器安装的用户在 update 后可能在 stderr 看到一次 standalone 提示（非 TTY/CI 延迟显示；只提示，不自动切换）。
 - v1.17.0 起，`update` 能从 **0.12 以来任意版本一次跑完**，且**不再需要 `--force`**。删旧文件的判据不是版本戳（命令文件根本没有版本戳），而是内容指纹：内容归一化后，等于某个已发布版本原样写出过的文件才删。编辑过的旧文件**保留并列出**（`kept`），读不了/删不了的单独列为 `unchecked`。例外是 `~` 里的共享 prompt 文件——它被同一台机器的多个项目共用，仍然只在 `--force` 或终端确认时删除。
 - v1.17.0 起，清扫**永不跨链接**：路径上任何一段是 symlink 就不搜索、不判断、不删除，即使加了 `--force` 也一样。工具更新失败或用户拒绝过清扫时，整个清扫跳过——旧文件可能还是该工具能用的唯一一份。
 - v1.17.0 起，命令文件被标记弃用，`update` 在“某个已配置工具仍会得到命令文件”时打印提示（历史形态；该提示函数在 2.0 已删除）。
 - v2.0.0 起（#2223），**命令文件不再生成**，`delivery` 配置项退役——skills / commands / both 三态不再存在，一律装 skills。`update` 按指纹清理早期版本生成的 command 文件：没人改过的删掉，改过的保留并列出。skills 只有一份真身，在 `.agents/skills/`；其他工具用自己的 `skills/` 目录放指向它的链接，建不了链接时退化为拷贝。
-- v2.1.0 起（#2241），技能作用域分 `global` 与 `project`，选择记在 `openspec/config.yaml`，团队不再被重复询问；非交互环境（CI、agent 调用）不弹问题，就地刷新。`init` / `update` 从 npm 包装 skills（v2.1.1 #2283），不再 clone——离线可用、不依赖 Git、版本永远一致。
+- v2.1.0 起（#2241），技能作用域分 `global`（新项目 `init` 默认，写入 `~/.agents/skills/`）与 `project`（`update` 保留在项目内时写入 `openspec/config.yaml` 的 `skillsScope: project`，团队不再被重复询问；全局 `config.json` 也可设默认 `skillsScope`）；非交互环境（CI、agent 调用）不弹问题，就地刷新。v2.1.1 起（#2283），`init` / `update` 把当前 npm 包内置的技能文本写进本地临时目录 `os.tmpdir()/openspec-skills-*` 再安装——完全离线、不依赖 `git` 或 GitHub 网络，版本永远与当前 CLI 一致。
 
 ### `openspec install [version]`
 
@@ -139,7 +140,7 @@
 输出：
 
 - 默认人类可读的版本报告（版本、安装位置、包管理器、scope，以及 `--check` 时的更新结论）；standalone 安装的 scope 是 `standalone` 并标 `(standalone)`。
-- `--json` 输出 `{ schemaVersion: 1, version, install, update? }`：`install` 含 `location` / `packageManager` / `scope`；`update` 只在 `--check` 时出现，含 `status`（`available`/`current`/`disabled`/`offline`）、`latest`，以及 `status: "available"` 时的升级 `command` 与 `canSelfUpgrade`。
+- `--json` 输出 `{ schemaVersion: 1, version, install, update? }`：`install` 含 `location` / `packageManager`（`npm`/`pnpm`/`bun`/`yarn`/`volta`/`homebrew`/`nix`/`null`）/ `scope`；`update` 只在 `--check` 时出现，含 `status`（`available`/`current`/`disabled`/`offline`）、`latest`，以及 `command` 与 `canSelfUpgrade`（`status: "available"` 时 `homebrew` 给 `brew upgrade openspec`，`nix` 因升级方式取决于 profile/flake/home-manager 而令 `command` 为 `null` 并在人类输出提示通过 Nix 升级，`src/core/version-check.ts:605-652,793-795`）。
 
 影响：
 
@@ -201,7 +202,7 @@
 
 - 交互式 dashboard。
 - v1.14.0 起，每个 active change 行下新增 `└─ [schemaName]` workflow status 行，逐 artifact 标注状态（done 加 ✓、ready 加 →、blocked 置灰、skipped 标 `(skipped)`）；某个 change 的 workflow 加载不出来时保留任务进度并给出警告。
-- **v1.14.1 起不再有 "Archived Changes" 分区**：dashboard 显示 active changes、`Completed Changes`（任务全勾完的 change，`view.ts:63`）与 specs——但**不读 archive 目录**。v1.14.0 引入的归档分区（以及它带来的"归档 change 也算进计数/排序"问题）被 #2031 整体撤回——要看归档记录用 `openspec list --archived`。
+- **v1.14.1 起不再有 "Archived Changes" 分区**：dashboard 显示 `Draft Changes`（无任务项，`view.ts:29`）、`Active Changes`（任务未全完成，`view.ts:38`）、`Completed Changes`（任务全勾完，`view.ts:63`）与 `Specifications`（`view.ts:73`）——但**不读 archive 目录**。v1.14.0 引入的归档分区（以及它带来的"归档 change 也算进计数/排序"问题）被 #2031 整体撤回——要看归档记录用 `openspec list --archived`。
 
 影响：
 
@@ -448,9 +449,9 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 
 把一个**已存在的**本地 repo checkout 注册为全局 store。选项只有 `--id`（缺省取 store 元数据或文件夹名）、`--yes`（确认给一个健康的 OpenSpec root 写入 store identity 元数据）、`--json`。**`register` 上既没有 `--remote` 也没有 `--branch`**——`--remote <url>` 属于 `store setup`（它才是"新建并注册"），用来把规范 clone 源记进 `store.yaml`。
 
-### `openspec store setup <id> --path <path> [--remote <url>]`
+### `openspec store setup [id] --path <path> [--remote <url>] [--no-init-git]`
 
-新建一个 store 并注册。另有 `--init-git` / `--no-init-git` 控制是否初始化 Git 仓库并提交。
+在本地新建并初始化一个 store 目录后注册到本机（**绝不执行 `git clone`**；`--remote <url>` 只作为团队 canonical clone 元数据写进 `.openspec-store/store.yaml`，也不跑 `git remote add origin`）。另有 `--init-git`（默认，初始化 Git 仓库并做首次提交）与 `--no-init-git`（跳过一切 Git 操作）及 `--json`。
 
 ### `openspec store list` / `unregister` / `remove` / `doctor`
 
@@ -462,7 +463,7 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 
 ### `openspec workset create` / `open` / `list` / `remove`
 
-保存（`create`）、打开、列出、删除个人本地的多仓库视图。纯本地，不共享。**没有 `save` 子命令**——保存动作叫 `create`。
+保存（`create`，写入 `<globalDataDir>/worksets/worksets.yaml`）、打开（`open`，每次重生成 `<globalDataDir>/worksets/<name>.code-workspace` 后交给工具打开；显式拒绝 `--json` 报 `workset_open_json_unsupported`；`code`/`cursor` 默认启用，`claude`/`codex` 等 `attach-dirs` CLI-agent opener 需设 `OPENSPEC_ENABLE_CLI_AGENT_OPENERS=1`）、列出、删除个人本地的多仓库视图。纯本地，不共享。**没有 `save` 子命令**——保存动作叫 `create`。
 
 ### `openspec doctor`
 

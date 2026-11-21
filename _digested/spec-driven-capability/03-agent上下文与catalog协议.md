@@ -55,6 +55,7 @@ Purpose 是最自然的索引摘要。新 capability 的 delta 应写出可读 P
 
 ~~~bash
 openspec list --specs --json
+openspec show identity/session --type spec --json --no-scenarios
 openspec show identity/session --type spec --json --requirements
 openspec show identity/session --type spec --json --requirement 2
 ~~~
@@ -82,7 +83,7 @@ catalog 是收缩局部上下文的工具，不是掩盖全局影响面的借口
 
 ## 把协议交给 agent，而不是靠记忆
 
-默认 spec-driven instruction 仍可能只提示 agent“检查 specs 目录”。项目要获得稳定行为，应把 path convention、catalog 位置与 discovery 步骤写入自身 AGENTS 或 config artifact rules。可直接基于 [capability-governance-template.md](capability-governance-template.md) 复制最小约定。
+内置 `spec-driven` 的 `proposal` instruction（`schemas/spec-driven/schema.yaml:21-34`）以及 `explore` / `propose` 工作流模板，现已默认引导两步发现协议：先用 `openspec list --specs` 盘点既有能力清单，再对疑似相关的能力执行 `openspec show "<spec-id>" --type spec --json --no-scenarios` 只读取 Purpose 与 requirement 正文（不把整份 scenarios 拉进上下文），确认相关后再用 `openspec show "<spec-id>" --type spec` 读取含 scenarios 的完整原文。不过，项目专属的命名规范（path convention）、领域边界与自定义 catalog 位置仍属于团队治理层——要获得稳定一致的跨会话行为，应将这些项目约定写入自身 `AGENTS.md` 或 `openspec/config.yaml` 的 `rules`。可直接基于 [capability-governance-template.md](capability-governance-template.md) 复制最小约定。
 
 但不要把整个 protocol、完整 taxonomy 或 catalog 内容都塞进 config.context。context 只放跨所有 change 都成立的短原则；catalog 保持外部、可搜索、可按需读取。
 

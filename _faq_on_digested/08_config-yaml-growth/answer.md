@@ -2,7 +2,7 @@
 
 ## 一句话
 
-`openspec/config.yaml` 定义项目 `context`（所有 artifact 的背景，也进入 Apply/Archive）、`rules`（按 artifact 的约束）、`operations`（Apply/Archive 的专属 guidance）和 schema/references 等项目配置。OpenSpec 给它的编辑工具几乎没有（`openspec init` 只写最小 stub），所以**怎么搞取决于你是谁**——下面按读者类型分四条路。从“用别人的 config”到“借 agent 长 config”到“自己精通 config（提示层）”再到“重塑 schema（结构层）”，操作对象一层比一层深。
+`openspec/config.yaml` 共支持 8 个顶层字段：`schema`、`context`（所有 artifact 的背景，也进入 Apply/Archive）、`rules`（按 artifact ID 的约束）、`operations`（`apply`/`archive` 的专属 guidance）、`references`（跨仓库 store 引用）、`store`（纯配置目录的默认 store 指针）、`githubCopilot`（`cloudAgent` 偏好）与 `skillsScope`（`project` | `global`，记录团队把 OpenSpec skills 留在项目仓还是放本机全局）。OpenSpec 给 `context`/`rules`/`operations` 的编辑工具几乎没有（`openspec init` 只写最小 stub 或 `--language` 种子），所以**怎么搞取决于你是谁**——下面按读者类型分四条路。从“用别人的 config”到“借 agent 长 config”到“自己精通 config（提示层）”再到“重塑 schema（结构层）”，操作对象一层比一层深。
 
 ## 四条路：你是哪种读者？
 

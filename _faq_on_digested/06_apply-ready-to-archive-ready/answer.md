@@ -2,7 +2,7 @@
 
 ## 一句话
 
-宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段。下文 `/openspec-apply-change` 是 Claude 示例；Codex v1.8.0 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。它的核心循环是：
+宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段（当前仅分发 skill：Claude 等宿主写作 `/openspec-apply-change`，Codex 写作 `$openspec-apply-change`，装在 `.agents/skills/` 或工具专属 skills 目录）。它的核心循环是：
 
 ```text
 选择 change
@@ -10,8 +10,9 @@
   -> instructions apply --json 获取 contextFiles / operation inputs / tasks / state
   -> 读取所有 contextFiles
   -> 逐个执行 pending task
-  -> 改业务代码
-  -> 更新 tasks.md checkbox
+  -> 改业务代码并运行 task 自带的 verification
+  -> 按 sourcePath + line 更新 tasks.md checkbox
+  -> 必跑 instructions apply --json 确认该 task 已 done 且 progress 递增
   -> 直到所有 tasks done 或遇到暂停条件
 ```
 
@@ -31,12 +32,12 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、�
 | APP-06 | show progress | 展示 schema、progress、remaining tasks 和 CLI 返回的 instruction。 |
 | APP-07 | pick pending task | 从 `tasks` 中选择下一个未完成 task。 |
 | APP-08 | implement + verify | 按 task 做最小、聚焦的真实代码修改，并执行该 task 声明的 verification。 |
-| APP-09 | update checkbox | verification 通过后才把 tracking file 中对应 checkbox 改成 done。 |
-| APP-10 | loop/re-read progress | 继续下一个 pending task；必要时重新获取 apply instructions 刷新进度。 |
-| APP-11 | pause guard | 任务不清、设计问题、错误阻塞或用户中断时暂停。 |
+| APP-09 | update checkbox | verification 通过后才在 `sourcePath` + `line` 处把对应 checkbox 改成 done。 |
+| APP-10 | rerun apply instructions | 每完成一个 task 必须重跑 `openspec instructions apply --change "<name>" --json`，确认该 task 已 done 且 progress 已更新。 |
+| APP-11 | pause guard | 任务不清、设计问题、超出范围、错误阻塞或用户中断时暂停。 |
 | APP-12 | all tasks done | tracking file 中所有 checkbox tasks 都已完成。 |
 | APP-13 | final summary | 输出本轮完成任务、总体进度、测试/验证结果和剩余风险。 |
-| APP-14 | archive-ready handoff | apply 完成后建议 archive；archive 是下一步，不属于 apply 本身。 |
+| APP-14 | review & archive handoff | 提示先按需复核或验证（review/verify），确认无误后再请求归档；archive 不属于 apply 本身。 |
 
 细节展开：
 
@@ -124,9 +125,9 @@ tasks.md
 
 | state | 含义 | agent 行为 |
 |---|---|---|
-| `blocked` | 缺 required artifact、缺 tracking file，或 tracking file 没有 checkbox tasks。 | 停止实施，建议 `/openspec-continue-change` 或修复 planning artifact。 |
+| `blocked` | 缺 required artifact、缺 tracking file、tracking file 不可读，或没有可执行的 checkbox tasks。 | 停止实施，展示 `missingArtifacts`（若有）及 CLI `instruction` 给出的恢复命令（`openspec instructions <target> --change <name>`，而不是盲猜某个 ready 工件）。 |
 | `ready` | required artifacts 存在，并且有 pending tasks。 | 读取 context files，开始实施。 |
-| `all_done` | tracking file 中所有 checkbox tasks 都完成。 | 不再实施，建议 review/test 后 archive。 |
+| `all_done` | tracking file 中所有 checkbox tasks 都完成。 | 不再实施，报告全部跟踪任务已完成，提示归档前先做复核或验证（review/verify）。 |
 
 注意：`tasks.md` 文件存在不等于 apply 一定 ready。如果文件里没有任何 checkbox task，apply instructions 会返回 `blocked`。
 
@@ -164,13 +165,15 @@ for each task where done = false:
   announce task
   implement minimal code change
   run the verification declared by that task
-  update checkbox at the task's sourcePath and line
+  confirm checkbox at sourcePath + line still matches task description (else rerun apply instructions)
+  update checkbox at the task's sourcePath and line: - [ ] -> - [x]
+  rerun openspec instructions apply --change "<name>" --json and confirm done + progress changed
   continue
 ```
 
 apply 的 task 顺序来自 `tasks.md`，不是 CLI 再算一次 DAG。CLI 只解析 checkbox 和进度。
 
-v1.9.0 起 apply 模板要求：若任务需要的工作**超出 spec/tasks 描述**，或你想靠缩小、推迟、接受例外来塞进范围，必须把新增范围摊开并暂停，不要默默吸收；只有指定行为全部落地才能勾 `- [x]`。这是 skill/command 文本，不是 CLI 硬门。
+v1.9.0 起 apply 模板要求：若任务需要的工作**超出 spec/tasks 描述**，或你想靠缩小、推迟、接受例外来塞进范围，必须把新增范围摊开并暂停，不要默默吸收；只有指定行为全部落地才能勾 `- [x]`。这是 skill 模板文本，不是 CLI 硬门。
 
 ## Step 7：实施代码并更新 checkbox
 
@@ -201,7 +204,7 @@ Working on task 3/7: Add OAuth callback route
 - [x] 2.1 Add OAuth callback route — verify: run the focused callback tests
 ```
 
-勾选位置不用 agent 猜：`instructions apply --json` 的每个 task 带 `sourcePath` 和 1-based `line`（v1.14.0 起，任务解析本身未变，只是补了定位）。apply workflow 的做法是：在该位置勾选 → 标记完成 → 重查进度。编辑前先确认 `sourcePath` + `line` 处的 checkbox 描述仍与 task 一致；不一致（例如 tracking file 在会话中被改过）就重跑 apply instructions 拿刷新后的位置，不要按旧行号盲写。
+勾选位置不用 agent 猜：`instructions apply --json` 的每个 task 带 `sourcePath` 和 1-based `line`（v1.14.0 起提供定位；v2.0.0 `#2228` 起 `parseLocatedTaskLines` 还把同一段落内的折行续行以单空格拼入 `description`，避免折行任务被腰斩，同时 `line` 仍锚定在复选框首行且不增加任务计数）。apply workflow 的做法是：编辑前先确认 `sourcePath` + `line` 处的 checkbox 描述仍与 task 一致（不一致就先重跑 apply instructions 拿刷新后的位置，不要按旧行号盲写）→ 在该位置把 `- [ ]` 改成 `- [x]` → **立即重跑 `openspec instructions apply --change "<name>" --json`** 确认该 task 已 `done` 且 `progress` 发生变化。
 
 这一步很重要：OpenSpec 的 apply progress 来自 `tasks.md` checkbox，不来自 agent 的口头总结。
 
@@ -301,10 +304,10 @@ Completed this session:
 
 `openspec instructions apply --change <name>` 之前只要 tasks 存在就报 ready，哪怕完全没有 spec delta——而这正是 `openspec validate` 拒绝的状态（`8ba4ac1b`）。v1.13.0 起 text 与 `--json` 都会警告，并给出两条出路：补写 specs，或在 `.openspec.yaml` 显式声明 `skip_specs: true`。纯重构/文档类 change 如果确实无行为变化，走后者是合法路径。
 
-## v1.14.0 补充：任务带源定位，归档前的进度判定改 schema-aware
+## v1.14.0 与 v2.0.0 补充：任务带源定位、折行续行拼接，且归档进度判定 schema-aware
 
-- **apply 任务源定位**（`e7a9512d`，#1994，v1.14.0）：`instructions apply --json` 的每个 task 带 `sourcePath` + 1-based `line`（内部 `LocatedTask`/`parseLocatedTasks`，不改任务解析本身）。apply workflow 据此在确切位置勾选 → 标记完成 → 重查进度，不再靠文本匹配找 checkbox。
-- **归档前的任务进度改 schema-aware**（`fb1b876`，归档工作流侧）：archive workflow 读取进度时认 schema 的 `apply.tracks` 配置（含自定义任务文件/glob），不再硬编码 `tasks.md`——自定义 tracking 文件不会因 CLI 找不到默认文件而误报"未完成"。CLI `openspec archive` 自身的 checkbox 统计行为不变。
+- **apply 任务源定位与折行续行解析**（v1.14.0 `#1994` + v2.0.0 `#2228`）：`instructions apply --json` 的每个 task 带 `sourcePath` + 1-based `line`（`parseLocatedTaskLines`，见 `src/utils/task-progress.ts:126-150`）；同一 Markdown 段落内未遇到空行、标题、围栏、块引用、HTML 声明或下一个列表项的折行续行（含去掉尾部硬换行 `\`）会以单空格拼接到 `description`，避免折行任务只剩半句话，同时 `line` 保持在复选框行、任务总数不变。apply workflow 每勾完一条都必须重跑 `instructions apply` 核对进度。
+- **归档前的任务进度改 schema-aware**（`fb1b876`）：`getTaskProgressForChange` 通过 `findTrackedTasksArtifact()`（`src/utils/task-progress.ts:171-177`）认 schema 的 `apply.tracks` 配置，不再硬编码 `tasks.md`。
 
 ## v1.14.1 补充：`all_done` 只说明跟踪任务完成，不说明可以归档
 
@@ -321,7 +324,7 @@ Review or verify the change as appropriate before archiving.
 
 | 阶段 | 该看什么 |
 |---|---|
-| 实施中 | `progress.completed/remaining` + 每个 task 的 `sourcePath`/`line` |
+| 实施中 | `progress.complete/remaining` + 每个 task 的 `sourcePath`/`line` |
 | 实施完（`all_done`） | 先复核或跑 verify，再看 follow-up 项是否需要在归档前处理 |
 | 归档 | `openspec archive` 自己的检查（任务、validate、spec 更新确认）——不因为 `all_done` 就跳过 |
 

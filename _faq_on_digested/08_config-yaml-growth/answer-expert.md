@@ -31,16 +31,16 @@ openspec init                → 不动 config（schema: spec-driven 一行够�
                               手补最痛的 1 条 rule 进对应 artifact
 ```
 
-为什么能这样边用边补：`config.yaml` 每次 `openspec instructions` 都重读、即时生效、写错不崩（fail-open，逐字段降级，`src/core/artifact-graph/instruction-loader.ts` + `src/core/project-config.ts`）。所以你不需要开局就写对——靠真实使用收敛。
+为什么能这样边用边补：`config.yaml` 每次 `openspec instructions` 都重读、即时生效；字段级类型错误在 `status` / `instructions` 里逐字段 warn 降级（`src/core/artifact-graph/instruction-loader.ts:369-402` + `src/core/project-config.ts:325-390`），同时自 v1.16.0 `#2127` 起，不可读或语法损坏的 YAML 会被 `openspec validate`（`readConfigParseError()`，`project-config.ts:477-498`）退出码 1 拦住。所以你不需要开局就写满——靠真实使用收敛。
 
 ## context 怎么手写好
 
-只放**不变的背景**，且要高信息密度：
+只放**读代码推断不出来的不变约束背景**（`src/core/config-prompts.ts:25-27`），且要高信息密度：
 
-- 放：技术栈、领域、质量优先级、兼容性约束。
-- 不放：PRD、本次 change 的目标、容易变的东西（它注入所有 artifact，临时内容会反复干扰）。
+- 放：领域边界、质量优先级、跨平台/向后兼容硬红线、产物语言规范。
+- 不放：通用项目文档、读代码库就能发现的常规事实、PRD、本次 change 的目标、容易变的东西（它注入所有 artifact，冗余或临时内容会反复干扰）。
 
-`context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:248`（`MAX_CONTEXT_SIZE`，超限 warn 并丢弃在 :350-353））。实践上控制在半屏以内。
+`context` 有 **50KB 硬上限**，超了整段被忽略并 warning（`src/core/project-config.ts:256` `MAX_CONTEXT_SIZE`，超限 warn 并丢弃在 `:357-363`）。实践上控制在半屏以内。
 
 写得好不好，套 handbook 23 的三个特质（见 [`../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md`](../../_openspec_handbook/23-高级-config-yaml-怎么写到真正好用.md)）：**高杠杆**（一条影响很多 change）、**可判断**（有对象和方向）、**长期稳定**（不是一次性的）。6 个 bad smell（太 PRD / 太口号 / 太一次性 / 太像能力清单 / 太像 schema 定义 / 又长又稀）也都在那。
 
@@ -68,7 +68,7 @@ Do not <危险行为> unless <例外>.
 
 砍掉一切口号（`clean` / `proper` / `best practice`）——它们没判断力，白占每个 artifact 的 token。4 类规则（结构 / artifact / 测试 / 风险）的完整展开见 handbook 23。
 
-**key 必须合法**。写成 `all` / `general` → 每次生成指令 warning 且规则永不注入（`src/core/project-config.ts:469-486` 的 `validateConfigRules`，由 `instruction-loader.ts:381-385` 用**所有已安装 schema 的 artifact ID 并集**校对）。
+**key 必须合法**。写成 `all` / `general` → 每次生成指令 warning 且规则永不注入（`src/core/project-config.ts:514-531` 的 `validateConfigRules`，由 `instruction-loader.ts:381-394` 用**所有已安装 schema 的 artifact ID 并集**校对）。
 
 ## 回响 schema 的术语
 
@@ -78,32 +78,32 @@ Do not <危险行为> unless <例外>.
 
 | 术语 | schema 里的含义 |
 |---|---|
-| `capability` | 一个 spec'd 的产品行为单元，kebab-case 命名，落地为 `specs/<name>/spec.md`。proposal 列出、specs 一对一物化（`schema.yaml:15-17`） |
-| `requirement` | 规范、可测的语句，`### Requirement:` 下，用 SHALL/MUST，每个至少 1 个 scenario（`:48-52`） |
-| `scenario` | requirement 下的 WHEN/THEN 测试用例，恰好 4 个 `#`（`:50-51`） |
-| observable behavior | 用户能看到的对外行为——specs 描述的对象，区别于实现 |
-| implementation details | "how"——明确不属于 proposal/specs，归 design/tasks（`:24-25`） |
-| why / what / how | 海拔分工：proposal=why，specs=what，design=how（`:10,35,90`） |
+| `capability` | 一个耐久的系统行为单元，kebab-case 路径片段，落地为 `specs/<capability-path>/spec.md`。proposal 列出、specs 一对一物化（`schema.yaml:15-18, 74-78`） |
+| `requirement` | 规范、可测的语句，`### Requirement:` 下，用 SHALL/MUST，正文 ≤500 字符，每个至少 1 个 scenario（`:102-110`） |
+| `scenario` | requirement 下的 WHEN/GIVEN + THEN 测试用例，恰好 4 个 `#`（`:105-108`） |
+| observable behavior | 用户能看到的对外行为——specs 描述的对象，区别于实现（`:59-72`） |
+| implementation details | "how"——明确不属于 proposal/specs，归 design/tasks（`:44-45, 68-69`） |
+| why / what / how | 海拔分工：proposal=why，specs=what，design=how（`:10, 55, 169`） |
 | `BREAKING` | proposal 里标记破坏性变更的字面 token（`:14`） |
-| testable / verifiable | 每个 scenario 是潜在测试；每个 task 完成时可判断（`:81,143`） |
+| testable / verifiable | 每个 scenario 是潜在测试；每条 checkbox task 必须声明自身验证方式（`:160, 226-230`） |
 
 **各 artifact `rules` 该 echo 的 signature 术语**：
 
 | artifact | 该 echo 的词 |
 |---|---|
-| `proposal` | Why / What Changes / **BREAKING** / New·Modified **Capabilities** / kebab-case |
-| `specs` | **delta ops**（ADDED/MODIFIED/REMOVED/RENAMED）/ `### Requirement:` / **SHALL/MUST**（避免 should/may）/ `#### Scenario:` WHEN/THEN |
-| `design` | **Goals / Non-Goals** / Decisions（"why X over Y"）/ **Risk → Mitigation** / Migration Plan + rollback |
-| `tasks` | checkbox `- [ ]` / `##` numbered headings / task group / dependency ordering |
+| `proposal` | Why / What Changes / **BREAKING** / New·Modified **Capabilities** / kebab-case / `skip_specs` |
+| `specs` | **delta ops**（ADDED/MODIFIED/REMOVED/RENAMED）/ `## Purpose`（新建时 ≥50 字符）/ `### Requirement:`（≤500 字符）/ **SHALL/MUST**（避免 should/may）/ `#### Scenario:` WHEN/THEN |
+| `design` | **Goals / Non-Goals** / Decisions（"why X over Y"）/ **Risk → Mitigation** / Migration Plan + rollback / Open Questions |
+| `tasks` | checkbox `- [ ]` / `##` numbered headings / task group / dependency ordering / `## Workflow follow-up` |
 
 **echo 要精确——这些词在 schema 里有定义含义，用俗义会坏**：
 
-- `capability` 不是"feature"的同义词——它是 kebab-case 文件契约，proposal 和 specs 靠它一对一对接（`:20-22`）。
-- `requirement` 要 SHALL/MUST + scenario；schema 明确 "avoid should/may"（`:49`）。
-- `scenario` 必须**恰好 4 个 `#`**——用 3 个或 bullet 会**静默失败**（`:51`，schema 自己标了 CRITICAL）。
-- `MODIFIED` 要**复制整个 requirement 块**，写部分会在 archive 时丢细节（`:60`）。
+- `capability` 不是"feature"的同义词——它是耐久行为边界与 kebab-case 路径契约，proposal 和 specs 靠它一对一对接（`:16-35`）。
+- `requirement` 要 SHALL/MUST + 至少一个含 WHEN/THEN 的 scenario，且描述正文不超过 500 字符；schema 明确 "avoid should/may"（`:104-110`）。
+- `scenario` 必须**恰好 4 个 `#`**——用 3 个或 bullet 会**静默失败**（`:106`，schema 自己标了 CRITICAL）。
+- `MODIFIED` 要**复制整个 requirement 块**，写部分会在 archive 时丢细节（`:127-134`）。
 - `BREAKING` 是要往 proposal 里**注入的字面 token**，不是形容词（`:14`）。
-- tasks 的 checkbox `- [ ]` 是 **apply 阶段解析的格式**——不这么写任务 "won't be tracked"（`:120-121`）。
+- tasks 的 checkbox 是 **apply 阶段解析的格式**——只有 `[x]`/`[X]` 算完成，其余复选框标记（`[~]`/`[-]`/`[]`）算未完成，只有完全不带复选框的行（如 `## Workflow follow-up` 纯 bullet）才不被追踪（`:210-225`）。
 
 **范例 + gap**：repo 自己的 [`../../openspec/config.yaml`](../../openspec/config.yaml) 已经 echo 了一部分——`context` 里 "user-facing product behavior language"（observable behavior）、"avoid implementation-negative SHALL statements"（SHALL）、"Put internal mechanisms in design.md"（implementation details，L9-12）。但它**漏了** delta ops、4-hashtag scenario、checkbox 格式、Non-Goals、Migration Plan——正好是机械性最强、写错静默失败的那些。专家手写时可以比 dogfood 更全。
 
@@ -135,7 +135,7 @@ Do not <危险行为> unless <例外>.
 
 ### 3. 校验
 
-config 没有 `validate` 命令（`openspec schema validate` 只管 schema.yaml，不管 config）。专家的校验靠两样：让 agent 对照 schema 查 key，以及**跑 `openspec instructions` 看 warning**——那是 OpenSpec 唯一的被动反馈。
+`openspec schema validate` 只管 `schema.yaml`；而 `openspec validate` 自 v1.16.0（`#2127`）起会通过 `readConfigParseError()` 拦截不可读或非法 YAML 语法的 `openspec/config.yaml`（退出码 1），但对字段级语义（未知 artifact ID、超 50KB 等）仍不做专门静态检查，另外 `openspec doctor` 只检查 `store` 指针与 `references` 关联健康度。因此专家对 `context`/`rules` 的语义校验靠三样：先跑 `openspec validate` 查 YAML 可解析性，再让 agent 对照 schema 查 key，最后**跑 `openspec instructions` 看 warning**。
 
 ```text
 你：对照 spec-driven schema，检查我 config.yaml 里 rules 的 key 是否都合法。

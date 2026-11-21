@@ -28,7 +28,7 @@ proposal → specs → tasks → apply
 | artifact | 和 spec-driven 比 |
 |----------|------------------|
 | `proposal` | **内容更厚**。spec-driven 的 proposal 是 Why + What Changes + Capabilities + Impact；requirement-driven 的 proposal 在这基础上加了 Stakeholders、User Personas、Raw User Stories、Edge Cases、Clarifying Questions。因为需求工程的前期获取比代码工程重得多 |
-| `specs` | **格式不同**。spec-driven 的 specs 是 delta ops（ADDED/MODIFIED/REMOVED）+ Scenario 块；requirement-driven 的 specs 是 PRD 格式——FR-N、NFR、User Stories 表格、Approval 章节。但 `generates: "specs/**/*.md"` 和 `id: specs` 不变 |
+| `specs` | **格式与落盘目录不同**。spec-driven 的 specs 是 delta ops（ADDED/MODIFIED/REMOVED）+ Scenario 块；requirement-driven 的 specs 是 PRD 格式——FR-N、NFR、User Stories 表格、Approval 章节。`id: specs` 与 `template: spec.md` 保持不变，但 `generates` 改为 `"requirements/**/*.md"` 以避开保留给 delta spec 合并器的 `specs/` 前缀（见下文决策 5） |
 | `design` | **去掉**。需求工程不需要实现方案 |
 | `tasks` | checklist 内容不同。spec-driven 的 tasks 是代码实现清单；requirement-driven 的 tasks 是需求工程清单（Proposal → Specs → Review → Approval → Handoff）。本示例遵循当前生成契约，每条 checkbox 都声明可观察的 verification，而不是只在末尾笼统“review”。 |
 | `apply` | **完全不同**。spec-driven 的 apply 是"读 design，写代码，勾 tasks"；requirement-driven 的 apply 是"读 specs，跟人沟通，迭代修改，推动签收，准备交接" |
@@ -49,23 +49,28 @@ spec-driven 和 agent-dev-driven 都有 design，因为它们的交付物需要"
 
 它们不是独立 artifact，而是 apply 阶段的活动：
 
-- **审查**：apply instruction 内置了完整的 review checklist（完整度、一致性、歧义、可行性、缺口）。agent 在 apply 循环中逐项执行，发现的问题更新回 specs 或 proposal，在 tasks.md 中跟踪
-- **签收**：specs.md 末尾有 Approval 章节（Approver、Date、Status、Conditions、Trade-offs）。当 tasks.md 中所有 Review 和 Approval 任务勾完，Approval 章节填写完毕，签收就完成了
-- **交接**：specs.md 末尾有 Developer Handoff Notes（复杂度、集成点、建议顺序、已知未知、联系人）。当 Handoff 任务勾完，需求工程阶段正式结束
+- **审查**：apply instruction 内置了完整的 review checklist（完整度、一致性、歧义、可行性、缺口）。agent 在 apply 循环中逐项执行，发现的问题更新回 `requirements/*.md`（specs artifact）或 proposal，在 tasks.md 中跟踪
+- **签收**：PRD 文件（`requirements/*.md`）末尾有 Approval 章节（Approver、Date、Status、Conditions、Trade-offs）。当 tasks.md 中所有 Review 和 Approval 任务勾完，Approval 章节填写完毕，签收就完成了
+- **交接**：PRD 文件末尾有 Developer Handoff Notes（复杂度、集成点、建议顺序、已知未知、联系人）。当 Handoff 任务勾完，需求工程阶段正式结束
 
 ### 4. 迭代在 instruction 中，不在 DAG 中
 
 DAG 是无环的（系统强制），但需求沟通是循环的。解决方式：**DAG 负责最小顺序，instruction 负责迭代行为**。
 
 apply instruction 明确告诉 agent：
-- 审查发现 specs 缺一整节？回去补，然后重新审查
-- 写 specs 时发现 proposal 漏了场景？回去补 proposal
-- 利益相关者在签收时改了主意？回 specs 修改，重新审查，重新签收
+- 审查发现 PRD 缺一整节？回去补，然后重新审查
+- 写 specs（`requirements/*.md`）时发现 proposal 漏了场景？回去补 proposal
+- 利益相关者在签收时改了主意？回 PRD 修改，重新审查，重新签收
 - 每次迭代问自己"这次修改让需求多清晰了 10% 以上吗？"
 
-### 5. 为什么 generates 保持 `specs/**/*.md`
+### 5. 为什么 `id: specs` 保留，但 `generates` 必须避开 `specs/`（改用 `"requirements/**/*.md"`）
 
-和 spec-driven 一致。虽然 requirement-driven 的 specs 内容是 PRD 而非 delta ops，但文件组织方式不变——每个 capability 一个 spec 文件。这保留了 OpenSpec 的多 spec 文件惯例，也让大型需求可以拆分。
+`templates/spec.md` 是自由格式 PRD（`## Executive Summary` / `## Functional Requirements` / `### FR-1:`），不含 OpenSpec delta 段头（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements` + `### Requirement:` + `#### Scenario:`）。如果沿用 `generates: "specs/**/*.md"`，`Validator.validateChangeDeltaSpecs()`（固定扫描 `<changeDir>/specs/`）和 `openspec archive` 会把生成的 PRD 当作 OpenSpec delta spec 强校验，直接报 **ERROR** 硬失败（`No delta sections found` / `Change must have at least one delta`）。
+
+把 `generates` 改为 **`"requirements/**/*.md"`**（同时保留 `id: specs` 与 `template: spec.md`）正是利用源码的精确契约：
+- `isSpecsArtifactPath(generates)`（`src/core/artifact-graph/outputs.ts:241-244`）只判断规范化后的 `generates` 是否以保留前缀 `specs/` 开头，不看 `artifact.id`；
+- 当 schema 中没有任何 artifact 的 `generates` 落在 `specs/` 下时，`createChange()`（`src/utils/change-utils.ts:171-173, 200`）创建 change 时会自动在 `.openspec.yaml` 写入 `skip_specs: true`；
+- 同时 `instruction-loader.ts:308` 只对 `isSpecsArtifactPath(artifact.generates)` 为真的 artifact 标记 `skipped`，因此 `id: specs`（`generates: "requirements/**/*.md"`）仍正常走 `ready → done`，支持按业务域拆分多份 PRD 文件，且 `openspec validate` 与 `openspec archive` 全程合法通过。
 
 ## 使用方式
 
@@ -90,13 +95,13 @@ agent 走完 proposal → specs → tasks 的 artifact 生成后，在 apply 阶
 
 ## 已知限制
 
-- **从来不是内置 schema**：OpenSpec 内置 `schemas/` 从 v1.6.0 到 v1.17.0 只有 `spec-driven`，`requirement-driven` 一直是项目级自定义 schema；本目录的 [`schema-package/`](schema-package/) 是唯一维护源，安装后作为项目级自定义 schema 与上游解耦。
-- **archive 的 tasks.md 硬编码**：和所有社区 schema 一样的限制。需求场景下 tasks.md 命名自然，不需要改
+- **从来不是内置 schema**：OpenSpec 内置 `schemas/` 从 v1.6.0 至今只有 `spec-driven`，`requirement-driven` 一直是项目级自定义 schema；本目录的 [`schema-package/`](schema-package/) 是唯一维护源，安装后作为项目级自定义 schema 与上游解耦。
+- **`apply.tracks` 可配置而非硬编码**：`archive` / `list` / `status` 通过 `getTaskProgressForChange()` → `findTrackedTasksArtifact()`（`src/utils/task-progress.ts:171-177`）读取 `schema.apply.tracks`（只需精确等于某个 artifact 的 `generates`），并非硬编码 `tasks.md`。需求场景下沿用 `tasks.md` 命名最自然，无需改名
 - **利益相关者不在线时流程阻塞**：apply 依赖利益相关者反馈。如果利益相关者不回复，agent 只能记录问题、标记 blocked、等下次会话。这是需求工程本身的属性
 - **不替代专业 RE 工具**：适合小团队或早期项目的需求定义，不适合审批流、基线管理、需求矩阵追踪等重型 RE 流程
 - **review 质量上限是 agent 能力**：agent 可以检查一致性和完整性，但不能替代有经验的工程师对可行性的判断
 - **verification 是 schema instruction/示例质量，不是 CLI 硬校验**：`openspec validate` 不会替你判断 stakeholder confirmation 是否真实。
-- **两套 requirement 长度口径别混**：OpenSpec 的 500 字符上限只看 `### Requirement:` 到首个 `#### Scenario:` 之间的正文，本 schema 的 PRD 用 `FR-N` 编号和 checkbox 验收标准，不走那套结构，因此不受该上限约束，也不会收到那条 WARNING（同理，PRD 没有 `### Requirement:`/`#### Scenario:` 形状，那套结构校验也落不到它身上）。代价是 **`openspec validate` 对 PRD 正文的质量几乎无话可说**。PRD 的长度与粒度纪律必须靠 apply instruction 里的 review checklist 和人工审查，不能指望 `--strict`。
+- **PRD 不受 OpenSpec delta 结构/长度 linter 约束**：因为 PRD 输出到 `requirements/**/*.md`（避开了保留的 `specs/` 目录，`createChange()` 自动写入 `skip_specs: true`），OpenSpec 面向 delta spec 的结构校验（`### Requirement:`、`#### Scenario:`、`WHEN`/`THEN`、以及 `### Requirement:` 到首个 `#### Scenario:` 之间 ≤500 字符的 WARNING）不会作用于 `requirements/` 下的 `FR-N` 文档。这避免了无 delta 段头导致的 `No delta sections found` 硬报错，代价是 **`openspec validate` 对 PRD 正文的质量不做结构审查**——长度与粒度纪律必须靠 apply instruction 里的 review checklist 和人工审查，不能指望 `--strict`。
 
 ---
 

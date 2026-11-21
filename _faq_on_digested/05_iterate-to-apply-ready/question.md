@@ -18,11 +18,11 @@
 
 - `03_explore-to-propose-change/` — Explore 如何判断是否 propose
 - `04_propose-to-apply-ready/` — Propose 如何生成 artifacts 并走到 mechanical apply-ready
-- `05_apply-ready-to-archive-ready/` — Apply 如何实施
-- `06_archive-ready-to-archived/` — Archive 如何收束
+- `06_apply-ready-to-archive-ready/` — Apply 如何实施
+- `07_archive-ready-to-archived/` — Archive 如何收束
 
 但它们之间有一个在实践中极其常见的动作没有被单独拎出来：**propose 完成 → 用 Explore 回头审视 artifacts → 发现 gap → 更新 artifacts → 再审视 → 直到真的可以 apply**。
 
-这个循环不是四条核心命令中的任何一条。它是 Explore 和 Propose 之间的迭代：Explore 提供智力审视，Propose（或 continue）提供 artifact 更新机制。
+这个循环不是四条核心命令中的任何一条。它是 Explore 和 Propose 之间的迭代：Explore 提供智力审视，Update / Continue 提供 artifact 修订与补齐机制。
 
 本问题专门回答这个迭代循环里到底发生了什么。

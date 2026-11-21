@@ -277,7 +277,7 @@ Open questions:
 
 ## 参考来源
 
-源码引用基于 commit `970cb44`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

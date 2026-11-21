@@ -6,8 +6,8 @@
 
 > **调用方式**：技能 `openspec-update-change` [change-name]——Claude Code 等工具里 `/openspec-update-change` [change-name]，Codex 用 `$openspec-update-change` [change-name]。1.x 写作 `/opsx:update`；v2.0.0 起命令文件已移除，`/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-update-change`（skill）/ `OPSX: Update`（command）
-> **独立 CLI 命令**：无——update 是纯 agent 模板，修订已有 planning artifacts，不改代码。
-> **profile**：custom（需显式启用，不在默认 core 里）
+> **独立 CLI 命令**：无（注意与刷新技能文件的 CLI 命令 `openspec update` 区分！`update-change.ts:41` 的技能描述专门写明：用户说 `"openspec update change"` 或要改计划时走本技能；若用户指的是刷新生成文件的 `openspec update` CLI 命令，则运行该命令而非本技能）。
+> **profile**：**core**（位于 `src/core/profiles.ts` 的 `CORE_WORKFLOWS` 默认 6 技能集内，开箱即用）
 
 ## 一句话
 
@@ -92,30 +92,30 @@ sequenceDiagram
     end
 
     rect rgb(240, 255, 240)
-        Note over MD,FS: Step 6 · 建议下一步
+        Note over MD,FS: Step 6 · 给出下一步指引（只给指引，绝不越界执行）
         MD->>MD: 检查状态
-        alt 还有 artifact 缺失
-            MD-->>User: "建议 /openspec-continue-change 补 artifact"
+        alt 仍有 empty existingOutputPaths 且 ready/blocked 的缺失产物
+            MD-->>User: "给出创建下一个 ready 产物的 CLI 命令<br/>openspec instructions <artifact-id> --change <name> --json"
         else change 已实施（tasks 已勾）
-            MD-->>User: "代码可能不再匹配修订后的 plan。<br/>建议 /openspec-apply-change"
-        else 全部完成
-            MD-->>User: "建议 /openspec-archive-change"
+            MD-->>User: "代码可能不再匹配修订后的计划，<br/>列出需要回访重新核对的实施任务"
+        else 全部产物完成且代码已落地
+            MD-->>User: "建议用 openspec archive \"<name>\" 归档"
         end
     end
 ```
 
 ## 关键 guardrail：只编已有文件，不推进 build frontier
 
-update 最核心的约束是（模板原文口径）：
+update 最核心的约束是（`update-change.ts:127` 原文口径）：
 
 ```text
 Do not advance the build frontier: if an artifact has empty existingOutputPaths
-and status ready or blocked, that is /openspec-continue-change's job. Leave skipped
+and status ready or blocked, create missing artifacts in a separate step. Leave skipped
 artifacts untouched. The only new-file scope is a confirmed concrete path under
 a glob artifact whose existingOutputPaths is non-empty.
 ```
 
-即**不推进 build frontier**：`existingOutputPaths` 为空且状态 `ready`/`blocked` 的 artifact 一律交给 continue；`skipped` 的不动。唯一的建新文件口子是：某个 glob artifact 已有部分文件、一致性检查发现确缺一个文件时，可以先起草 → 用户确认 → 在 `changeRoot` 内选一个不存在的具体路径创建（创建前刷新 status/instructions 复核，仍不得用 glob `resolvedOutputPath` 当目标）。**continue 推进 build frontier（创建新 artifact），update 只在已有 frontier 内修订**——外加这个狭窄的、需确认的补口。
+即**不推进 build frontier**：`existingOutputPaths` 为空且状态 `ready`/`blocked` 的 artifact 留待独立步骤创建（模板通过 CLI 命令 `openspec instructions "<artifact-id>" --change "<name>" --json` 提示下一步，不假定用户一定安装了 `continue` 技能）；`skipped` 的不动。唯一的建新文件口子是：某个 glob artifact 已有部分文件、一致性检查发现确缺一个文件时，可以先起草 → 用户确认 → 在 `changeRoot` 内选一个不存在的具体路径创建（创建前刷新 status/instructions 复核，并用“目标已存在即失败”的创建操作防止覆盖，仍不得用 glob `resolvedOutputPath` 当目标）。**continue 推进 build frontier（创建新 artifact），update 只在已有 frontier 内修订**——外加这个狭窄的、需确认的补口。
 
 ### v1.14.2 起：例外写在两处（#2083）
 
@@ -145,38 +145,38 @@ update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。�
 - "update vs start fresh" 判断（修改意图 vs 精炼细节）
 - 和 continue/apply/archive 的衔接路径
 
-## update 的工具侧行为补强
+## 区分两层 update：`openspec-update-change` 技能 vs `openspec update` CLI
 
-注意区分**两层 update**：`update-change.ts`（本文：agent 修订 planning artifact 的 workflow）与 `src/core/update.ts`（`openspec update`：把 CLI 的 skills/commands 同步到工具侧文件系统）。下面两条属于后者，但影响同一份文档的读者：
+务必区分名字相近但职责完全不同的两套机制：
 
-- **共享 IDE restart 提示**：`openspec init` 和 `openspec update` 共用 `src/core/shared/ide-restart.ts` 的同一句提示（`Restart your IDE to refresh commands.` / `...skills.`），message 也覆盖「移除 workflow」场景，不再声称生成了新文件。
-- **损坏 command 文件检测**：`openspec update` 之前只比对 skill 文件的 `generatedBy` 版本戳——skill 是新版本就报「All up to date」，但旁边手改/截断的 command 文件完全没被检查。现在也比对 command 文件内容（只针对 skills+commands 都配置的工具；commands-only 路径不变），`--force` 之外多了一条自动修复路径。
-- **遗漏 workflow 提示**：init/update 输出用 `formatOptionalWorkflowsNote` 列出 profile 没装的 workflow（`new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard`）和 `openspec config profile` 命令。
-- **工具目标大扩容**：`--tools` 新增 10 个目标——`dsh`（DeepSeek Harness，skills-only，项目级 `.dsh/skills/`）、`codestudio`（skills + `.prompt.md` 命令）、`gigacode`（Markdown 命令 `opsx-<id>.md`）、`atomcode`（Markdown 命令 `/opsx-<id>`，按 workflow 是否读输入声明 `args: optional`/`args: none`）、`easycode`（TOML 命令 `/opsx:<id>`，新共享模块 `src/core/command-generation/toml.ts`）、`gsd` 与 `amp`（与 Codex/Zed/Antigravity 共享 `.agents` root，detection 分别靠 `.gsd`/`.amp`）、`grok`、`warp`、`veai`（均 skills-only）。全部注册在 `src/core/config.ts` 的 `AI_TOOLS`；shared `.agents` root 成员扩为六方。IBM Bob 显示名改为 "IBM Bob"（tool id `bob` 与 `.bob` 路径不变）。命令形态与 detection 细节见 [`../mechanisms/02-tool-delivery.md`](../mechanisms/02-tool-delivery.md)。
-- **Kilo Code 目录修正**：`openspec init`/`update` 的命令文件写到 `.kilo/command/opsx-<id>.md`（此前错写在 `.kilocode/workflows/`）；legacy cleanup 按已知文件名清走两代旧文件。
+- **`openspec-update-change`（本文，`src/core/templates/workflows/update-change.ts`）**：coding agent 消费的工作流技能，用来修订某个活跃 change 的既有规划文档（`proposal.md`、`specs/`、`design.md`、`tasks.md` 等）并保持产物间自洽。
+- **`openspec update`（CLI 命令，`src/core/update.ts`）**：刷新项目级 `.agents/skills/`（或 `skillsScope: global` 下的本机 `~/.agents/skills/`）中的单份共享技能真身、对账各工具目录的技能链接/拷贝（`src/core/shared/skill-links.ts`），并按发布指纹库（`isReleasedGeneratedContent`）清理 1.x 遗留的旧命令文件（v2.0.0 起命令文件已不再生成；未改动的历史生成文件自动移除，用户改过的保留并列出）。未安装的 optional workflows（`new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard`）仍通过 `formatOptionalWorkflowsNote` 提示可用 `openspec config profile` 开启，刷新完成后通过 `src/core/shared/ide-restart.ts` 提示重启 IDE 以重载 skills。工具投递细节见 [`../mechanisms/02-tool-delivery.md`](../mechanisms/02-tool-delivery.md)。
 
 ## Guardrails
 
 | Guardrail | 含义 |
 |---|---|
-| Planning artifacts only — NEVER edit code | 如果修订暗示代码变更，停止并指向 `/openspec-apply-change` |
-| Use artifact ids from `openspec status`, never hardcode | schema-agnostic |
-| Edit `existingOutputPaths` + step 4 允许的已确认具体路径，绝不用 `resolvedOutputPath` | glob artifact 的 resolvedOutputPath 还是 pattern；两处规则口径一致，别只读其中一处 |
-| Do not advance build frontier | 不创建新 artifact；唯一例外是部分填充 glob 下经用户确认补一个具体路径文件 |
-| Confirm every edit with user before writing | 每次修改都要确认 |
-| If request changes intent → recommend `/openspec-new-change` | "Update vs. Start Fresh" 判断 |
+| Planning artifacts only — NEVER edit code | 若修订后的计划需要改动业务代码，在改完规划产物后停止，并明确指出需要做哪些代码修改（`stop after revising the plan and identify any code changes it calls for`） |
+| Use artifact ids from `openspec status`, never hardcode | schema-agnostic，不写死 `proposal.md` 等文件名 |
+| Edit `existingOutputPaths` + step 4 允许的已确认具体路径，绝不用 `resolvedOutputPath` | glob artifact 的 `resolvedOutputPath` 仍是模式串；Step 2 与 Guardrail 两处规则口径一致 |
+| Do not advance build frontier | `existingOutputPaths` 为空的 `ready`/`blocked` 产物留到独立步骤创建（Step 6 给出 `openspec instructions` CLI 命令），`skipped` 产物保持不动 |
+| Confirm every edit with user before writing | Step 4 只在对话里起草，Step 5 逐项经用户确认后才写盘 |
+| If request changes intent → recommend `openspec new change "<new-change-name>"` | 若需求改变了整个 change 的初衷而非精炼细节，询问一个新名字并建议用 CLI 新建 change（本技能自身绝不调用 `new change`） |
 
 ## 源码锚点
 
-| 内容 | 行号范围（update-change.ts，**v2.1.1**，全文 231 行） |
+| 内容 | 行号范围（`update-change.ts`，全文 231 行） |
 |---|---|
-| continue / apply / archive / new 的 handoff 常量 | L11-L35 |
+| CLI / 自然语言交接常量（`CONTINUE_*` / `APPLY_*` / `ARCHIVE_HANDOFF` / `INTENT_CHANGE_GUARDRAIL`） | L11-L37 |
 | `getUpdateChangeSkillTemplate()`（技能正文） | L38-L134 |
-| `getOpsxUpdateCommandTemplate()`（1.x 命令模板，**2.0 起不再生成**） | L136-L231 |
+| Step 1–6（skill 版） | L54 / L70 / L84 / L88 / L101 / L110 |
+| 部分填充 glob 产物补缺文件的 5 步协议 | L93-L98 |
+| Guardrails（6 条，glob 新文件例外在 L82 与 L126 两处一致） | L123-L129 |
+| `getOpsxUpdateCommandTemplate()`（1.x 历史命令模板，**2.0 起不再生成**） | L136-L231 |
 
-> **与 v1.14.3 相比**：`optionalWorkflow()` 已随 `optional-workflow.ts` 一起删除，handoff 常量改成**运行时判断**的纯文本（「如果那个技能装了就跑它，否则自己做」）。命令模板函数仍在文件里，但 2.0 起没有任何调用方会把它写进项目——保留只是为了让旧项目能被识别和清理。
-| Guardrails（例外在两处一致） | L161-L167（6 条；168-171 是返回对象收尾） |
+> **交接常量设计**：1.x 的 `optionalWorkflow()` 已随 `optional-workflow.ts` 在 v2.0.0 删除；`update-change.ts:11-37` 将所有后续衔接统一写成了不依赖特定 optional skill 是否安装的通用指引与 CLI 命令（如 `openspec instructions "<artifact-id>" --change "<name>" --json`、`openspec archive "<name>"`、`openspec new change "<new-change-name>"`）。
 
-## v1.13.1 行为更新
+## 历史行为演进
 
-**draft-then-write（`fede536c`）**：`/openspec-update-change` 现在把请求的修订先起草（step 4），经用户确认后才写入（step 5）。与 explore 的 capture 确认同属一轮「写前确认」护栏收紧。
+- **draft-then-write（v1.13.1，`fede536c`）**：请求的修订统一在 Step 4 对话中起草，经用户确认后才在 Step 5 写入磁盘。
+- **glob 例外双处对齐（v1.14.2，`#2083`）**：Step 2 与 Guardrail 同步声明「部分填充 glob 产物下经确认的具体新路径」例外，消除前后规则自相矛盾。

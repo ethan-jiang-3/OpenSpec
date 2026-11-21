@@ -73,17 +73,17 @@ proposal -> specs -> design -> tasks
 - **依赖偏序**：`proposal` 后 `specs/design` 可并行，二者之后才是 `tasks`。
 - **CLI 的确定性展示/选择顺序**：同级 ready 的 `specs` 在 `design` 前，因为内置 schema 的声明顺序如此。
 
-### 当前 schema 内部的两个张力
+### 当前 schema 内部的两个张力与工作流层弥合
 
-第一，`design.instruction` 要求“Reference the proposal for motivation and specs for requirements”，但 `design.requires` 只有 `proposal`。生成 design instructions 时，`dependencies` 不会把 change specs 当成硬依赖；虽然内置推荐顺序会先显示 specs，agent 仍不能把这种顺序提示当成 DAG 保证。
+第一，`design.instruction`（`schema.yaml:191-193`）已把文案收敛为“Reference the proposal for motivation and, **once written**, the specs for requirements”，承认 `specs` 未必已在 `design` 之前落盘；因为 `design.requires` 只有 `proposal`，生成 design instructions 时 `dependencies` 不会把 change specs 当成硬依赖。虽然内置推荐顺序会先显示 `specs`，agent 仍不能把这种顺序提示当成 DAG 保证。
 
-第二，`design.instruction` 写着“create only if any apply”，但 `tasks.requires` 固定包含 `design`。在当前 DAG 中，不创建 `design.md` 就无法让 `tasks` 进入 ready，因此 design 实际上是结构必需项。
+第二，`design.instruction` 写着“create only if any apply”（`schema.yaml:171-175`），而 `tasks.requires` 固定包含 `design`。在纯 CLI 的 `ArtifactGraph`（`status`）里，没有原生的 conditional artifact 字段，不创建 `design.md` 会使 `tasks` 在 `status` 中保持 `blocked`。**但工作流模板层已对此做了显式弥合**（`propose.ts:136-138`、`ff-change.ts:96-98`、`explore.ts:172-174`、`continue-change.ts`）：当四条启用条件无一适用时，允许有意识地条件跳过 `design.md`（deliberate skip），并奉行“Dependencies are enablers, not gates”——只要 `design` 是 `tasks` 唯一缺失的前置依赖，即便 `tasks` 在 `status` 中显示 `blocked`，agent 也会直接拉取 `openspec instructions tasks` 完成 `tasks.md`（而 `apply.requires` 只看 `[tasks]`，因此后续进入 Apply 也不会受阻）。
 
-维护 schema 前应先决定目标语义：
+维护或复刻 schema 前仍应先决定目标语义：
 
-- 若希望 specs 与 design 并行，应修改 description 和 design instruction，不要让 design 假设 change specs 已存在。
-- 若希望严格 `proposal -> specs -> design -> tasks`，应让 `design.requires` 包含 `specs`，并补相应图与 workflow 测试。
-- 若 design 真正可选，当前 schema 数据模型没有 conditional artifact；不能只靠 instruction 中的“可选”实现结构可选。
+- 若希望 specs 与 design 完全并行，保持当前 `design.requires: [proposal]` 与“once written”限定即可。
+- 若希望严格强制 `proposal -> specs -> design -> tasks`，应让 `design.requires` 包含 `specs`，并补相应图与 workflow 测试。
+- 若想在 CLI `status`（`isPlanningComplete`）层面也原生表达可选产物，仍需在 `ArtifactSchema` 数据模型中正式引入 conditional 字段，而非仅靠工作流技能层跳过。
 
 ## 4. 完成判定只是文件存在
 
@@ -163,7 +163,7 @@ apply:
 “正常生成路径”与“硬保证”必须分开：
 
 - 正常路径中，`tasks` 只有在 specs/design done 后才 ready，所以通常四个 artifact 都已存在。
-- Apply 的**阻塞门**只看 `apply.requires`（即 `missingArtifacts`，v1.14.3 里就是 `tasks`）。但它**同时也算了一份传递闭包** `missingPrerequisites`（按 `getBuildOrder()` 展开，`instructions.ts:583-588`），并写进 JSON（`:714`）与人类可读提示（`:637-638`）——那份闭包只用于**诊断提示**，不参与 blocked 判定。若有人手工创建了含 checkbox 的 `tasks.md`，缺少 proposal/specs/design 不一定使 Apply blocked，`contextFiles` 也只包含实际存在的文件。
+- Apply 的**阻塞门**只看 `apply.requires`（即 `missingArtifacts`，内置 `spec-driven` 里就是 `tasks`）。但它**同时也算了一份传递闭包** `missingPrerequisites`（按 `getBuildOrder()` 展开，`instructions.ts:580-585`），并写进 JSON（`:711`）与人类可读提示（`:634-636`）——那份闭包只用于**诊断提示**，不参与 blocked 判定。若有人手工创建了含 checkbox 的 `tasks.md`，缺少 proposal/specs/design 不一定使 Apply blocked，`contextFiles` 也只包含实际存在的文件（同时 `collectApplyWarnings` 会对无 delta spec 且未标 `skip_specs` 的情形附加 warning）。
 - `apply.requires` 是可用性 gate，不是 artifact 语义 validator，也不证明实现正确。
 
 因此，不应把“`apply.requires: [tasks]`”表述成无条件保证四个 artifact 都完整。更准确的说法是：DAG 的正常 authoring 路径要求先完成上游，而 Apply 当前直接以 `tasks` 和 tracking file 作为准入检查。

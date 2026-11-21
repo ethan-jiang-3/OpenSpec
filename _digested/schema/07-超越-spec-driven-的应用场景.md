@@ -168,7 +168,7 @@ artifacts:
 
 apply:
   requires: [scenes]
-  tracks: null   # scenes 是 glob（scenes/**/*.md），tracks 无法精确匹配；显式置 null 表示不靠 artifact 图数进度
+  tracks: null   # apply.tracks 本身支持 glob（instructions.ts:603 会走 resolveArtifactOutputs 展开匹配文件），但分场正文不含 - [ ] 任务清单；显式置 null 表示终审不按 checkbox 统计进度
   instruction: |
     通读全稿，检查一致性、节奏、角色声音。标记需要修改的场景。
 ```
@@ -237,7 +237,7 @@ artifacts:
 
 apply:
   requires: [skills, scripts, tests]
-  tracks: null   # tests 是 glob（tests/**/*），同上
+  tracks: null   # apply.tracks 支持 glob，但 tests/**/* 是行为用例而非待勾选的 - [ ] 任务清单；显式置 null 免于按空任务阻塞 apply
   instruction: |
     就绪检查：所有 skill 有对应 test，所有脚本可执行。
     集成到 Agent 运行时并验证。

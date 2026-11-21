@@ -248,12 +248,12 @@ Next:
 
 ## 参考来源
 
-源码引用基于 commit `970cb44`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/explore.ts` | Explore 没有固定 ending；可能流向 proposal、artifact updates、clarity 或 later continuation |
 | `src/core/templates/workflows/propose.ts` | Propose 从已明确的 change name/description 开始 |
-| `src/core/templates/workflows/continue-change.ts` | 已有 change 的 artifact 补充应走 continue/update 语义 |
+| `src/core/templates/workflows/continue-change.ts`、`update-change.ts` | 已有 change 补齐缺失 `ready` 工件走 `openspec-continue-change`，修订已完成 `done` 工件走 `openspec-update-change` |
 | [`answer-exp04.md`](answer-exp04.md) | active changes 和 artifacts 的读取机制 |
 | [`answer-exp06.md`](answer-exp06.md) | 问题地图如何形成分流判断 |

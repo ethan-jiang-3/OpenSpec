@@ -11,11 +11,11 @@
 5. [`02-diagnose-maintain-config-yaml.md`](02-diagnose-maintain-config-yaml.md)：生效 root、schema、instructions、迁移和验证的诊断/维护手册。
 6. [`sources.md`](sources.md)：源码、消化文档和项目特定样例的证据索引。
 
-三篇通用指南读完后，如需观察归位方法如何落到具体项目，再进入 [`project-cases/README.md`](project-cases/README.md)。其中 10、11、12 分别审计 Deep Research Tool、Agentic PPT workflow 和 DeerFlow Deep Research；它们不属于通用阅读主线，也不是可以套到其他项目的配置模板。
+三篇通用指南读完后，如需观察归位方法如何落到具体项目，再进入 [`project-cases/README.md`](project-cases/README.md)。其中 10、11、12、13 分别审计 Deep Research Tool、Agentic PPT workflow、DeerFlow Deep Research 和 Agentic Business Simulation；它们不属于通用阅读主线，也不是可以套到其他项目的配置模板。
 
 ## 先用 frontmatter 路由
 
-三篇通用指南（00、01、02）和三篇项目审计（10、11、12）的开头都使用同一组决策型 frontmatter；先读它，再决定是否进入正文：
+三篇通用指南（00、01、02）和四篇项目审计（10、11、12、13）的开头都使用同一组决策型 frontmatter；先读它，再决定是否进入正文：
 
 - `document_kind`：它是初始基线、设计手册、诊断手册还是项目审计。
 - `applies_to`：它覆盖的 runtime model 或项目条件。

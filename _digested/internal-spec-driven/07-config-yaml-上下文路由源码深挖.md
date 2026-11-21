@@ -177,8 +177,8 @@ apply:
 
 1. **Gate 只直接检查 `tasks`。** `generateApplyInstructions()` 不递归复查 `tasks` 的 `specs`/`design` 依赖；它只按 `apply.requires` 查对应 output 是否存在。
 2. **`contextFiles` 扫描全部四个 artifact。** 对当前存在的 `proposal.md`、所有匹配 `specs/**/*.md` 的文件、`design.md`、`tasks.md` 分别建立数组；缺失类别直接省略。
-3. **`tracks: tasks.md` 决定进度。** checkbox parser（`parseTaskLines()` in `src/utils/task-progress.ts`）识别 `-`/`*` 开头的 `[ ]`/`[x]`/`[X]`，**允许前导缩进（缩进子任务也计入）**；tasks 文件缺失、没有 checkbox，或缺少 required artifact 时都会得到 `blocked`。
-4. **schema instruction 只在 `ready` 分支使用。** `blocked` 与 `all_done` 会改用运行时生成的提示；全部 checkbox 完成时返回 `all_done` 和 archive 建议。无论 state 如何，返回对象还可含 `context` 与 `operationGuidance`，它们是 prompt-level input，不改变 gate 或完成条件。
+3. **`tracks: tasks.md` 决定进度。** checkbox parser（`parseLocatedTaskLines()` / `parseTaskLines()` in `src/utils/task-progress.ts`）识别全 CommonMark 列表标记（`-`、`*`、`+` 与 1–9 位有序 `1.` / `1)`）下的单字符非空白标记或空框（仅 `[x]`/`[X]` 为完成，其余如 `[ ]`/`[~]`/`[-]`/`[?]`/`[]` 均计入总数并算未完成，且支持首段多行折行合并 #2228），**允许前导缩进（缩进子任务也计入）**；tasks 文件缺失、没有有效 checkbox，或缺少 required artifact 时都会得到 `blocked`。
+4. **schema instruction 只在 `ready` 分支使用。** `blocked` 与 `all_done` 会改用运行时生成的提示；全部 checkbox 完成时返回 `all_done` 并提示**在归档前按需复核或验证改动**（`Review or verify the change as appropriate before archiving.`）。无论 state 如何，返回对象还可含 `context` 与 `operationGuidance`，它们是 prompt-level input，不改变 gate 或完成条件。
 
 实现均在 [`parseTaskLines()`（`src/utils/task-progress.ts`）与 `generateApplyInstructions()`](../../src/commands/workflow/instructions.ts)，行为测试见 [`artifact-workflow.test.ts`](../../test/commands/artifact-workflow.test.ts)。Apply skill 随后要求 agent 读取 `contextFiles` 中的**每一条**路径再实施（[`apply-change.ts`](../../src/core/templates/workflows/apply-change.ts)）。
 
@@ -206,11 +206,9 @@ Explore 是 stance，不是 schema phase。生成的 workflow 先调用 `openspe
 
 schema description 仍以 `proposal → specs → design → tasks` 作为可读的推荐序列，但 `design.requires` 只有 `proposal`。现将 status/continue 等同级选择固定为 schema 声明顺序，因此内置 schema 会先推荐 `specs` 再推荐 `design`；这消除了旧版按字母序先推 design 的矛盾，却不改变 `design` 可与 specs 并行生成的 DAG。文档应统一画成 `proposal -> {specs, design} -> tasks`，再说明推荐展示顺序来自 schema 声明。
 
-### 7.2 `design` 的“可选”文案与 DAG 冲突
+### 7.2 `design` 的“可选”文案与纯图模型的张力
 
-`design.instruction` 写着“create only if any apply”，但 artifact 类型没有 optional 字段，`tasks.requires` 又强制包含 `design`。因此在当前 runtime 中，`design.md` 是到达 `tasks` 的必需文件，不是可选项（[`schema.yaml`](../../schemas/spec-driven/schema.yaml)、[`ArtifactSchema`](../../src/core/artifact-graph/types.ts)）。
-
-在机制改变前，应把这句话理解为“简单变更也要创建一个最小 design，说明为何无需复杂设计”，否则 workflow 会停在 blocked。
+`design.instruction` 写着“create only if any apply”，但 `ArtifactSchema` 类型没有原生的 optional 字段，`tasks.requires` 又包含 `design`（[`schema.yaml`](../../schemas/spec-driven/schema.yaml)、[`ArtifactSchema`](../../src/core/artifact-graph/types.ts)）。因此在纯 CLI `ArtifactGraph`（`openspec status`）视角下，不写 `design.md` 会让 `tasks` 保持 `blocked`、`isPlanningComplete` 保持 `false`；不过生成的 workflow 技能（`propose`、`ff`、`explore`、`continue`）已在模板层允许对不满足条件的 `design.md` 记录**有意识的条件跳过（deliberate skip）**，并在 `design` 是唯一缺失依赖时跨过 `blocked` 直接拉取 `openspec instructions tasks` 创建 `tasks.md`（由于 `apply.requires: [tasks]`，后续进入 Apply 不受影响）。
 
 ### 7.3 `design` instruction 与 template 不完全一致
 
@@ -226,9 +224,9 @@ schema instruction 要求 `Migration Plan`、`Open Questions` 等 section，但�
 
 `apply.requires: [tasks]` 只检查 `tasks.md` output；手工制造一个带 checkbox 的 tasks 文件，即使其他 artifact 缺失，也可能进入 ready。正常 Propose/Continue 通过 DAG 避免这种路径，但 runtime 本身没有传递闭包校验。后续测试应加入“只有 tasks 存在”的 builtin-spec-driven case，明确这是接受的流动工作流还是需要收紧的 invariant（[`generateApplyInstructions()`](../../src/commands/workflow/instructions.ts)）。
 
-### 7.6 四 artifact 名称在生成文案中仍有漏项
+### 7.6 四 artifact 名称在配置描述中仍有简写
 
-`getOpsxProposeSkillTemplate()` 的开场列表只列 `proposal.md`、`design.md`、`tasks.md`，漏掉 `specs`，尽管后续循环会按 schema 生成它；config profile 的 Propose 描述也写成“proposal, design, and tasks”（[`propose.ts`](../../src/core/templates/workflows/propose.ts)、[`commands/config.ts`](../../src/commands/config.ts)）。面向用户与维护者的所有基线文档应始终明确四个 artifact：`proposal`、`specs`、`design`、`tasks`。
+`getOpsxProposeSkillTemplate()`（[`propose.ts:25-30`](../../src/core/templates/workflows/propose.ts)）的开场列表现已完整列出全部四项（`proposal.md`、`` `specs/<capability-path>/spec.md` ``、`design.md`、`tasks.md`），但交互式 profile 选择器里的 Propose 简介仍简写为“Create proposal, design, and tasks from a request”（[`src/commands/config.ts:186`](../../src/commands/config.ts)）。面向用户与维护者的基线文档应始终明确四个 artifact：`proposal`、`specs`、`design`、`tasks`。
 
 ### 7.7 operation input 的边界仍应有回归覆盖
 
@@ -278,7 +276,7 @@ references:
 | Explore 或 Archive 必须强制执行的检查 | 持久化 artifact 或独立自动检查 | guidance 是 prompt input，不替代 validator/test/CI。 |
 | 只读上游 spec 的发现入口 | `references` | instructions 只注入实时索引，需要时再 fetch 正文。 |
 
-`readProjectConfig()` 采用逐字段 fail-open：合法兄弟字段会在某字段无效时继续生效；`context` 上限是 50 KiB UTF-8 bytes；rules value 必须是字符串数组，空数组或只含空字符串的数组没有实际效果；未知 rule key 要到 artifact instructions 生成时才会按当前 graph 校验并 warning（[`project-config.ts`](../../src/core/project-config.ts)、[`project-config.test.ts`](../../test/core/project-config.test.ts)）。因此“YAML 能解析”不等于“每条指导都到达目标阶段”。
+`readProjectConfig()` 采用逐字段 fail-open：合法兄弟字段会在某字段无效时继续生效；`context` 上限是 50 KiB UTF-8 bytes（`references` 渲染索引共享同一 50 KiB 上限）；rules value 必须是字符串数组，空数组或只含空字符串的数组没有实际效果；未知 rule key 要到 artifact instructions 生成时才会对照**所有可用 schema 的 artifact ID 并集**（`listSchemasWithInfo` + `validateConfigRules`）校验并 warning（[`project-config.ts`](../../src/core/project-config.ts)、[`instruction-loader.ts`](../../src/core/artifact-graph/instruction-loader.ts)）；而不可读或非合法 YAML 的 `config.yaml`/`.yml` 会被 `openspec validate` 拦截并以退出码 `1` 失败。因此“日常命令没报错”不等于“每条指导都到达目标阶段”。
 
 ## 9. 修改后的最小验证闭环
 

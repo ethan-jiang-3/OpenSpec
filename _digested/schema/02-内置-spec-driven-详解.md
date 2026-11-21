@@ -108,13 +108,16 @@ apply:
 **instruction 核心内容**：
 - Delta 操作：ADDED / MODIFIED / REMOVED / RENAMED Requirements
 - 格式强制：`### Requirement:` + `#### Scenario:` (必须是 4 个 #)
-- GIVEN / WHEN / THEN 场景格式
-- MODIFIED 要求复制完整 requirement（防止 archive 时信息丢失）
-- 新 capability 的 delta 可写 `## Purpose`；archive 会将它带入新 main spec。既有 main spec 的 Purpose 不由 delta 改写。
+- GIVEN / WHEN / THEN 场景格式：`openspec validate` 会在 scenario 缺少 `**WHEN**`/`**GIVEN**` 与 `**THEN**` 结构化条目时发出 WARNING（#2079，`--strict` 下计为失败）
+- MODIFIED 要求复制完整 requirement（含全部保留的 scenarios，防止 archive 时信息丢失并避免被 loss guard 拒绝）
+- 新 capability 的 delta 应写 `## Purpose`（不少于 50 字符，`MIN_PURPOSE_LENGTH = 50`，过短会触发 WARNING、保留 `TBD` 会触发 ERROR）；archive 会将它带入新 main spec。既有 main spec 的 Purpose 不由 delta 改写。
 - `skip_specs: true` 时不要创建 delta spec；instructions/status 会将 specs 标为 skipped。
 - instruction 明确要求先从 `openspec instructions ... --json` 读取 `planningHome.root`：MODIFIED step 1 必须读 `<planningHome.root>/openspec/specs/<capability-path>/spec.md`；直接修改既有 main spec 的 Purpose 也使用同一 resolved root。这里修的是 agent instruction 的 store-aware 路径，不是 archive/sync 新增了 store 能力，也不代表 CLI 会自动检索 referenced store 的 spec 正文。
 - prose 可以按 `config.context` 中的语言要求本地化；结构标题（`## ADDED/MODIFIED/REMOVED/RENAMED Requirements`、`### Requirement:`、`#### Scenario:`）保持英文。规范性文字仍推荐 `SHALL`/`MUST`：normal 模式缺关键字是 warning，strict 模式会把 warning 计为失败。
-- **requirement 500 字符口径（v1.14.0，`1872982`）**：schema instruction 明确写出——`### Requirement:` 到首个 scenario 之间的描述文本控制在 500 字符内，`openspec validate` 会对超长描述报警（v1.14.1 起是 **WARNING**，此前 INFO；`--strict` 会失败，且 change 里的 **ADDED requirement 也受同一限制**，MODIFIED 不受限）。写新 requirement 时一个 requirement 只陈述一个行为：示例与边界情况移入 scenario；覆盖多个行为的 requirement 拆成多个 block。MODIFIED 下保持既有 requirement block 完整，不得为凑长度而拆分、删减或改写既有文本。
+- **requirement 500 字符口径（v1.14.0 `1872982`，v2.1.1 #2265 收紧 MODIFIED）**：schema instruction 明确写出——`### Requirement:` 到首个 scenario 之间的描述文本控制在 500 字符内，`openspec validate` 会对超长描述发出 **WARNING**（`--strict` 会失败）。具体判定分两类：
+  - **主 spec 与 change 里的 ADDED requirement**：正文长度 `> 500` 字符即触发 WARNING；
+  - **change 里的 MODIFIED requirement（v2.1.1 #2265，`validator.ts:789-801`）**：当 `nextText.length > 500 && nextText.length > currentTextLength`——即 **MODIFIED requirement 正文总长度超过 500 字符，且比主 spec 里的基线更长（哪怕只多 1 个字符）**时触发 WARNING；若正文虽超过 500 字符但未超过主 spec 基线（持平或缩短），则不报警。
+  写新 requirement 时一个 requirement 只陈述一个行为：示例与边界情况移入 scenario；覆盖多个行为的 requirement 拆成多个 block。MODIFIED 下仍须保持既有 requirement block 完整，需要扩写行为细节时优先放进 scenario 而非继续拉长超长描述段。
 
 **specs 的写入方式（v1.14.1 #2037）**：instruction 的首句原文是 `Write the spec files one at a time, so the user sees progress and an interrupted run keeps the files it already wrote:`——它把**理由**写进了同一句，既是格式要求也是收益说明。具体四条：
 
@@ -206,11 +209,11 @@ apply:
 
 ```text
 proposal (root)
-   ├──→ specs
-   │      │
-   └──→ design
-          │
-          └──→ tasks ──→ apply
+   ├──→ specs ───────┐
+   │                 │
+   └──→ design ──────┤
+                     ↓
+                   tasks ──→ apply
 ```
 
 注意：specs 和 design 是**并行**的（都只依赖 proposal），但 tasks 必须等它们**都完成**。

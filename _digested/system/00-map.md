@@ -38,9 +38,9 @@ OpenSpec 当前系统
    openspec templates
 
 4. Tool delivery
-   global config profile + delivery
-   skills / commands
-   per-tool command adapters
+   global config profile + skillsScope
+   skills（全局 ~/.agents/skills/ 或项目 .agents/skills/ + 工具目录链接）
+   skills 包安装器（command adapters 仅留作 1.x 旧文件清理）
 
 5. Store coordination
    global store registry
@@ -58,7 +58,7 @@ OpenSpec 当前系统
 | Repo-local planning | 这个 repo 当前承认什么规格？这次 change 准备怎么改？ | `openspec/specs/`、`openspec/changes/` |
 | Schema runtime | 一次 change 应该有哪些 artifact，依赖关系是什么？ | `schema.yaml`、templates |
 | Agent runtime API | agent 此刻应该写什么、能写什么、缺什么？ | `status` / `instructions` JSON |
-| Tool delivery | 哪些 workflow 以什么形式交给哪个 coding agent？ | global config、skills、commands |
+| Tool delivery | 哪些 workflow 以什么作用域交给哪个 coding agent？ | global config、skills（1.x 另有 commands，v2.0.0 起不再生成） |
 | Store coordination | 哪些其他仓库的 specs 与当前项目相关？agent 怎么引用它们？ | `<globalDataDir>/stores/registry.yaml`、`openspec/config.yaml` references、working set |
 
 ## 现有专题怎么分工
@@ -96,9 +96,9 @@ internal-spec-driven/
 | workflow runtime API | `src/commands/workflow/` |
 | artifact graph | `src/core/artifact-graph/` |
 | project config | `src/core/project-config.ts` |
-| global config/profile/delivery | `src/core/global-config.ts`、`src/core/profiles.ts` |
-| init/update 投递 | `src/core/init.ts`、`src/core/update.ts` |
-| tool command adapters | `src/core/command-generation/` |
+| global config / profile | `src/core/global-config.ts`、`src/core/profiles.ts` |
+| init/update 与技能安装 | `src/core/init.ts`、`src/core/update.ts`、`src/core/skill-installer.ts`、`src/core/global-skills.ts` |
+| 旧 command 路径知识（清理用） | `src/core/command-generation/` |
 | store 状态 | `src/core/store/` |
 | root 选择 | `src/core/root-selection.ts` |
 | references 索引 | `src/core/references.ts` |

@@ -8,7 +8,7 @@
 
 编号按**难度层级分配号段首位**：初级 `0N`、中级 `1N`、高级 `2N`、实战 `5N`；`00` 是导读，`90`/`99` 是附录与 FAQ。
 
-术语上先记住一点：`openspec` 是终端 CLI 和文件状态机制。`/openspec-*` 是 Claude Code 等 command adapter 的入口，不是所有宿主的通用语法；Codex 使用 `$openspec-*` skills。`opsx` 不是另一个产品。
+术语上先记住一点：`openspec` 是终端 CLI 和文件状态机制。`/openspec-*` 是 Claude Code、Cursor、Zed 等宿主里调用 **skill**（技能）的写法，不是所有宿主的通用语法——Codex 使用 `$openspec-*` 调用同一组 skills。`opsx`（`/opsx:*`）不是另一个产品，只是 1.x 时代的斜杠命令命名空间，已在 OpenSpec 2.0 移除。
 
 ## 目录结构
 

@@ -97,6 +97,16 @@ operations:
 
 **注意**：OpenSpec 的 rules 使用**结构化格式**（按 artifact 分类）。写成纯文本不会报错——它会被静默忽略，只在 stderr 留一条 `Invalid 'rules' field in config (must be object)` 这类 warning。也就是说**配置看着写进去了，实际什么都没注入**，比直接报错更难发现。Apply/Archive 不是 artifact rule consumers：它们读取 project `context` 以及 `operations.apply/archive.guidance`；`rules.apply` / `rules.archive` 不会成为 operation 指令。
 
+### `config.yaml` 全部 8 个顶层字段的边界
+
+`openspec/config.yaml`（也认 `config.yml`，同目录并存时 `.yaml` 优先）一共只识别 **8 个顶层字段**，按职责分三组（详细字段写法与校验表见 [23](23-高级-config-yaml-怎么写到真正好用.md)）：
+
+| 分组 | 字段 | 管什么边界 |
+|------|------|------------|
+| **工作流与提示注入**（日常手写） | `schema`、`context`、`rules`、`operations` | 默认 schema 选择、全局背景（50 KB 上限）、按 artifact ID 分流的规则、Apply/Archive 操作建议 |
+| **跨仓库 store 关联**（多仓可选） | `references`、`store` | `references` 声明只读引用的上游 store；`store` 仅在无本地 `specs/`/`changes/` 的 config-only 目录下作为规划 root 指针（详见 [24](24-高级-store-跨仓库协同.md)） |
+| **工具与技能投递偏好**（多由 CLI 维护） | `skillsScope`、`githubCopilot.cloudAgent` | `skillsScope`（`project` / `global`）记录团队技能存放作用域；`githubCopilot.cloudAgent`（布尔值）记录是否生成 GitHub Copilot 云端 coding-agent 文件 |
+
 ### config.yaml vs schema：对比表
 
 | 维度 | config.yaml | schema |
@@ -338,8 +348,8 @@ profile 和 schema 不是一回事。
 
 profile 管的是：
 
-- 你装哪些 workflow 命令
-- 默认是 core 6 个，还是更多扩展动作
+- 你安装哪些 workflow 技能（skills）
+- 默认是 `core` 6 个，还是在 `custom` 下从全部 12 个技能中自选扩展动作
 
 ### schema 管什么
 
@@ -360,23 +370,23 @@ schema 管的是：
 **场景**：你想用 OpenSpec，但只想要最简单的工作流。
 
 1. **选 profile**：`openspec config profile` 选 `core` 或 `custom`
-   - core：你只有 6 个命令（propose/explore/apply/update/sync/archive）
-   - custom：自选命令（可以额外启用 new/continue/ff/verify/bulk-archive/onboard 等）
+   - core：你只有 6 个技能（propose/explore/apply/update/sync/archive）
+   - custom：自选技能（可以额外启用 new/continue/ff/verify/bulk-archive/onboard 等）
    - 这是"入口层"的选择
 
    会展开 custom profile 的依赖：若选择 `archive` 或 `bulk-archive` 却漏了 `sync`，CLI 会在第一个依赖它的 workflow 前自动插入 `sync`；已有 `sync` 时不重复、不重排。例如 `[verify, archive]` 解析为 `[verify, sync, archive]`。这不会把 custom 降级成 core，也不会自动加入其他 core workflows。
 
-**⚠️ 警告**：
-- 切换 profile 可能会删除或添加 workflow 文件
-- 从 custom 切换回 core 会删除额外的 workflow 文件
-- 切换前确保你理解影响，建议先提交当前更改
+**切换注意**：
+- 切换 profile 后，需要运行 `openspec update` 按当前作用域刷新技能目录（默认 `global` 作用域刷新 `~/.agents/skills/` 及各工具全局目录；`project` 作用域刷新仓库内 `.agents/skills/` 及各工具链接）
+- 从 `custom` 切回 `core` 会删除新 profile 不再包含的额外技能文件夹
+- 若项目使用 `project` 作用域将技能提交在仓库里，建议切换前先确认工作区干净
 
 2. **选 schema**：在 `config.yaml` 里写 `schema: spec-driven`
    - 结果：每个 change 都有 proposal/specs/design/tasks 四个 artifact
    - 这是"结构层"的选择
 
 **关系**：
-- profile 决定"你能用哪些命令"
+- profile 决定"你能用哪些工作流技能"
 - schema 决定"每个 change 长什么样"
 - 它们是独立的两个维度
 

@@ -12,22 +12,22 @@
 
 | 原因 | 说明 | 下一步 |
 |---|---|---|
-| 缺 required artifact | `apply.requires` 中的 artifact 没有输出文件。 | 用 `/openspec-continue-change` 或 openspec-continue-change 补 artifact。 |
-| 缺 tracking file | schema 配了 `tracks: tasks.md`，但文件不存在。 | 生成或修复 tasks artifact。 |
-| tracking file 没有 checkbox | `tasks.md` 存在，但没有 `- [ ]` / `- [x]` task。 | 添加 tasks 或重新生成 tasks.md。 |
+| 缺 required artifact | `apply.requires` 中的 artifact 没有输出文件（同时返回按构建顺序排列的 `missingPrerequisites`）。 | 展示缺失项与 CLI `instruction` 给出的恢复命令 `openspec instructions <target> --change <name>`（保留 `--store`），不要自行假定别的工件已 ready。 |
+| 缺 tracking file | schema 配了 `tracks: tasks.md`，但文件不存在。 | 按 CLI `instruction` 给出的 `openspec instructions <tasks-id> --change <name>` 生成或修复 tracking file。 |
+| tracking file 没有可用 checkbox 任务 | 文件不可读、没有任何复选框，或复选框后没有任务文本。 | 补充带描述的 checkbox 任务或重建 tracking file。 |
 
-注意：只有缺 required artifact 时才一定有 `missingArtifacts`。tracks 文件缺失或无 checkbox 也会 blocked，但不一定带 `missingArtifacts`。
+注意：只有缺 required artifact 时才一定有 `missingArtifacts`。tracks 文件缺失、不可读或无可用 checkbox 任务也会 blocked，但不一定带 `missingArtifacts`。
 
 ## all_done：不需要再实施
 
-如果 `state: "all_done"`，说明 tracking file 里的 checkbox tasks 都完成了。
+如果 `state: "all_done"`，说明 tracking file 里的跟踪任务（checkbox）都完成了。
 
-agent 不应该继续改代码，而应该：
+agent 不应该继续改代码，也不应把 `all_done` 直接等同于立即归档，而应该：
 
 ```text
-总结完成状态
-建议运行测试 / review
-建议 /openspec-archive-change
+报告全部跟踪任务已完成（All tracked tasks are complete）
+建议归档前按需复核或验证（Review or verify the change as appropriate before archiving）
+待用户复核确认后再触发归档（openspec archive 或 openspec-archive-change）
 ```
 
 archive 会合并 specs 并移动 change，这是后续动作。
@@ -106,7 +106,7 @@ Options:
 
 ## 参考来源
 
-源码引用基于 commit `ff4576f`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

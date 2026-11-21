@@ -12,7 +12,7 @@
 
 ## 先定位：日常工作流圈里，archive 是哪一步
 
-日常四步 **explore → propose → apply → archive**：前三步是 `/opsx:` slash 技能（agent 驱动），**archive 是 `openspec` CLI 命令**——也是这四步里**唯一会写主 spec**的一步（specs 只在这一步更新）。`validate`/`list`/`view` 是另一类 CLI 工具命令，只读不写、不在这个圈里（CLI/slash 完整对照表见 `README.md`）。
+日常四步 **explore → propose → apply → archive**：前三步是 `openspec-*` 技能（agent 驱动，1.x 写作 `/opsx:*` 命令），**archive 是 `openspec` CLI 命令**——也是这四步里**唯一以确定规则写主 spec**的一步（specs 常规只在这一步更新）。`validate`/`list`/`view` 是另一类 CLI 工具命令，只读不写、不在这个圈里（CLI/skill 完整对照表见 `README.md`）。
 
 所以本章讲"specs 怎么产生"，本质上就是讲 **archive 这一步内部发生了什么**。
 
@@ -25,19 +25,19 @@ openspec/changes/<id>/specs/<capability-path>/spec.md   ← delta（提案要改
    findSpecUpdates()        把每个 delta path 配对到 openspec/specs/<path>/spec.md
         ▼
    buildUpdatedSpec()       按顺序 RENAMED → REMOVED → MODIFIED → ADDED 重写主 spec
-        │   匹配键 = normalizeRequirementName(标题) = 标题.trim()
+        │   匹配键 = normalizeRequirementName(标题) = 剥收尾 # run 后 .trim()
         ▼
    writeUpdatedSpec()       落盘 openspec/specs/<cap>/spec.md
         ▼
    moveDirectory()          把 change 移到 openspec/changes/archive/<YYYY-MM-DD>-<id>/
 ```
 
-两个入口都汇到同一个 `buildUpdatedSpec`：
+两条更新主 spec 的路径职责不同（只有 `openspec archive` 走上面的确定性 `buildUpdatedSpec` 引擎）：
 
 | 入口 | 性质 | 是否移动 change 到 archive |
 |------|------|----------------------------|
-| `openspec archive <change>` | **唯一的确定写入 CLI 动词**；写前全量 fail-fast，mutation 后失败用 snapshot 尽力回滚 | 是 |
-| host 的 sync workflow（Codex: `$openspec-sync-specs`；Claude Code: `/openspec-sync-specs`，1.x 写作 `/opsx:sync`） | LLM 读 delta + 主 spec 再对齐，非确定、幂等 | 否（它只改 spec） |
+| `openspec archive <change>` | **唯一的确定写入 CLI 动词**（内部走 `buildUpdatedSpec`）；写前全量 fail-fast，mutation 后失败用 snapshot 尽力回滚 | 是 |
+| host 的 sync workflow（`openspec-sync-specs`：Claude Code `/openspec-sync-specs`、Codex `$openspec-sync-specs`；1.x 写作 `/opsx:sync`） | **不调 `buildUpdatedSpec`**，由 LLM 读 delta + 主 spec 直接编辑主 spec，随后跑 `openspec validate --specs`；非确定、幂等 | 否（它只改主 spec） |
 
 > 注意：**没有 `openspec apply` 命令**。delta→主 spec 的合并（`findSpecUpdates` → `buildUpdatedSpec` → `writeUpdatedSpec`，都在 `src/core/specs-apply.ts`）是 `archive` 内部调用的能力，不是一个对外 CLI 动词（`src/cli/index.ts` 里 `.command('archive')` 有、`.command('apply')` 没有）。对外能以确定规则写主 spec 的路径就 `archive` 一条；想在归档前做更灵活的整段重写，走 host 的 sync workflow（它本质是让 agent 手动改 spec）。
 
@@ -69,7 +69,7 @@ export function normalizeRequirementName(name: string): string {
 推论（每一条都会在 `02` 变成真实的漂移来源）：
 
 - **没有 ID** ⇒ 一个 requirement 的一生，全靠这行标题文本维系。
-- **只 trim** ⇒ 改一个字母的大小写、换个标点，规范化都"消化不掉"，会被当成**另一个** requirement。
+- **仅剥收尾 `#` run + trim** ⇒ 改一个字母的大小写、换个标点，规范化都"消化不掉"，会被当成**另一个** requirement。
 - delta 的 `MODIFIED`/`REMOVED`/`RENAMED` 要命中主 spec 里的 requirement，靠的就是用这行标题文本去 `Map` 里精确查找。只对已同步完成的 REMOVED/RENAMED 放宽为 no-op；其余找不到仍需诊断（见 `04`）。
 
 一个容易踩的细节：**delta 的段落标题大小写不敏感，但 requirement 名字的大小写敏感**。
@@ -77,7 +77,7 @@ export function normalizeRequirementName(name: string): string {
 ```text
 ## ADDED Requirements          ← 段头：getSectionsCaseInsensitive()，大小写不敏感
                                 （写成 "## added requirements" 也能认）
-### Requirement: Skill Gen     ← 名字：normalizeRequirementName()，只 trim
+### Requirement: Skill Gen     ← 名字：normalizeRequirementName()，剥收尾 # run + trim
                                 （"Skill Gen" 与 "skill gen" 是两个不同 key）
 ```
 
@@ -114,8 +114,8 @@ Aborted. No files were changed.
 
 注意几点：
 
-- 精确名找不到时报 `... - not found`。**近似名提示只在两个操作上有**：`REMOVED`（`specs-apply.ts:521`）和 `RENAMED`（`:465`），文案是 `... not found, but "### Requirement: <真实名>" exists; fix the header to match it exactly`。
-- **`MODIFIED` 没有这个提示**——`specs-apply.ts:540` 只抛裸的 `MODIFIED failed for header "### Requirement: <名>" - not found`。所以上面那次 `cli-init MODIFIED failed ... - not found` 就是全部信息，得自己去主 spec 里比对标题的大小写/空白。碰到 MODIFIED 找不到目标时，先用 grep 把主 spec 的 `### Requirement:` 全列出来人工比对，或者改用 RENAMED 让工具替你定位近似名。
+- 精确名找不到时报 `... - not found`。**近似名提示在 `REMOVED`（`specs-apply.ts:535-538`）与 `RENAMED`（`:475-482`、目标重名近似 `:493-500`）上有**，文案是 `... not found, but "### Requirement: <真实名>" exists; fix the header to match it exactly`。
+- **`MODIFIED` 没有这个提示**——`specs-apply.ts:555` 只抛裸的 `MODIFIED failed for header "### Requirement: <名>" - not found`。所以上面那次 `cli-init MODIFIED failed ... - not found` 就是全部信息，得自己去主 spec 里比对标题的大小写/空白。碰到 MODIFIED 找不到目标时，先用 grep 把主 spec 的 `### Requirement:` 全列出来人工比对，或者改用 RENAMED 让工具替你定位近似名。
 - 因为是原子的，连本来能成功创建的 `profiles`/`propose-workflow` 也一并没动。一个 delta 坏，整批不落地。
 - 这种"找不到"几乎都来自身份脆弱性：主 spec 的标题被改过、被别的 archive 重写过、或 delta 本身就指向一个从没存在过的名字。
 

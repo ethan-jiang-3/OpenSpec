@@ -46,10 +46,10 @@ OpenSpec Awareness 段里还有 spec 侧和 capture 侧的命令：
 
 | 用途 | 命令 | 何时 |
 |---|---|---|
-| 清点 capability | `openspec list --specs` | 判断讨论是否触及既有 capability |
-| 读 spec 正文 | `openspec show "<spec-id>" --type spec` | 用户提到某能力时 |
-| 项目上下文 | 读 `openspec/config.yaml` 的 `context` | 需要遵守项目约定时 |
-| 落地捕获 | `openspec new change "<name>"` → `openspec status --change "<name>" --json` → `openspec instructions <artifact-id> --change "<name>" --json` | 用户确认要捕获成 change 时 |
+| 清点 capability | `openspec list --specs`（可带 `--json`） | 判断讨论是否触及既有 capability |
+| 两步读 spec | 先 `openspec show "<spec-id>" --type spec --json --no-scenarios` 看概要，做覆盖决策前再 `openspec show "<spec-id>" --type spec` 读含 scenarios 全文 | 涉及某既有能力时 |
+| 项目上下文 | 读 `<root.path>/openspec/config.yaml`（或 `config.yml`）的 `context` 与 `rules` | 需要遵守项目约定或写对应 artifact 时 |
+| 落地捕获 | `openspec new change "<name>"` → `openspec status --change "<name>" --json` → `openspec instructions <artifact-id> --change "<name>" --json` | 用户确认或主动要求捕获成 change 时 |
 
 ## 时序图
 
@@ -84,7 +84,7 @@ sequenceDiagram
     end
 
     alt 自然收束
-        MD-->>User: "Ready to start? I can create a change proposal."
+        MD-->>User: "Would you like me to capture this as a change?"
     else 继续探索
         MD-->>User: 继续对话，无需 formalize
     end
@@ -92,7 +92,7 @@ sequenceDiagram
 
 ## 四个 entry point 场景
 
-template 里硬编码了四种典型入口的示例对话（`## Handling Different Entry Points`，explore.ts L253/L276/L307/L324）。**没有"空输入"这一种**——直接进入 explore mode 而不给具体入口时，template 不做特殊处理，走自由对话：
+template 里硬编码了四种典型入口的示例对话（`## Handling Different Entry Points`，`explore.ts` L228/L251/L282/L299）。**没有"空输入"这一种**——直接进入 explore mode 而不给具体入口时，template 不做特殊处理，走自由对话：
 
 | 入口 | 用户说什么 | agent 怎么回应 |
 |---|---|---|
@@ -123,25 +123,25 @@ template 里写了 9 条 guardrail：
 
 | Guardrail | 类型 |
 |---|---|
-| **Don't implement** — 绝不写代码或实现功能 | 硬约束 |
+| **Don't implement** — 绝不写业务代码或实现功能；**创建或编辑工作流配置（schemas、templates、`openspec/config.yaml`）同样属于改动而非思考，一律禁止** | 硬约束 |
 | **Don't fake understanding** — 不清楚就深挖 | 软约束 |
 | **Don't rush** — 探索是思考时间，不是任务时间 | 姿态 |
 | **Don't force structure** — 让模式自然浮现 | 姿态 |
-| **Don't auto-capture** — 提议保存洞察，但不替用户决定。只读工具和命令不需要确认；在第一次写操作之前（含 `openspec new change`），命名拟创建/编辑的 artifacts 或文件，ask a direct yes/no question，在单独的 user message 中等待确认。答案设计/澄清问题不是写入授权。 | 硬约束 |
+| **Don't auto-capture** — 提议保存洞察，但不替用户决定。只读工具和命令不需要确认；在第一次写操作之前（含 agent 主动提议时的 `openspec new change`），命名拟创建/编辑的 artifacts 或文件，ask a direct yes/no question，在单独的 user message 中等待确认。回答设计/澄清问题不是写入授权。 | 硬约束 |
 | **Don't manually scaffold changes** — 绝不手建 `openspec/changes/<name>/`，一律走 `openspec new change "<name>"`（必要时 `--store <id>`），好让 `.openspec.yaml` 这类必需元数据先于工件落盘 | 硬约束 |
-| **Do visualize** — 好图胜过千言 | 鼓励 |
+| **Do visualize** — 好图胜过千言（且仅用纯 ASCII 字符画图，防止跨终端宽度漂移） | 鼓励 |
 | **Do explore the codebase** — 扎根现实 | 鼓励 |
 | **Do question assumptions** — 包括用户的和你自己的 | 鼓励 |
 
-## v1.12.0–v1.13.1 行为更新
+## 历史行为演进
 
 | 变更 | 版本 | 说明 |
 |---|---|---|
-| spec inventory | v1.13.0 | explore 现在显式列出 spec inventory（`openspec list --specs` + store-aware 读取），不再把 in-flight changes 当 specs 读 |
-| capture 即确认 | v1.13.1 | v1.11.0 的「单独 yes/no 写入确认」演进：用户明确要求 capture 一个 change 即视为该次写入的确认；其余写操作仍需命名 + 直接问 + 单独等确认 |
-| handoff 点名 | v1.13.1 | 每次交接都点名 `/opsx:propose`、`/opsx:apply`，不再让用户猜下一步 |
 | 聚焦式 discovery 问题 | v1.12.0 | 问依赖感知的问题、推荐默认值，先查仓库再问用户已有的事实 |
+| spec inventory + 两步读取 | v1.13.0 | 显式列出 spec inventory（`openspec list --specs` + `show --no-scenarios` → 全文读取），不再把 in-flight changes 当 specs 读 |
 | 不再声称「绝不写文件」 | v1.13.0 | `b9281652` 修正了 explore 指令中过度承诺的措辞 |
+| capture 即确认 | v1.13.1 | 用户主动明确要求捕获为新 change 即视为该次写入的确认；其余写操作仍需命名 + 直接问 + 单独等确认 |
+| 自然语言交接（移除命令绑定） | v2.0.0 | 所有交接常量（`explore.ts:33-50`）改为工作流无关的自然语言表述（如 `offer to capture the discussion as a change`），不再引用已移除的 `/opsx:*` 斜杠命令 |
 
 ## 和 FAQ 的衔接
 
@@ -149,16 +149,19 @@ FAQ `03_explore-to-propose-change/` 是从 "Explore 怎么判断是否 propose" 
 
 ## 源码锚点
 
-| 内容 | 行号范围（explore.ts，v1.14.3） |
+| 内容 | 行号范围（`explore.ts`，共 587 行） |
 |---|---|
-| SkillTemplate 定义 | L76-L398 |
-| CommandTemplate 定义 | L401-L612（文件 612 行） |
-| 捕获表 + 默认 schema 限定 | 限定句 L219-L220 / L555-L556；表头 L222 / L558；表行 L223-L229 / L559-L565 |
-| capture 的输出路径选择（步骤 3） | skill 版 L198；command 版 L534 |
-| `STORE_SELECTION_GUIDANCE` 注入（import 在 L9） | L86, L413 |
-| `## OpenSpec Awareness` 段 | L157-L238 / L491-L575 |
-| 四个 entry point 示例 | L253, L276, L307, L324 |
-| `## Guardrails` 段 | L384-L393 / L600-L609 |
+| 交接文案常量 | L33-L50 |
+| SkillTemplate 定义 | L51-L374 |
+| CommandTemplate 定义 | L376-L587 |
+| `STORE_SELECTION_GUIDANCE` + `PROJECT_ROOT_GUARD` 注入 | L61-L63, L388-L390 |
+| 纯 ASCII 画图规范 | L122-L123, L456-L457 |
+| `## OpenSpec Awareness` 段 | L132-L212 / L466-L548 |
+| capture 的输出路径选择（步骤 3） | skill 版 L173；command 版 L509 |
+| 捕获表 + 默认 schema 限定（#2086） | 限定句 L195 / L531；表 L197-L205 / L533-L541 |
+| 四个 entry point 示例 | L228, L251, L282, L299 |
+| `## Ending Discovery` 段 | L330-L355 / L562-L571 |
+| `## Guardrails` 段 | L359-L369 / L575-L585 |
 
 - **捕获表限定默认 schema（v1.14.2，`9cb5ba8c` #2086）**：捕获表与示例 offer 标注为默认 spec-driven schema；换 schema 时按 `artifactPaths` 选该 schema 定义的工件并点名，绝不创建 schema 未定义的文件。
 - **输出路径先定后写（v1.14.3，`276d0150` #2104）**：capture 步骤 3 与 propose/ff/continue 同口径——先定并校验 `changeRoot` 内的具体路径，再创建。

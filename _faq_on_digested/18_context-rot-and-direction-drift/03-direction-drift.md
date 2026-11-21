@@ -41,7 +41,7 @@
 
 ### ① `openspec validate` 规则集
 
-`--strict` 的语义【代码：`src/core/validation/validator.ts:1020-1022`】：
+`--strict` 的语义【代码：`src/core/validation/validator.ts:1062-1064`】：
 
 ```ts
 const valid = this.strictMode
@@ -49,9 +49,9 @@ const valid = this.strictMode
   : errors === 0;
 ```
 
-**ERROR（默认就失败）**：requirement 名在同一文件内重复；主 spec 里出现 delta 头；requirement 落在 `## Requirements` 之外；requirement 无正文；**零 scenario**；**MODIFIED 丢了主 spec 仍有的 scenario**；跨节声明冲突（MODIFIED+REMOVED / MODIFIED+ADDED / ADDED+REMOVED）；FROM/TO 不配对；`specs/` 根下放 delta `spec.md`；非 `spec.md` 里写 delta 节；`skip_specs` marker 与 `specs/` 下文件冲突；零 delta（除非 `skip_specs`）。
+**ERROR（默认就失败，或直接退出 1）**：`openspec/config.yaml`（或 `.yml`）不可读或 YAML 解析失败（`#2127`，`validate.ts:123-141` 以 `unreadable_config` / `unparseable_config` 直接 exit 1）；delta 里 requirement 落在未识别的 `## ... Requirements` 标题（如 `## DEPRECATED Requirements`、`## Add Requirements`）下（`#2207`，`validator.ts:260-270`，archive 同样拒绝）；requirement 名在同一文件/节内重复（含 `#2133` 无空格 `###Requirement:`）；主 spec 里出现 delta 头或 requirement 落在 `## Requirements` 之外；requirement 无正文；delta 中 ADDED/MODIFIED **零 scenario**（或空 scenario 头）；**MODIFIED 丢了主 spec 仍有的 scenario**；跨节声明冲突（MODIFIED+REMOVED / MODIFIED+ADDED / ADDED+REMOVED / MODIFIED 引用旧 RENAMED 名 / RENAMED TO 撞 ADDED）；FROM/TO 不配对或为空；`specs/` 根下放 delta `spec.md`；非 `<cap>/spec.md` 文件里写 delta 节；delta 节无条目或文件无 delta 节；`skip_specs` marker 非布尔或与 `specs/` 下任意文件冲突；零 delta（除非 `skip_specs: true`）；主 spec 不可读导致无法核对 MODIFIED。
 
-**WARNING（只有 `--strict` 才失败）**：requirement 正文 >500 字符；正文缺 SHALL/MUST；Purpose 是占位符；Purpose <50 字符；未知元数据键。
+**WARNING（只有 `--strict` 才失败）**：主 spec 或 ADDED requirement 正文 `>500` 字符，以及 **MODIFIED requirement 正文总长 `>500` 字符且比主 spec 基线更长**（`#2265`，`nextText.length > 500 && nextText.length > currentTextLength`）；`Scenario:` 缺少 `WHEN`/`GIVEN` 触发步或 `THEN` 结果步（`#2079`）；delta 中归档不会带走的文本 `unappliedContent`（`#2054`；首行闭合且含真实键值的顶部 YAML frontmatter 块自 `#2273` 起豁免）；散文标题（如 `## Notes`）或首个 `## ` 之前的孤立 requirement；非空 requirement 正文缺 `SHALL`/`MUST`；主 spec requirement 零 scenario；非 `Requirement:` 的杂散 `### ` 标题；Purpose 是 `TBD`/`TODO` 占位符或 `<50` 字符；`.openspec.yaml` 未知元数据键（小写 `x-*` 除外）；任务文件无 checkbox 或编号乱序。
 
 `validate` 的完整旗标【实测：读 help】：`--all`、`--changes`、`--specs`、`--archived`、`--report full|findings`、`--type`、`--strict`、`--json`、`--concurrency <n>`、`--no-interactive`、`--store`。
 
@@ -61,47 +61,47 @@ const valid = this.strictMode
 
 ```text
 写作期  openspec validate
-        → level: ERROR（validator.ts:779-786）【代码】，直接 exit 1
+        → level: ERROR（validator.ts:804-813）【代码】，直接 exit 1
         → "MODIFIED \"X\" omits scenario(s) the current spec still has: \"…\".
            … Copy the omitted scenarios into the MODIFIED block
            (a MODIFIED requirement replaces the whole block,
             so archive refuses to drop them)."
 
 归档期  openspec archive
-        → 硬抛错拒绝合并（specs-apply.ts:549-554）【代码】
+        → 硬抛错拒绝合并（specs-apply.ts:564-569）【代码】
         → "… current spec contains scenario(s) not present in the modified block:
            \"…\". … Refresh the change spec before archiving to avoid dropping
            scenarios."
 ```
 
-两侧共用同一个函数，**所以不可能给出不一致的判定**【代码】：`src/core/parsers/requirement-blocks.ts:644-655` 注释明说 *"which archive (refusing to apply the block) and validate (reporting the same loss at authoring time) both go through, so the two cannot disagree"*。
+两侧共用同一个函数，**所以不可能给出不一致的判定**【代码】：`src/core/parsers/requirement-blocks.ts:724-731` 注释明说 *"which archive (refusing to apply the block) and validate (reporting the same loss at authoring time, #1477) both go through, so the two cannot disagree"*。
 
-而且是**多重集感知**的【代码：`diffScenarioNames`，`requirement-blocks.ts:610-640`】：同名 scenario 出现 N 次 vs M 次，会算 `max(0, N−M)`，不会因为"名字出现过"就误判为已覆盖。
+而且是**多重集感知**的【代码：`diffScenarioNames`，`requirement-blocks.ts:687-717`】：同名 scenario 出现 N 次 vs M 次，会算 `max(0, N−M)`，不会因为"名字出现过"就误判为已覆盖。
 
 > **这一条直接命中"隔一阵子换方向"的场景**：主 spec 已经往前走了，你手里陈旧的 change 想合并——**工具不让你静默覆盖，它让你先 refresh**。
-> **本仓实测**：scenario 丢失共 **10 条**，跨 **5 个 change**（`add-devin-desktop-support`、`add-global-install-scope`、`add-skill-cli-auto-approval`、`fix-opencode-commands-directory`、`make-codex-skills-only`）【实测】。
+> **本仓实证**：上游在 PR #2128（`ebdd9a53`）集中归档历史积压 change 时，正是被这道闸门拦下了 4 份陈旧 delta（清理前曾有 10 条 scenario 丢失 ERROR），被迫逐一重基线补齐后才得以归档；当前工作树保留的 4 个活跃 change 已清零此项 ERROR【实测】。
 
 ### ③ 归档合并干跑预检（免费，INFO）
 
-`findArchiveBlockers`【代码：`src/core/validation/validator.ts:958-1013`】对每个 delta **真的调一次** `buildUpdatedSpec(update, changeName, {silent:true})`，合并若抛错则报【实测】：
+`findArchiveBlockers`【代码：`src/core/validation/validator.ts:1000-1055`】对每个 delta **真的调一次** `buildUpdatedSpec(update, changeName, {silent:true})`，合并若抛错则报【实测】：
 
 ```text
 INFO  Archive would refuse this delta: cli-init MODIFIED failed for header
       "### Requirement: Skill generation per tool (…)" - not found
 ```
 
-级别是 **INFO，不阻塞**——代码注释解释了理由【代码：`validator.ts:951-957`】：
+级别是 **INFO，不阻塞**——代码注释解释了理由【代码：`validator.ts:994-999`】：
 
 ```text
 "INFO leaves the verdict unchanged: a missing target can be a typo or a
  requirement introduced by a sibling change that has not archived yet."
 ```
 
-这是"我离开一阵子，主 spec 被别的 change 改了"的**免费探测器**。本仓实测打出 **2 条**【实测】。
+这是"我离开一阵子，主 spec 被别的 change 改了"的**免费探测器**。本仓 `simplify-skill-installation` 实测实时打出 **2 条**（`cli-init` 与 `cli-update` 各 1 条）【实测】。
 
 ### ④ 全或无写入 + 写前校验
 
-`archive` 合并期【代码】：每个重建的 spec 在**任何文件被写之前**先过校验（`archive.ts:1872-1968`）；零计数的合并**跳过写入**（`archive.ts:2017-2021`，注释 *"Every operation was already synced: rewriting the file would only churn normalization differences into it."*）；输入做指纹（`1724-1736`）。**不可能半应用或覆盖并发编辑。**
+`archive` 合并期【代码】：每个重建的 spec 在**任何文件被写之前**先过校验（`archive.ts:1872-1968`）；零计数的合并**跳过写入**（`archive.ts:2018-2022`，注释 *"Every operation was already synced: rewriting the file would only churn normalization differences into it."*）；输入做指纹（`1724-1736`）。**不可能半应用或覆盖并发编辑。**
 
 > ⚠️ 注意：归档用的是**非严格**校验器（`archive.ts:73`、`1458`、`1879` 均为 `new Validator()`）【代码】，**所以 WARNING 永远不挡归档**。500 字符那条 WARNING 会一路穿过归档。
 
@@ -116,7 +116,7 @@ retire_capabilities: true
 
 理由是 *"the deletion is not recoverable from the working tree - only from git - so it is the author's call, not an inference from the shape of a delta."*【代码】
 
-还需通过校验器 oracle（唯一 error 必须是 `Spec must have at least one requirement`）+ 全文件 `unaccountedContent` 否决【代码：`archive.ts:118-170`】。
+还需通过校验器 oracle（唯一 error 必须是 `Spec must have at least one requirement`）+ 全文件 `unaccountedContent` 否决【代码：`archive.ts:118-170`】（`#2266` 放行了以 `<args>` 等类标签词开头的折行句子续行，但原始 HTML 块与独立标签行仍否决退役）。
 
 > ⚠️ **【代码】非【实测】**：我没有真跑一次删除 spec 的归档。
 
@@ -124,7 +124,7 @@ retire_capabilities: true
 
 ## B2 · `update-change` 一致性复核【软能力，但在 core profile】
 
-`src/core/templates/workflows/update-change.ts:79` 的定义就是"方向改了"【文档】：
+`src/core/templates/workflows/update-change.ts:41`（skill 模板）的定义就是"方向改了"【文档】：
 
 ```text
 "Update an OpenSpec change by revising its existing planning artifacts and
@@ -135,8 +135,8 @@ retire_capabilities: true
 
 两个决定性细节：
 
-- **`:124`** —— 只说 "update" 就跑**自洽复核**：*"read the existing artifacts and check them against each other for **contradictions, gaps, and duplication**."*
-- **`:128`** —— 复核是**双向**的：
+- **`:86`** —— 只说 "update" 就跑**自洽复核**：*"read the existing artifacts and check them against each other for **contradictions, gaps, and duplication**."*
+- **`:90`** —— 复核是**双向**的：
 
 ```text
 "check every other existing artifact against the drafted edit - in ANY direction:
@@ -145,7 +145,7 @@ retire_capabilities: true
  which artifacts may be revised."
 ```
 
-即"改了 tasks 可能得回头改 proposal"。配套的防抖与安全边界：`:137`"若已自洽则不提修订"；`:139-142`"本步骤执行全部写入，更早步骤不写任何 artifact"；用户拒绝的修订不写入；`:164-166`"不推进 frontier"。
+即"改了 tasks 可能得回头改 proposal"。配套的防抖与安全边界：`:99`"若已自洽则不提修订"；`:101-104`"本步骤执行全部写入，更早步骤不写任何 artifact"；用户拒绝的修订不写入；`:127`"不推进 frontier"。
 
 **但它不强制**：它是一段 prompt，靠模型执行；且不检测陈旧（见 §[02 A6](02-context-rot.md)）。
 
@@ -155,7 +155,7 @@ retire_capabilities: true
 
 三维检查：Completeness（含 REMOVED 反向检查、RENAMED 检查）、Correctness、Coherence。输出 CRITICAL/WARNING/SUGGESTION。**明确 advisory**【文档：`verify-change.ts:66` "Verification is advisory"】，**不阻塞归档**。
 
-默认 profile 里**没有**它，要用先开 expanded（见 §[04](04-usage.md)）。
+默认 `core` profile 里**没有**它，要用需通过 `openspec config profile` 交互勾选切到 **`custom` profile**（见 §[04](04-usage.md)）。
 
 ---
 
@@ -237,33 +237,33 @@ unlocks: ["tasks"]
 
 ## B5 · 跨 change：确实完全没有（且缺口是真的）
 
-### 已有提案，但未落地
+### 曾有提案，但未落地且已被删除
 
-`openspec/changes/add-change-stacking-awareness/proposal.md` 提出的正是这块：`dependsOn`/`provides`/`requires`/`touches`/`parent` 元数据 + `openspec change graph`。
+上游曾在 `openspec/changes/add-change-stacking-awareness/proposal.md`（PR #733）提出这块：`dependsOn`/`provides`/`requires`/`touches`/`parent` 元数据 + `openspec change graph`，随后在 PR #2128（`ebdd9a53`）将其作为从未实现的陈旧提案直接删除。
 
-**实测确认它没落地**【实测】：
+**实测确认它在源码中零落地**【实测】：
 
 ```text
 dependsOn     在 src/ 中 0 命中
-provides/touches  各有 2 处命中，但全是注释里的英文散文（"the caller provides…"），非元数据字段
-parent        87 处命中，全是路径/文件系统语义（parent directory），非 change 元数据
+provides/touches  分别 2 处与 6 处命中，全是注释散文（"the caller provides…"），非元数据字段
+parent        89 处命中，全是路径/文件系统语义（parent directory），非 change 元数据
 openspec change --help → 只有 show / list / validate，无 graph
-该 change 自身卡在 3/4 artifacts（缺 design）
 ```
 
 > ⚠️ 初版这里写成"五个字段全部 0 命中"，**不准确**——`parent` 是个常见英文词，命中很多但与 change 元数据无关。正确说法是：**这些字段作为 change 元数据一个都没落地**。
 
-### 本仓实测：30 个活跃 change 抢 34 个 capability
+### 本仓实测：4 个活跃 change 全部撞在同一对核心 capability 上
 
 ```text
-cli-init           被 8 个 change 同时改   ← 8 路争用
-cli-update         被 6 个
-ai-tool-paths      被 6 个
-command-generation 被 5 个
-cli-validate       被 4 个
-cli-archive        被 4 个
+cli-init              被 4 个活跃 change 全部同时改   ← 4 路 100% 争用
+cli-update            被 4 个活跃 change 全部同时改   ← 4 路 100% 争用
+ai-tool-paths         被 1 个
+cli-artifact-workflow 被 1 个
+cli-config            被 1 个
+profiles              被 1 个
+propose-workflow      被 1 个
 ────────────────────────────────────────────
-34 个目标里 20 个是【已存在的主 spec】→ 走 MODIFIED → 漂移风险区
+7 个目标里 5 个是【已存在的主 spec】→ 走 MODIFIED → 漂移风险区
 ```
 
 而 `openspec validate --all --json` 的 issues 里，**命中 `overlap|conflict|stack|depend` 的条数是 0**【实测】。
@@ -286,7 +286,7 @@ cli-archive        被 4 个
 
 | 缺口 | 证据 |
 |---|---|
-| **近似重复 capability 零检测** | 所有重复检查都**只在一个文件内**。**ADDED-only 的 delta 写错 capability 路径 → 静默新建一个 capability**，连 "did you mean" 都没有（只有 MODIFIED/RENAMED 指向不存在路径才 abort，`specs-apply.ts:394-398`）【代码】 |
+| **近似重复 capability 零检测** | 所有重复检查都**只在一个文件内**。**ADDED-only 的 delta 写错 capability 路径 → 静默新建一个 capability**，连 "did you mean" 都没有（只有 MODIFIED/RENAMED 指向不存在路径才 abort，`specs-apply.ts:409-413`）【代码】 |
 | **三个静默 no-op** | ① REMOVED 一个不存在的名字 → 仅 warning，exit 0；② RENAMED 已同步（FROM 没了、TO 在）→ **无任何警告**；③ ADDED 与现有块完全相同 → 无警告。**陈旧的 delta 看起来跟成功一样**【代码】 |
 | **无陈旧/废弃/TTL/墓碑** | `SpecSchema` 只有 name/overview/requirements/metadata；无 `deprecated:`/`status:`/`superseded_by`/TTL。`git log --diff-filter=D -- openspec/specs` 显示 **5 个 spec.md 被删过**（cli-diff + 4 个 workspace-*），而 `openspec/specs/` 里**没有任何记录**说明它们存在过【实测】 |
 | **无 spec↔code 漂移检测** | `verify` 是 advisory prompt；`openspec doctor` 的 "drift" 是 store 检出物的 **git upstream 落后**（`src/core/relationship-health.ts:122-136`），不是规格漂移【代码】 |

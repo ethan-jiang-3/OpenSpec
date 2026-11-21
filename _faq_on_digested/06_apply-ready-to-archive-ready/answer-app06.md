@@ -95,17 +95,17 @@ Keep changes minimal and focused
 
 但建议统一用小写 `x`。
 
-完成 task 并通过其 verification 后应立即更新 checkbox。不要等一批任务都做完再统一改，因为中途暂停时进度会丢失。
-
-## progress 如何变化
-
-下一次运行：
+完成 task 并通过其 verification 后，先确认 `sourcePath` + `line` 处的复选框仍对应当前 task，再立即把 `- [ ]` 改成 `- [x]`，并**紧接着重跑**：
 
 ```bash
 openspec instructions apply --change "<name>" --json
 ```
 
-CLI 会重新解析 `tasks.md`，计算：
+这不是“可选刷新”，而是 apply workflow 每勾完一条任务都要求的核对步骤（确认该 task 已变成 `done: true` 且 `progress` 已递增）。不要等一批任务都做完再统一改，因为中途暂停时进度会丢失。
+
+## progress 如何变化
+
+每次重跑 `openspec instructions apply --change "<name>" --json` 时，CLI 会重新解析 tracking file（`TASK_LINE_PATTERN` + `parseLocatedTaskLines`，含折行续行拼接），计算：
 
 ```text
 total
@@ -149,18 +149,18 @@ progress.remaining == 0
 state: "all_done"
 ```
 
-这时 agent 应该建议：
+这时 agent 应该先提示复核或验证，再交棒归档：
 
 ```text
-run tests / review changes
-then /openspec-archive-change
+All tracked tasks are complete.
+Review or verify the change as appropriate before archiving.
 ```
 
-archive 仍然需要用户显式触发。
+archive 仍然需要用户确认复核无误后显式触发。
 
 ## 参考来源
 
-源码引用：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

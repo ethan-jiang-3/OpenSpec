@@ -23,7 +23,7 @@ tool delivery 负责把说明交给不同工具
 | 它是 IDE 插件 | 它是 CLI + 文件状态 + agent 指令投递，IDE/agent 只是消费方 |
 | 它是 LLM wrapper | 它不做创造性推理，推理发生在宿主 coding agent |
 | 它是固定流程引擎 | schema 定义 artifact DAG，workflow 只是围绕 DAG 的动作入口 |
-| skill/command 是核心资产 | skill/command 是投递产物，核心资产仍是 `openspec/`、schema 和模板 |
+| skill 是核心资产 | skill（及 1.x 已移除的 command）是投递产物，核心资产仍是 `openspec/`、schema 和模板 |
 | 把 store 当成多仓库事实源 | store 提供跨仓库 spec 索引，不替 referenced repo 决定业务归属 |
 
 这些边界解释了为什么 OpenSpec 源码里会同时有 parser、validator、artifact graph、workflow template、tool adapter、store registry。它们不是散装功能，而是服务同一个分层目标。
@@ -105,18 +105,17 @@ OpenSpec 借用宿主 coding agent 的 LLM 能力。agent 做这些事：
 
 这也是 `status` 和 `instructions` 的意义。它们不是给人看的帮助文本，而是给 agent 的稳定操作包。
 
-## template、skill、command 都是投递层
+## template 与 skill 都是投递层
 
-OpenSpec 同时支持多种 AI Coding 工具。不同工具发现指令的方式不同：有的看 skill，有的看 command，有的用全局 prompt 目录，有的用项目内命令目录。
+OpenSpec 同时支持数十种 AI Coding 工具。v2.0.0 起 OpenSpec 统一收敛为标准 Agent Skills 投递（1.x 曾通过 `delivery` 与 command adapters 同时生成工具私有的 command 文件，现已退役并仅保留清理逻辑）。
 
-所以源码里有 profile、delivery、skill generation、command adapters。它们的共同目的不是定义业务事实，而是把同一套 workflow 语义投递到不同 agent 外壳。
+所以源码里有 `profile`、`skillsScope`、`skill-generation`、`skill-installer`、`skill-links`。它们的共同目的不是定义业务事实，而是把同一套 workflow 语义投递到全局（`~/.agents/skills/`）或项目（`.agents/skills/` + 各工具链接）入口：
 
 ```text
 workflow template
-  → skill content
-  → command content
-  → tool-specific adapter path
-  → agent 可发现入口
+  → 标准 SKILL.md（每个 skill 恒定一份文本）
+  → 全局 ~/.agents/skills/ 或项目 .agents/skills/（+ 工具目录相对链接/拷贝）
+  → agent 可自动发现并唤起的入口
 ```
 
 删除或重生成这些投递产物会影响 agent 能不能触发 OpenSpec workflow，但不会直接改变 `openspec/specs/` 或 `openspec/changes/` 的业务事实。
@@ -179,5 +178,5 @@ store/reference/workset 模型的设计原则是克制：
 | workflow runtime API | `src/commands/workflow/` |
 | Markdown parser / validator | `src/core/parsers/`、`src/core/validation/` |
 | workflow templates | `src/core/templates/workflows/` |
-| skill / command 投递 | `src/core/shared/skill-generation.ts`、`src/core/command-generation/` |
+| skill 投递与旧命令清理 | `src/core/shared/skill-generation.ts`、`src/core/skill-installer.ts`、`src/core/command-generation/`（清理用） |
 | store coordination | `src/core/store/`、`src/core/references.ts`、`src/core/root-selection.ts` |

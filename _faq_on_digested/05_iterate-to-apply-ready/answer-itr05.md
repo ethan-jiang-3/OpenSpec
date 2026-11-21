@@ -45,7 +45,7 @@ specs 的 requirement/scenario 不足以指导实施和验证。
 | 补一两个 scenario | 直接编辑 specs/*.md，按 spec format 补充 |
 | 补整个 requirement | 直接编辑 specs/*.md，新增 `### Requirement:` + scenarios |
 | MODIFIED 不完整 | 从 main spec 复制完整 requirement block，加入新 scenario |
-| specs 结构性问题（多个 requirement 缺失） | 用 `/openspec-continue-change` 重新生成 specs artifact |
+| specs 结构性问题（多个 requirement 缺失或重写） | 用 `openspec-update-change` 修订既有 `specs/*.md`（若属半写完的 glob 缺文件，也可由 `update-change` 或 `continue-change` 补齐缺失文件） |
 | capability 边界不清 | 回到 Explore，重新讨论 capability 划分 |
 
 specs 的 MODIFIED 是最容易出错的地方。CLI archive 做的是完整替换，不是智能 patch。所以 MODIFIED 必须包含完整 requirement block，包括所有已有 scenario。ITR-03 审视时要特别检查这一点。
@@ -69,7 +69,7 @@ design 里的技术决策、架构假设、abstraction 引用和真实代码对�
 | 修正技术细节（改名、改接口签名） | 直接编辑 design.md |
 | 补充缺失的 abstraction 说明 | 直接编辑 design.md |
 | 架构假设根本性错误 | 回到 Explore，重新讨论技术方案 |
-| design 需要推翻重来 | 回到 Explore → 更新 design.md（可能通过 /openspec-continue-change） |
+| design 需要推翻重来 | 回到 Explore → 用 `openspec-update-change` 重写既有 `design.md`（会自动调 `instructions design --json` 取模板规则并做跨工件对账；注意 `openspec-continue-change` 只创建缺失的 `ready` 工件，已有 `design.md` 为 `done` 时不会重生成） |
 
 ### 类型 4：tasks 不可执行
 
@@ -91,7 +91,7 @@ tasks 太粗、太模糊、或和实际代码结构不匹配。
 | 拆粗 task | 直接编辑 tasks.md，把一行拆成 3-5 行 |
 | 补充验证步骤 | 直接编辑 tasks.md，在实现 task 后加验证 task |
 | 调整顺序 | 直接编辑 tasks.md |
-| tasks 结构性问题（大量 task 需要重写） | 用 `/openspec-continue-change` 重新生成 tasks artifact |
+| tasks 结构性问题（大量 task 需要重写） | 用 `openspec-update-change`（调 `openspec instructions tasks --change <name> --json`）重写既有 `tasks.md` |
 | task 粒度原则不清楚 | 参考 codebase 的 commit 粒度或 PR 大小来决定 task 粒度 |
 
 好的 task 标准：agent 看到 task 描述就知道去改哪个文件、改成什么样。例如 `- [ ] 1.1 Create src/routes/oauth.ts with GET/POST /auth/oauth/callback route`。
@@ -179,11 +179,14 @@ ITR-05 的输出应该是一份 gap 清单 + 修复计划：
 
 ## 参考来源
 
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
+
 | 来源 | 用到的结论 |
 |---|---|
 | `schemas/spec-driven/schema.yaml` | proposal/specs/design/tasks 的定义和 DAG 关系 |
 | `src/core/artifact-graph/graph.ts` | artifact DAG 的 requires/generates 约束 |
-| `src/core/templates/workflows/continue-change.ts` | `/openspec-continue-change` 的 artifact 补充机制 |
+| `src/core/templates/workflows/update-change.ts` | `openspec-update-change` 修订既有 `done` 工件（大幅重写时拉取 `instructions`）并做跨工件一致性对账 |
+| `src/core/templates/workflows/continue-change.ts` | `openspec-continue-change` 仅创建缺失的 `ready` 工件（及半写完的 glob 缺口），全部规划完成时直接交棒 apply（`#2274`） |
 | [`../03_explore-to-propose-change/answer-exp07-11.md`](../03_explore-to-propose-change/answer-exp07-11.md) | 分流判断的标准（何时回 Explore、何时拆 change） |
 | [`answer-itr03.md`](answer-itr03.md) | 上游：批判性阅读 artifacts |
 | [`answer-itr04.md`](answer-itr04.md) | 上游：代码校验对照表 |

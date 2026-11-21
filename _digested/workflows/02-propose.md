@@ -11,28 +11,31 @@
 
 ## 一句话
 
-propose 是**默认快速路径**：从 change name/description 出发，创建 change 容器，然后循环 status → instructions → write → status，直到 schema 的 `apply.requires` 全部满足。它是规划类四个 workflow 里最"全自动"的一个。
+propose 是**带前置上下文与规划边界的默认完整规划路径**：澄清实质性歧义 → 调 `openspec context --json` 并预读 `<root.path>/openspec/config.yaml` → 确定 schema → 创建新 change 容器 → 循环 `status → instructions → write → status`，直到 `applyRequires` 的传递依赖闭包全部满足（`done`、`skipped` 或有意识条件跳过），最后**严格停在规划边界内**，绝不在同一轮开始写业务代码。
 
 ## 和 new / continue / ff 的粒度区别
 
 ```text
-propose:  create change + 生成全部 artifact → apply-ready（一口气）
-new:      create change only → STOP（scaffold）
-continue: 已有 change → 生成下一个 ready artifact → STOP（一步）
-ff:       已有或新 change → 批量生成剩余 artifact → apply-ready（批量推进）
+propose:  澄清实质歧义 + context 预加载 + 新建 change + 生成传递必需集全部 artifact → STOP（严守规划边界）
+new:      新建 change + 展示首个 ready 模板 → STOP（scaffold）
+continue: 已有 change → 先补完半写 glob 产物，否则生成下一个 ready artifact → STOP（一步）
+ff:       新建 change（跳过 context 预检，倾向做合理假设保持节奏）→ 生成传递必需集全部 artifact → STOP
 ```
 
-## CLI 命令调用序列
+## CLI 命令调用序列（完整 7 步）
 
 ```text
-1. openspec new change "<name>"           # 创建容器
-2. openspec status --change "<name>" --json   # 读 DAG
-3. loop:
-   a. openspec instructions <artifact> --change "<name>" --json  # 取操作包
-   b. [agent 读依赖 + 写 artifact 文件]
+1. [理解请求 + 澄清实质性歧义]
+2. openspec context --json [--store "<id>"]  # 解析权威 root.path，再读 <root.path>/openspec/config.yaml (≤51,200B)
+3. [可选] openspec schemas --json            # 仅当用户询问有哪些工作流时，在 root.path 下运行
+4. openspec new change "<name>" [--schema "<schema-name>"]  # 创建新容器
+5. openspec status --change "<name>" --json  # 读 DAG（含 applyRequires 与 artifacts[].requires）
+6. loop:
+   a. openspec instructions <artifact> --change "<name>" --json  # 取操作包（或检查是否可条件跳过）
+   b. [agent 重读依赖 + 只读探查代码库 + 定输出路径 + 写 artifact 文件]
    c. openspec status --change "<name>" --json                   # 刷新状态
-   until applyRequires 及其 requires 传递闭包全部 done 或 skipped
-4. openspec status --change "<name>"       # 展示最终状态（人类可读）
+   until applyRequires 及其沿 requires 边的传递闭包全部 done、skipped 或条件跳过
+7. openspec status --change "<name>"         # 展示最终状态（人类可读），提示 "ask me to apply it"
 ```
 
 ## 时序图
@@ -45,42 +48,51 @@ sequenceDiagram
     participant FS as 文件系统
 
     User->>MD: /openspec-propose <name or description>
-    MD->>MD: 若无输入 → 向用户询问<br/>从描述导出 kebab-case name
+    MD->>MD: Step 1 · 无输入则询问；遇影响范围/行为/兼容性的<br/>实质性歧义先停下澄清，导出 kebab-case name
+
+    rect rgb(245, 245, 255)
+        Note over MD,FS: Step 2-3 · 加载项目 context 与确定 schema
+        MD->>TS: openspec context --json
+        TS-->>MD: root.path（若 no_openspec_root 则停下）
+        MD->>FS: 读 <root.path>/openspec/config.yaml（≤51,200B context）
+        opt 用户询问有哪些工作流
+            MD->>TS: openspec schemas --json（cwd=root.path）
+            TS-->>MD: 可用 schema 列表
+        end
+    end
 
     rect rgb(240, 248, 255)
-        Note over MD,FS: Step 2 · 创建容器
+        Note over MD,FS: Step 4 · 创建容器
         MD->>TS: openspec new change "add-oauth"
         TS->>FS: 创建 change 目录 + .openspec.yaml
         TS-->>MD: change 已创建
     end
 
     rect rgb(255, 250, 240)
-        Note over MD,FS: Step 3 · 读 DAG
+        Note over MD,FS: Step 5 · 读 DAG 与传递必需集
         MD->>TS: openspec status --change X --json
-        TS-->>MD: artifacts[{id, status}], applyRequires
-        MD->>MD: 确认：proposal ready<br/>specs/design blocked（缺 proposal）<br/>tasks blocked（缺 specs+design）
+        TS-->>MD: artifacts[{id, status, requires}], applyRequires
     end
 
     rect rgb(255, 240, 255)
-        Note over MD,FS: Step 4 · artifact 生成循环
-        loop 每轮：status → instructions → write → status
+        Note over MD,FS: Step 6 · artifact 生成循环
+        loop 每轮：instructions → 代码探查与定路径 → write → status
             MD->>TS: openspec instructions <artifact> --change <name> --json
-            TS-->>MD: dependencies, template, instruction,<br/>context, rules, resolvedOutputPath
-            MD->>FS: 从磁盘重读依赖文件<br/>（不用内存中的旧版本——<br/>用户可能已编辑过）
-            MD->>MD: 按 template 组织 + instruction 约束<br/>context/rules 不写入文件！
-            MD->>MD: 先定输出路径：glob 时选一个<br/>changeRoot 内、resolve symlink 后仍在<br/>changeRoot 内的具体路径
-            MD->>FS: 写 artifact 到该输出路径
+            TS-->>MD: dependencies, template, instruction,<br/>context, rules, resolvedOutputPath, skipped?
+            MD->>FS: 从磁盘重读依赖 + 按需只读探查项目代码/测试
+            MD->>MD: 先定输出路径（glob 须落在 changeRoot 内且防 symlink 逃逸）<br/>context/rules 仅作约束，绝不写进文件！
+            MD->>FS: 写 artifact 到输出路径（或记录条件跳过）
             MD->>TS: openspec status --change X --json
-            TS-->>MD: 更新后的 done/ready/blocked
+            TS-->>MD: 更新后的 done/skipped/ready/blocked
         end
     end
 
     rect rgb(240, 255, 240)
-        Note over MD,FS: Step 5 · apply gate
-        MD->>MD: 检查 required set 全部满足<br/>（applyRequires + requires 闭包，done 或 skipped）
+        Note over MD,FS: Step 7 · 最终状态与规划边界停机
+        MD->>MD: 确认传递必需集全部满足（done / skipped / 条件跳过）
         MD->>TS: openspec status --change X
         TS-->>MD: 最终状态（人类可读）
-        MD-->>User: "All artifacts created! Ready for implementation."
+        MD-->>User: "The plan is ready for review. When you're ready, ask me to apply it."（绝不写业务代码）
     end
 ```
 
@@ -102,7 +114,7 @@ These guide what you write, but should never appear in the output
 - **capability 命名引导**：proposal 的 Capabilities 段（schema instruction + proposal 模板注释，经 `openspec instructions proposal` 投递）引导 agent 用**耐久的系统行为**命名新 capability（如 `user-auth`），而不是本次工作（如 `add-login-endpoint`）；选一个能随系统演化持续拥有相关 requirement 的内聚边界，避免宽泛的 catch-all 名。新引入的路径段用 kebab-case，并沿用项目既有 spec 组织。
 - `specs` 和 `design` 在 proposal 后都 ready，但 status/模板按 schema 声明顺序先推荐 specs。它不是新增的 `specs -> design` 依赖。
 - 纯重构、工具或文档工作可在 `.openspec.yaml` 声明 `skip_specs: true`。此时 specs 是 `skipped`，而不是待生成的空文件；若需求出现 spec-level 行为变化，必须移除 marker 后再写 delta。
-- nested layout 使用 `specs/<capability-path>/spec.md`，如 `specs/identity/session/spec.md`；默认 schema 文案仍偏 flat，团队应在 config/AGENTS 明确路径约定。
+- nested layout 原生受 `propose.ts` 与内置 `schema.yaml` 支持：两者统一以 `specs/<capability-path>/spec.md`（例如 `user-auth` 或 `identity/user-auth`）表述能力路径，要求对既有 capability 保留完整相对路径，对新 capability 沿用项目已有的扁平或分层目录组织（不再假设单层扁平目录）。
 
 ## 先读代码、先加载上下文
 
@@ -127,12 +139,12 @@ artifact 循环里 `resolvedOutputPath` 有两副面孔：**具体路径**，或
 
 | Guardrail | 含义 |
 |---|---|
-| 创建 ALL artifacts（required set = `applyRequires` + 沿 `requires` 边的传递闭包，不是只看 `applyRequires`） | 不半途而废 |
-| 写之前重读依赖（从磁盘，不从内存） | 用户可能已编辑过 |
-| context 不清时问用户 | 但优先保持 momentum |
-| change 同名时问用户 | 避免覆盖 |
-| 写完后验证文件存在 | 不假称完成 |
-| 先定并校验输出路径，再创建任何东西 | glob 工件必须有具体且落在 `changeRoot` 内的路径 |
+| **Planning boundary（规划边界）**：触发本工作流的请求只授权规划，任何实现/apply 指令均不跨阶段结转 | 严禁在本轮修改业务代码或自动启动 apply；写完产物必须停止并等待新一轮用户指令 |
+| 创建传递必需集内全部 artifacts（`applyRequires` + 沿 `requires` 边的传递闭包，而非只看 `applyRequires`） | 防止先写 `tasks.md` 漏掉上游 `specs`（#2089）；支持对不满足条件的 `design.md` 做有意识条件跳过 |
+| 写之前重读依赖（从磁盘，不从对话记忆） | 用户可能已编辑过 |
+| **实质性歧义先停下问用户，细节假设记录在案** | 凡影响范围、外部可观测行为、兼容性或验收标准的歧义必须在创建 change 前问清（"优先保持 momentum" 是 `ff` 的策略，不是 `propose` 的） |
+| change 同名时询问用户是继续已有 change 还是另起新名 | 避免覆盖 |
+| 写完后验证文件存在，且写前先定并校验 `changeRoot` 内的具体输出路径 | 不假称完成，glob 工件防逃逸 |
 
 ## 和 FAQ 的衔接
 
@@ -140,18 +152,21 @@ FAQ `04_propose-to-apply-ready/` 从工程视角分析了 propose 的 artifact D
 
 ## 源码锚点
 
-| 内容 | 行号范围（propose.ts，v1.14.3） |
+| 内容 | 行号范围（`propose.ts`，共 342 行） |
 |---|---|
-| SkillTemplate 定义 | L33-L194 |
-| CommandTemplate 定义 | L199-L357（文件 358 行） |
-| Step 1: 询问输入/澄清歧义 | L63-L72 |
-| Step 2: 加载 context | L74-L82 |
-| Step 3: schema 选择 | L84-L92 |
-| Step 4: new change | L94-L107 |
-| Step 5: status DAG | L109-L116 |
-| Step 6: artifact 循环（含输出路径选择 L140-L142） | L118-L159 |
-| Step 7: final status | L161-L164 |
-| context/rules 警告 | L181-L183 |
+| 交接文案常量 `SKILL_APPLY_HANDOFF` / `COMMAND_APPLY_HANDOFF` | L11-L15 |
+| SkillTemplate 定义 | L17-L179 |
+| CommandTemplate 定义 | L181-L342 |
+| Planning boundary（规划边界） | L23 / L189 |
+| Step 1: 理解请求并澄清实质性歧义 | L45-L54 |
+| Step 2: 加载项目 context（`openspec context --json` + `config.yaml` ≤51,200B） | L56-L64 |
+| Step 3: 确定工作流 schema（含 `openspec schemas --json`） | L66-L74 |
+| Step 4: `new change` | L76-L89 |
+| Step 5: `status` DAG | L91-L98 |
+| Step 6: artifact 循环（含输出路径选择 L124 与传递必需集 L130-L139） | L100-L143 |
+| Step 7: final status | L144-L147 |
+| context/rules 警告 | L164-L166 |
+| Guardrails | L168-L174 |
 
 ## v1.12.0–v1.13.1 行为更新
 

@@ -12,9 +12,9 @@
 | **本区间审计记录** | [`0015`](./0015-v1.17.0-to-v2.1.1.md)（v1.17.0 → v2.1.1，23 提交） |
 | **当前进行中的计划** | [`_plan-14`](./_plan-14-v2.1.1-doc-complete-sync.md) — 三套资料对齐 2.1.1 |
 | **计划的上游** | [`_plan-13`](./_plan-13-v2.1.1-full-sync.md)（源码同步，Phase B–D 已移交 plan-14） |
-| **资料回填进度** | plan-13 与 plan-14 全部完成并已提交：`9e4b0dc5`（主要落点）、`91314d4a`（Phase B–F 收尾）、`0e80f66b`（升级准备与回滚）、账本收尾提交 |
-| **机器级升级** | 14/14 个项目已从 CLI 1.15.0 升到 2.1.1，记录见 [`_runbook-machine-upgrade.md`](./_runbook-machine-upgrade.md)；只剩「人工复核」 |
-| **下一步** | 人工复核三套资料的 2.1.1 口径；之后钉下一个上游 tag 再开 `_plan-15` |
+| **资料回填进度** | plan-13 与 plan-14 全部完成：首轮落点（`9e4b0dc5`、`91314d4a`、`0e80f66b`）+ 全库逐行源码精校（补齐 `0015` 第 9 组修复 `#2266` 与 `#2265` 精确判据、三套资料细节及 `_runbook` 脚本加固） |
+| **机器级升级** | 14/14 个项目已从 CLI 1.15.0 升到 2.1.1，记录见 [`_runbook-machine-upgrade.md`](./_runbook-machine-upgrade.md)（含 `upgrade-all.sh` 非交互与指纹保护加固）；只剩「人工复核」 |
+| **下一步** | 人工复核三套资料与 runbook 的 2.1.1 口径；之后钉下一个上游 tag 再开 `_plan-15` |
 
 **恢复动作**（按顺序，别跳）：
 
@@ -93,7 +93,7 @@ _change_log/
 ├── 0012-v1.14.0-to-v1.14.3.md  # 完全同步 v1.14.3（glob 输出路径边界与引擎替换、symlink 包含、unappliedContent、500 字符升 WARNING、x- 扩展键、archive 清理错误码、CLI 按需加载、view 移除归档分区）
 ├── 0013-v1.14.3-to-v1.15.0.md  # 完全同步 v1.15.0（免 Node.js 的 standalone 二进制、update --dry-run/--json、feedback 对齐 bug 表单、new change 显示实际 schema、verify REMOVED 精确名）
 ├── 0014-v1.15.0-to-v1.17.0.md  # 完全同步 v1.17.0（历史产物指纹库与旧文件清扫、命令文件弃用预告、validate 三条收紧、version --check 语义、Node 22.12 门槛、安装改归档）
-├── 0015-v1.17.0-to-v2.1.1.md  # 完全同步 v2.1.1（2.0 大版本：只装 skills 与单份共享副本、命令文件移除、delivery 退役、Amazon Q 退役；2.1 全局 skills；安装层外包给 skills 包；2.1.1 八组修复）
+├── 0015-v1.17.0-to-v2.1.1.md  # 完全同步 v2.1.1（2.0 大版本：只装 skills 与单份共享副本、命令文件移除、delivery 退役、Amazon Q 退役；2.1 全局 skills；安装层外包给 skills 包；2.1.1 九组修复）
 ├── _plan-1-remaining-digested.md  # 计划 1/3：_digested/ → v1.5.0 更新
 ├── _plan-2-faq-on-digested.md     # 计划 2/3：_faq_on_digested/ → v1.5.0 更新
 ├── _plan-3-openspec-handbook.md   # 计划 3/3：_openspec_handbook/ → v1.5.0 更新

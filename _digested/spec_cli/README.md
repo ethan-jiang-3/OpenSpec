@@ -5,7 +5,7 @@
 1. `openspec` CLI 在整个项目里扮演什么角色。
 2. 哪些命令主要服务人类用户，哪些命令主要服务 OPSX/AI 工作流。
 3. 每个关键命令本质上在处理什么对象，读进来什么，产出去什么，产出后会影响谁。
-4. `init` / `update` / profiles / delivery / schemas / templates 这些机制怎样共同组成 OpenSpec 的工作流系统。
+4. `init` / `update` / profiles / `skillsScope` / schemas / templates 这些机制怎样共同组成 OpenSpec 的工作流系统（1.x 另有 `delivery`，v2.0.0 起退役）。
 
 ## 阅读顺序
 
@@ -25,14 +25,14 @@
 这里把 CLI 看成三层：
 
 - 产品层：人类开发者在终端里直接使用的命令。
-- 协议层：OPSX/skills/commands 模板会调用的结构化接口。
+- 协议层：工作流 skills（及 1.x 已退役的 commands）模板会调用的结构化接口。
 - 投递层：`init` / `update` 把 OpenSpec 工作流投放到不同 AI 工具里的机制。
 
 如果只从“命令帮助文本”看，很容易把 `openspec` 理解成普通开发工具。如果顺着源码看，会发现它其实更像一个工作流内核：
 
 - 一部分命令直接操作项目里的 OpenSpec 状态。
 - 一部分命令对这些状态做解释、验证、编译和暴露。
-- 一部分命令把这些能力包装成外部 AI 工具可消费的技能与 slash commands。
+- 一部分命令把这些能力包装成外部 AI 工具可消费的标准 skills（1.x 曾含 slash commands，v2.0.0 起不再生成）。
 
 ## 文档索引
 

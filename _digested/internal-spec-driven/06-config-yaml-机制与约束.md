@@ -49,12 +49,16 @@ const ProjectConfigSchema = z.object({
     .object({ cloudAgent: z.boolean().optional() })
     .optional()
     .describe('GitHub Copilot integration preferences'),
+  skillsScope: z
+    .enum(['project', 'global'])
+    .optional()
+    .describe('Where this project keeps its OpenSpec skills'),
 });
 ```
 
-其中 `githubCopilot` 目前只识别 `cloudAgent` 一个布尔子字段（`project-config.ts:82-87`、解析在 `:427-443`）：`cloudAgent` 是 boolean 才收下，给了非 boolean 会 warn `Invalid 'githubCopilot.cloudAgent' field in config (must be a boolean)`；`githubCopilot` 本身不是对象则 warn `Invalid 'githubCopilot' field in config (must be an object)`；其他子字段静默丢弃。
+其中 `githubCopilot` 目前只识别 `cloudAgent` 一个布尔子字段（`project-config.ts:79-87`、解析在 `:436-451`）：`cloudAgent` 是 boolean 才收下，给了非 boolean 会 warn `Invalid 'githubCopilot.cloudAgent' field in config (must be a boolean)`；`githubCopilot` 本身不是对象则 warn `Invalid 'githubCopilot' field in config (must be an object)`；其他子字段静默丢弃。`skillsScope`（v2.1.0 起，`project-config.ts:89-96`、解析在 `:453-460`）记录团队选择的技能安装作用域（`"project"` 或 `"global"`），使 `openspec update` 不再重复询问是否迁移到全局技能目录；非法值会 warn `Invalid 'skillsScope' field in config (must be "project" or "global")` 并忽略。
 
-> **注意**：Zod schema 中 `context` 字段**只有 `z.string().optional()`，没有 `.max(...)` 约束**。50KB 的长度上限是**在 `readProjectConfig()` 运行时手动检查**的（`project-config.ts:350-357`，用 `Buffer.byteLength` 比对 `MAX_CONTEXT_SIZE`），不在 Zod 类型定义里。Zod schema 在这里主要起"类型推导 + 文档"作用；真正的逐字段容错解析逻辑写在 `readProjectConfig()` 函数体中，而非依赖 `ProjectConfigSchema.safeParse()` 整体校验。
+> **注意**：Zod schema 中 `context` 字段**只有 `z.string().optional()`，没有 `.max(...)` 约束**。50KB 的长度上限是**在 `readProjectConfig()` 运行时手动检查**的（`project-config.ts:357-365`，用 `Buffer.byteLength` 比对 `MAX_CONTEXT_SIZE`），不在 Zod 类型定义里。Zod schema 在这里主要起"类型推导 + 文档"作用；真正的逐字段容错解析逻辑写在 `readProjectConfig()` 函数体中，而非依赖 `ProjectConfigSchema.safeParse()` 整体校验。
 
 ### 字段约束表
 
@@ -62,27 +66,31 @@ const ProjectConfigSchema = z.object({
 |------|------|------|------|--------|
 | `schema` | 是 | `string` | 非空 | 无（`openspec init` 自动写入 `spec-driven`） |
 | `context` | 否 | `string` | 最大 **50KB**（51,200 字节，运行时检查） | 无 |
-| `rules` | 否 | `Record<string, string[]>` | key 应为合法的 artifact ID | 无 |
+| `rules` | 否 | `Record<string, string[]>` | key 应为合法的 artifact ID；值必须是字符串数组 | 无 |
 | `operations` | 否 | object | 只接受 `apply` / `archive`；各自只接受字符串数组 `guidance` | 无 |
-| `store` | 否 | `string` | config-only root 的 store fallback；不是 operation prompt | 无 |
-| `references` | 否 | string 或 `{id, remote}` 数组 | 由 `readProjectConfig()` 专门解析；为 artifact/Apply 提供索引 | 无 |
+| `store` | 否 | `string` | config-only root 的默认 store 指针；根解析走严格的 `readStorePointer()` | 无 |
+| `references` | 否 | string 或 `{id, remote}` 数组 | 由 `readProjectConfig()` 手工解析；渲染出的索引共享 **50KB** 上限（`MAX_RENDERED_INDEX_SIZE`） | 无 |
+| `githubCopilot` | 否 | `{ cloudAgent?: boolean }` | GitHub Copilot cloud coding-agent 生成开关 | 无 |
+| `skillsScope` | 否 | `'project' \| 'global'` | 项目 OpenSpec skills 的存放作用域（项目内 `.agents/skills/` 或本机 `~/.agents/skills/`） | 无 |
 
-当前项目级 `openspec/config.yaml` 的已消费顶层字段是 `schema`、`context`、`rules`、`operations`、`store`、`references` 与 `githubCopilot`（**七个**）。其中 `rules` 只属于 artifact prompt 注入层；`context` 同时进入 artifact 与 operation input；`operations` 只为 Apply/Archive 提供 advisory guidance；`schema` 属于 workflow schema 选择层；`store` / `references` 处理 root 与跨 store 上下文；`githubCopilot` 目前只有 `cloudAgent` 一个开关生效。
+当前项目级 `openspec/config.yaml` 的已消费顶层字段共有**八个**：`schema`、`context`、`rules`、`operations`、`store`、`references`、`githubCopilot` 与 **`skillsScope`**。其中 `rules` 只属于 artifact prompt 注入层；`context` 同时进入 artifact 与 operation input；`operations` 只为 Apply/Archive 提供 advisory guidance；`schema` 属于 workflow schema 选择层；`store` / `references` 处理 root 与跨 store 上下文；`githubCopilot` 控制云端 agent 文件生成；`skillsScope` 记录技能安装作用域。
 
 如果 YAML 顶层额外写了其他 key，例如 `team:`、`metadata:`、`owner:`，当前实现会被 YAML parser 读到，但不会成为 OpenSpec 的运行时配置。结果就是：**静默忽略，不报错，也不生效**；不要把自定义 metadata 与上述已消费字段混在一起期待它被 workflow 使用。
 
-### 50KB 限制
+### 50KB 限制（`context` 与 `references` 索引共享）
 
-`project-config.ts:45`：
+`project-config.ts:256`（并由 `src/core/references.ts:46` 复用为 `MAX_RENDERED_INDEX_SIZE = MAX_CONTEXT_SIZE`）：
 ```typescript
-const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit
+export const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit, shared with the references index
 ```
 
-如果 `context` 字段超过 50KB，**该 context 字段被忽略并打印 warning**（不截断，全有或全无）。注意：只是忽略 `context` 字段，**不影响 config 的其他字段** —— `schema` 和 `rules` 照常生效（`project-config.ts:347-358`）。
+- 如果 `context` 字段超过 50KB，**该 context 字段被忽略并打印 warning**（不截断，全有或全无），**不影响 config 的其他字段** —— `schema` 和 `rules` 照常生效（`project-config.ts:357-365`）。
+- 同样地，`references` 组装并按 XML 渲染出的上游 store 索引总大小也受同一个 50KB UTF-8 字节上限约束（`MAX_RENDERED_INDEX_SIZE`），超出部分截断并附带 warning 诊断。
 
-### rules key 验证
+### rules key 与元素形状验证
 
-`config.yaml` 的 `rules` 字段 key 不强制与 schema 的 artifact ID 匹配 —— 但你写了一个不存在的 artifact ID，会在**每次 session 首次生成指令时**产生一个 warning（`project-config.ts:479-482` 的真实文案）：
+1. **元素形状诊断与引号修复提示（#1984，`describeRulesShapeError` in `project-config.ts:265-294, 400`）**：当 `rules.<artifactId>` 不是字符串数组时（最常见踩坑是裸 `-` 列表项里写了未加引号的 `": "`，被 YAML 解析成了键值映射 mapping），告警会精确点名每个违规下标及其实际 YAML 类型（如 `rules.proposal[0] is a mapping`），并在检测到 mapping 时主动追加修复提示：`— an unquoted ": " makes YAML read the item as a key/value pair; quote the whole scalar to keep it a string.`。
+2. **artifact ID 存在性校验**：`config.yaml` 的 `rules` 字段 key 不强制与当前单 change schema 绑定——但若写了一个在**任何可用 schema 中都不存在**的 artifact ID，会在**每次 session 首次生成指令时**产生一个 warning（`project-config.ts:514-531` 的真实文案）：
 
 ```
 Unknown artifact ID in rules: "review". It matches no artifact in any available schema. Known artifact IDs: <sorted ids>
@@ -142,9 +150,13 @@ if (effectiveProjectRoot) {
 
 其中 `actionContext` 来自 planning home、project root 和 artifact IDs（`src/core/change-status-policy.ts` 的 `buildActionContext()`），**不是**从 project context 或 artifact rules 注入。
 
-### resilience 设计
+### resilience 设计与两条显式硬阻断例外
 
-config 读取失败（文件不存在、YAML 解析错误、字段类型不匹配）**不会抛异常中断流程**。原因是 **`readProjectConfig()` 自己就吞掉了所有异常**并返回 `null` 或部分 config（源码注释原话：`readProjectConfig never throws: missing/unparseable configs are null.`），所以消费点（`loadRootConfigContext()`、`createChange()`、archive instructions 等）都是**直接调用、外面不再包 try/catch**——这一点容易反过来记成"消费点各自防御"。
+在常规 prompt/指令读取链路上，`readProjectConfig()` 自身吞掉所有异常并返回 `null` 或部分 config（源码注释：`readProjectConfig never throws: missing/unparseable configs are null.`），所以 `loadRootConfigContext()`、`createChange()` 等消费点直接调用即可，不会抛异常中断生成。
+
+**但有两条关键路径特意绕开 fail-open，实行硬阻断（fail-closed）**：
+1. **`openspec validate` 拦截不可读或语法损坏的 `config.yaml`/`.yml`（#2127 / #1892）**：`ValidateCommand.execute()`（`src/commands/validate.ts:123-141`）在校验任何 spec/change 之前先调用 `readConfigParseError(root.path)`（`project-config.ts:477-498`）。一旦 `openspec/config.yaml`（或 `.yml`）无法读取（`unreadable_config`）或不是合法 YAML（`unparseable_config`），`openspec validate` **直接报错并以退出码 `1` 终止**，确保 CI 能抓出损坏的项目配置。
+2. **根解析与 `init` 守卫拦截畸形 `store:` 指针**：根解析不走 `readProjectConfig()` 的静默丢弃分支，而是调用 `readStorePointer()`（`project-config.ts:628-653`）。若配置文件因 YAML 语法错误无法解析（`malformed: 'unparseable'`）或 `store:` 不是单个字符串（`malformed: 'non_string'`），根解析直接报 `invalid_store_pointer` 错误阻断，防止因丢掉 `store:` 指针而悄悄把工作写错到本地目录。
 
 ---
 
@@ -388,17 +400,18 @@ rules:
 
 ---
 
-## 8. config.yaml 的解析容错策略
+## 8. config.yaml 的解析容错策略与硬门禁边界
 
-`readProjectConfig()` (`project-config.ts`) 的设计是 **逐字段 fail-open**（field-by-field resilient parsing），而非用 `ProjectConfigSchema.safeParse()` 做整体校验：
+`readProjectConfig()` (`project-config.ts:325-470`) 的设计是 **逐字段 fail-open**（field-by-field resilient parsing），而非用 `ProjectConfigSchema.safeParse()` 做整体校验：
 
-1. 文件不存在（`resolveConfigFilePath` 返回 `null`）→ 返回 `null`（`project-config.ts:319-320`）
-2. YAML 解析失败 → warn 并返回 `null`（`:327-329` 顶层不是对象；`:447-451` 解析抛异常的两条路径）
+1. 文件不存在（`resolveConfigFilePath` 依次探测 `config.yaml` → `config.yml` 均无果）→ 返回 `null`（`project-config.ts:326-329, 656-663`；注意若 `config.yaml` 存在但损坏，**不会**回退读 `config.yml`）
+2. YAML 解析失败或顶层非对象 → 在 `readProjectConfig()` 中 warn 并返回 `null`（`:335-338, :464-469`）；**但在 `openspec validate` 中会通过 `readConfigParseError()` 直接报 `unreadable_config` / `unparseable_config` 并退出 `1`（#2127），在 config-only 目录做根解析时也会被 `readStorePointer()` 判定为 `unparseable` 硬阻断**
 3. `schema` 字段缺失或无效 → warn，返回的 config 中**不含 `schema` 字段**。**默认值 `'spec-driven'` 的回退发生在消费端** `resolveSchemaForChange`（`change-metadata.ts`），不在 `readProjectConfig` 内部
-4. `context` 超过 50KB → 忽略 `context` 字段并 warning（其他字段不受影响）
-5. `context` 不是 string → 忽略
-6. `rules` 不是合法 record → 忽略
-7. `rules` 中有未知 artifact ID → warning，不阻断
-8. 未知顶层 key → 不报错、不 warning，但也不会生效；不要依赖它承载自定义 metadata
+4. `context` 超过 50KB 或非 string → 忽略 `context` 字段并 warning（其他字段不受影响）
+5. `rules` 不是合法对象，或某个 `rules.<id>` 含非字符串元素 → `describeRulesShapeError()` 逐下标报出 YAML 形状与 `": "` 加引号提示（#1984），仅忽略该受损条目集
+6. `rules` 中有未知 artifact ID → 按所有可用 schema 的 artifact ID 并集校验，首次命中时 warning，不阻断
+7. `store` 非字符串 → 在 `readProjectConfig()` 中 warn 并忽略；**但在根解析与 `openspec init` 指针守卫中，`readStorePointer()` 返回 `malformed: 'non_string'` 并直接报错拒绝执行**
+8. `skillsScope` 非 `'project' | 'global'`，或 `githubCopilot.cloudAgent` 非 boolean → warn 并忽略该字段
+9. 未知顶层 key → 不报错、不 warning，但也不会生效；不要依赖它承载自定义 metadata
 
-这种设计的意图是：**config 不应该成为工作流的中断点**。即使 config 写得不好，agent 仍然可以工作 —— 只是质量可能下降。
+这种分层设计的意图是：**常规指令读取容忍局部配置瑕疵、不让单字段拼写错误卡死日常对话；而涉及目标根路由（`store:`）和 CI 质量门禁（`openspec validate`）时，则严格报错拦截**。

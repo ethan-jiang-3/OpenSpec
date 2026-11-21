@@ -45,7 +45,7 @@
   <text x="500" y="354" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">落地（走受控流水线，别手搓 spec）</text>
   <text x="500" y="372" text-anchor="middle" font-size="9" fill="#1d4ed8">openspec new change → 写 delta → openspec archive -y（自校验）</text>
   <text x="500" y="388" text-anchor="middle" font-size="9" fill="#1d4ed8">DELETE / SHELVE 用文件操作（无 CLI 删除命令）</text>
-  <text x="500" y="404" text-anchor="middle" font-size="9" fill="#1d4ed8">archive 后补 ## Purpose · git diff review</text>
+  <text x="500" y="404" text-anchor="middle" font-size="9" fill="#1d4ed8">新 capability 在 delta 先写 ## Purpose · git diff review</text>
   <text x="500" y="420" text-anchor="middle" font-size="8" fill="#b91c1c">★ 原子 fail-fast：not found 会回滚整批，失败项修完一起再 archive</text>
 
   <!-- LEFT: 纪律 -->

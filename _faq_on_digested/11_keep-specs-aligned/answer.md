@@ -122,14 +122,14 @@ openspec archive <change> -y
 
 | 位置 | 例子 |
 |---|---|
-| 第一个 `## ` 之前的正文 | 你在 delta 文件顶上写的"这次为什么改" |
+| 第一个 `## ` 之前的正文（第 1 行顶部 YAML frontmatter 除外，见下） | 你在 delta 文件顶上写的"这次为什么改" |
 | `## ADDED/MODIFIED Requirements` 里第一个 requirement 之前的散文 | 分组说明、迁移注意事项 |
 | Purpose 与四类 delta 段之外的任何 `## ` 段 | `## Notes`、`## Migration`、`## Open questions` |
 
-现在 `validate` 报 WARNING、`archive` 也 `warn()`，两者都点名行号，但**文案不同**：
+现在 `validate` 报 WARNING、`archive` 也 `warn()`，两者都点名行号，但**文案与顶部 YAML frontmatter 的口径不同**：
 
-- `validate`（`validator.ts:268-270`）：`... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.` —— 带处置建议
-- `archive`（`specs-apply.ts:258`）：`<spec> - <text> (line N) is not carried into the main spec.` —— 只陈述事实，没有建议
+- `validate`（`src/core/validation/validator.ts:274-281`）：`... is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.` —— 带处置建议（`--strict` 下升为错误；**v2.1.1 `#2273` 起**位于文件第 1 行的顶部 YAML frontmatter 在 `validate --strict` 下被豁免，不报 `unappliedContent` 警告）
+- `archive`（`src/core/specs-apply.ts:269-275`）：对一般未搬运文本输出 `<spec> - <text> (line N) is not carried into the main spec.`（`:272-274`，只陈述事实）；对第 1 行顶部 YAML frontmatter 则单独提示 `<spec> - frontmatter (line 1) is not carried into the main spec. It stays with the change.`（`:269-271`）
 
 看到后者时照前者的建议处理即可。
 
@@ -137,9 +137,10 @@ openspec archive <change> -y
 
 - 对行为的约束、边界、例外 → 写进 requirement（必要时新建一个）；
 - 为什么这么改、取舍、被否掉的方案 → proposal 或 design；
+- 工具侧自定义元数据 → 可放在 delta 顶部 YAML frontmatter（`validate --strict` 放行，归档后留在 archived change 目录中）；
 - 一次性说明、给 reviewer 的备注 → 删掉，本来就该在 PR 描述里。
 
-`# ` 标题与 `#### ` scenario 正文不在告警范围；REMOVED/RENAMED 的正文也不告警——那些位置没有"会被丢掉"的问题。
+`# ` 标题、第 1 行顶部 YAML frontmatter（`validate` 豁免、`archive` 仅提示留在 change，v2.1.1 `#2273`）与 `#### ` scenario 正文不在 `unappliedContent` 告警范围；REMOVED/RENAMED 的正文也不告警——那些位置没有"会被误以为进了主 spec 却静默丢掉"的问题。
 
 ## 常见误区
 
@@ -171,7 +172,7 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 
 ## 参考来源
 
-源码引用：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|
@@ -181,8 +182,8 @@ apply 只改代码，**specs 只在 archive 时才更新**。不 archive，spec 
 | [`../../_digested/specs_truth/03-手段清单-到底有多少种修法.md`](../../_digested/specs_truth/03-手段清单-到底有多少种修法.md) | 修法：纠正型 delta、AUTHOR-NEW、DELETE/SHELVE |
 | [`../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md`](../../_digested/specs_truth/04-问题到方法-决策矩阵与排错.md) | `archive ... not found` 怎么排错 |
 | [`../../_digested/specs_truth/06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md)（validate 命令参考） | `validate` 是 CLI 命令（非 slash）、结构 linter、抓不出漂移；archive 自校验使单独 validate 冗余 |
-| [`../../_digested/specs_truth/06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md)（delta 文本边界） | `unappliedContent` 三处边界与 WARNING 口径（v1.14.2） |
-| [`../../_openspec_handbook/26-高级-治理边界与漂移维护.md`](../../_openspec_handbook/26-高级-治理边界与漂移维护.md#写进-delta-的散文不会进主-specv1142-起会告警) | 用户向的归属判断表 |
+| [`../../_digested/specs_truth/06-源码锚点与缺口.md`](../../_digested/specs_truth/06-源码锚点与缺口.md)（delta 文本边界） | `unappliedContent` 三处边界、WARNING 口径（v1.14.2）及顶部 frontmatter 豁免（v2.1.1 `#2273`） |
+| [`../../_openspec_handbook/26-高级-治理边界与漂移维护.md`](../../_openspec_handbook/26-高级-治理边界与漂移维护.md#写进-delta-的散文不会进主-spec) | 用户向的归属判断表 |
 | [`../../_openspec_handbook/26-高级-治理边界与漂移维护.md`](../../_openspec_handbook/26-高级-治理边界与漂移维护.md) | capability=specs 相对 path=身份、capability 无独立 rename；specs 漂移与维护（用户向） |
-| `src/core/specs-apply.ts` | `buildUpdatedSpec`：MODIFIED 整块替换、按标题精确匹配、原子 fail-fast |
-| `src/core/validation/validator.ts` | `validateChangeDeltaSpecs` 只读 change delta、不打开主 spec（误区 1 的根） |
+| `src/core/specs-apply.ts:269-275` | `buildUpdatedSpec`：MODIFIED 整块替换、按标题精确匹配、丢弃内容与顶部 frontmatter 提示 |
+| `src/core/validation/validator.ts:274-281` | `validateChangeDeltaSpecs` 只做结构校验与主 spec 合并预检/scenario-loss 检查，从不读业务源码（误区 1 的根） |

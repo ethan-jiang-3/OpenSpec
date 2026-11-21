@@ -1,8 +1,6 @@
 # 55 · 实战：多人协作与 Git 工作流
 
-> 多人用 OpenSpec + Git 时，**绝大多数冲突都来自一件事：有人忘了"一个 change = 一个分支、PR 合并后立即 archive"这条纪律。** 这一篇把这条纪律拆成 4 个场景（独立功能 / 有依赖 / 改同一个 spec / 紧急 bugfix），告诉你每一步敲哪条命令、archive 顺序错会怎样、怎么用 PR 串行化避免基线不一致。
-
-> **v1.13.1 协作边界。** “一个 change = 一个分支、合并后 archive”是强烈推荐的团队纪律，不是 CLI 硬校验。同 path 仍需串行化/重基线；退役还必须同时处理在途 MODIFIED 与 main spec 中的 orphan content。
+> 多人用 OpenSpec + Git 时，**绝大多数冲突都来自一件事：有人忘了"一个 change = 一个分支、PR 合并后立即 archive"这条纪律**（适用 openspec 2.1.1；该纪律是强烈推荐的团队约定而非 CLI 硬锁，同 capability path 并行仍需串行化或重基线）。这一篇把团队技能作用域与 4 个典型协作场景（独立功能 / 有依赖 / 改同一个 spec / 紧急 bugfix）一次拆透。
 
 ---
 
@@ -36,6 +34,28 @@ feature/csv-export     ←→  changes/add-csv-export/
 - Git 的分支管理能力可以直接用于 change 管理
 - PR review 时可以同时看到代码和 specs 的变化
 - 回滚时代码和 specs 一起回滚
+
+---
+
+## 团队技能作用域选择：`global`（默认推荐）vs `--scope project`
+
+在多人团队里，除了 `openspec/` 本身，还要先拍板一件事：**`openspec-*` 工作流技能是装在每个人自己电脑上，还是提交进 Git 仓库？** OpenSpec 2.1 提供两种明确的作用域：
+
+| 维度 | 默认全局作用域（`global` scope，推荐） | 仓库内共享作用域（`--scope project`） |
+|---|---|---|
+| **Git 提交内容** | 只提交 `openspec/`（`config.yaml`、`specs/`、`changes/`） | 提交 `openspec/`（含 `skillsScope: project`）+ `.agents/skills/` + 各工具技能链接/拷贝 |
+| **多工具混用体验** | 极佳：Alice 用 Claude Code、Bob 用 Codex、Carol 用 Cursor，互不往仓库塞各自的工具隐藏目录 | 仓库内 `.agents/skills/.openspec-target` 记录全队工具清单，为需要独立目录的工具建相对链接 |
+| **新成员接入动作** | `git pull` 后在终端跑 `openspec update`（提示本机安装时选 **Yes**），或脚本化跑 `openspec init --tools <ids>` | `git pull` 即自带技能文件；升级 CLI 后由一人跑 `openspec update` 并提交变更 |
+| **典型适用场景** | 绝大多数本地 CLI / IDE 协作团队 | 使用 GitHub 云端托管 Copilot coding agent（读不到个人 `~` 主目录）或要求锁死仓库级技能文本的团队 |
+
+### 两条必须知会的团队落地细节
+
+1. **老项目切 `global` 前先对齐全队 CLI 版本**：旧版 1.x / 2.0 CLI 只认识项目内技能。把已有仓库切到 `global` 前，先让全队升级到 OpenSpec 2.1+，再由一人执行 `openspec update` 选择 **Switch to global**（或 `openspec init --scope global`）并提交删掉的仓库内技能目录。
+2. **使用 `--scope project` 时，Windows 成员有两项前置设置**：项目级技能在 macOS/Linux 下会把 `.claude/skills/openspec-*` 等作为相对符号链接提交进 Git。Windows 成员在 clone / checkout 前必须开启：
+   ```bash
+   git config --global core.symlinks true
+   ```
+   并在 Windows 系统设置中开启**开发者模式（Developer Mode）**。未开启这两项时，Git 会把符号链接检出成一行目标路径文本小文件；后续运行 `openspec update` 会自动识别并将其替换为普通 `SKILL.md` 拷贝（功能照常可用，只是失去链接去重；在 Windows 本机直接运行 `--scope project` 初始化时也会默认写入普通拷贝以便 Git 跨机传输）。
 
 ---
 
@@ -489,7 +509,7 @@ rm -rf openspec/changes/change-b/
 | 条件 | 可以并行？ | 原因 |
 |------|-----------|------|
 | 修改不同的 spec 文件 | ✅ 可以 | 不会冲突 |
-| 修改同一个 spec 的不同 requirement | ⚠️ 谨慎 | 可能冲突，需要 sync |
+| 修改同一个 spec 的不同 requirement | 谨慎（需 sync） | 可能冲突，需提前 sync 或重基线 |
 | 修改同一个 requirement | ❌ 不建议 | 肯定冲突，错开时间 |
 | 有依赖关系 | ❌ 不能 | 必须串行 |
 
@@ -500,7 +520,7 @@ graph TD
     A[两个 change 能并行吗？] --> B{修改同一个<br/>spec 文件？}
     B -->|否| C[✅ 可以并行]
     B -->|是| D{修改同一个<br/>requirement？}
-    D -->|否| E[⚠️ 谨慎并行<br/>需要 sync]
+    D -->|否| E[谨慎并行<br/>需要 sync]
     D -->|是| F[❌ 不建议并行<br/>错开时间]
     
     A --> G{有依赖关系？}
@@ -672,12 +692,12 @@ Blocking rule:
 
 假设 Alice 和 Bob 同时开工：
 
-```
+```text
 Alice: add-qc-check     → 改 specs/quality/spec.md（新增 Requirement: Photo Verification）
 Bob:   add-qc-report    → 也改 specs/quality/spec.md（修改 Requirement: Report Format）
 ```
 
-如果 Alice 先 archive，Bob 的 delta 是基于旧 `specs/quality/spec.md` 写的——他的 `## MODIFIED Requirements: Report Format` 期望的是一个旧版本。等 Bob archive 时，要么合并冲突，要么更糟——Alice 新增的 `Photo Verification` 在 Bob 的合并中被无声覆盖。
+如果 Alice 先 archive，Bob 的 delta 是基于旧 `specs/quality/spec.md` 写的——他在 `## MODIFIED Requirements` 段下的 `### Requirement: Report Format` 期望的是旧版本基线。等 Bob archive 时，如果 requirement 块与最新主 spec 冲突就会被拒绝归档，必须手动重基线。
 
 **sync 的价值就是把"等 archive 才合并"拆成两步**：先把 spec 级别的变更合并回主线（sync），代码实现可以继续留在 change 里（apply 还没完）。这样 Bob 开工时看到的 `specs/quality/spec.md` 已经包含了 Alice 的 spec 变更，不会产生基于旧基线的冲突。
 
@@ -688,7 +708,7 @@ Bob:   add-qc-report    → 也改 specs/quality/spec.md（修改 Requirement: R
 - **智能合并，不是文件覆盖**——MODIFIED 只改提到的 requirement，不改的保留原样。ADDED 如果 main spec 已经有了同名 requirement 就当 MODIFIED 处理（sync workflow 模板原文：`If requirement already exists → update it to match (treat as implicit MODIFIED)`，`sync-specs.ts:114`。注意这是 **sync workflow 的行为**；程序化合并路径遇到同名 ADDED 会直接抛 `<spec> ADDED failed for header "### Requirement: X" - already exists`，`specs-apply.ts:577`）
 - **幂等**——同样的 delta 跑两次 sync，结果一样
 - **不归档**——change 仍然 active，代码实现和 tasks 不受影响
-- **sync 后再 archive**——v1.8.0（v1.7.0 起）中，sync 后的 delta 和 main spec 完全一致时，archive 是 no-op（只移动目录，不重写文件）
+- **sync 后再 archive**——sync 后的 delta 和 main spec 完全一致时，archive 是 no-op（只移动目录，不重写文件）
 
 ### 什么时候用它
 
@@ -740,11 +760,11 @@ Bob 需要等 Alice 的 change archive 后再开始。
 1. **周一早上**：团队站会，宣布本周计划
    - Alice: "我要做申请导出，会修改 `requests/submission`"
    - Bob: "我要做审批撤回，依赖 Alice 的申请可见性规则"
-   - Carol: "我要做短信通知，修改 notifications spec"
+   - Carol: "我要做现场站内通知，修改 `notifications/decision-events`"
 
 2. **周三**：Alice 完成申请导出
    - Alice archive 后在团队频道通知："申请导出已 archive，Bob 可以开始了"
-   - Bob 从 main 创建分支，开始退款功能
+   - Bob 从 `main` 创建分支，开始审批撤回功能（`add-approval-revoke`）
 
 3. **周五**：Code Review
    - 每个 PR 都包含代码 + specs
@@ -756,27 +776,11 @@ Bob 需要等 Alice 的 change archive 后再开始。
 
 ---
 
-## 压缩结论
-
-### 快速记忆
-
-1. **一个 change = 一个 Git 分支**
-2. **PR 合并后立即 archive**
-3. **避免并行修改同一个 spec**
-4. **在 proposal 里声明依赖关系**
-5. **每天开始前 git pull，结束前 archive**
-6. **团队沟通：谁在改哪个 spec**
-7. **Code Review 时同时看代码和 specs**
-
-遵循这些原则，多人团队可以高效使用 OpenSpec，避免冲突和混乱。
-
----
-
 ## 跨仓库协作（store 场景）
 
 本文讨论的协作模式是基于「单个仓库内多个 change」的场景。多仓库场景下，store 模型提供跨仓库上下文引用：
 
-### 跨仓库协作
+### 跨仓库协作分层
 
 使用 store 时，协作分为两层：
 
@@ -789,9 +793,18 @@ Bob 需要等 Alice 的 change archive 后再开始。
 
 - **`references:` 声明「这个项目还关心哪些仓库的 specs」**，不包含跨仓库实现计划
 - **各 repo 各自创建 change 来实现自己的部分**，使用 `spec-driven` schema
-- **Change 生命周期不变** — 实现完成后，各 repo 各自 archive 自己的 change
+- **Change 生命周期不变** —— 实现完成后，各 repo 各自 archive 自己的 change
 - **`openspec context` 提供 referenced store 的 working set、路径和 `show --store` 入口**，作为按需读取的起点
 
 详细机制见 [24 高级·store 跨仓库协同](24-高级-store-跨仓库协同.md)。
 
 ---
+
+## 压缩结论
+
+1. **一个 change = 一个 Git 分支**，PR 合并后立即在 `main` 上执行 archive 闭环。
+2. **团队默认用 `global` 作用域装技能**，只把 `openspec/` 提交进 Git；若因云端托管 agent 选 `--scope project`，把 `skillsScope: project` 提交进 `config.yaml`，并提醒 Windows 成员开启 `core.symlinks=true` 与开发者模式。
+3. **并行的真正边界是 capability path**——不同 path 可自由并行，同一 path 需错开归档顺序或用 `/openspec-sync-specs` 提前同步并重基线。
+4. **有前置依赖时在 `proposal.md` 显式写明**，等上游 change archive 进 `main` 后再拉分支。
+5. **每天开工前 `git pull`**，确保始终基于最新正式 `openspec/specs/` 编写 delta。
+6. **Code Review 同时审代码与 delta spec**，合并前跑通 `openspec validate --strict`。

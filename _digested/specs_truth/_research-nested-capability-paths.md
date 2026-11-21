@@ -2,9 +2,9 @@
 
 > **当前基线（2026-07-29）**：本 checkout 已合入 upstream v1.7.0 `4e16790`，PATH 中实际执行的全局 `openspec` 也已核验为 v1.7.0。本笔记只以该正式发布版说明当前行为与建议。
 
-> **v1.8.0 同步（2026-08-08）**：nested capability path 语义在 v1.8.0 不变（path namespace、非 retrieval）；源码链接保留到 v1.7.0 作为原始核验锚点，当前行为以 v1.8.0 为准。
-
-> **v1.14.3 复核（本轮同步）**：nested 语义仍未变——目录是命名空间、无继承/聚合/自动 retrieval，`identity` 与 `identity/session` 是两个独立 capability。下面三条历史约束逐条复核结果：
+> **历史快照声明（原始核验固定于 2026-07-29 `v1.7.0`）**：本文件已登记于 [`_digested/README.md`](../README.md) 的版本敏感表，下文中未另标注版本的「当前」与固定 commit 链接均指向 `v1.7.0` 快照。注意 §77 提到的 agent 引导在后续版本中已补齐：内置 `schemas/spec-driven/schema.yaml`、`explore.ts`、`propose.ts`、`sync-specs.ts` 均已改用 `<capability-path>` 并在 `schema.yaml:16` 显式给出 `identity/user-auth` 等嵌套路径示例；但「目录仅作命名空间、无父子继承、团队需自行约定扁平还是分层」的核心结论不变。
+>
+> **v1.14.3 复核**：nested 语义仍未变——目录是命名空间、无继承/聚合/自动 retrieval，`identity` 与 `identity/session` 是两个独立 capability。下面三条历史约束逐条复核结果：
 > - 跳过隐藏目录 —— **仍成立**（`spec-discovery.ts:40`、`:100` `entry.name.startsWith('.')`）
 > - 不追踪**目录** symlink —— **仅对"递归发现"成立，措辞需要收紧**（见下）
 > - 根目录直放的 `openspec/specs/spec.md` 被忽略 —— **仍成立**

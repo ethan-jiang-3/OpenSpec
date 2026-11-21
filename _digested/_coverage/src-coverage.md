@@ -1,5 +1,7 @@
 # 源码覆盖矩阵
 
+> 当前仓库 `src/**/*.ts` 共 **227** 个源文件，已全量纳入下表追踪。
+
 ## 机制级覆盖
 
 | 源码 | 覆盖位置 |
@@ -18,7 +20,8 @@
 | `src/core/relationship-health.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/core/working-set.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/core/openers.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
-| `src/core/file-state.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
+| `src/core/file-state.ts`、`src/core/zod-issues.ts` | `../mechanisms/01-store-模型与仓库协同.md`（文件锁/原子写与 `formatZodIssues` 状态校验错误格式化） |
+| `src/core/file-view.ts` | `../mechanisms/02-tool-delivery.md`、`../mechanisms/05-cli-infra.md`（`FileView` / `DISK_VIEW` 读视图抽象，供 `update --dry-run` 传递计划树） |
 | `src/core/openspec-root.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/commands/store.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/commands/context.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
@@ -26,7 +29,9 @@
 | `src/commands/doctor.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter；v1.12.0 含 Code Assistant adapter `adapters/codeassistant.ts`；v1.14.0 新增 atomcode/codestudio/easycode/gigacode adapter 与 `command-generation/toml.ts`。**v2.0.0 起不再生成任何 command 文件**，34 个 adapter 保留但只用于识别旧路径，调用方只剩 `migration` / `command-reconcile` / `tool-detection` / `profile-sync-drift` / `released-output-sweep`） |
-| `src/core/shared/skill-generation.ts` | `../mechanisms/02-tool-delivery.md` |
+| `src/core/shared/skill-generation.ts`、`src/core/shared/skill-content-equivalence.ts`、`src/core/shared/allowed-tools.ts`、`src/core/shared/index.ts` | `../mechanisms/02-tool-delivery.md`（单一恒定技能内容生成、新旧双引用等价判定、`Bash(openspec:*)` 预授权常量与 `init`/`update` 共享 barrel） |
+| `src/core/shared/skill-paths.ts` | `../mechanisms/02-tool-delivery.md`（`SHARED_SKILLS_ROOT`、33 个直读 `universal` 工具 vs 54 个建链工具路径解析、旧专属目录定位） |
+| `src/core/github-copilot/cloud-agent.ts` | `../mechanisms/02-tool-delivery.md`（GitHub Copilot cloud coding-agent 文件生成与 `githubCopilot.cloudAgent` opt-in/out 持久化） |
 | `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 起 tool-detection 有 command-drift 检测） |
 | `src/core/init.ts`、`src/core/update.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 `.gitkeep` + 共享 restart；v1.13.0 损坏 command 检测） |
 | `src/core/shared/ide-restart.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 新增） |
@@ -67,6 +72,7 @@
 | 源码 | 覆盖位置 |
 |------|----------|
 | `src/cli/index.ts` | `../system/06-源码地图与扩展点.md`、`../spec_cli/04-command-deep-dive.md` |
+| `src/cli/commands/config.ts`、`src/cli/commands/context.ts`、`src/cli/commands/doctor.ts`、`src/cli/commands/schema.ts`、`src/cli/commands/spec.ts`、`src/cli/commands/store.ts`、`src/cli/commands/workset.ts` | `../system/06-源码地图与扩展点.md`、`../mechanisms/05-cli-infra.md`、`../spec_cli/04-command-deep-dive.md`（v1.14.1 命令注册定义壳，action 内按需 `await import()` 实现） |
 | `src/index.ts`、`src/core/index.ts` | `../system/06-源码地图与扩展点.md` |
 
 
@@ -79,7 +85,6 @@
 | `src/utils/task-progress.ts`（扩展）+ `src/core/validation/task-checkboxes.ts`（新） | 全标记计数 / 无 checkbox 检测 | `../internal-spec-driven/03`、`../specs_truth/06`（已记） |
 | `src/core/completions/installers/shell-quote.ts` | completion 安装 shell 引用 | `../mechanisms/05-cli-infra.md`（已记） |
 | `src/telemetry/opt-out.ts` | 遥测 opt-out | `../mechanisms/05-cli-infra.md`（待展开） |
-| `src/core/templates/optional-workflow.ts` | profile 未装 workflow 的提示支撑 | 待消化 |
 | `src/core/templates/workflows/project-root.ts` | workflow 写前 init 检查 | `../workflows/`（行为已记） |
 | `src/utils/nested-change.ts` | namespace 目录中 change 的报告 | `../specs_truth/06`（已记锚点） |
 
@@ -106,7 +111,7 @@
 | `src/core/standalone-tip.ts` | 全局包管理器用户的 standalone 一次性提示（update 后、非 TTY/CI 延迟） | `test/core/standalone-tip.test.ts` |
 | `src/utils/executable-path.ts` | `findCopiesOnPath` / `samePath`：PATH 上实际生效的副本判定 | `test/core/version-check.test.ts`、`test/commands/install-standalone.test.ts` |
 | `scripts/binary/` + `.github/workflows/binaries.yml` | standalone 单文件的构建、安装、校验、8 目标验证与 release 资产 | `test/commands/install-standalone.test.ts`、`test/core/standalone-tip.test.ts`（CLI 侧） |
-| `src/core/version-check.ts`（standalone 扩展） | `markStandaloneBinary` / `getStandaloneBinaryPath`；`scope: 'standalone'`；升级命令 `openspec install` | `test/core/version-check.test.ts` |
+| `src/core/version-check.ts`（standalone + Homebrew/Nix 扩展） | `markStandaloneBinary` / `getStandaloneBinaryPath`（`scope: 'standalone'`，升级命令 `openspec install`）；v2.1.1 `#2264` 新增 `homebrew`（`brew upgrade openspec`）与 `nix`（`update.command: null`）识别 | `test/core/version-check.test.ts` |
 
 ## v2.0.0–v2.1.1 新增模块
 

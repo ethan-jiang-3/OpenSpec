@@ -35,7 +35,7 @@
 | `test/core/templates/` | `../mechanisms/04-workflow-templates.md`（v1.13.0 新增 `test/core/templates/spec-inventory.test.ts`） |
 | `test/core/templates/main-spec-paths.test.ts` | `../schema/02-内置-spec-driven-详解.md`、`../internal-spec-driven/02-propose-提案生成.md` |
 | `test/package-install-scripts.test.ts` | `../mechanisms/05-cli-infra.md`（v1.12.0 git 安装免 pnpm） |
-| `test/core/update.test.ts` | `../mechanisms/02-tool-delivery.md`（v1.13.0 command-drift 检测 `test/core/shared/tool-detection-command-drift.test.ts`） |
+| `test/core/update.test.ts`、`test/core/shared/tool-detection.test.ts` | `../mechanisms/02-tool-delivery.md`（1.x 的 `tool-detection-command-drift.test.ts` 已在 v2.0.0 随命令生成移除而删除） |
 | `test/telemetry/`、`test/commands/feedback.test.ts` | `../mechanisms/05-cli-infra.md` |
 | `test/specs/` | `_coverage/specs-coverage.md` |
 | `test/vocabulary-sweep.test.ts` |术语扫描测试 |
@@ -59,12 +59,12 @@
 | `test/commands/validate.findings.test.ts`、`test/cli-e2e/validate-findings.test.ts` | `validate --report findings` | `../spec_cli/02/04` |
 | `test/cli-e2e/validate-task-checkboxes.test.ts` | 全标记 task 计数 | `../internal-spec-driven/03-apply-实施执行.md` |
 | `test/commands/apply-instructions-warnings.test.ts`、`apply-instructions-blocked.test.ts` | apply 无 spec 警告 / blocked | `../spec_cli/03-workflow-runtime-api.md` |
-| `test/commands/validate-task-checkboxes` 相关（core+e2e） | 「无 checkbox」检测与全标记计数 | `../internal-spec-driven/03` |
+| `test/core/task-checkboxes.test.ts`、`test/cli-e2e/validate-task-checkboxes.test.ts` | 「无 checkbox」检测与全标记计数 | `../internal-spec-driven/03` |
 | `test/commands/store-remove-nested.test.ts`、`store-setup-no-init-git.test.ts`、`store-phantom-root.test.ts` | store 三修复 | `../mechanisms/01-store-模型与仓库协同.md` |
 | `test/core/artifact-graph/schema-apply-references.test.ts`、`test/commands/schema-apply-references.test.ts` | apply block 引用校验 | `../schema/00-map.md` |
 | `test/commands/workflow-instructions-injection.test.ts`、`validate.name-guard.security.test.ts`、`completion-tip.atomic-write.security.test.ts` | #1835 安全加固 | `../mechanisms/05-cli-infra.md` |
 | `test/commands/config-edit.test.ts` | 不可解析 config 防重写 | `../spec_cli/05-config-profile-delivery.md` |
-| `test/commands/profile-handoffs.test.ts` | optional-workflow 生成时 handoff 解析 | `../spec_cli/05`、`../workflows/00-overview.md` |
+| `test/commands/profile-handoffs.test.ts` | profile 工作流间 handoff 与 CLI 回归（v1.13.x 曾按已删除的 `optional-workflow` 生成期解析，v2.0.0 起改为单一恒定技能文本） | `../spec_cli/05-config-profile-delivery.md`、`../workflows/00-overview.md` |
 | `test/core/completions/installers/bash-installer.round-trip.test.ts` | bash 卸载逐字节还原 | `../mechanisms/05-cli-infra.md` |
 | `test/cli-e2e/archive-closed-requirement-heading.test.ts`、`archive-requirement-name-near-miss.test.ts` | archive 收尾 `#`、大小写近名拒绝 | `../internal-spec-driven/04-archive-归档合并.md` |
 
@@ -117,12 +117,28 @@
 | 测试 | 覆盖内容 | 对应 digest |
 |------|----------|-------------|
 | `test/cli-e2e/upgrade-from-releases.test.ts` | **本版最有价值的测试**：把真实 npm 发布版（0.14.0 / 0.23.0 / 1.0.0 / 1.2.0 / 1.10.0 / 1.16.0）装进临时项目，用当前构建 `update` 升级，断言不需要 `--force`、不留下未编辑的旧产物、编辑过的保留、第二次运行无事可做。需网络，`OPENSPEC_RELEASE_UPGRADES=1` 才启用 | `../mechanisms/05-cli-infra.md`、`../mechanisms/02-tool-delivery.md` |
-| `test/fixtures/released-output/`（6 个新夹具） | 真实发布产物（v0.23.0 / v1.0.0 的 CLAUDE.md、命令、prompt），按字节校验指纹；`.gitattributes` 里 `-text` 禁止 autocrlf 转换 | `../mechanisms/05-cli-infra.md` |
+| `test/fixtures/released-output/`（v1.17.0 起 6 个，v2.1.1 扩至 **37 个**文件） | 真实发布产物（v0.23.0–v2.0.0 的 CLAUDE.md、命令、prompt 与 skills），按字节校验指纹与退役清理；`.gitattributes` 里 `-text` 禁止 autocrlf 转换 | `../mechanisms/05-cli-infra.md` |
 | `test/core/released-output-sweep*.test.ts` | 清扫的五重条件、链接路径一律不碰、`pruneEmptyParents` 只回收空目录 | `../mechanisms/05-cli-infra.md` |
 | `test/core/shared/generated-fingerprint.test.ts` | 归一化边界：BOM、CRLF、合法/非法版本号、`generatedBy` 自由文本仍算实质、`C#` 与 NBSP | `../mechanisms/05-cli-infra.md` |
-| `test/core/shared/command-reconcile*.test.ts` | `removed`/`kept`/`unchecked` 三分；三组 workflow 集的候选比对；symlink 越界归 `unchecked` | `../mechanisms/02-tool-delivery.md` |
-| `test/core/command-surface.test.ts` | 能力矩阵与四条判定；弃用提示只在“切 skills 会改变该工具”时出现 | `../mechanisms/02-tool-delivery.md` |
+| `test/core/command-reconcile.test.ts` | `removed`/`kept`/`unchecked` 三分；三组 workflow 集的候选比对；symlink 越界归 `unchecked` | `../mechanisms/02-tool-delivery.md` |
 | `test/core/parsers/closed-requirement-heading.test.ts` | `## Purpose ##` 等价、`### Requirement: Foo ###`、`C#` 保 `#`、NBSP 不剥 | `../spec_cli/01-human-facing-cli.md` |
 | `test/core/validation.*`（v1.16 扩展） | #2079 scenario 无 WHEN/THEN 为 WARNING 且 `--strict` 才失败；#2207 未识别 Requirements 段为 ERROR 且 archive 拒绝；#2127 坏 config 退出 1 | `../spec_cli/01-human-facing-cli.md` |
-| `test/core/version-check.test.ts`（v1.16.1 扩展） | 显式 `--check` 不受遥测/CI 影响；standalone 只提示有 `SHA256SUMS` 的版本 | `../spec_cli/01-human-facing-cli.md` |
-| `test/core/completions/zsh-installer.test.ts` | `ZDOTDIR` 绝对路径写 `$ZDOTDIR/.zshrc`；相对/`~` 前缀忽略；uninstall 清同一文件并清早期 `~/.zshrc` 残留 | `../mechanisms/05-cli-infra.md` |
+| `test/core/version-check.test.ts`（v1.16.1 / v2.1.1 扩展） | 显式 `--check` 不受遥测/CI 影响；standalone 只提示有 `SHA256SUMS` 的版本；v2.1.1 新增 `homebrew` / `nix` 识别 | `../spec_cli/01-human-facing-cli.md`、`../spec_cli/02-machine-facing-cli.md` |
+| `test/core/completions/installers/zsh-installer.test.ts` | `ZDOTDIR` 绝对路径写 `$ZDOTDIR/.zshrc`；相对/`~` 前缀忽略；uninstall 清同一文件并清早期 `~/.zshrc` 残留 | `../mechanisms/05-cli-infra.md` |
+
+## v2.0.0–v2.1.1 新增/删除测试
+
+| 测试 | 覆盖内容 | 对应 digest |
+|------|----------|-------------|
+| `test/core/global-skills.test.ts` | 全局/项目技能作用域、`supportsGlobalSkills`、`isHomeFolder`、`global-skills.lock` 并发锁与陈旧锁清理、全局 `update` 免 `openspec/` 运行 | `../mechanisms/02-tool-delivery.md`、`../spec_cli/05-config-profile-delivery.md` |
+| `test/core/project-skills-scope.test.ts` | `openspec/config.yaml` 中 `skillsScope: project` 的读写与切回全局时的清理（保留注释与其他字段） | `../mechanisms/02-tool-delivery.md`、`../spec_cli/05-config-profile-delivery.md` |
+| `test/core/project-skills-vercel.test.ts` | `skills` 包安装桥接、本地离线临时目录安装（#2283）与 `eve` 的 `projectSkillText`（剥离 `allowed-tools`） | `../mechanisms/02-tool-delivery.md` |
+| `test/core/known-projects.test.ts` | `<globalDataDir>/projects.json` 的记录、去重、控制字符过滤与读写失败静默容错 | `../mechanisms/02-tool-delivery.md`、`../system/02-目录与状态边界.md` |
+| `test/core/skills-2-0-hardening.test.ts`、`test/core/shared/skill-links.test.ts` | `.agents/skills/` 单一真身、54 个建链工具的相对软链与退化拷贝、`SkillLinkSpot` 五态（`missing`/`link`/`copy`/`released`/`user`） | `../mechanisms/02-tool-delivery.md` |
+| `test/core/retired-tools.test.ts` | `RETIRED_TOOLS`（`amazon-q` → `kiro`）：`init --tools amazon-q` 拒绝报错并指路，`update` 按指纹清理 `.amazonq` 遗留文件 | `../mechanisms/02-tool-delivery.md` |
+| `test/core/templates/one-text-per-skill.test.ts` | 断言任意 workflow profile 过滤下每个 skill 产出的正文恒定一致（取代已删除的 `optional-workflow.test.ts`） | `../mechanisms/02-tool-delivery.md`、`../spec_cli/05-config-profile-delivery.md` |
+| `test/core/templates/archive-existing-target.test.ts` | #2277：`openspec-archive-change` 在写任何主 spec 前先检查 `<changesDir>/archive/<target-name>` 冲突 | `../spec_cli/06-opsx-call-chains.md`、`../mechanisms/04-workflow-templates.md` |
+| `test/cli-e2e/apply-wrapped-tasks.test.ts` | 折行/多行任务项在 `instructions apply` 中的解析与行号定位 | `../spec_cli/03-workflow-runtime-api.md` |
+| `test/upgrade-to-2-docs-claims.test.ts`、`test/ci-docs-only.test.ts` | 2.0 升级指南断言校验与纯文档变更的 CI 快路径 | 仓库工程/文档面 |
+
+**v2.0.0 随命令面移除而删除的测试文件**：`test/core/command-deprecation-notice.test.ts`、`test/core/shared/tool-detection-command-drift.test.ts`、`test/core/templates/optional-workflow.test.ts`、`test/core/templates/profile-handoffs.test.ts`、`test/delivery-deprecation-docs-claims.test.ts`。

@@ -159,6 +159,23 @@ operations:
 
 只要这四层不混，`config.yaml` 就比较容易保持质量。
 
+### `openspec/config.yaml` 全部 8 个顶层字段总表
+
+CLI 解析项目配置时按 **`openspec/config.yaml` > `openspec/config.yml`** 探测（两者并存时只读 `.yaml`）。整个文件共支持以下 **8 个顶层字段**：
+
+| 字段 | 类型 | 必填 | 谁消费它 / 边界与上限 |
+|---|---|---|---|
+| `schema` | `string` | 推荐（缺省回退 `spec-driven`） | 新建或解析未显式指定 schema 的 change 时用作项目默认工作流名 |
+| `context` | `string` | 否 | 注入每个 artifact 生成指令及 `instructions apply` / `instructions archive`；文本输出包裹在 `<project_context>...</project_context>` 信封标签中，`--json` 直接返回字符串。**硬上限 50 KB**（与 `references` 索引共享额度；`context` 本身超限会整段丢弃并告警） |
+| `rules` | `Record<artifactId, string[]>` | 否 | 按 artifact ID 精确分流，仅注入同名 artifact 的生成指令（文本模式包裹在 `<rules>` 中）；所有可用 schema 都不认识的 key 会告警 |
+| `operations` | `{ apply?: { guidance?: string[] }, archive?: { guidance?: string[] } }` | 否 | 仅支持 `apply` 与 `archive` 两个操作 ID，各自的 `guidance` 分别注入 `instructions apply` 与 `instructions archive` |
+| `references` | `Array<string \| { id: string, remote?: string }>` | 否 | 声明跨仓库只读引用的已注册 store ID（及可选克隆源 `remote`），供 `openspec context`、`doctor` 与 `instructions` 组装引用索引（详见 [24](24-高级-store-跨仓库协同.md)） |
+| `store` | `string` | 否 | 仅当本地 `openspec/` 是不含 `specs/`、`changes/` 的 config-only 指针目录时，指向外部已注册 store；本地已有规划目录时忽略并告警（详见 [24](24-高级-store-跨仓库协同.md)） |
+| `githubCopilot` | `{ cloudAgent?: boolean }` | 否 | 记录是否生成 GitHub Copilot 云端 coding-agent 工作流与 agent 文件（需配合仓库内 `project` 技能作用域） |
+| `skillsScope` | `'project' \| 'global'` | 否 | 记录本项目 skills 的存放作用域（例如保留在仓库内时写入 `skillsScope: project`，使 `openspec update` 不再重复询问迁移） |
+
+> **语法损坏时的硬门禁**：普通命令（如 `list`、`status`、`instructions`）遇到不可读或 YAML 语法损坏的 `config.yaml` 时只打警告并忽略该文件继续运行；但 **`openspec validate` 会直接以退出码 `1` 失败**（`--json` 诊断码为 `unreadable_config` 或 `unparseable_config`），防止配置文件写坏导致全部规则静默失效却在 CI 里绿灯放行。
+
 ### 一张图记住三层分工
 
 ```mermaid

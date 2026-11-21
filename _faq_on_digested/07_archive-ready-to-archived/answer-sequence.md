@@ -4,7 +4,7 @@
 
 Archive 是四个阶段里 TS 比重最高的。前三个阶段（Explore、Propose、Apply）都是 MD 主导、TS 提供状态和指令；archive 反了过来——TS 的 `ArchiveCommand.execute()` 程序化执行验证、合并、移动，MD（agent 或用户）只出现在决策点：选择 change、确认 warning、决定是否跳过 spec updates。
 
-但还有第二条路径：`/openspec-archive-change` agent 模板会在调 CLI 之前做 MD 主导的 pre-flight checks（status、sync assessment），形成一段短的 MD↔TS 交替前奏。
+但还有第二条**完全独立**的路径：`openspec-archive-change` agent skill（Claude 等写作 `/openspec-archive-change`，Codex 写作 `$openspec-archive-change`）**绝不调用 `openspec archive` CLI**——它只用只读 CLI（`instructions archive`/`status`/`list`/`instructions specs`）查询状态与规则，在写任何主 spec 前先检查 `<planningHome.changesDir>/archive/<target-name>` 未冲突（v2.1.1 `#2277`），由 agent inline 同步主 specs 并校验，最后自己执行 `mkdir -p` + `mv`。
 
 ## 时序图（双路径）
 
@@ -58,27 +58,29 @@ sequenceDiagram
 
         %% Phase 3
         rect rgb(255, 255, 240)
-            Note over User,FS: Phase 3 · task progress check
-            TS->>FS: 读 tasks.md（若存在）
+            Note over User,FS: Phase 3 · task progress check（schema-aware）
+            TS->>FS: getTaskProgressForChange() 读 schema apply.tracks
             FS-->>TS: checkbox 内容
-            TS->>TS: getTaskProgressForChange()<br/>统计 - [ ] / - [x]
+            TS->>TS: TASK_LINE_PATTERN 统计<br/>（仅 x/X 算完成，[~]/[-]/[] 均计未完）
             alt 有未完成 tasks
                 TS-->>User: "Warning: N incomplete task(s).<br/>Continue?"
                 User->>TS: y/N
-            else 无 tasks.md
-                TS->>TS: total=0, complete=0<br/>"No tasks"（不阻塞）
+            else 无跟踪任务文件或 0 任务
+                TS->>TS: total=0, completed=0<br/>"No tasks"（不阻塞）
             end
         end
 
         %% Phase 4
         rect rgb(245, 255, 245)
-            Note over User,FS: Phase 4 · 查找 + 确认 spec updates
+            Note over User,FS: Phase 4 · 预检目标 + 预构建 + 确认 spec updates
+            TS->>FS: assertArchiveDestinationAvailable()<br/>先确认 archive/YYYY-MM-DD-<name> 不存在
             alt 无 --skip-specs
-                TS->>FS: findSpecUpdates()<br/>扫描 change/specs/*/spec.md<br/>映射到 openspec/specs/*/spec.md
+                TS->>FS: findSpecUpdates()<br/>扫描 change/specs/<cap>/spec.md<br/>映射到 openspec/specs/<cap>/spec.md
                 FS-->>TS: SpecUpdate[]{source, target, exists}
                 alt 有 spec updates
-                    TS-->>User: "Specs to update:<br/>  user-auth: update<br/>  billing: create<br/>Proceed?"
-                    User->>TS: y/N
+                    TS->>TS: 对全部 updates 先内存预构建：<br/>buildUpdatedSpec()（RENAMED→REMOVED→MODIFIED→ADDED）<br/>收集丢弃内容/frontmatter 告警
+                    TS-->>User: 展示告警 + "Specs to update ... Proceed?"
+                    User->>TS: y/N（拒绝则跳过写 spec，仍继续移动 change）
                 else 无 spec updates
                     TS->>TS: 跳过 spec 更新，仍可 archive
                 end
@@ -89,19 +91,12 @@ sequenceDiagram
 
         %% Phase 5
         rect rgb(248, 248, 255)
-            Note over User,FS: Phase 5 · build + merge（纯 TS，无 MD 参与）
+            Note over User,FS: Phase 5 · 全量校验 + 快照 + 写主 specs（纯 TS）
             alt 用户确认更新 specs
-                TS->>TS: 对所有 updates 预构建：<br/>buildUpdatedSpec(update, changeName)
-                TS->>FS: 读 main spec（或创建 skeleton）
-                FS-->>TS: main spec 内容
-                TS->>TS: findMainSpecStructureIssues()<br/>（拦截 delta header 混入 main spec）
-                TS->>TS: 解析 delta plan：<br/>added[], modified[], removed[], renamed[]
-                TS->>TS: 预验证：<br/>同 section 不重复、不同 section 不冲突、<br/>RENAMED TO 不和 ADDED 冲突
-                TS->>TS: 按顺序应用操作：<br/>RENAMED → REMOVED → MODIFIED → ADDED
-                Note right of TS: MODIFIED 是完整替换，<br/>不是智能 patch
-                TS->>TS: 重建 spec.md：<br/>已有 requirement 保持原序<br/>新增追加到 ## Requirements 末尾
-                TS->>TS: Validator.validateSpecContent()<br/>验证 rebuilt spec
-                TS->>FS: writeUpdatedSpec()<br/>写入 openspec/specs/<capability>/spec.md
+                TS->>TS: 复核输入 fingerprint 未在等待确认时变化
+                TS->>TS: 对全部待写 rebuilt specs 执行<br/>Validator.validateSpecContent()<br/>（任一失败 → 全部不写、直接中止）
+                TS->>FS: 复检并独占声明 archive 目标目录<br/>captureSpecSnapshots() 捕获主 spec 快照
+                TS->>FS: writeUpdatedSpec() / 授权退役删除<br/>（若中途失败，restoreSpecSnapshots 回滚）
                 FS-->>TS: 写入完成
                 TS-->>User: "+ 2 added  ~ 1 modified<br/>  - 0 removed  -> 1 renamed"
             end
@@ -110,45 +105,52 @@ sequenceDiagram
         %% Phase 6
         rect rgb(255, 248, 248)
             Note over User,FS: Phase 6 · move change 目录
-            TS->>TS: 生成目标名：<br/>YYYY-MM-DD-<changeName>
-            TS->>FS: 检查 archive target 是否已存在
-            FS-->>TS: 不存在 ✓
-            TS->>FS: fs.rename() 移动 change 目录<br/>→ openspec/changes/archive/YYYY-MM-DD-<name>/
+            TS->>FS: moveDirectory()（fs.rename 或带快照回滚的 copy+remove）<br/>→ openspec/changes/archive/YYYY-MM-DD-<name>/
             FS-->>TS: 移动完成
             TS-->>User: "Change 'add-oauth-login' archived<br/>Specs updated: 1"
         end
     end
 
-    %% ===== Path B: OPSX 模板 =====
+    %% ===== Path B: openspec-archive-change skill =====
     rect rgb(250, 255, 250)
-        Note over User,FS: ══════ 路径 B · /openspec-archive-change（agent 模板，MD↔TS 交替前奏） ══════
+        Note over User,FS: ══════ 路径 B · openspec-archive-change（独立 agent skill，绝不调 openspec archive CLI） ══════
 
         User->>MD: /openspec-archive-change [change-name]
-        MD->>MD: 读 archive skill template
+        MD->>MD: 读 archive skill 指令
 
         rect rgb(245, 245, 255)
-            Note over User,FS: MD↔TS 交替 pre-flight
+            Note over User,FS: Step 1-3 · 上下文、工件与任务检查
+            MD->>TS: openspec list --json（若需选 change）
+            MD->>TS: openspec instructions archive --change "X" --json
+            TS-->>MD: context + operationGuidance（可选）
             MD->>TS: openspec status --change "X" --json
-            TS-->>MD: artifact 完成状态
-            MD->>MD: 确认所有 artifacts done
+            TS-->>MD: schemaName, planningHome, changeRoot, artifactPaths, artifacts
+            MD->>TS: openspec list --json（读取 schema-aware 的 totalTasks / completedTasks）
+            TS-->>MD: 匹配 change 的任务完成数（有未完任务时提示用户确认）
+        end
 
-            MD->>TS: openspec list --json（若无 name）
-            TS-->>MD: active changes
-
-            MD->>MD: delta spec sync assessment：<br/>读 change delta specs + main specs<br/>判断是否需要 sync 再 archive<br/>（agent-driven merge，<br/>非 CLI 的 programmatic merge）
-
-            MD-->>User: "archive 前建议确认：<br/>- tasks 全部完成 ✓<br/>- delta specs 与 main 同步 ✓<br/>确认 archive？"
-            User->>MD: 确认
-
-            opt 需要 sync（v1.14.0 阻塞语义）
-                MD->>FS: inline 执行 sync（同步等待，<br/>不委托后台）
-                MD->>MD: sync 报任何 stop/blocking →<br/>视为 sync 失败，立即停止归档：<br/>不比对、不移 changeRoot，<br/>修复后可重跑
-                MD->>MD: sync 成功后结构验证：<br/>主 spec 无 delta header 残留、<br/>REMOVED 已删、retire 的<br/>capability 主 spec 已删
+        rect rgb(245, 255, 250)
+            Note over User,FS: Step 4 · 先查归档目标冲突（#2277）→ sync 评估与执行
+            MD->>FS: 先检查 <planningHome.changesDir>/archive/<target-name> 是否已存在<br/>（若已存在，写任何主 spec 前立即报错停止！）
+            MD->>MD: 对比 artifactPaths.specs.existingOutputPaths 与<br/><planningHome.root>/openspec/specs/<cap>/spec.md
+            MD-->>User: 展示组合 sync 摘要并询问（Sync now / Archive without syncing / Cancel）
+            User->>MD: 选择 Sync now
+            opt 执行 inline sync
+                MD->>FS: 再次确认 archive/<target-name> 不存在
+                MD->>TS: openspec instructions specs --change "X" --json（取 specs rules 快照）
+                TS-->>MD: rules 快照
+                MD->>FS: inline 同步执行 openspec-sync-specs（严禁委托后台）
+                MD->>MD: 任一 stop/blocking → 立即停止归档，不移 changeRoot<br/>成功后全量核验主 spec 结构与变更内容（无 delta 段头残留等）
             end
         end
 
-        MD->>TS: openspec archive <name> --yes
-        Note over TS,FS: 此后进入路径 A 的 Phase 1-6<br/>（TS 主导的程序化 archive）
+        rect rgb(255, 248, 248)
+            Note over User,FS: Step 5-6 · 创建归档目录并直接 mv（不调 openspec archive）
+            MD->>FS: mkdir -p "<planningHome.changesDir>/archive"
+            MD->>FS: 移前最后复检 archive/<target-name> 不存在
+            MD->>FS: mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
+            MD-->>User: 输出 Archive Complete 摘要
+        end
     end
 ```
 
@@ -209,24 +211,22 @@ TS: buildUpdatedSpec()
 
 操作顺序是语义保证，不是实现细节。RENAMED 先发生，后续 MODIFIED 才能引用新名字；REMOVED 先删掉不再存在的 requirement；MODIFIED 替换完整 block；ADDED 最后加入，避免和 rename target 冲突。
 
-### 模式 4（仅 OPSX 路径）：MD 做 sync assessment → 再交 TS 执行
+### 模式 4（`openspec-archive-change` skill 路径）：MD 主导全流程，不调 `openspec archive`
 
 ```text
-MD: openspec status --change <name> --json → artifacts 都 done
-MD: 读 change delta specs + main specs
-MD: 判断 sync 状态：
-  - delta 是否已经合理反映到 main？
-  - 是否需要先 openspec-sync-specs？
-  - 有没有冲突需要用户决策？
-MD→User: sync assessment 结果 + 确认
-User→MD: 确认
-MD→TS: openspec archive <name> --yes
-TS→: 进入程序化 archive（路径 A Phase 1-6）
+MD: openspec instructions archive --change <name> --json → 读 context / operationGuidance
+MD: openspec status --change <name> --json → 检查 artifacts 是否均 done 或 skipped
+MD: openspec list --json → 读取该 change 的 totalTasks / completedTasks（schema-aware）
+MD: 先检查 <planningHome.changesDir>/archive/<target-name> 是否已存在（#2277：写主 spec 前硬拦截！）
+MD: 对比 delta specs 与 <planningHome.root>/openspec/specs/<cap>/spec.md，向用户展示评估并确认
+User→MD: 选择 Sync now（或 Archive without syncing）
+MD: （若选 Sync）拉取 instructions specs --json 规则快照 → inline 同步主 specs 并对全部 capability 核验
+MD: mkdir -p "<planningHome.changesDir>/archive" + 复检目标不存在 + mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
 ```
 
-OPSX 路径的价值就是这一段 MD 前奏。CLI 路径假设用户在调命令之前已经自己做完了这些判断。
+注意两条路径的分界：`openspec-archive-change` skill **从不调用 `openspec archive` CLI**——它的合并由 `openspec-sync-specs`（或 agent inline 合并）完成，移动由 `mkdir -p` + `mv` 完成；而 `openspec archive` CLI 是纯 TypeScript 的程序化合并与带快照回滚的移动。
 
-v1.14.0（`0ff63dba`）给这段前奏加上了硬规则：sync 报告任何 stop/blocking 条件即视为 sync 失败，立即停止归档（不比对、不移 `changeRoot`，修复后重跑）；sync 成功后还要对全部 capability 做结构验证（无 delta header 残留、REMOVED 已删、被 retire 的 capability 主 spec 已删除而非留空），任何 mismatch 同样停止归档。sync 只能 inline 同步等待——委托后台会让 step 5 移走 `changeRoot`，留下"已归档但主 specs 没更新"的状态。
+v1.14.0（`0ff63dba`）与 v2.1.1（`#2277`）给 skill 路径补齐了硬护栏：先在写任何主 spec 之前预检归档目标目录未冲突（`#2277`）；sync 报告任何 stop/blocking 条件即视为失败并立即停止归档（不比对、不移 `changeRoot`）；sync 成功后还要对全部 capability 做结构与内容核验（无 delta header 残留、REMOVED 已删、被 retire 的 capability 主 spec 已删除而非留空）。sync 只能 inline 同步等待——委托后台会让 step 5 移走 `changeRoot`，留下"已归档但主 specs 没更新"的状态。
 
 ## guard 强度分层
 
@@ -251,7 +251,7 @@ archive 的 guard 不是二元 "通过/不通过"。它有明确分层：
 
 ## 参考来源
 
-源码引用基于 commit `487ea92`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

@@ -17,11 +17,11 @@
 两句话：
 
 ```text
-config.yaml 里没有一条是硬的 —— 它是投递面，不是闸门面
+config.yaml 的正文投递三面（context / rules / operations）没有一条校验方向内容 —— 它是投递面，不是语义闸门面
 内置 schema 也没有「方向」这个 artifact —— 方向就活在 proposal.md 里
 ```
 
-第一句解释了为什么线 B 看起来有机制、实际拦不住人：线 B 的"纪律"大多落在 `config.yaml` 和 prompt 模板里。
+第一句需要把边界说准：`config.yaml` 里 `schema`、`references`、`store`、`githubCopilot.cloudAgent`、`skillsScope` 这 5 个结构性键由 CLI 硬解析（且 `validate` 会对不可读/非法 YAML 直接 exit 1，`#2127`；`context:` 也有 50 KB 硬上限），但**真正承载写作与执行纪律的三个散文投递面（`context`、`rules`、`operations.*.guidance`）全部是软 prompt**——这也是为什么线 B 看起来能写规则、实际拦不住空壳方向。
 
 第二句是本章的关键前提。内置 `spec-driven` 的四个 artifact 是：
 
@@ -92,7 +92,7 @@ tasks     generates: tasks.md           requires: [specs, design]
 
 ---
 
-## 6.3 `config.yaml` 三个面：都软，但都用得上
+## 6.3 `config.yaml` 的三个提示投递面：都软，但都用得上
 
 ### `context:` —— 放跨 change 恒真的方向纪律
 
@@ -318,7 +318,7 @@ D 又改了方向，specs 没跟上（真正的漂移）
 
 ## 6.6 跨 change：内置能力补不上
 
-`openspec validate --all` 对"8 个 change 抢同一个 capability"完全沉默（实测命中 `overlap|conflict|stack|depend` 的条数为 **0**）。这一块**内置 schema 和脚本都帮不上多少**，因为根因是结构性的。
+`openspec validate --all` 对"4 个活跃 change 同时改同一个 capability"完全沉默（实测命中 `overlap|conflict|stack|depend` 的条数为 **0**）。这一块**内置 schema 和脚本都帮不上多少**，因为根因是结构性的。
 
 可以做的只有两件：
 
@@ -330,7 +330,7 @@ D 又改了方向，specs 没跟上（真正的漂移）
 
 | 提案 | 状态 | 覆盖 |
 |---|---|---|
-| `openspec/changes/add-change-stacking-awareness/` | **未落地**（卡 3/4） | `dependsOn` 等元数据 + `change graph` |
+| `openspec/changes/add-change-stacking-awareness/` | **未落地（已在 PR #2128 删除）** | `dependsOn` 等元数据 + `change graph` |
 | [issue #1915](https://github.com/Fission-AI/OpenSpec/issues/1915) | open | `depends_on` 元数据 + list 可见性 |
 | [issue #1387](https://github.com/Fission-AI/OpenSpec/issues/1387) | open（`design-review`） | 归档前 drift / overlap 检测 |
 

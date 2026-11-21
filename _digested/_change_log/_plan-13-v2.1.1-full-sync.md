@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-- **计划状态**：Phase A 完成、Phase B–D 主要落点已回填、E1/E2 已跑；剩余 B9/C5/C6/D4/D5 校验项与 E3–E7 收尾未完成
+- **计划状态**：Phase A–E 全部完成（Phase B–D 由 [`_plan-14`](./_plan-14-v2.1.1-doc-complete-sync.md) 接续并完成全库源码精校），仅剩 E7 人工复核
 - **本地分支**：`ethan`
 - **旧基线**：OpenSpec `v1.17.0`，tag/commit `579fcac5`
 - **目标基线**：OpenSpec `v2.1.1`，tag/commit `0c737dc1`
@@ -69,7 +69,7 @@ git diff --cached --name-only --diff-filter=A -- . ":!_\*" ":!CONTEXT.md"
 - **命令文件是「已移除」，不是「弃用」**：1.17.0 标弃用，2.0 真删。资料里凡是写「已标记弃用」的都要改成「已移除」
 - **skills 只有一份**：`.agents/skills/` 为真身，其他工具用自己的 `skills/` 目录指向它的链接；建不了链接时退化为拷贝
 - **`delivery` 已退役**：配置里不再有这一项，不要再写三态
-- **作用域**：2.1 起有 `global` / `project` 两种，记在 `openspec/config.yaml`
+- **作用域**：2.1 起有 `global` / `project` 两种——项目侧记在 `openspec/config.yaml`（`skillsScope`），机器级默认记在全局 `config.json`（`GlobalConfig.skillsScope`），另支持环境变量 `OPENSPEC_SKILLS_SCOPE` 覆盖
 - **安装层外包**：运行时依赖 `skills` 包；适配器层仍在，但**只做路径解析，不做生成**
 - **退役工具有正式机制**：`RETIRED_TOOLS` 表 + 替代工具提示（Amazon Q → Kiro）
 - **Node 门槛**：`>=22.20.0`
@@ -82,7 +82,7 @@ git diff --cached --name-only --diff-filter=A -- . ":!_\*" ":!CONTEXT.md"
 
 ### Phase A：upstream 行为审计 → `_change_log/0015-v1.17.0-to-v2.1.1.md`
 
-- [x] A1 产出 0015：2.0 破坏性变更、`skills` 包外包、全局 skills、工具退役、2.1.1 八组修复、其余；附影响矩阵
+- [x] A1 产出 0015：2.0 破坏性变更、`skills` 包外包、全局 skills、工具退役、2.1.1 九组修复（含 #2266 退役 `<` 折行正文修复与 #2265 精确判据）、其余；附影响矩阵
 - [x] A2 源码核实（读 diff 与源码，不只读 changelog）：
   - `shouldGenerateCommandsForTool` 已不存在（命令生成能力移除）
   - 34 个适配器仍在，但调用方只剩清理/路径解析
@@ -148,4 +148,4 @@ git diff --cached --name-only --diff-filter=A -- . ":!_\*" ":!CONTEXT.md"
 - **审计（Phase A）**：确认 2.0 删掉了命令生成能力但保留 34 个适配器做路径解析；安装层改为依赖 `skills` 包；0015 写入。
 - **Phase B–D（2026-11-21）**：`_digested` 回填基线、命令移除、skills 单份共享、delivery 退役、源码地图 8 个新模块与适配器新职责、12 个 workflow 的调用头；`_faq_on_digested` 回填 Node 22.20、2.x 升级段、校验面 2.1.1 三项、版本表 3 行与 2.0 五步路线图状态；`_openspec_handbook` 回填版本表、命令速查改技能名、Q27h、01/50/52/55/90 的 `/opsx:*` → `/openspec-*`。全库相对链接 0 断链。
 - **一处口径反转**：`_coverage/doc-assertions.md` 里「不得写已移除」的旧口径已作废并改写——那是 v1.17.0 轮的要求，2.0 起 command 文件真的没了。
-- **下一步**：B9/C5/C6/D4/D5 的抽查与全局 grep，再走 E3–E7。
+- **收尾与全库精校**：B9/C5/C6/D4/D5 与 E3–E6 已由 `_plan-14` 接续收口，并完成二轮源码逐行精校（补齐 `0015` 第 9 组修复 `#2266`、修正 `#2265` 判据表述、加固 `_runbook` 脚本）。当前仅剩 E7 交人复核。

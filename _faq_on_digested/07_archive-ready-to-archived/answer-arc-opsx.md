@@ -50,22 +50,21 @@ OPSX 模板在：
 src/core/templates/workflows/archive-change.ts
 ```
 
-它指导 agent 做：
+它指导 agent 做（全程**不调用 `openspec archive` CLI**）：
 
-1. 没有 change name 时，运行 `openspec list --json` 并让用户选择。
-2. 运行 `openspec status --change "<name>" --json`。
-3. 检查 artifact completion。
-4. 读取 tasks file，警告未完成 tasks。
-6. 用 `artifactPaths.specs.existingOutputPaths` 找 delta specs。
-7. 做 delta sync assessment。
-8. 必要时调用 `openspec-sync-specs`。
-9. 创建 archive 目录并移动 change。
+1. 选择 change（未显式传入且有歧义时，运行 `openspec list --json` 让用户选择），并运行 `openspec instructions archive --change "<name>" --json` 读取可选的 `context` 与 `operationGuidance`。
+2. 运行 `openspec status --change "<name>" --json`，检查所有 artifacts 是否均为 `done` 或 `skipped`（有未完成项时警告并请用户确认）。
+3. 运行 `openspec list --json`，从匹配该 change 的条目读取 schema-aware 的 `totalTasks` 与 `completedTasks`（不直接假设顶层 `tasks.md`）；存在未完成任务时警告并请用户确认。
+4. **先预检归档目标路径** `<planningHome.changesDir>/archive/<target-name>` 是否已存在（v2.1.1 `#2277`，在写任何主 spec 前硬拦目标冲突！）。
+5. 用 `artifactPaths.specs.existingOutputPaths` 找 delta specs，与 `<planningHome.root>/openspec/specs/<capability-path>/spec.md` 做 delta sync assessment 并向用户询问。
+6. 若用户选择同步：再次确认归档目标未占用，运行 `openspec instructions specs --change "<name>" --json` 获取 rules 快照，随后同步内联执行 `openspec-sync-specs`（或内联智能合并）并校验主 specs。
+7. 创建 `<planningHome.changesDir>/archive` 目录（`mkdir -p`），移动前最后复检目标不存在，执行 `mv` 移动 `changeRoot` 并输出摘要。
 
-这条路径更像 agent 操作手册，不是 `ArchiveCommand.execute()` 的 wrapper。
+这条路径是独立的 agent 操作手册，不是 `ArchiveCommand.execute()` 的 wrapper。
 
-## 为什么 OPSX 要先跑 status
+## 为什么 archive skill 要先跑 status 与 list
 
-因为 agent 不能假设路径和 schema。`status --json` 给它：
+因为 agent 运行在宿主会话里，不能硬编码目录名、schema 或任务文件名。`status --json` 与 `list --json` 给它：
 
 ```text
 schemaName
@@ -74,13 +73,14 @@ changeRoot
 artifactPaths
 actionContext
 artifacts
+totalTasks / completedTasks
 ```
 
 尤其是：
 
-- `changeRoot`：不能硬编码 `openspec/changes/<name>`。
-- `artifactPaths.specs.existingOutputPaths`：delta spec 文件列表。
-CLI `ArchiveCommand` 是 repo-local 文件系统命令；OPSX 模板要适配 agent runtime，所以需要 status JSON。
+- `changeRoot` 与 `planningHome`：不能硬编码当前目录下的 `openspec/changes/<name>` 或 `openspec/specs/`。
+- `artifactPaths.specs.existingOutputPaths`：唯一的 delta spec 文件列表来源。
+- CLI `ArchiveCommand` 同样支持 `--store <id>`、项目 `store:` 指针与全局 `defaultStore`（进程内通过 `resolveRootForCommand` 解析 root）；而 archive skill 运行在外部 coding agent 中，所以通过 `status --json` / `list --json` 获取这些已解析的路径和计数。
 
 ## sync assessment 是模板层，不是 CLI 内部步骤
 
@@ -136,7 +136,7 @@ CLI archive 则调用 `moveDirectory()`，优先 `fs.rename()`；EPERM/EXDEV 时
 
 ## 参考来源
 
-源码引用基于 commit `487ea92`：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|

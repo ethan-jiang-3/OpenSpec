@@ -8,25 +8,26 @@
 
 ## 0 · 先确认你手上有什么：profile 决定到手面
 
-**默认是 `core`**【实测：`openspec config get profile` → `core`；代码 `src/core/global-config.ts:47`】：
+**默认是 `core`**【实测：`openspec config get profile` → `core`；代码 `src/core/global-config.ts:52`】：
 
 ```text
 core（默认）      propose  explore  apply  update  sync  archive
                   src/core/profiles.ts:14  CORE_WORKFLOWS
 
-expanded（可选）   + new  continue  ff  verify  bulk-archive  onboard
-                  启用：openspec config profile  →  openspec update
+custom（可选）    通过交互式选择器自由勾选（最多全部 12 项 ALL_WORKFLOWS）：
+                  + new  continue  ff  verify  bulk-archive  onboard
+                  启用：openspec config profile（交互勾选保存为 custom） →  openspec update
 ```
 
-**所以开箱没有 `/openspec-verify-change`**，也没有 `new`/`continue`/`ff`/`bulk-archive`/`onboard`。
+**所以开箱没有 `/openspec-verify-change`**，也没有 `new`/`continue`/`ff`/`bulk-archive`/`onboard`（注意 OpenSpec 只有 `'core' | 'custom'` 两种 profile，没有叫 `expanded` 的预设）。
 
-> **注意**：CLI 命令（`validate`/`show`/`status`/`instructions`/`list`/`archive`/`doctor`/`context`/`store`/`workset`/`schema`…）**不受 profile 影响**，始终可用。profile 只决定投递哪些 skill / slash command。
+> **注意**：CLI 命令（`validate`/`show`/`status`/`instructions`/`list`/`archive`/`doctor`/`context`/`store`/`workset`/`schema`…）**不受 profile 影响**，始终可用。profile 只决定投递哪些 skill（1.x 还曾控制命令文件，2.0 起只装 skills）。
 
 ---
 
 ## 1 · 把 `tasks.md` 当持久记忆，实现前主动清上下文 `[软]`
 
-官方口径【文档：`docs/faq.md:91-93`】：
+官方口径【文档：`docs/faq.md:93`】：
 
 ```text
 "Because the plan lives in files (not only in chat history), you can clear your
@@ -44,8 +45,8 @@ expanded（可选）   + new  continue  ff  verify  bulk-archive  onboard
 ## 2 · 用分级读控制上下文，别整树读 `[硬]`
 
 ```text
-openspec list --specs                    # 2,687 B 盘点 36 个 capability
-openspec show <id> --type spec --json --no-scenarios    # 省 84%
+openspec list --specs                    # 3,289 B JSON 盘点 44 个 capability
+openspec show <id> --type spec --json --no-scenarios    # 省 81%
 openspec show <id> --type spec           # 只对真正相关的读全文
 ```
 
@@ -59,13 +60,13 @@ schema 明确要求"摘要看完必须读全文再决定改什么"——但那�
 
 规则同理：`rules:` 按 artifact 分流就是为这个设计的。键写错会 warning 并列出合法 id——但**只有 `instructions` 会报，`validate --all` 不报**，所以 CI 里查不出来（§[02 A4](02-context-rot.md)）。
 
-`config.yaml` 的三个面全部是**软能力**，怎么用才不白配，见 §[06](06-remedies-within-budget.md)。
+`config.yaml` 中面向写作/执行的三个提示投递面（`context`、`rules`、`operations.*.guidance`）除 50 KB 上限与 `#2127` YAML 语法检查外全部是**软能力**（怎么用才不白配，见 §[06](06-remedies-within-budget.md)）。
 
 ---
 
 ## 4 · 方向变了先过「三问」，再决定改还是新开 `[软]`
 
-【文档：`docs/faq.md:89` + `docs/opsx.md:298-310`】
+【文档：`docs/faq.md:93` + `docs/opsx.md:286-315`】
 
 ```text
 同意图？            同一件事的细化      → update
@@ -90,7 +91,7 @@ openspec validate --strict          # 让 WARNING 也失败（500 字符、占�
 openspec validate --all             # 顺带读 INFO：Archive would refuse this delta（免费预检）
 ```
 
-本仓实测【实测】：非严格 **60 passed / 6 failed**；严格 **53 passed / 13 failed**——`--strict` 多翻 7 项。**归档用的是非严格校验器，所以不跑 `--strict` 就永远看不到那 7 项。**
+本仓实测【实测】：非严格 **48 passed / 0 failed**；严格 **42 passed / 6 failed**——`--strict` 多翻 6 项。**归档用的是非严格校验器，所以不跑 `--strict` 就永远看不到那 6 项。**
 
 ---
 
@@ -117,11 +118,11 @@ openspec validate --all             # 顺带读 INFO：Archive would refuse this
 
 ---
 
-## 9 · 想要 `/openspec-verify-change` 就开 expanded profile `[软]`
+## 9 · 想要 `/openspec-verify-change` 就配 `custom` profile `[软]`
 
 ```bash
-openspec config profile      # 选 expanded
-openspec update              # 重新投递
+openspec config profile      # 交互勾选 verify（及所需工作流），保存为 profile: "custom"
+openspec update              # 重新投递 skills
 ```
 
 它是 advisory、不阻塞归档——当"待办清单"用，不要当门禁。
@@ -183,25 +184,25 @@ artifacts:
 
 ## 12 · 跨 change 重叠必须自己查 —— 这是能力之外的活
 
-自带能力对"8 个 change 抢同一个 capability"**完全沉默**。进 change 前自己做个能力矩阵：
+自带能力对"4 个 change 同时改同一个 capability"**完全沉默**。进 change 前自己做个能力矩阵：
 
 ```bash
-cd openspec/changes
-for d in */; do d=${d%/}; [ "$d" = archive ] && continue; \
-  caps=$(ls "$d/specs" 2>/dev/null | tr '\n' ' '); \
-  [ -n "$caps" ] && echo "$d :: $caps"; done \
-| awk '{print $3}' | sort | uniq -c | sort -rn | awk '$1>1'
+for d in openspec/changes/*/; do
+  name=$(basename "$d")
+  [ "$name" = archive ] && continue
+  ls "$d/specs" 2>/dev/null
+done | sort | uniq -c | sort -rn | awk '$1>1'
 ```
 
 特别盯**同一个 requirement 名的并发 MODIFIED**——那是唯一会在 archive 时炸的地方（见 §[03 B5](03-direction-drift.md)）。
 
-> 说明白：这不是"补它的能力"，这是它能力之外的工作。已有提案 `add-change-stacking-awareness` 想解决，但**未落地**。
+> 说明白：这不是"补它的能力"，这是它能力之外的工作。曾有提案 `add-change-stacking-awareness` 想解决，但**从未落地且已被上游清理删除**。
 
 ---
 
 ## 13 · 想要硬闸门，只有两条路 `[外置]`
 
-前 12 条里标 `[硬]` 的，全部来自**代码**（50 KB 预算、校验器、DAG）或**CLI 的 JSON 结构**（分级读）。`config.yaml` 里的三个面**一条都不硬**。
+前 12 条里标 `[硬]` 的，全部来自**代码**（50 KB 预算、校验器、DAG）或**CLI 的 JSON 结构**（分级读）。`config.yaml` 里约束写作/执行正文的三个投递面（`context`、`rules`、`operations.*.guidance`）**一条都不硬**。
 
 如果空 `direction.md` 能过门、或者"改了方向下游没跟上"这两件事让你难受，唯一能补成硬的办法是**消费 `status --json` 的脚本**：
 

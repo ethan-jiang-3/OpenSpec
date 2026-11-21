@@ -39,7 +39,7 @@
 OpenSpec 明确区分终端 `openspec ...` 与聊天中的技能（1.x 为 `/opsx:*`，2.x 为 `openspec-*` 技能）。[一手说明](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/docs/how-commands-work.md#L1-L75)
 
 - 终端 `openspec archive` 使用上述程序化 delta 合并。
-- `openspec-sync-specs` skill 是 **agent-driven**：它读取 delta/main spec 后直接编辑 main spec，明确允许部分 scenario 合并。[已发布 skill](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/skills/openspec-sync-specs/SKILL.md#L12-L123) `openspec-archive-change` skill 会内联执行这个 sync 并复核每个 capability，避免 sync 仍在读 delta 时移动 change；这是 [#1394](https://github.com/Fission-AI/OpenSpec/pull/1394) 修复的 race。[已发布 skill](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/skills/openspec-archive-change/SKILL.md#L86-L125)
+- `openspec-sync-specs` skill 是 **agent-driven**：在 v1.7.0 快照中，它读取 delta/main spec 后直接编辑 main spec，当时曾允许部分 scenario 合并（注：后续版本中 `sync-specs.ts:247-253` 已收紧，要求 delta 里的 `MODIFIED` 必须包含完整 requirement 及全部保留的 scenarios，否则会被 `validate` 和 `archive` 拒绝）。[已发布 skill](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/skills/openspec-sync-specs/SKILL.md#L12-L123) `openspec-archive-change` skill 会内联执行这个 sync（或优先通过 `openspec archive` 程序化合并）并复核每个 capability，避免 sync 仍在读 delta 时移动 change；这是 [#1394](https://github.com/Fission-AI/OpenSpec/pull/1394) 修复的 race。[已发布 skill](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/skills/openspec-archive-change/SKILL.md#L86-L125)
 
 第二条路径能处理更富语义的合并，却依赖 agent 忠实执行指令；它不是 runtime lock。长期团队应统一“由哪条路径合并”和升级后如何运行 `openspec update` 刷新生成的 workflow，而不要把 skill 中的 guardrail 误认为 CLI 的强制校验。
 

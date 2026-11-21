@@ -59,12 +59,12 @@
   <!-- identity note -->
   <rect x="520" y="168" width="450" height="34" rx="4" fill="url(#neutralGrad)" stroke="#d1d5db"/>
   <text x="745" y="183" text-anchor="middle" font-size="9" fill="#4b5563">身份枢纽：requirement 无 ID = "### Requirement: &lt;Name&gt;" 原文</text>
-  <text x="745" y="196" text-anchor="middle" font-size="9" fill="#b91c1c">normalizeRequirementName 仅 trim · 大小写敏感（段头却大小写不敏感）</text>
+  <text x="745" y="196" text-anchor="middle" font-size="9" fill="#b91c1c">normalizeRequirementName 剥收尾 # + trim · 大小写敏感（段头却大小写不敏感）</text>
 
   <!-- alt path note -->
   <rect x="40" y="168" width="250" height="34" rx="4" fill="url(#neutralGrad)" stroke="#d1d5db"/>
-  <text x="165" y="183" text-anchor="middle" font-size="9" fill="#4b5563">另一路：/opsx:sync</text>
-  <text x="165" y="196" text-anchor="middle" font-size="9" fill="#4b5563">LLM 非确定再对齐 · 幂等</text>
+  <text x="165" y="183" text-anchor="middle" font-size="9" fill="#4b5563">另一路：openspec-sync-specs</text>
+  <text x="165" y="196" text-anchor="middle" font-size="9" fill="#4b5563">LLM 直接编辑主 spec · 幂等</text>
 
   <!-- ===== BAND 2: 漏 ===== -->
   <rect x="15" y="232" width="970" height="200" rx="6" fill="none" stroke="#fca5a5" stroke-width="1.2" stroke-dasharray="6,3"/>
@@ -72,10 +72,10 @@
 
   <!-- three gaps -->
   <rect x="40" y="262" width="290" height="74" rx="5" fill="url(#badGrad)" stroke="#fca5a5"/>
-  <text x="185" y="281" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">缺口① validate 逐文件</text>
-  <text x="185" y="299" text-anchor="middle" font-size="9" fill="#b91c1c">基本不读主 spec（MODIFIED 例外）</text>
-  <text x="185" y="313" text-anchor="middle" font-size="9" fill="#b91c1c">⇒ delta↔spec 失配</text>
-  <text x="185" y="327" text-anchor="middle" font-size="9" fill="#b91c1c">静默通过 validate</text>
+  <text x="185" y="281" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">缺口① validate 不拦目标失配</text>
+  <text x="185" y="299" text-anchor="middle" font-size="9" fill="#b91c1c">仅 MODIFIED 丢 scenario 报 ERROR</text>
+  <text x="185" y="313" text-anchor="middle" font-size="9" fill="#b91c1c">MODIFIED/RENAMED 缺目标仅报 INFO</text>
+  <text x="185" y="327" text-anchor="middle" font-size="9" fill="#b91c1c">⇒ 退出码仍 0，不拦 CI</text>
 
   <rect x="355" y="262" width="290" height="74" rx="5" fill="url(#badGrad)" stroke="#fca5a5"/>
   <text x="500" y="281" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">缺口② 匹配只在 archive</text>
@@ -112,7 +112,7 @@
   <rect x="40"  y="496" width="305" height="66" rx="5" fill="url(#agentGrad)" stroke="#93c5fd"/>
   <text x="192" y="514" text-anchor="middle" font-size="9" fill="#1d4ed8">内容失准（③⑤⑥）</text>
   <text x="192" y="532" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">修复原语 · delta + archive</text>
-  <text x="192" y="548" text-anchor="middle" font-size="9" fill="#1d4ed8">大量混乱 → ②/opsx:sync 或 ⑤再基线</text>
+  <text x="192" y="548" text-anchor="middle" font-size="9" fill="#1d4ed8">大量混乱 → openspec-sync-specs 或 再基线</text>
 
   <rect x="355" y="496" width="290" height="66" rx="5" fill="url(#engineGrad)" stroke="#86efac"/>
   <text x="500" y="514" text-anchor="middle" font-size="9" fill="#15803d">漏了能力（②）</text>

@@ -27,8 +27,8 @@
 
 ## 6. Harness Integration
 
-- [ ] 6.1 Copy skill files to target harness skill directory (e.g., `.claude/skills/<name>/SKILL.md`) — verify: the harness lists the skill
-- [ ] 6.2 Copy command files to target harness command directory (e.g., `.claude/commands/opsx/<name>.md`) — verify: the harness lists the command
+- [ ] 6.1 Copy skill files to target harness skill directory (e.g., `.claude/skills/<name>/SKILL.md` or `.agents/skills/openspec-<name>/SKILL.md`) — verify: the harness lists the skill
+- [ ] 6.2 Copy cross-tool skill or command files to target harness directory (e.g., `.agents/skills/openspec-<name>/SKILL.md`) — verify: the harness lists the entry
 - [ ] 6.3 Run all eval cases — verify: all expected assertions pass
 
 ## 7. End-to-End

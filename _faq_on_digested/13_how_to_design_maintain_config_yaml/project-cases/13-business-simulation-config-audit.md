@@ -83,7 +83,7 @@ semantic precision
 | `proposal`（156-176） | control-impact / semantic-admission declarations 已经是很好的 change-local 分类；capability 与 scope 也有 owner。 | 保留 declarations，但增加四份 policy 的明确路径与选择顺序。proposal 只记录本次适用性、authority owner 和最小结论，不复制 policy 教程。 |
 | `specs`（178-195） | 能把 classification 变成 observable outcome、subject owner、bypass/recovery contract。 | 只在 applicable change 写这些约束；引用 owning capability/runtime authority，不把 policy prose 变成 schema 或 pass/fail truth。 |
 | `design`（197-214） | 已适合记录 writer、binding、freshness、repair 与 semantic surface 的实际取舍。 | 作为四-policy 的主审查与技术证据 owner：明确读到的 policy、runtime contract、direct SoR、checker/ops/playbook 影响、测试界限。 |
-| `tasks`（216-230） | 已把 wrong-authority mutation、same-check/H-node recovery 与真实观察边界变成实施证明。 | 保留；确保 tasks 从 design 继承具体 command/fixture/observation，不假设 Apply 会重读 config。 |
+| `tasks`（216-230） | 已把 wrong-authority mutation、same-check/H-node recovery 与真实观察边界变成实施证明。 | 保留；确保 tasks 从 design 继承具体 command/fixture/observation，不假设 Apply 会收到 artifact `rules`（Apply 只接收全局 `context` 与 `operations.apply.guidance`，单次实施动作仍须落入 `tasks.md`）。 |
 
 ## 具体编辑类型
 

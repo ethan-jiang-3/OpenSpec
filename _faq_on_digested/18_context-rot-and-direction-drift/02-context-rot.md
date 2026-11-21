@@ -10,42 +10,44 @@
 
 ![注入体不随规格树增长](figures/injection-vs-spec-tree.svg)
 
-对 `add-amp-support` 实测 `openspec instructions specs --change add-amp-support --json`，载荷构成【实测】：
+对活跃 change `install-skills-globally` 实测 `openspec instructions specs --change install-skills-globally --json` 与 `instructions apply --change install-skills-globally --json`，载荷构成【实测】：
 
 | 字段 | 内容 | 实测体量 |
 |---|---|---|
-| `instruction` | 该 artifact 的写作指令（来自 schema） | 6,476 B |
+| `instruction` | 该 artifact 的写作指令（来自 schema） | 6,765 B |
 | `context` | `config.yaml` 的 `context:` 全文 | 847 B |
-| `rules` | `config.yaml` 的 `rules.specs` | 5 条 |
+| `rules` | `config.yaml` 的 `rules.specs` | 5 条（JSON 427 B） |
 | `template` | 模板 | 374 B |
-| `contextFiles` | **本 change 的文件绝对路径**（非内容） | — |
+| `contextFiles` | **本 change 的文件绝对路径**（非内容，`instructions apply` 返回） | — |
 | `dependencies` | 上游 artifact + `done` 标志 | — |
 | `unlocks` | 本 artifact 解锁谁 | — |
 | `existingOutputPaths` | 已存在产物（防重写） | — |
 | `planningHome` | store 感知的正确根 | — |
-| `state` / `missingPrerequisites` / `progress` | 门控状态 | — |
-| `tasks[].done` + `sourcePath` + `line` | 逐任务状态与**精确行号** | — |
+| `state` / `missingPrerequisites` / `progress` | 门控状态（`instructions apply` 返回） | — |
+| `tasks[].done` + `sourcePath` + `line` | 逐任务状态与**精确行号**（`instructions apply` 返回） | — |
 
-**全 JSON 合计 9,315 B**【实测】。`instructions apply` 是 3,930 B【实测】。
+**`instructions specs` 全 JSON 合计 9,729 B**【实测】；`instructions apply` 是 **4,181 B**【实测】。
 
 决定性的一点【实测】：
 
 ```text
 contextFiles = {
-  "proposal": ["…/add-amp-support/proposal.md"],
-  "specs":    ["…/add-amp-support/specs/ai-tool-paths/spec.md"],
-  "tasks":    ["…/add-amp-support/tasks.md"]
+  "proposal": ["…/install-skills-globally/proposal.md"],
+  "specs":    ["…/install-skills-globally/specs/cli-init/spec.md",
+               "…/install-skills-globally/specs/cli-update/spec.md"],
+  "design":   ["…/install-skills-globally/design.md"],
+  "tasks":    ["…/install-skills-globally/tasks.md"]
 }
 ```
 
 **只指本 change 的文件，完全不指 `openspec/specs/`。** 对比规模【实测】：
 
 ```text
-本仓 specs 树   36 个 spec.md │ 5,758 行 │ 261,948 B
-                252 条 requirement │ 749 个 scenario
-最大单文件      cli-completion/spec.md = 432 行 / 19,949 B / 11 条
+本仓 specs 树   44 个 spec.md │ 7,959 行 │ 395,059 B
+                318 条 requirement │ 1,040 个 scenario
+最大单文件      cli-validate/spec.md = 752 行 / 45,506 B / 20 条
 ──────────────────────────────────────────────────────────
-单次注入        9,315 B（占规格树 3.6%）
+单次注入        9,729 B（占规格树 2.5%）
 ```
 
 > **机理上，注入体不随规格树增长。** agent 拿到的是"去哪读、什么规则、门开没开"，规格内容靠它自己按需取。这是防腐的结构性前提——**堆积的是磁盘，不是上下文**。
@@ -58,8 +60,8 @@ contextFiles = {
 
 | 层级 | 命令 | 实测 |
 |---|---|---|
-| 全库盘点 | `openspec list --specs --json` | **2,687 B** 覆盖 36 个 capability 的 id + requirement 数【实测】 |
-| 过滤读 | `show <id> --type spec --json --no-scenarios` | cli-archive **18,013 → 2,845（−84%）**；artifact-graph 12,209 → 2,573（−79%）；instruction-loader 4,208 → 1,189（−72%）【实测】 |
+| 全库盘点 | `openspec list --specs --json` | **3,289 B** 覆盖 44 个 capability 的 id + requirement 数【实测】 |
+| 过滤读 | `show <id> --type spec --json --no-scenarios` | cli-archive **22,660 → 4,320（−81%）**；artifact-graph 12,209 → 2,573（−79%）；instruction-loader 4,208 → 1,189（−72%）【实测】 |
 | 单条直取 | `show <id> --type spec --json -r <n>` | "Show specific requirement by ID (1-based)"【实测：读 `show --help`】 |
 | 全文 | `show <id> --type spec` | 全量 |
 
@@ -81,7 +83,7 @@ contextFiles = {
 
 ## A3 · 50 KB 硬预算 ★唯一的字节闸门
 
-`src/core/project-config.ts:248`【代码】：
+`src/core/project-config.ts:256`【代码】：
 
 ```ts
 export const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit, shared with the references index
@@ -91,7 +93,7 @@ export const MAX_CONTEXT_SIZE = 50 * 1024; // 50KB hard limit, shared with the r
 
 ```text
 config.yaml 的 context: 超限
-  → 警告 + 【整个字段丢弃】（不是截断）        project-config.ts:350-353  【代码】
+  → 警告 + 【整个字段丢弃】（不是截断）        project-config.ts:358-363  【代码】
 
 跨仓 references 索引超限
   → 二分查找截断 + 诊断码 reference_index_truncated
@@ -107,7 +109,7 @@ config.yaml 的 context: 超限
 
 > ⚠️ **这条是【代码】不是【实测】**：本仓 `openspec context` 输出为 `No references declared`【实测】，所以 50 KB 截断分支没有被运行到。想亲手验证需要先注册一个 store 并配 `references:`，再堆够 50 KB 的 spec 索引。
 
-配套使用纪律【文档】（`docs/troubleshooting.md:153-155`）：*"capped at 50KB, **on purpose, because it's injected into every request**… Lean context also produces better, faster results."*
+配套使用纪律【文档】（`docs/troubleshooting.md:157`）：*"capped at 50KB, **on purpose, because it's injected into every request**… Lean context also produces better, faster results."*
 
 ---
 
@@ -128,7 +130,7 @@ config.yaml 的 context: 超限
 
 > ⚠️ **一个容易踩的坑**：`rules:` 是 YAML **列表**，单条写错会让**该 artifact 的整组规则失效**。最常见的诱因是行首的 `##` 被 YAML 当注释、整条变 `null`。规则里出现 `##` 或 `": "` 时，**整条加引号**【实测】。
 
-还有防"配错静默失效"的校验【代码】（`validateConfigRules`，`src/core/project-config.ts:469-486`）：规则键拿去跟**所有可用 schema 的 artifact id** 对账，对不上则 **warning 并列出合法 id**。
+还有防"配错静默失效"的校验【代码】（`validateConfigRules`，`src/core/project-config.ts:514-531`）：规则键拿去跟**所有可用 schema 的 artifact id 并集**对账，不属于任何可用 schema 时才 **warning 并列出合法 id**。
 
 > ⚠️ **但这道校验很弱，本节初稿低估了它的边界**（本次复核修正）：`validateConfigRules` 的唯一调用点是 `src/core/artifact-graph/instruction-loader.ts:385`，所以——
 >
@@ -167,10 +169,10 @@ apply     requires: [tasks]   tracks: tasks.md
 | 缺口 | 证据 |
 |---|---|
 | **除 50 KB 外无任何 token 预算/截断/溢出处理** | 全库 grep token/budget/truncat/byteLength，除 A3 两处外无命中【实测】 |
-| **无「新鲜度」失效机制** | `status` 是**文件存在性**不是新旧。`src/core/templates/workflows/propose.ts:149` 原话：*"`status` is file-existence only, so an `applyRequires` artifact reading `done` does NOT mean its dependencies exist - writing `tasks.md` early marks `tasks` done while `specs` was never written. Use each artifact's `requires` edges, not its `status`"*【文档】；同见 `docs/agent-contract.md:61`【文档】 |
+| **无「新鲜度」失效机制** | `status` 是**文件存在性**不是新旧。`src/core/templates/workflows/propose.ts:133` 原话：*"`status` is file-existence only, so an `applyRequires` artifact reading `done` does NOT mean its dependencies exist - writing `tasks.md` early marks `tasks` done while `specs` was never written. Use each artifact's `requires` edges, not its `status`"*【文档】；同见 `docs/agent-contract.md:61`【文档】 |
 | **glob artifact 假 done** | `specs/**/*.md` 只要匹配到一个文件就 `done`，中断后仍读 `done` 而文件不全【文档：`continue-change.ts` 的 `PARTIAL_ARTIFACT_CHECK`，issue #2034】 |
 | **改了上游 artifact 不会让下游失效** | 无任何机制把 `tasks.md` 标记为"因 `proposal.md` 变更而陈旧"【代码：不存在】 |
-| **specs 无陈旧信号** | `src/core/list.ts:275-285`：specs 模式完全忽略 mtime；changes 模式的 `lastModified` 见 `:63-96`【代码】。另实测：把 `direction.md` 的 mtime 回退到 2020 年，`openspec list --changes` 仍显示 `just now`、`status` 仍显示下游 `[x]`【实测】——**连 change 级的 mtime 也不用于陈旧判定** |
+| **specs 无陈旧信号** | `src/core/list.ts:275-285`：specs 模式完全忽略 mtime；changes 模式的 `lastModified` 见 `:66-100`【代码】。另实测：把 `direction.md` 的 mtime 回退到 2020 年，`openspec list --changes` 仍显示 `just now`、`status` 仍显示下游 `[x]`【实测】——**连 change 级的 mtime 也不用于陈旧判定** |
 | `archive --no-validate` 跳过重建校验 | `src/core/archive.ts:1454-1457` —— 校验整个不跑，空 `## Requirements` 也能写进去【代码】 |
 | `rules:` 写错静默失效 | 错键 warning 只走 stderr 且只由 `instructions` 触发；`validate --all` 不报（见 §A4）【实测】 |
 

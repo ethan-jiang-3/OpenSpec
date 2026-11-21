@@ -344,7 +344,7 @@ rules:
 
 ```bash
 # 1. 新 capability 全部被发现
-openspec list --specs --json | jq '.[].id'          # 若未安装 jq，直接看未过滤的 JSON 输出
+openspec list --specs --json | jq '.specs[].id'     # 若未安装 jq，直接看未过滤的 JSON 输出
 # 预期输出包含 identity/login、identity/session、billing/invoices 等
 # 预期输出不含 auth、login、session、billing（旧 path）
 
@@ -468,5 +468,5 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ### 上游
 - [Issue #1459](https://github.com/Fission-AI/OpenSpec/issues/1459) — nested path 的 agent-facing guidance 仍为 open
-- [`discoverSpecFiles()` 源码](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/src/utils/spec-discovery.ts) — 递归发现、ID 规范化、边界处理
-- [`spec-discovery.test.ts`](https://github.com/Fission-AI/OpenSpec/blob/4e16790d90d8f54d4773ad9a5e71a57cd9f1e86b/test/utils/spec-discovery.test.ts) — flat、nested、正斜杠 ID、root-file exclusion、symlink 测试覆盖
+- [`discoverSpecFiles()` 源码（`0c737dc1`）](https://github.com/Fission-AI/OpenSpec/blob/0c737dc1b543249b38b0f4716816fcf493d894dd/src/utils/spec-discovery.ts) — 递归发现、ID 规范化、边界处理
+- [`spec-discovery.test.ts`（`0c737dc1`）](https://github.com/Fission-AI/OpenSpec/blob/0c737dc1b543249b38b0f4716816fcf493d894dd/test/utils/spec-discovery.test.ts) — flat、nested、正斜杠 ID、root-file exclusion、symlink 测试覆盖

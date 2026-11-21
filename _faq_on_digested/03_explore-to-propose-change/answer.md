@@ -15,9 +15,7 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
   = 是否 propose，以及 propose 什么 change
 ```
 
-所以关键不是“Explore 调了哪个命令就得到 change name”，而是 agent 在 Explore 中完成了一次 scoped discovery。
-
-> **v1.8.0 当前边界。** Explore 也会读取项目 `config.yaml` 的 `context` 与 artifact `rules`，作为探索时的背景和约束；它没有 `operations.explore`，不会获得 Apply/Archive 专属 guidance。调用名由宿主决定：下文的 `/openspec-*` 是 Claude 示例，Codex 使用相应的 `$openspec-*` skill（v1.8.0 下装在 `.agents/skills/`）。
+所以关键不是“Explore 调了哪个命令就得到 change name”，而是 agent 在 Explore 中完成了一次 scoped discovery。Explore 还会从解析出的 `<root.path>/openspec/config.yaml`（或 `config.yml`）读取项目 `context` 与按 artifact id 索引的 `rules`，作为探索和捕获工件时的背景与约束；配置里没有 `operations.explore`，因此不会注入 Apply/Archive 专属 guidance。当前宿主侧唯一投递形态是 skill（装在 `.agents/skills/` 或工具专属 skills 目录；Claude 等宿主调用写作 `/openspec-*`，Codex 写作 `$openspec-*`）。
 
 ## 先分清两件事
 
@@ -98,7 +96,7 @@ Explore 模板要求启动时快速检查当前 OpenSpec 上下文：
 openspec list --json
 ```
 
-这个命令告诉 agent 当前有没有 active changes，以及它们的名称、schema、状态等。
+这个命令返回 `{ "changes": [...], "root": { ... } }`，告诉 agent 当前有没有 active changes、它们的名称与任务进度状态（`Their names and task status`），以及解析出的 OpenSpec root。
 
 它的意义不是“从列表里选一个答案”，而是避免两个错误：
 
@@ -152,7 +150,7 @@ OpenSpec 的核心事实源之一是：
 openspec/specs/
 ```
 
-它表示当前已经成立的capability 基线。判断一个 change 应不应该存在，必须先知道它相对于当前基线是增量还是误解。
+它表示当前已经成立的 capability 基线。Explore 模板规定用两步命令盘点基线：先运行 `openspec list --specs` 看既有 capability 清单，对可能相关的项先用 `openspec show "<spec-id>" --type spec --json --no-scenarios` 读取 `## Purpose` 与 requirement 正文做轻量概览，准备做边界或修改判断前再用 `openspec show "<spec-id>" --type spec` 读完整内容（含 scenarios）。判断一个 change 应不应该存在，必须先知道它相对于当前基线是增量还是误解。
 
 Explore 至少要弄清楚：
 
@@ -172,7 +170,7 @@ Explore 至少要弄清楚：
 此时可能同时成立：
 
 ```text
-openspec list --json  -> []
+openspec list --json  -> { "changes": [], "root": { ... } }
 openspec/specs/       -> 空目录，甚至还没有形成任何capability 基线文档
 openspec/changes/     -> 没有 active change
 ```
@@ -194,7 +192,7 @@ openspec/changes/     -> 没有 active change
 
 | 编号 | 名称 | 在流程里做什么 |
 |---|---|---|
-| EXP-12 | OpenSpec 空状态 | `openspec list --json` 返回空，`openspec/specs/` 也为空；说明没有 active change 和 formalized specs。 |
+| EXP-12 | OpenSpec 空状态 | `openspec list --json` 返回 `{ "changes": [], "root": {...} }`（`changes` 为空），`openspec/specs/` 也为空；说明没有 active change 和 formalized specs。 |
 | EXP-13 | 正确解释 | 把空状态理解为“尚无 formalized baseline”，而不是“没有事实”或“无法探索”。 |
 | EXP-14 | 错误捷径 | 只凭用户一句话直接建 change，会产生空泛、错位或重复的 artifacts。 |
 | EXP-15 | 事实源转向真实项目 | 读取 README/docs、代码入口、命令/API/UI、数据模型、测试和现有行为描述。 |
@@ -465,25 +463,25 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 
 ## 参考来源
 
-源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」为准（历史核对记录：v1.10.0 未改变 Explore 的 stance、分流或只读边界）：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/explore.ts` | Explore 是 stance；可以读代码但不实施；启动时检查 `openspec list --json`；相关 change 用 `status --json` 读取 artifacts，并读取项目 context/rules |
+| `src/core/templates/workflows/explore.ts` | Explore 是 stance；可以读代码但不实施；启动时检查 `openspec list --json` 与 `openspec list --specs`；相关 change 用 `status --json` 读取 artifacts，并读取 `<root.path>/openspec/config.yaml` 的 context/rules |
 | `src/core/templates/workflows/propose.ts` | Propose 从 change name/description 开始，创建 change，并按 `status` / `instructions` 循环生成 artifacts |
-| `src/commands/workflow/status.ts` | `status --json` 解析 planning home、change、schema 后输出结构化 status JSON |
+| `src/commands/workflow/status.ts` | `status --json` 经 `resolveRootForCommand` + `toPlanningHome` 解析 root、change、schema 后输出结构化 status JSON |
 | `src/commands/workflow/instructions.ts` | `instructions <artifact> --json` 输出依赖文件、输出路径、template、rules、instruction 等 agent 操作包 |
 | `src/core/artifact-graph/instruction-loader.ts` | `formatChangeStatus()` 组装 `artifactPaths`、`actionContext`、`nextSteps`；`generateInstructions()` 组装 artifact instructions |
-| `src/core/change-status-policy.ts` | `actionContext` 和 `nextSteps` 的语义， |
+| `src/core/change-status-policy.ts` | `actionContext` 和 `nextSteps` 的语义 |
 | [`../../_digested/internal-spec-driven/01-explore-探索模式.md`](../../_digested/internal-spec-driven/01-explore-探索模式.md) | Explore 的 guardrails、OpenSpec awareness、已有 change 场景 |
 | [`../../_digested/internal-spec-driven/02-propose-提案生成.md`](../../_digested/internal-spec-driven/02-propose-提案生成.md) | Propose 的 change 创建和 artifact DAG 生成过程 |
 | [`../../_digested/system/07-OpenSpec-工程思想.md`](../../_digested/system/07-OpenSpec-工程思想.md) | 文件状态优先、CLI 解释状态、agent 负责推理 |
 | [`../../_digested/system/08-对照常见-SDD-与-AI-Coding.md`](../../_digested/system/08-对照常见-SDD-与-AI-Coding.md) | `specs/` 是capability 基线，`changes/` 是增量协议 |
 
 
-## v1.13.1 补充：capture 即确认
+## v1.13.1 起补充：capture 即确认，且 handoff 保持工作流中立
 
-v1.11.0 要求写入前「命名 artifacts + 直接问 + 单独等确认」。v1.13.1（`4c369e02`）演进：**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再要求额外一轮 yes/no；其余写操作（改 schema、编辑 config.yaml 等）仍需完整确认流程。同时 explore 在每个 handoff 点名 `/openspec-propose`、`/openspec-apply-change`。
+v1.11.0 要求写入前「命名 artifacts + 直接问 + 单独等确认」。v1.13.1（`4c369e02`）起演进：**用户自己明确要求将探索结果 capture 为新 change，该请求本身即视为创建该 change 及其点名 artifacts 的确认**，不再要求额外一轮 yes/no；若是由 agent 主动提议 capture 或扩大写入范围，仍需明确列出目标并单独等待确认。注意 Explore 的护栏（`explore.ts:361`）明确规定**创建或编辑 schemas、templates 或 `openspec/config.yaml` 属于改动而非思考，在 Explore 模式下禁止执行**。同时 `explore.ts:33-49` 的交接措辞采用**工作流中立的自然语言**（如 `offer to capture the discussion as a change`、`To finish planning, complete the remaining planning artifacts from the change`、`To implement, start from the tasks after leaving explore mode`），**不硬编码点名** `/openspec-propose` 或 `/openspec-apply-change`。
 
 ## v1.14.0 补充：propose 引导耐久的行为型 capability 命名
 

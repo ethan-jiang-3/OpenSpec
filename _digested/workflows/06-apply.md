@@ -44,9 +44,9 @@ sequenceDiagram
     end
 
     alt state = "blocked"
-        MD-->>User: "Apply blocked. 缺 artifact。<br/>建议 /openspec-continue-change。"
+        MD-->>User: "Apply blocked：展示缺失产物链路与<br/>CLI instruction 中的 openspec instructions <artifact> 恢复命令"
     else state = "all_done"
-        MD-->>User: "所有 tasks 已完成。<br/>建议 /openspec-archive-change。"
+        MD-->>User: "所有跟踪任务已完成。<br/>建议归档前先复核或 verify 改动。"
     else state = "ready"
         rect rgb(255, 250, 240)
             Note over MD,FS: Step 4 · 读上下文
@@ -81,7 +81,7 @@ sequenceDiagram
             Note over MD,FS: Step 7 · 完成
             MD->>TS: openspec instructions apply --change X --json
             TS-->>MD: state: "all_done"
-            MD-->>User: "跟踪任务已完成<br/>复核/验证后再 /openspec-archive-change"
+            MD-->>User: "所有跟踪任务已完成。<br/>请先复核或验证改动，再请求归档该 change。"
         end
     end
 ```
@@ -92,13 +92,16 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 
 | state | 含义 | agent 行为 |
 |---|---|---|
-| `blocked` | 缺 required artifact、缺 tracking file、或无 checkbox | 停止，建议 `/openspec-continue-change` |
-| `ready` | 一切就绪，有 pending tasks | 读 contextFiles → 开始 task loop |
-| `all_done` | 全部 checkbox 已勾 | 报「跟踪任务已完成」，建议归档前先复核或 verify |
+| `blocked` | 缺 required artifact、缺 tracking file、或无有效 checkbox | 暂停实施：若 `missingArtifacts` 非空，展示缺失产物与 CLI `instruction` 字段给出的恢复步骤（即 **`openspec instructions <artifact> --change <name>`**，绝不推荐默认 core 不安装的 `openspec-continue-change`）；否则按 CLI 指令基于既有规划产物创建或修复追踪文件 |
+| `ready` | 一切就绪，有 pending tasks（或 schema 未配置追踪文件） | 读 contextFiles → 开始 task loop |
+| `all_done` | 全部 checkbox 已勾 | 报「跟踪任务已完成」，建议**在归档前按需复核或 verify 改动**（`Review the completed work, then ask to archive this change.`） |
 
-## 任务源定位：sourcePath + line
+## 任务源定位与多行折行合并：sourcePath + line
 
-`instructions apply --json` 的 task 列表里，每个任务现在带 `sourcePath`（checkbox 所在文件）和 1-based `line`（行号）——`src/commands/workflow/instructions.ts` 的 `LocatedTask`/`parseLocatedTasks` 只给解析结果附加定位，**不改任务解析本身**。
+`instructions apply --json` 的 task 列表里，每个任务带 `sourcePath`（checkbox 所在文件）和 1-based `line`（起始行号），由 `src/utils/task-progress.ts` 的 **`parseLocatedTaskLines()`** 统一解析：
+
+- **多行折行任务完整读取（v2.0.0 #2228）**：`parseLocatedTaskLines()` 读取任务列表项的**完整首段落**——后续凡未触发段落中断（空行、标题、代码块、引用、HTML 注释/声明、分隔线、新列表项）的折行都会剥去尾部奇数个 `\` 硬换行符后以单空格拼入 `description`，解决了按列宽换行的长任务在首个换行符处被截断成半句话的问题（续行本身不重复计数）。
+- **宽容单字符未完成标记（#1761）**：全 CommonMark 列表标记（`-`/`*`/`+` 与 `1.`/`1)`）下的方括号内，只有 `x`/`X` 算 `done: true`；其余任意单非空白字符（`[~]`、`[-]`、`[?]`）与空框 `[]` 全部计入 `progress` 总数并标为 `done: false`。
 
 模板把 task loop 规定为三步节拍：
 
@@ -199,15 +202,16 @@ FAQ `06_apply-ready-to-archive-ready/` 从工程视角分析了 task loop、chec
 
 ## 源码锚点
 
-| 内容 | 行号范围（apply-change.ts，v1.14.3） |
+| 内容 | 行号范围（`apply-change.ts`，共 234 行） |
 |---|---|
-| 共享指令正文 `getApplyInstructions()`（skill 与 command 共用同一份文本） | L39-L224（Fluid Workflow 段 L219-L224） |
-| SkillTemplate 定义 | L227-L236 |
-| CommandTemplate 定义 | L238-L246（文件 246 行） |
-| Step 3: apply instructions + state 处理（含 `all_done` 语义） | L67-L105 |
-| Step 6: task loop（sourcePath/line 勾选 + pause 条件） | L123-L141 |
-| Guardrails | L201-L218 |
-| Fluid Workflow | L219-L225 |
+| 交接文案常量 `BLOCKED_STATE_HANDOFF` / `ARCHIVE_HANDOFF` | L11-L16 |
+| 共享指令正文 `getApplyInstructions()`（skill 与 command 共用同一份文本） | L27-L213（Fluid Workflow 段 L207-L212） |
+| SkillTemplate 定义 | L215-L224 |
+| CommandTemplate 定义 | L226-L234 |
+| Step 3: apply instructions + state 处理（含 `blocked` 与 `all_done` 语义） | L56-L92 |
+| Step 6: task loop（`sourcePath`/`line` 勾选 + pause 条件） | L111-L128 |
+| Guardrails | L189-L205 |
+| Fluid Workflow | L207-L212 |
 
 ## v1.13.0 行为更新
 

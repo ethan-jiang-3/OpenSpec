@@ -6,19 +6,18 @@
 
 ```text
 change name / description
+  -> openspec context --json（预检解析权威 root.path，读 <root.path>/openspec/config.yaml）
   -> openspec new change
   -> .openspec.yaml 选定 schema
   -> status --json 计算 artifact DAG
   -> instructions <artifact> --json 给 agent 操作包
   -> agent 写 artifact 文件
   -> status loop 重新解释文件状态
-  -> applyRequires 满足
-  -> /openspec-apply-change 可以开始
+  -> applyRequires 及其传递依赖闭包（required set）全部满足
+  -> openspec-apply-change 可以开始
 ```
 
-OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责创建 change 容器、解释 schema 和文件状态、给出路径和 instructions；agent 负责读取上下文、生成 artifact 内容并写文件。
-
-> **当前边界。** `/openspec-apply-change` 是 Claude 写法；Codex 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；若 resolved schema 根本不生成 specs artifact，`new change` 会自动写入该 marker。真实行为变化仍不能借 marker 绕过 specs。`openspec instructions apply` 在无 delta specs 且未声明 `skip_specs` 时会警告，被前置 artifact 挡住时给出完整 `missingPrerequisites` 缺失链。
+OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责创建 change 容器、解释 schema 和文件状态、给出路径和 instructions；agent 负责读取上下文、生成 artifact 内容并写文件。宿主侧只分发 skill（Claude 等写作 `/openspec-apply-change`，Codex 写作 `$openspec-apply-change`，装在 `.agents/skills/` 或工具专属 skills 目录）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；若 resolved schema 根本不生成 specs artifact，`new change` 会自动写入该 marker。真实行为变化仍不能借 marker 绕过 specs。`openspec instructions apply` 在无 delta specs 且未声明 `skip_specs` 时会警告，被前置 artifact 挡住时给出完整 `missingPrerequisites` 缺失链。
 
 ![Propose 到 apply-ready 的流程](figures/propose-to-apply-ready.svg)
 
@@ -35,7 +34,7 @@ OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责�
 | PRP-07 | read dependencies | agent 按 `dependencies` 读取已完成 artifact 作为上下文。 |
 | PRP-08 | write artifact | agent 用 `template`、`instruction`、`context`、`rules` 生成内容并写到 `resolvedOutputPath`。 |
 | PRP-09 | status loop | 写完后重新运行 `status --json`，让 CLI 重新解释哪些 artifacts done/ready/blocked。 |
-| PRP-10 | applyRequires gate | 检查 schema `apply.requires` 中的 artifacts 是否都已经有输出文件。 |
+| PRP-10 | required set gate | 检查 `applyRequires` 及其沿 `requires` 边的传递闭包（required set）是否全部为 `done`、`skipped` 或已记录条件跳过。 |
 | PRP-11 | final status | apply gate 满足后显示最终 `openspec status --change "<name>"` 给人看。 |
 | PRP-12 | apply instructions | 宿主 apply workflow 会调用 `openspec instructions apply --change "<name>" --json`。 |
 | PRP-13 | contextFiles/tasks | apply instructions 返回 artifact context files、project `context`、`operations.apply.guidance`、task progress 和 pending tasks。 |
@@ -83,18 +82,20 @@ change name 需要通过 `validateChangeName()`：
 
 另外长度上限是 200 字符（`change-utils.ts:75`，超了报 `Change name is too long (200 characters max)`），避免变成一个裸的 `ENAMETOOLONG`。
 
-## Step 2：创建 change 容器，而不是直接创建 artifacts
+## Step 2：预检项目上下文并创建 change 容器，而不是直接创建 artifacts
 
-agent 运行：
+在创建目录前，`propose` skill 先运行 `openspec context --json`（显式选中独立注册 store 时加 `--store "<store-id>"`）获取权威 `root.path`；若返回 `no_openspec_root` 则立即停止（绝不自动执行 `openspec init` 或回退到当前目录），若成功则读取 `<root.path>/openspec/config.yaml`（或不存在时读 `config.yml`）中 ≤51,200 字节 UTF-8 的 `context` 作为探索与规划约束。
+
+随后 agent 运行：
 
 ```bash
 openspec new change "<name>"
 ```
 
-CLI 的实际行为是：
+CLI 的实际行为是（`src/commands/workflow/new-change.ts`；支持 `--store` 的现代 CLI 命令统一走 `resolveRootForCommand(...)` + `toPlanningHome(root)`，见 `src/core/root-selection.ts:576`，而纯本地同步 helper `resolveCurrentPlanningHomeSync()` 仍保留在 `src/core/planning-home.ts:74` 并由 `src/core/index.ts` 重导出）：
 
 ```text
-resolveCurrentPlanningHomeSync()
+resolveRootForCommand() -> toPlanningHome(root)
 validateChangeName()
 validateSchemaExists()     # 如果显式传了 --schema
 createChange()
@@ -309,18 +310,18 @@ artifactOutputExists(changeDir, artifact.generates)
 完成判定不是“agent 说写完了”，而是文件系统中有符合 `generates` 的输出文件：
 
 - 普通路径：必须是 `statSync(...).isFile()`。
-- glob：用 `fast-glob` 在 changeDir 下匹配 `onlyFiles: true`，至少一个文件匹配才算 done。
+- glob：先由 `brace-expansion` 展开花括号（嵌套深度 ≤16、展开条数预算 ≤1024），再结合 `picomatch`（逐段目录匹配与 symlink 边界校验）与 `tinyglobby` 在 changeDir 下匹配 `onlyFiles: true`（`src/core/artifact-graph/outputs.ts`），至少一个文件匹配才算 done。
 
 所以 propose 的循环是：
 
 ```text
-status -> 找 ready artifact
-instructions -> 读依赖和模板
+status -> 找 required set 中尚未满足的 ready artifact
+instructions -> 读依赖和模板（并结合真实代码做只读核查）
 write -> 写 artifact
-status -> 重新判断 done/ready/blocked
+status -> 重新判断 done/skipped/ready/blocked
 ```
 
-直到 `applyRequires` 满足。
+直到 **required set（`applyRequires` 及其沿 `requires` 边的传递闭包）** 中的每个 artifact 都为 `done`、`skipped`（`skip_specs: true`）或因其自身 `instruction` 标明可选而被显式条件跳过（`propose.ts:130-139`；如 `spec-driven` 的 `design.md`）。仅凭 `applyRequires` 自身 `done` 不能提前停下——因为 `status` 只看文件是否存在，若提前写了 `tasks.md` 会把 `tasks` 标成 `done` 而漏掉 `specs`。
 
 ## Step 7：Apply-Ready 的精确定义
 
@@ -412,11 +413,11 @@ planning artifacts 已经足够让 apply skill 读取上下文和任务清单
 
 ## 参考来源
 
-源码引用：
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/propose.ts` | propose skill 的完整步骤、循环、guardrails 和输出要求 |
+| `src/core/templates/workflows/propose.ts` | propose skill 的 `openspec context --json` 预检、传递闭包 required set 循环、guardrails 和输出要求 |
 | `src/commands/workflow/new-change.ts` | `openspec new change` 的 CLI 行为和 JSON/human 输出 |
 | `src/utils/change-utils.ts` | change name 校验、schema 解析优先级、目录创建和 `.openspec.yaml` 写入 |
 | `test/commands/artifact-workflow.test.ts` | no-spec schema 的 `new change` 自动 marker |

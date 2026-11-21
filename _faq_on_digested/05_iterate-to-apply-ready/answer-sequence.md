@@ -64,8 +64,12 @@ sequenceDiagram
 
             alt 小修（补 scenario/细化 task/改文件名）
                 MD->>FS: 直接编辑 artifact 文件
-            else 补缺失 artifact
-                MD->>TS: /openspec-continue-change（按 schema 规则补充）
+            else 大幅修订已有 done 工件（如重写 design.md）
+                MD->>TS: openspec-update-change（调 instructions <id> --json + 跨工件对账）
+                TS-->>MD: instructions + 操作包
+                MD->>FS: 确认后更新既有 artifact
+            else 补缺失的 ready 工件（如补上之前跳过的 design.md）
+                MD->>TS: openspec-continue-change（只创建缺失 ready 工件）
                 TS-->>MD: instructions + 操作包
                 MD->>FS: 写新 artifact
             else scope 需要重定义
@@ -115,24 +119,32 @@ MD 判断：proposal impact 不准确 → 更新 proposal.md
 
 这和 Explore 的 EXP-05 逻辑一致，但起点不同：EXP-05 从用户意图出发做 discovery，ITR-04 从 artifact 声称出发做 verification。
 
-### 模式 3：TS 按需介入
+### 模式 3：TS 按需介入（区分修订已有 `done` 工件 vs 补建缺失 `ready` 工件）
 
 ```text
-MD 发现 design.md 需要推翻重来
-  → 可能需要 /openspec-continue-change 重新生成 design artifact
+情形 A（既有 design.md 已存在，需要推翻重写）：
+  → 走 openspec-update-change（修订既有 existingOutputPaths 并跨工件对账）
   → MD → TS: openspec instructions design --change "X" --json
   → TS → MD: template + instruction + dependencies
-  → MD 写新 design.md
+  → 用户确认后 MD 更新既有 design.md
+
+情形 B（之前跳过了可选 design.md，现在需补建缺失的 ready 工件）：
+  → 走 openspec-continue-change（仅创建缺失的 ready 工件；若规划已全部完成则直接交棒 apply，见 #2274）
+  → MD → TS: openspec instructions design --change "X" --json
+  → MD 创建新 design.md
 ```
 
-这是本阶段少有的 TS 参与点。而且不是因为 TS 要求 MD 这样做，而是 MD 主动决定需要 TS 的 artifact 生成机制。
+这是本阶段少有的 TS 参与点。而且不是因为 TS 要求 MD 这样做，而是 MD 主动决定借用 TS 的 instructions 规则包。
 
 ## 参考来源
+
+源码引用以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」（`0c737dc1`）为准：
 
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/explore.ts` | Explore stance：可读代码、可审视架构、不可实施 |
-| `src/core/templates/workflows/continue-change.ts` | `/openspec-continue-change` 的 artifact 补充机制 |
+| `src/core/templates/workflows/update-change.ts` | `openspec-update-change` 修订既有 `done` 工件并跨工件对账 |
+| `src/core/templates/workflows/continue-change.ts` | `openspec-continue-change` 仅创建缺失 `ready` 工件，规划全齐时交棒 apply（`#2274`） |
 | `src/commands/workflow/instructions.ts` | artifact instructions 的生成 |
 | [`answer.md`](answer.md) | 主流程和 ITR 节点说明 |
 | [`answer-itr03.md`](answer-itr03.md) | 批判性阅读 artifacts |

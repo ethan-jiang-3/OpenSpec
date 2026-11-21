@@ -28,7 +28,7 @@ next_read:
 1. 同时存在 `openspec/config.yaml` 与 `openspec/config.yml` 时，`.yaml` 优先；修改 `.yml` 不会覆盖它。
 2. `store:` 只在 `openspec/` 是 config-only 目录，即没有 `specs/` 和 `changes/` 时，才作为 pointer 选择已注册 store。
 3. 本地已有 planning shape 时，本地 root 必然胜出；`store:` 被忽略并产生 warning。命令随后从选中的 root 读 config，因此 pointer 目录内的 `schema`、`context`、`rules`、`references` 都不是有效项目配置。
-4. parser 是逐字段 fail-open：YAML 能解析不代表每个字段有效。无效字段和未知顶层 key 会被丢弃，合法兄弟字段仍可能继续工作。
+4. `readProjectConfig()` 对常规命令是逐字段 fail-open：YAML 能解析不代表每个字段有效，无效字段和未知顶层 key 会被丢弃，合法兄弟字段仍继续工作；但 **`openspec validate` 会在 `config.yaml`/`.yml` 不可读或不是合法 YAML 时以 `unreadable_config` / `unparseable_config` 直接退出 `1`（#2127）**。
 
 因此，先解决 root 选择和文件优先级，再讨论 rule 的措辞。`store:` 目录只应承担 pointer 角色；项目 guidance 必须写在最终被选为 planning root 的目录中。
 
@@ -60,15 +60,15 @@ next_read:
 | 改了 `config.schema`，活跃 change 仍选择旧名称 | change metadata `.openspec.yaml` 中记录的 schema 名称优先 | 新 change 使用新默认值；既有 change 要显式改名迁移并验证，不要期待隐式切换。注意 metadata 不保存 schema 内容；修改同名 schema 定义仍可能影响既有 change。 |
 | `openspec schema init --default` 后默认 schema 没变 | 此前命令写入的 `defaultSchema` 没有被 project config 消费者读取；升级后项目里可能仍残留该字段 | 升级后重跑命令（会写有效 `schema` 并删除 `defaultSchema`），或以新 change 的 `.openspec.yaml` 验证。 |
 | `store:` 指向外部 store，但本地 guidance 仍被使用 | 本地 planning shape 让 local root 胜出 | 移除歧义：使用 config-only pointer，或把 guidance 放到真正选中的 local/store root。 |
-| 新增 `guidance:`、`apply_rules:`、`operations.explore:` 等字段后没有效果 | 未支持的顶层 key/operation 被静默忽略 | 使用 `operations.apply/archive.guidance` 或现有 placement，或先实现可验证的 OpenSpec feature。 |
+| 新增 `guidance:`、`apply_rules:`、`operations.explore:` 等字段后没有效果 | 未支持的顶层 key/operation 被静默忽略（`ProjectConfig` 仅识别 `schema`、`context`、`rules`、`operations`、`references`、`store`、`githubCopilot`、`skillsScope` 共 8 个顶层字段，`operations` 仅支持 `apply`/`archive`） | 使用 `operations.apply/archive.guidance` 或现有 placement，或先实现可验证的 OpenSpec feature。 |
 
 ## schema 与多 schema 的维护规则
 
 1. `config.schema` 决定新 change 的默认 schema 名称；已有 change 的 `.openspec.yaml` 中的名称优先。它不是 schema 内容、hash 或 version 的快照。
 2. `schema` 缺失或无效时，合法的 `context`/`rules` 仍可能被保留，schema 消费者则回退到默认值。能运行不等于显式选中了预期 workflow；应始终写有效 `schema: <name>`。
 3. `openspec schema init --default` 写入有效 `schema` 键并删除遗留 `defaultSchema`，失败时回滚两个文件；此前写入的 `defaultSchema` 是静默无效字段，升级后应确认已迁移。
-4. `rules` 对当前 schema 的 artifact IDs 有效。并行使用多个 schema 时，某个 schema 专属 key 在另一个 change 上可能 warning 且不注入。
-5. 切换默认 schema 前先盘点 active changes；要么让旧 change 完结，要么为它们制定可验证的显式迁移，而不是期望一份全局 rules 同时无噪声服务两套不兼容 ID。
+4. `generateInstructions()` 按**全部可用 schema 的 artifact ID 并集**（内置 + `openspec/schemas/`）校验 `rules` 的 key（`instruction-loader.ts:379-385`）：另一个已安装 schema 的专属 artifact key **不会**触发 warning，只是不会注入不含该 artifact ID 的 change；只有不属于任何可用 schema 的 key 才会在 `instructions` 的 stderr 告警 `Unknown artifact ID in rules`。
+5. 切换默认 schema 前先盘点 active changes；要么让旧 change 完结，要么为它们制定可验证的显式迁移。若两套并行 schema 复用了同名 artifact ID（如 `proposal`），同一组 `rules.<id>` 会同时注入两者，需确认规则语义兼容。
 
 ## 维护循环
 
@@ -88,7 +88,7 @@ next_read:
 3. 对代表性 change 运行 `openspec instructions <artifact-id> --change <change> --json`，确认只出现预期 `context`/`rules`。
 4. 运行 `openspec instructions apply --change <change> --json` 和 `openspec instructions archive --change <change> --json`，确认 operation guidance 来自正确的 `operations` 字段，而 artifact rules 没有误当作 operation input。
 5. 运行 `openspec status --change <change> --json`，确认 schema、artifact 状态和后续步骤。
-6. 检查 stderr 的 YAML、50 KiB、unknown artifact ID 或 ignored `store:` warning。
+6. 运行 `openspec validate --changes`（或 `openspec validate --all`），确保 `config.yaml`/`.yml` 没有因不可读或非法 YAML 触发 `unreadable_config` / `unparseable_config`（exit 1，#2127），并检查 `instructions` stderr 的字段形状、50 KiB、unknown artifact ID 或 ignored `store:` warning。
 7. 运行硬规则对应的 checker/test/CI；“prompt 已出现”不是验收证据。
 
 新建或重构配置的归位决策见 [`01-design-config-yaml.md`](01-design-config-yaml.md)；从项目类型开始选择基线见 [`00-initial-config-baselines.md`](00-initial-config-baselines.md)。

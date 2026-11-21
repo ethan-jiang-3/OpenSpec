@@ -14,7 +14,7 @@
   <rect x="50" y="166" width="368" height="26" rx="6" fill="#dafbe1"/>
   <text x="62" y="183" font-size="12" fill="#1f2328">A1　注入导航简报，不是规格正文</text>
   <rect x="50" y="197" width="368" height="26" rx="6" fill="#dafbe1"/>
-  <text x="62" y="214" font-size="12" fill="#1f2328">A2　四级分级过滤读（省 84%）</text>
+  <text x="62" y="214" font-size="12" fill="#1f2328">A2　四级分级过滤读（省 81%）</text>
   <rect x="50" y="228" width="368" height="26" rx="6" fill="#dafbe1"/>
   <text x="62" y="245" font-size="12" fill="#1f2328">A3　50 KB 字节硬预算</text>
   <rect x="50" y="259" width="368" height="26" rx="6" fill="#dafbe1"/>
@@ -45,7 +45,7 @@
   <rect x="482" y="256" width="368" height="26" rx="6" fill="#fff8c5"/>
   <text x="494" y="273" font-size="12" fill="#1f2328">B3　update-change 双向一致性复核</text>
   <rect x="482" y="287" width="368" height="26" rx="6" fill="#fff8c5"/>
-  <text x="494" y="304" font-size="12" fill="#1f2328">B4　verify 三维检查（需 expanded profile）</text>
+  <text x="494" y="304" font-size="12" fill="#1f2328">B4　verify 三维检查（需 custom profile）</text>
 
   <text x="482" y="344" font-size="12.5" font-weight="700" fill="#cf222e">缺口</text>
   <rect x="482" y="354" width="368" height="70" rx="6" fill="#ffebe9" stroke="#cf222e" stroke-width="1" stroke-dasharray="4 3"/>

@@ -35,7 +35,7 @@
 
   <rect x="70" y="96" width="250" height="96" class="box" fill="url(#empty)" stroke="#cbd5e1"/>
   <text x="195" y="126" text-anchor="middle" class="label">EXP-12 OpenSpec 空状态</text>
-  <text x="195" y="154" text-anchor="middle" class="small">openspec list --json = []</text>
+  <text x="195" y="154" text-anchor="middle" class="small">list --json: { changes: [], root }</text>
   <text x="195" y="176" text-anchor="middle" class="small">openspec/specs/ = 空</text>
 
   <rect x="435" y="96" width="250" height="96" class="box" fill="url(#choice)" stroke="#facc15"/>

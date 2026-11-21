@@ -61,8 +61,9 @@ remote: https://github.com/team/platform-api.git
 CLI 操作：
 
 ```bash
-openspec store setup [id] --remote <url>          # 新克隆一个 store 并注册（--remote 只在这有）
-openspec store register <path> --id <store-id>    # 注册已有的本地 checkout（只有 --id/--yes/--json）
+openspec store setup [id] --path <path> [--remote <url>] [--no-init-git]
+  # 在本地初始化并注册新 store 目录（绝不 clone 远端仓库；--remote 仅作为团队 canonical clone 元数据写入 store.yaml，不执行 git remote add origin）
+openspec store register [path] --id <store-id>    # 注册已有的本地 checkout（仅接受 --id/--yes/--json）
 openspec store list                               # 列出
 openspec store unregister <id>                    # 注销（保留文件）
 openspec store remove <id>                        # 连本地文件夹一起删
@@ -105,11 +106,13 @@ Referenced stores
 
 ```bash
 openspec workset create my-session --member . --member platform-api=<path/to/platform-api>
-openspec workset open my-session   # 在编辑器里打开所有 member
+openspec workset open my-session   # 在编辑器里打开所有 member（不支持 --json，传了报 workset_open_json_unsupported）
 openspec workset list
 ```
 
-数据存在 `<globalDataDir>/worksets/worksets.yaml`。不提交、不共享、不写入 member 目录。
+- `workset create` 把成员与可选首选工具写入 `<globalDataDir>/worksets/worksets.yaml`（纯本地，不提交、不共享、不写入 member 目录）。
+- `workset open <name>` 每次运行时在锁内按当前仍存在的成员目录重新生成 `<globalDataDir>/worksets/<name>.code-workspace`，再交给 opener 启动；由于它把当前终端交接给外部工具，显式拒绝 `--json`（`workset_open_json_unsupported`）。
+- 内置 opener 分两类（`src/core/openers.ts`）：`workspace-file` 风格（`code`、`cursor`）默认启用；CLI-agent `attach-dirs` 风格（`claude`、`codex`）默认被门禁关闭，需显式设置 `OPENSPEC_ENABLE_CLI_AGENT_OPENERS=1` 才允许打开。
 
 ### Doctor：健康检查
 
@@ -138,7 +141,7 @@ openspec workset list
 |------|------|
 | planning home 判定 | `resolveCurrentPlanningHomeSync()` in `src/core/planning-home.ts` |
 | store 基础数据 | `src/core/store/foundation.ts`（metadata, registry state, path helpers） |
-| store CRUD | `src/core/store/operations.ts`（1196 行） |
+| store CRUD | `src/core/store/operations.ts`（1267 行） |
 | store registry | `src/core/store/registry.ts` |
 | store git 操作 | `src/core/store/git.ts` |
 | root 选择 | `resolveRootForCommand()` in `src/core/root-selection.ts` |

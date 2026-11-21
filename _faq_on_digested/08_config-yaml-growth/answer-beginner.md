@@ -11,49 +11,56 @@
 | 字段 | 作用 |
 |---|---|
 | `schema` | 用哪个工作流（默认 `spec-driven`） |
-| `context` | 项目背景，注入到**所有** artifact 的指令 |
+| `context` | 项目约束背景（不放可通过读代码推断的事实），注入到**所有** artifact 指令，也进入 Apply/Archive |
 | `rules` | 按 artifact ID 分的约束，只注入给对应 artifact |
 | `operations.apply.guidance` | Apply 专属项目指引，和 context 一起进入 apply instructions |
 | `operations.archive.guidance` | Archive 专属项目指引，和 context 一起进入 archive instructions |
+| `references` / `store` / `githubCopilot` / `skillsScope` | 其余 4 个系统配置项：外部 store 引用、config-only 目录的默认 store 指针、Copilot 云端 agent 开关、以及 `skillsScope`（`project` \| `global`，记录项目是否将 OpenSpec skills 保留在仓库内） |
 
-`rules.apply` / `rules.archive` 不会生效；Explore 会读取 `context` / artifact `rules`，但没有 `operations.explore`。
+`rules.apply` / `rules.archive` 不会生效；Explore 会读取 `context` / artifact `rules`，但没有 `operations.explore`（且 Explore 模式明确禁止创建或修改 `openspec/config.yaml`）。
 
-真实"长出来"的样子——这个 repo 自己 dogfood 的 [`openspec/config.yaml`](../../openspec/config.yaml)（OpenSpec 团队自己的成品）：
+真实"长出来"的样子——这个 repo 自己 dogfood 的 [`openspec/config.yaml`](../../openspec/config.yaml)（OpenSpec 团队自己的成品，完整定义了 `schema`、`context` 与跨 `specs`/`tasks`/`design` 三个 artifact 的 `rules`，未使用可选的 `operations:`）：
 
 ```yaml
 schema: spec-driven
 
 context: |
-  Tech stack: TypeScript, Node.js (≥20.19.0), ESM modules
+  Tech stack: TypeScript, Node.js (≥22.20.0), ESM modules
   Package manager: pnpm
   CLI framework: Commander.js
 
   Product language:
   - Write OpenSpec proposals and specs in user-facing product behavior language
-  - Avoid implementation-negative SHALL statements when a positive outcome can express the same rule
+  - Requirements should describe the experience, observable behavior, and product contract
+  - Avoid implementation-negative SHALL statements when a positive user outcome can express the same rule
+  - Put internal mechanisms in design.md or tasks.md unless the mechanism is itself part of the user-facing contract
 
   Cross-platform requirements:
   - This tool runs on macOS, Linux, AND Windows
   - Always use path.join() or path.resolve() for file paths - never hardcode slashes
+  - Never assume forward-slash path separators
+  - Tests must use path.join() for expected path values, not hardcoded strings
+  - Consider case sensitivity differences in file systems
 
 rules:
   specs:
+    - Include scenarios for Windows path handling when dealing with file paths
     - Requirements involving paths must specify cross-platform behavior
+    - Prefer user-facing product behavior and observable outcomes over internal implementation mechanics
+    - Include HOW details only when the mechanism is part of the product contract
     - If we generate artifacts, specify deletion/modification by explicit list lookup, not pattern matching
+  tasks:
+    - Add Windows CI verification as a task when changes involve file paths
+    - Include cross-platform testing considerations
   design:
+    - Document any platform-specific behavior or limitations
+    - Prefer Node.js path module over string manipulation for paths
+    - Use existing constants and lists - don't invent detection mechanisms
     - Prefer explicit lookups over pattern matching or regex
     - If we generate it, we track it by name in a constant
-
-operations:
-  apply:
-    guidance:
-      - Run the relevant tests before marking a task complete.
-  archive:
-    guidance:
-      - Review migration and rollback notes before confirming archive.
 ```
 
-`context` 分两块（产品语言 + 跨平台要求），`rules` 跨三个 artifact，每条都具体可执行；`operations` 只放 Apply/Archive 真正需要的稳定步骤。**这就是长出来的样子——也是你下面该抄的范本。**
+如果项目还需要给 Apply 或 Archive 注入稳定的执行提示，可以额外加上可选的 `operations` 段（如 `operations.apply.guidance` / `operations.archive.guidance`，见下方 `openspec init` 注释模板）。`context` 分两块（产品语言 + 跨平台要求），`rules` 覆盖 `specs`、`tasks`、`design` 三个 artifact，每条都具体可执行。**这就是长出来的样子——也是你下面该抄的范本。**
 
 ## 普通人的路：language 有快捷入口，一般规则仍没有向导
 
@@ -71,25 +78,29 @@ openspec init --language "Chinese (zh-CN)"
 schema: spec-driven
 
 # Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
 # Example:
 #   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     ...
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
 
 # Per-artifact rules (optional)
 # ...（同样是注释例子）
+
+# Per-operation guidance (optional)
+# ...（apply / archive 的 guidance 注释例子）
 ```
 
-不带 `--language` 时，`schema` 那行是唯一真正生效的内容，`context` 和 `rules` **全是注释掉的示例**。
+不带 `--language` 时，`schema` 那行是唯一真正生效的内容，`context`、`rules` 和 `operations` **全是注释掉的示例**（且注释专门提醒：不要把通用项目文档或读代码就能发现的事实塞进 `context`）。
 
 **2. `openspec config` 是个陷阱。** 它名字看着就是干这个的（`config set / edit / reset / list`），但 `src/cli/commands/config.ts:13-19`：
 
 ```text
 .command('config')
 .description('View and modify global OpenSpec configuration')   ← "global"
-.hook('preAction', (cmd) => {
+.hook('preAction', (thisCommand) => {
   if (opts.scope && opts.scope !== 'global') {
     console.error('Error: Project-local config is not yet implemented');
     process.exit(1);
@@ -99,9 +110,9 @@ schema: spec-driven
 
 它只管**全局 JSON**（`~/.config/openspec/config.json`），不管项目 `config.yaml`。想加项目级 `context`/`rules`？代码直接 `process.exit(1)` 拒绝。
 
-**3. 没有诊断/建议命令。** `openspec doctor` 检查 store 健康状态，**不读 `config.yaml`**，也没有命令读你的 `package.json`/源码去建议该写什么。
+**3. 没有针对 `context`/`rules` 内容的诊断或建议命令。** `openspec doctor`（`src/commands/doctor.ts`）**会读取 `openspec/config.yaml`**，但它只检查 `store` 指针（含同时存在本地规划目录与指针、非法指针、失效指针声明）和 `references` 跨仓关联健康度，不评估 `context`/`rules` 写得好不好，也没有命令读你的项目去建议该写什么规则。
 
-**4. agent 没有被引导到这条路径。** 你会想：让 Claude Code 帮我写不就行了？理论上能，但 **OpenSpec 的 skill 没引导 agent 去做这件事**——所有 workflow 把 `context`/`rules` 当**只读消费**（`propose.ts:128-129` "do NOT include in output"），`onboard` skill 全文不提 config。而且指令里 context/rules 缺失时**静默省略**，没有"你的 context 是空的、建议补上"的提示（`instruction-loader.ts:319`）。
+**4. agent 没有被引导到这条路径。** 你会想：让 Claude Code 帮我写不就行了？理论上能，但 **OpenSpec 的 skill 没引导 agent 去做这件事**——所有 workflow 把 `context`/`rules` 当**只读消费**（`propose.ts:112-113, 164-166` "do NOT include in output"，且 `explore.ts:361` 明确禁止在 Explore 模式下创建或编辑 `openspec/config.yaml`），`onboard` skill 全文不提 config。而且指令里 context/rules 缺失时**静默省略**，没有"你的 context 是空的、建议补上"的提示（`instruction-loader.ts:397-402`）。
 
 ```text
 普通人的现实：
@@ -130,7 +141,7 @@ schema: spec-driven
 3. **rules 先别自己发明。** 抄来的先用着；真要加新规则，照着抄来的格式写——key 用真实的 artifact ID（`proposal`/`specs`/`design`/`tasks`），别发明 `all`/`general`/`apply`/`archive` 这种（不会作为 artifact rule 生效）。Apply/Archive 的稳定步骤放到上面的 `operations.*.guidance`。
 4. **撞墙了再升级。** 当你想精确控制产出，或 agent 老犯同类错而你又不会改 rules——升级到 [`answer-intermediate.md`](answer-intermediate.md)（让 agent 帮你建/改 config）。熟 SDD 的话直接 [`answer-expert.md`](answer-expert.md)。
 
-为什么这样 OK：config 每次 `openspec instructions` 都重读、即时生效、写错不崩（fail-open）。所以抄一份先用着、慢慢改，比从零写靠谱得多，也**不必提前焦虑**。
+为什么这样 OK：`config.yaml` 每次 `openspec instructions` 都重读、即时生效；字段类型小错在 `status` / `instructions` 里是逐字段 warn + 降级（但注意自 v1.16.0 `#2127` 起，若 `config.yaml` 不可读或 YAML 语法本身损坏，`openspec validate` 会通过 `readConfigParseError()` 退出码 1 报错，帮你拦住缩进/引号坏掉的文件）。所以抄一份先用着、改完跑一下 `openspec validate`，比从零写靠谱得多，也**不必提前焦虑**。
 
 ## 那 agent 能不能帮上忙？
 

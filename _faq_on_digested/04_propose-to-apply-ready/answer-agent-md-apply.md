@@ -67,5 +67,5 @@ agent 按 tasks 执行并更新 checkbox
 | 来源 | 用到的结论 |
 |---|---|
 | `src/commands/workflow/instructions.ts` | apply runtime 从 schema 读取 `apply.requires`、`apply.tracks`、`apply.instruction`，并生成 `contextFiles/progress/tasks/state`。 |
-| `src/core/templates/workflows/apply-change.ts` | 默认 apply skill/command 的 agent loop 和代码偏置文案。 |
+| `src/core/templates/workflows/apply-change.ts` | 默认 apply skill 的 agent loop 和代码偏置文案（v2.0.0 `#2223` 起仅投递 skills，不再生成 command 文件）。 |
 | `_digested/schema/04-schema-解析优先级.md` | 项目级 schema 优先于用户级和包内置 schema。 |

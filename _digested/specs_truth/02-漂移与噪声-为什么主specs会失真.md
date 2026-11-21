@@ -16,20 +16,20 @@
 
 ## 三道结构性缺口（漂移为什么是默认）
 
-### 缺口一：`validate` 不做跨文件对账——它是 CLI 结构 linter，不是 slash，也抓不出漂移
+### 缺口一：`validate` 不做完整跨文件对账——它是 CLI 结构 linter，不是 skill，也抓不出代码漂移
 
 先把 `validate` 的身份钉死（很多人这里就误会了）：
 
-- **它是 `openspec` CLI 命令**（和 `archive` 同列），**不是 `/opsx:` slash 技能**（没有 `/openspec-validate`）。
-- 它是**结构 linter**：`Validator.validateChangeDeltaSpecs()` 只读 `changeDir/specs/` 下的 delta 文件，检查它们**自身**的结构（段头齐不齐、有没有 SHALL/MUST、有没有 scenario、段内重不重名）。默认（normal）模式下，缺失 SHALL/MUST 只是 guidance（WARNING），`--strict` 才强制。`Validator.validateChangeDeltaSpecs()` **本身**不碰主 spec——但 `openspec validate <change>` 会额外传 `mainSpecsDir`，于是它复用 archive 的合并器（`findArchiveBlockers` → `findSpecUpdates` + `buildUpdatedSpec`）预演一次合并冲突，命中时以 **INFO** 报告（`Archive would refuse this delta: …`）。`archive` 自己走的内部校验不传这个参数，那条预演不会跑。
+- **它是 `openspec` CLI 命令**（和 `archive` 同列），**不是 `openspec-*` 技能**（没有 `openspec-validate`）。
+- 它是**结构 linter**（另外在 v1.15+ / #2127 中，若 `openspec/config.yaml` 或 `.yml` 不可读或 YAML 语法损坏，`openspec validate` 会直接报错并以退出码 1 退出）：`Validator.validateChangeDeltaSpecs()` 检查 `changeDir/specs/` 下 delta 文件的结构（段头齐不齐、未识别的 `## ... Requirements` 段头下误放的 requirement 报 ERROR #2207、有没有 SHALL/MUST、有没有 scenario、scenario 是否具备 `WHEN`/`GIVEN` + `THEN` 告警 #2079、段内重不重名）。默认（normal）模式下，缺失 SHALL/MUST 只是 guidance（WARNING），`--strict` 才强制。`Validator.validateChangeDeltaSpecs()` 在 `openspec validate <change>` 传入 `mainSpecsDir` 时，还会跑两项跨文件检查：一是 **MODIFIED 丢 scenario** 报 ERROR、**MODIFIED 正文超过 500 字符且比基线更长**报 WARNING（#2265）；二是复用 archive 合并器（`findArchiveBlockers` → `findSpecUpdates` + `buildUpdatedSpec`，`validator.ts:1000-1055`）做干跑预演，命中合并阻塞时以 **INFO** 报告（`Archive would refuse this delta: …`）。`archive` 自己的内部预检阶段随后直接执行真实的 `buildUpdatedSpec` 合并。
 
 后果分三种，不能一概而论：
 
-- **MODIFIED 指向主 spec 里不存在的 requirement**：`buildUpdatedSpec` 会抛错，`validate <change>` 接住后报 INFO（**退出码仍是 0**）——有信号但不失败；
-- **REMOVED 删一个早已不在的东西**：`buildUpdatedSpec` 只 `warn()` 然后当作 no-op，**不抛错**，所以预演也报不出东西；
-- **RENAMED 改一个不存在的标题**：同样是静默 `continue` 的 no-op。
+- **MODIFIED 指向主 spec 里不存在的 requirement**：`buildUpdatedSpec` 抛错，`validate <change>` 在 `findArchiveBlockers` 接住后报 **INFO**（**退出码仍是 0，哪怕加 `--strict` 也不会失败**）——有信号但不拦 CI；
+- **REMOVED 删一个早已不在的东西**：只要没有大小写/空白近似名，`buildUpdatedSpec` 只 `warn()` 然后当作 early-sync no-op，**不抛错**，所以预演不报 blocker（若存在大小写/空白近似名则抛错并报 INFO）；
+- **RENAMED 改一个不存在的标题**：若 `TO` 已存在于主 spec（且无 `FROM` 的近似名），视为已 early-sync 的静默 no-op；若 **`FROM` 和 `TO` 都不存在**（或主 spec 里有 `FROM` 的大小写/空白近似名），`buildUpdatedSpec` 会抛 `RENAMED failed ... - source not found`，`validate <change>` 同样在 `findArchiveBlockers` 里报 **INFO**（退出码仍为 0）。
 
-后两种只有等到 `archive` 时才能发现。精确名找不到时，报错只说 `not found`；但如果主 spec 里存在只差大小写或内部空白的近似名（`foldRequirementName`），v1.14.x 的报错会**指名那个真实 header**，让你按它逐字改。
+所以缺目标或重名冲突在 `validate` 下最多只是不改退出码的 INFO（已删除项连 INFO 都没有），真正硬拦截仍要等到 `archive`。精确名找不到时，报错说 `not found`；但如果主 spec 里存在只差大小写或内部空白的近似名（`foldRequirementName`），`REMOVED`/`RENAMED` 的报错会**指名那个真实 header**，让你按它逐字改。
 
 补了其中一个缺口：当 `validate <change>` 能拿到 main specs 时，会前置检测 **MODIFIED 省略了主 spec 仍有的 scenario**——这正是 archive 拒绝的那种 loss，现在在 authoring 阶段就失败，错误信息会指名要抄回的 scenarios。其余匹配类缺口（指向不存在的 requirement、改名不存在标题等）仍是 archive 时发现。（`validate` 的完整选项/CI 用途/与 archive 的冗余关系，见 `06` 的 validate 命令参考。）
 
@@ -117,7 +117,7 @@ Aborted. No files were changed.
 | ② 有代码无 spec | 漏报现状 | 修复原语（AUTHOR-NEW） |
 | ③ 冻结 spec | archive 后无人维护 | 修复原语（纠正型 delta）或核选项（再基线） |
 | ④ 废弃仍 active change | 放弃了没清 | 清除原语（DELETE/SHELVE） |
-| ⑤ 平行权威层未对齐 | conventions 没承认新层 | 修复原语（更新 conventions spec）；详见 `09` |
+| ⑤ 平行权威层未对齐 | conventions 没承认新层 | 修复原语（更新 conventions spec） |
 | ⑥ 身份脆弱性（ur-cause） | 标题被改、delta 停在旧标题 | 修复原语（RENAMED）或核选项（再基线） |
 
 ## 守住的边界
@@ -145,8 +145,8 @@ v1.13.0 的 parser 大修消除了几个「写了但没生效、还报成功」�
 
 本文描述的失真机理中，凡引用这些 bug 作为实例的段落应视为历史案例；失真的**人为源头**（标题手改不走 RENAMED、requirement 大小写漂移等）仍然存在——且 v1.13.0 起仅大小写不同的 requirement 名会被 archive 显式拒绝，这类漂移从「静默」变为「显式报错」。
 
-## v1.14.x 后的失真源变化
+## v1.14.x–v2.1.1 后的失真源变化
 
-- **delta 里"不会被带走"的文本现在可见**（v1.14.2，#2054）：第一类静默丢失——作者把背景、理由、取舍写进 delta spec 的散文里，archive 按 delta 段合并时这些文本根本不会进主 spec——从「无声消失」变成 WARNING。告警面覆盖三处（首个 `## ` 前的正文、首个 requirement 前的散文、Purpose 与四类 delta 段之外的 `##` 段），措辞明确指向出路：挪进 requirement，或挪进 proposal/design。**搬运行为本身没变**，变的只是它不再悄悄发生。
-- **超长 requirement 从 hint 升级为可拦截**（v1.14.1，#2020）：requirement 正文 >500 字从 INFO 变 WARNING，`--strict` 会失败；同一限制前移到 change 的 ADDED requirement，所以"一条 requirement 塞三个行为"这种**语义稀释型失真**在 authoring 阶段就能被 CI 拦住（MODIFIED 不受限，避免逼人拆动既有正文）。配套的 specs instruction 给出了拆分既有长 requirement 的正确做法：保留 header 与全部 scenario，正文收敛到一个行为，被移除的行为各自作为新的 ADDED requirement 进来。
+- **delta 里"不会被带走"的文本现在可见，且顶部 YAML frontmatter 已豁免**（v1.14.2 #2054；v2.1.1 #2273）：作者把背景、理由、取舍写进 delta spec 的散文里，archive 按 delta 段合并时这些文本不会进主 spec——从「无声消失」变成 WARNING。告警面覆盖三处（首个 `## ` 前的正文、首个 requirement 前的散文、Purpose 与四类 delta 段之外的 `##` 段），措辞明确指向出路：挪进 requirement，或挪进 proposal/design。v2.1.1（#2273）起，delta 文件顶部合法的 YAML frontmatter 不再计入 `unappliedContent`（`validate --strict` 通过；`archive` 会打印一条提示说明 frontmatter 不随合并带入主 spec）。此外，拼错的 `## ... Requirements` 段头（如 `## UPDATED Requirements`，#2207）若包含 requirement，在 `validate` 与 `archive` 中均直接报 **ERROR / 拒绝归档**，不再只当普通散文警告放过。
+- **超长 requirement 从 hint 升级为可拦截，并覆盖继续膨胀的 MODIFIED**（v1.14.1 #2020；v2.1.1 #2265）：主 spec 与 change ADDED requirement 正文 >500 字符报 WARNING（`--strict` 失败）；v2.1.1（#2265，`validator.ts:789-801`）进一步对 **MODIFIED requirement** 在 `nextText.length > 500 && nextText.length > currentTextLength`——即**正文总长度超过 500 字符，且比主 spec 基线更长（哪怕只多 1 个字符）**时发出 WARNING（若虽超 500 字符但持平或缩短则不报警）。同时 scenario 缺少 `WHEN`/`GIVEN` + `THEN` 条目也会报 WARNING（#2079）。配套的 specs instruction 给出了拆分既有长 requirement 的正确做法：保留 header 与全部 scenario，正文收敛到一个行为，被移除的行为各自作为新的 ADDED requirement 进来。
 - **spec 文件可以是项目内 symlink**（v1.14.2 #2052 / v1.14.3 #2101）：漂移治理因此多了一个真实场景——spec 文件住在产品文档旁边、由团队协作者直接编辑，OpenSpec 只通过链接读写。代价是"手改检测"这个本就缺失的能力更显眼：链接指向的文件谁都能编辑，OpenSpec 既无 hash 也无变更记录（见 `06` 的诚实声明）。写侧的 canonical path 钉定（`writeUpdatedSpec`）至少保证 archive 不会因链接被换向而写到未校验的文件。

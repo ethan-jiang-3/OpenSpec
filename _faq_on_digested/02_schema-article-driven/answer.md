@@ -59,7 +59,7 @@ brief ──────────┤              ├──→ tasks ──�
 
 ### 为什么保留 tasks 这个 artifact id（但文件名其实可以改）
 
-**tracking 文件名是可配置的，不是硬编码。** `src/utils/task-progress.ts:106-112` 的 `findTrackedTasksArtifact()` 先读 schema 的 `apply.tracks`，拿它的值去匹配某个 artifact 的 `generates`：
+**tracking 文件名是可配置的，不是硬编码。** `src/utils/task-progress.ts:171-177` 的 `findTrackedTasksArtifact()`（由 `getTaskProgressForChange()` 调用，覆盖 `list` / `status` / `archive`）先读 schema 的 `apply.tracks`，拿它的值去匹配某个 artifact 的 `generates`：
 
 ```ts
 const tracks = schema.apply?.tracks;
@@ -71,12 +71,15 @@ return schema.artifacts.find((a) => a.id === 'tasks');   // 没设 tracks 时才
 
 ```text
 $ openspec list --json
-{ "changes": [{ "name": "t1", "completedTasks": 1, "totalTasks": 2, "status": "in-progress" }] }
+{
+  "changes": [{ "name": "t1", "completedTasks": 1, "totalTasks": 2, "status": "in-progress", ... }],
+  "root": { ... }
+}
 ```
 
 —— tracking 文件叫 `checklist.md`，计数照常。
 
-article-driven 仍把 artifact id 叫 `tasks`、文件名写 `tasks.md`，理由不是"不改就失败"，而是：**`apply.tracks` 必须与某个 artifact 的 `generates` 字符串完全相等**（否则会 warn `apply.tracks '<x>' does not exactly match any artifact's generates value`），沿用默认名就少一处要维护的一致性；而且 `openspec instructions apply` 等提示文案里的 "tasks" 不会让读者意外。
+article-driven 仍把 artifact id 叫 `tasks`、文件名写 `tasks.md`，理由不是"不改就失败"，而是：**`apply.tracks` 必须与某个 artifact 的 `generates` 字符串完全相等**（否则 `src/core/artifact-graph/schema.ts:122-133` 会 warn `apply.tracks '<x>' does not exactly match any artifact's generates value`，且 `list`/`status`/`archive` 退回顶层 `tasks.md`），沿用默认名就少一处要维护的一致性；而且 `openspec instructions apply` 等提示文案里的 "tasks" 不会让读者意外。
 
 ### 为什么 apply gate 设成 draft + tasks
 
@@ -113,5 +116,5 @@ agent 会像处理代码 change 一样走完 brief → outline → research → 
 
 ## 已知限制
 
-- **archive 的 tasks.md 硬编码**：这是当前绕过它的原因，也是这个 schema 最大的"代码痕迹"。如果未来 archive 把 tracking filename 做成可配置项，tasks.md 可以改名来更贴合内容生产的语境。
+- **`apply.tracks` 需精确匹配 `generates`**：`archive` / `list` / `status` 通过 `getTaskProgressForChange()` → `findTrackedTasksArtifact()`（`src/utils/task-progress.ts:171-177`）读取 `schema.apply.tracks`，已不是硬编码 `tasks.md`；但 `apply.tracks` 必须与某个 artifact 的 `generates` 字符串完全相等（写成 glob 或子文件未精确命中时会告警并退回顶层 `tasks.md`）。本示例直接沿用 `tasks.md` 省去额外映射。
 - **不是通用 CMS 替代品**：这个 schema 适合个人或小团队的结构化写作流程，不适合需要审批流、多级编辑、发布调度等 CMS 级功能。它验证的是"OpenSpec 协议可以泛化"这个命题，不是"OpenSpec 可以替代 CMS"。

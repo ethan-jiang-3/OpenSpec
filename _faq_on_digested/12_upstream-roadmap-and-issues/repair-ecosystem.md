@@ -1,10 +1,9 @@
 # `/openspec-repair` 深度探究：从上游 Issue #821 到我们已有的研究
 
 > 这是对 `answer.md` 中 "社区呼声最高的 Feature Request — `/openspec-repair`" 一条的展开。
-> 来源：GitHub Issue #821、#684、upstream docs（commands.md, reviewing-changes.md）、`/openspec-verify-change` 实现细节、
+> 来源：GitHub Issue #821、#684、upstream docs（commands.md, reviewing-changes.md）、`openspec-verify-change` 实现细节、
 > 以及我们已有的 `_faq_on_digested/11_keep-specs-aligned/` + `_digested/specs_truth/` + `_digested/workflows/08-verify.md` + `_digested/workflows/12-update.md`。
-
-> **历史边界。** 本文讨论的是 issue 语境中的 Claude `/openspec-*` 与当时机制；Codex 当前为 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`）。文中关于 Apply/Archive “不能接收 config”的旧说法应读作“不接收 artifact rules”；project `context` 与 `operations.apply/archive.guidance` 已分别成为当前 operation input。v1.8.0 未推翻这些边界。
+> （注：下文引述 Issue 时保留当时的 `/openspec-*` 叫法；当前唯一分发形态为 skill，Claude 等宿主写作 `/openspec-*`、Codex 写作 `$openspec-*`，且 `openspec/config.yaml` 的 `context` 与 `operations.{apply,archive}.guidance` 已分别作为 Apply/Archive 的原生输入生效。）
 
 ---
 
@@ -52,7 +51,7 @@ Issue #821 的讨论中，维护者和社区成员指出 `/openspec-repair` 的�
 
 ### 2.1 `/openspec-verify-change` — 发现问题，但不修
 
-v0.20.0 引入，属于 expanded profile。在 apply 之后、archive 之前运行。按三个维度检查：
+v0.20.0 引入，属于 **`custom` profile**（OpenSpec 的 profile 只有 `core` 与 `custom` 两种，`core` 默认只含 `propose`/`explore`/`apply`/`archive`，`verify` 需切到 `custom` 勾选启用）。在 apply 之后、archive 之前运行。按三个维度检查：
 
 | 维度 | 检查什么 | 严重度分级 |
 |------|---------|-----------|
@@ -60,7 +59,7 @@ v0.20.0 引入，属于 expanded profile。在 apply 之后、archive 之前运�
 | **Correctness** | 实现是否匹配 spec 意图、边界情况是否处理、错误状态是否匹配 spec 定义 | CRITICAL / WARNING |
 | **Coherence** | 设计决策是否反映在代码中、命名约定是否一致、模式是否匹配 design.md | WARNING / SUGGESTION |
 
-技术实现：agent 读取 `tasks.md` 的 `[x]` checkbox 状态、从 delta spec 提取 `### Requirement:` 头、搜索代码库寻找实现证据、检查 `#### Scenario:` 是否有测试覆盖。
+技术实现：agent 先运行 `openspec status --change "<name>" --json` 与 `openspec instructions apply --change "<name>" --json`（`verify-change.ts:50`），直接消费 CLI 按 schema `apply.tracks` 聚合好的顶层 `tasks` 与 `progress`、按 `artifactPaths.<id>.outputPath` 落在 `specs/` 下的输出路径发现 delta specs（对 `REMOVED`/`RENAMED` 还会先从 `<planningHome.root>/openspec/specs/<capability-path>/spec.md` 按精确规范化名称读取主 spec 基线），再搜索代码库寻找实现与 `#### Scenario:` 测试覆盖证据。
 
 **关键限制**：verify 只诊断不治疗。它产出报告（CRITICAL / WARNING / SUGGESTION），但**不修任何东西**。发现 spec 和代码不一致时，它只能说"这里有问题"，不会自动判断是改 spec 还是改代码，更不会执行修复。
 
@@ -74,11 +73,11 @@ v1.6.0 引入（PR #1278）。当你想修改 planning artifacts（proposal/spec
 
 **关键限制**：update 的隐含前提是"修改 artifacts 去更好地描述**已经确定的**需求"，而不是"实现中发现了 spec 的错误并需要双向修复"。它不分析代码实现，也不判断"到底是代码错了还是 spec 错了"——它假设你在调 artifacts。
 
-### 2.3 `/openspec-continue-change` — 推进 artifact 生成，但不做修复决策
+### 2.3 `/openspec-continue-change` — 补建未完成的 `ready` 工件，但不重写已有工件或做修复决策
 
-在 `/openspec-new-change` 创建空 change scaffold 后，逐个生成 artifact。也可以用来重新生成某个 artifact。
+在创建空 change scaffold 后，每次调用按 DAG 顺序**只创建尚未落盘的下一个 `status: "ready"` 工件**（以及补齐半写完的 glob 工件缺口）；当规划工件已全部存在（`isPlanningComplete: true`）时，它会直接交棒给 apply 并停止（`#2274`），**不会重新生成已为 `done` 的工件**（修订已有工件归 `openspec-update-change` 负责）。
 
-**关键限制**：continue 按 DAG 拓扑序推进 artifact 生成，但它不执行"对比 spec 和代码 → 判断谁错了 → 修复"这个决策循环。它只是"按 schema 声明继续生成下一个 artifact"。
+**关键限制**：continue 只按 schema 推进缺失的构建前沿（build frontier），不执行"对比 spec 和代码 → 判断谁错了 → 修复"这个决策循环。
 
 ### 2.4 三个命令的覆盖矩阵
 
@@ -104,7 +103,7 @@ v1.6.0 引入（PR #1278）。当你想修改 planning artifacts（proposal/spec
 **官方回答**：
 1. 暂停 apply
 2. 手动编辑 change 目录下的 artifact 文件（`proposal.md`、`specs/<capability>/spec.md`、`design.md`、`tasks.md`）
-3. 重新运行 `/openspec-apply-change`（它每次调用都会重新读取所有上下文文件——源码 `src/commands/workflow/instructions.ts:595-615`）
+3. 重新运行 `/openspec-apply-change`（它每次调用都会通过 `generateApplyInstructions()` 重新读取所有 `contextFiles` 并重算状态与警告——源码 `src/commands/workflow/instructions.ts:588-594, 666-698`）
 4. 或者用 `/openspec-update-change`（v1.6.0+）来自动调和关联产物
 
 **核心态度**：OpenSpec 是"fluid, not phase-locked"——没有阶段锁，随时可以编辑 artifacts 再重新 apply。哲学上是灵活的，但**实操上仍然是手工的**。#821 的 `/openspec-repair` 就是要把这个手工循环自动化。
@@ -141,7 +140,7 @@ Issue #821 可以被理解为：**社区终于意识到"手工对账"的负担�
 
 1. **设计难度高**：不像 verify（只读诊断）或 update（假设 artifacts 是主动要改的），repair 需要 agent 做出**根因判断**——代码错了还是 spec 错了？这个判断在不理解业务语义的情况下容易出错。修错了方向（spec 本来对的但 agent 把它改成匹配错误代码）比不修更糟糕。
 
-2. **三个现有命令已经降低了痛点**：verify 能发现问题、update 能修 artifacts、continue 能重新生成——虽然拼起来有缝，但缝已经比 v1.0 时代小得多。维护者可能认为优先级不如 initiative/workspace 等架构级工作。
+2. **三个现有命令已经降低了痛点**：verify 能发现问题、update 能修订已有 artifacts、continue 能补齐缺失的 `ready` 工件——虽然拼起来有缝，但缝已经比 v1.0 时代小得多。维护者可能认为优先级不如 initiative/workspace 等架构级工作。
 
 3. **和 OpenSpec 的哲学张力**：OpenSpec 的核心哲学是"specs 是人 + 纪律 + 巡检的责任"（`specs_truth/README.md` 的结论）。做一个自动判断"spec 对还是代码对"的工具，某种程度上是把人类的决策责任外包给 agent——和 OpenSpec "spec 是人类意图的表达"的定位有张力。
 

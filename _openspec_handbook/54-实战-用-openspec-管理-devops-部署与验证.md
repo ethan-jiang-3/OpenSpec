@@ -1,9 +1,6 @@
 # 54 · 实战：用 OpenSpec 管理 DevOps 部署与验证
 
-> 这一篇讲的是：实现已经写出来以后，怎么把部署、验证、回滚也纳入 OpenSpec 的 change 闭环。
-> OpenSpec 不是 CI/CD 系统，但它很适合把部署这件事讲清楚、做有序、验有据。
-
-> **v1.13.1 实施/归档提示。** 将持续的部署检查写进 `operations.apply/archive.guidance`，但每个生成的 task 仍要在同一 checkbox 中声明 verification；只有跨多项工作的系统检查才单列 Integration Verification。prompt 不替代 CI。
+> 这一篇讲的是：实现已经写出来以后，怎么把部署、验证、回滚也纳入 OpenSpec 的 change 闭环（适用 openspec 2.1.1）。OpenSpec 不是 CI/CD 系统，但它很适合把部署这件事讲清楚、做有序、验有据；持续性的团队发布检查可写进 `config.yaml` 的 `operations.apply/archive.guidance`，单次发布的上线验证则落进每条 checkbox 的内联 verification。
 
 ---
 
@@ -75,44 +72,47 @@ flowchart LR
 
 这时不要把部署当成"代码写完后的口头操作"。
 
-更好的做法是把部署和验证写进 `tasks.md`：
+更好的做法是把部署与归档前验证写成带编号的 checkbox，而把**归档动作本身及归档后事项**写成末尾 `## Workflow follow-up` 下的**普通 `- ` 列表项（不带 `[ ]`）**：
 
 ```markdown
 # Tasks
 
 ## 1. Implementation
-- [x] Add backend CSV export endpoint — verify: API integration test returns filtered CSV
-- [x] Add frontend export button — verify: component test finds the action for authorized staff
-- [x] Add authorization checks — verify: unauthorized request returns 403
-- [x] Add unit and integration tests — verify: targeted test command passes
+- [x] 1.1 Add backend CSV export endpoint — verify: API integration test returns filtered CSV
+- [x] 1.2 Add frontend export button — verify: component test finds the action for authorized staff
+- [x] 1.3 Add authorization checks — verify: unauthorized request returns 403
+- [x] 1.4 Add unit and integration tests — verify: targeted test command passes
 
 ## 2. Pre-deploy checks
-- [x] Run unit tests — verify: unit-test command exits 0
-- [x] Run integration tests — verify: integration-test command exits 0
-- [x] Confirm CSV injection sanitization — verify: malicious spreadsheet formulas are escaped in a focused test
-- [x] Confirm no schema migration is required — verify: schema diff is empty
+- [x] 2.1 Run unit tests — verify: unit-test command exits 0
+- [x] 2.2 Run integration tests — verify: integration-test command exits 0
+- [x] 2.3 Confirm CSV injection sanitization — verify: malicious spreadsheet formulas are escaped in a focused test
+- [x] 2.4 Confirm no schema migration is required — verify: schema diff is empty
 
 ## 3. Staging deployment
-- [ ] Deploy to staging — verify: release dashboard reports the target build healthy
-- [ ] Run task export smoke test in staging — verify: smoke command exits 0
-- [ ] Verify exported rows match active filters — verify: row count and IDs equal the UI result
-- [ ] Check application logs for export errors — verify: no new export errors appear in the deployment window
+- [ ] 3.1 Deploy to staging — verify: release dashboard reports the target build healthy
+- [ ] 3.2 Run task export smoke test in staging — verify: smoke command exits 0
+- [ ] 3.3 Verify exported rows match active filters — verify: row count and IDs equal the UI result
+- [ ] 3.4 Check application logs for export errors — verify: no new export errors appear in the deployment window
 
 ## 4. Production rollout
-- [ ] Deploy to production during normal release window — verify: production reports the intended build healthy
-- [ ] Run production smoke test with staff account — verify: a filtered CSV downloads successfully
-- [ ] Verify p95 export latency remains under 5 seconds — verify: dashboard query stays below threshold
-- [ ] Monitor errors for 30 minutes after deploy — verify: error-rate alert remains clear for the full window
+- [ ] 4.1 Deploy to production during normal release window — verify: production reports the intended build healthy
+- [ ] 4.2 Run production smoke test with staff account — verify: a filtered CSV downloads successfully
+- [ ] 4.3 Verify p95 export latency remains under 5 seconds — verify: dashboard query stays below threshold
+- [ ] 4.4 Monitor errors for 30 minutes after deploy — verify: error-rate alert remains clear for the full window
 
 ## 5. Archive readiness
-- [ ] Record deploy evidence in final summary — verify: summary links the release, smoke run, and dashboard
-- [ ] Confirm no rollback was required — verify: release record shows healthy or records the rollback decision
-- [ ] Archive change — verify: active change is absent and dated archive directory exists
+- [ ] 5.1 Record deploy evidence in final summary — verify: summary links the release, smoke run, and dashboard
+- [ ] 5.2 Confirm no rollback was required — verify: release record shows healthy or records the rollback decision
+
+## Workflow follow-up
+- Archive the change after production verification passes and review requirements are satisfied
+- Verify the archived change directory and updated `openspec/specs/` baseline on `main`
 ```
 
-这不是把 OpenSpec 变成 CI/CD。真正的 deploy 仍然由你的发布系统执行。
+> **为什么 `Archive the change` 不能写成 `- [ ]` checkbox？** OpenSpec 的任务进度解析器逐行扫描所有 `- [ ]` / `- [x]`，不看段落标题。如果你把“归档这个 change”写成 `- [ ]`，归档前进度永远差一条未完成（`archive` 会警告未完成任务）；一旦归档进去却没勾上，`openspec validate --archived` 又会直接判定该归档存在未完成任务而报错。所以归档本身以及归档之后才发生的事（如隔周清理特性开关），一律放在 `## Workflow follow-up` 下写成不带 checkbox 的普通 `- ` 条目。
 
-OpenSpec 只是把"这次部署怎样才算完成"变成明确协议。
+这不是把 OpenSpec 变成 CI/CD。真正的 deploy 仍然由你的发布系统执行；OpenSpec 只是把"这次部署怎样才算完成"变成明确协议。
 
 ---
 
@@ -120,27 +120,39 @@ OpenSpec 只是把"这次部署怎样才算完成"变成明确协议。
 
 不是每个 change 都要写复杂部署说明。
 
-但只要涉及线上行为、配置、迁移、权限、外部依赖，就应该在 proposal 里把发布边界说清楚。
+但只要涉及线上行为、配置、迁移、权限、外部依赖，就应该在 `proposal.md` 的标准段落里把发布边界和影响面说清楚。
 
 示例：
 
 ```markdown
-## Scope
-- Add CSV export for filtered task list
-- Restrict export to authorized staff users
-- Deploy as part of normal web/API release
+# Proposal: Roll Out Construction Task CSV Export
+
+## Why
+Ship the verified construction task CSV export capability to staging and production with explicit smoke-test and latency guards before closing the change.
+
+## What Changes
+- Add CSV export for filtered construction task list
+- Restrict export to authorized project staff
+- Roll out through the standard web/API release pipeline with post-deploy verification
+
+## Capabilities
+
+### New Capabilities
+<!-- None -->
+
+### Modified Capabilities
+- `task-tracking`: Expose filtered CSV export in production for authorized project staff
+
+## Impact
+- No database migration required
+- No new infrastructure required
+- Uses existing API and frontend release pipeline; requires post-deploy smoke test with staff test account
 
 ## Out of Scope
 - Scheduled exports
 - Background export jobs
 - New data retention policy
 - Separate reporting service
-
-## Deployment Impact
-- No database migration required
-- No new infrastructure required
-- Uses existing API and frontend release pipeline
-- Requires post-deploy smoke test with staff account
 ```
 
 这段的价值是提前防止两类失控：
@@ -201,7 +213,7 @@ OpenSpec 不跑自动化，但 `tasks.md` 可以明确调用哪些自动化。
 | Smoke Test | 登录、关键 API、关键 UI 路径 | `tasks.md` staging / production |
 | Data Check | migration count、数据一致性 | `design.md` + `tasks.md` |
 | Observability | error rate、latency、logs、alerts | `design.md` verification |
-| Business Signal | 订单导出成功率、任务完成率 | `tasks.md` post-deploy evidence |
+| Business Signal | 施工任务导出成功率、工序验收完成率 | `tasks.md` post-deploy evidence |
 
 一个更自动化的 tasks 写法可以是：
 
@@ -295,41 +307,52 @@ implementation done
 可以把下面这组 checklist 复制到高风险 change 的 `tasks.md`：
 
 ```markdown
-## Deployment readiness
-- [ ] All implementation tasks complete — verify: no earlier checkbox remains open
-- [ ] Tests passing locally or in CI — verify: required check suite is green
-- [ ] Migration impact reviewed — verify: design records migration/no-migration conclusion
-- [ ] Rollback plan documented — verify: design names trigger, owner, and action
-- [ ] Monitoring dashboard or alert path identified — verify: tasks link the dashboard or alert
+## 1. Deployment readiness
+- [ ] 1.1 All implementation tasks complete — verify: no earlier checkbox remains open
+- [ ] 1.2 Tests passing locally or in CI — verify: required check suite is green
+- [ ] 1.3 Migration impact reviewed — verify: design records migration/no-migration conclusion
+- [ ] 1.4 Rollback plan documented — verify: design names trigger, owner, and action
+- [ ] 1.5 Monitoring dashboard or alert path identified — verify: tasks link the dashboard or alert
 
-## Staging
-- [ ] Deploy to staging — verify: target build reports healthy
-- [ ] Run smoke tests — verify: smoke command exits 0
-- [ ] Verify logs and metrics — verify: no guard threshold is breached
-- [ ] Confirm stakeholder acceptance if needed — verify: acceptance evidence is linked
+## 2. Staging
+- [ ] 2.1 Deploy to staging — verify: target build reports healthy
+- [ ] 2.2 Run smoke tests — verify: smoke command exits 0
+- [ ] 2.3 Verify logs and metrics — verify: no guard threshold is breached
+- [ ] 2.4 Confirm stakeholder acceptance if needed — verify: acceptance evidence is linked
 
-## Production
-- [ ] Deploy to production — verify: target build reports healthy
-- [ ] Run production smoke tests — verify: smoke command exits 0
-- [ ] Monitor error rate and latency — verify: rollout window stays within documented guards
-- [ ] Record deploy link / CI run / dashboard evidence — verify: final summary contains all required links
+## 3. Production
+- [ ] 3.1 Deploy to production — verify: target build reports healthy
+- [ ] 3.2 Run production smoke tests — verify: smoke command exits 0
+- [ ] 3.3 Monitor error rate and latency — verify: rollout window stays within documented guards
+- [ ] 3.4 Record deploy link / CI run / dashboard evidence — verify: final summary contains all required links
 
-## Completion
-- [ ] Rollback not required, or rollback result recorded — verify: release record states the final decision
-- [ ] Specs still match shipped behavior — verify: reviewer compares shipped flow with delta scenarios
-- [ ] Archive change — verify: active change is absent and dated archive directory exists
+## 4. Completion
+- [ ] 4.1 Rollback not required, or rollback result recorded — verify: release record states the final decision
+- [ ] 4.2 Specs still match shipped behavior — verify: reviewer compares shipped flow with delta scenarios
+
+## Workflow follow-up
+- Archive the change once production rollout guards remain green
+- Remove temporary rollout flags in a dedicated follow-up change if applicable
 ```
+
+---
+
+## 常见踩坑表
+
+| 坑 | 表现 | 后果 | 正确做法 |
+|---|---|---|---|
+| **把归档或归档后清理写成 `- [ ]`** | 在 `tasks.md` 里写 `- [ ] Archive change` | 归档前卡未完成告警，归档后触发 `openspec validate --archived` 报错 | 移入末尾 `## Workflow follow-up`，写成不带 `[ ]` 的普通 `- ` 条目 |
+| **代码刚合并就立刻 archive** | 还没发 staging/production 就先把 change 归档了 | 若线上冒烟失败需要回改方案，change 已经躺进 `archive/` | 需要线上验证的变更，等验证通过或回滚结论明确后再 archive |
+| **回滚阈值只留在聊天群里** | 上线抖动时临时争论要不要回滚 | 响应慢、事后复盘无据可查 | 上线前在 `design.md` 写明量化回滚触发条件与降级路径 |
 
 ---
 
 ## 压缩结论
 
-1. OpenSpec 不是 CI/CD，也不应该伪装成 CI/CD
-2. OpenSpec 适合管理部署 change 的意图、风险、步骤、验证和证据
-3. 部署动作可以写进 `tasks.md`，部署风险应该写进 `design.md`
-4. 自动化验证仍然由已有工具执行，但完成标准要回到 OpenSpec
-5. 高风险部署值得单独开 change
-6. archive 最好发生在部署验证通过之后
-7. 部署失败不是流程失败，而是 change 还没完成
-
----
+1. OpenSpec 不是 CI/CD，也不应该伪装成 CI/CD。
+2. OpenSpec 适合管理部署 change 的意图、风险、步骤、验证和证据。
+3. 归档前可完成的部署验证写进 `tasks.md` checkbox；归档动作与归档后跟进放进 `## Workflow follow-up` 普通列表项。
+4. 部署风险、监控指标与量化回滚阈值应该写进 `design.md`。
+5. 自动化验证仍然由已有工具执行，但完成标准要回到 OpenSpec。
+6. 高风险部署值得单独开 change。
+7. 部署失败不是流程失败，而是 change 还没完成。
