@@ -25,7 +25,7 @@
         │                              │
    还在这条 change 里              要换一条 change
         │                              │
-        ├─ B2 /opsx:update〔软〕       ├─ 启发式判定〔软〕
+        ├─ B2 /openspec-update-change〔软〕       ├─ 启发式判定〔软〕
         │  双向一致性复核               │  同意图？>50% 重叠？能独立完成？
         │                              │
         └──────────────┬───────────────┘
@@ -151,7 +151,7 @@ retire_capabilities: true
 
 ---
 
-## B3 · `/opsx:verify`【软能力，且不在 core profile】
+## B3 · `/openspec-verify-change`【软能力，且不在 core profile】
 
 三维检查：Completeness（含 REMOVED 反向检查、RENAMED 检查）、Correctness、Coherence。输出 CRITICAL/WARNING/SUGGESTION。**明确 advisory**【文档：`verify-change.ts:66` "Verification is advisory"】，**不阻塞归档**。
 

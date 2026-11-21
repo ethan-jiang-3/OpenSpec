@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/continue-change.ts` → `getContinueChangeSkillTemplate()` + `getOpsxContinueCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:continue [change-name]`；Codex 用 `$openspec-continue-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：技能 `openspec-continue-change` [change-name]——Claude Code 等工具里 `/openspec-continue` [change-name]，Codex 用 `$openspec-continue-change`。1.x 写作 `/opsx:continue`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-continue-change`（skill）/ `OPSX: Continue`（command）
 > **独立 CLI 命令**：无——continue 没有对应的 `openspec continue` CLI 命令。
 > **profile**：custom（需显式启用，不在默认 core 里）

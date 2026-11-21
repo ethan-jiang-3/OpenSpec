@@ -54,7 +54,7 @@ _faq_on_digested/
 - [`03_explore-to-propose-change/`](03_explore-to-propose-change/question.md) — Explore 如何基于用户意图、OpenSpec 状态和真实代码判断是否应该 propose change，以及应该 propose 一个还是多个。
 - [`04_propose-to-apply-ready/`](04_propose-to-apply-ready/question.md) — Propose 动作出现后，OpenSpec 如何创建 change、生成 artifacts，并走到 mechanical apply-ready。
 - [`05_iterate-to-apply-ready/`](05_iterate-to-apply-ready/question.md) — Propose 产出了 artifacts 但真的能拿来实施吗？最常见的做法：用 Explore 回头审视 artifacts → 拿真实代码校验 → 发现 gap → 更新 → 再审，直到真正可以 apply。
-- [`06_apply-ready-to-archive-ready/`](06_apply-ready-to-archive-ready/question.md) — `/opsx:apply` 开始后，agent 如何读取上下文、实施 tasks、更新 checkbox，并走到可以 archive。
+- [`06_apply-ready-to-archive-ready/`](06_apply-ready-to-archive-ready/question.md) — `/openspec-apply-change` 开始后，agent 如何读取上下文、实施 tasks、更新 checkbox，并走到可以 archive。
 - [`07_archive-ready-to-archived/`](07_archive-ready-to-archived/question.md) — Implementation 已完成后，`openspec archive` 如何验证、合并 specs、移动 change，并收束到 archived。
 - [`08_config-yaml-growth/`](08_config-yaml-growth/question.md) — 熟悉 SDD 的人能手动调 config.yaml，但普通程序员怎么搞？有没有交互式工具或 agent 辅助——还是现状就是个缺口？
 - [`09_schema-agent-dev/`](09_schema-agent-dev/question.md) — OpenSpec 的 schema 能不能用来开发 AI Agent 本身？概念验证：和 spec-driven 同框架（proposal/specs/design/tasks），只改 instruction 内容，不改源码。

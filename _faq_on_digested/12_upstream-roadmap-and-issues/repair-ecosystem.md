@@ -1,18 +1,18 @@
-# `/opsx:repair` 深度探究：从上游 Issue #821 到我们已有的研究
+# `/openspec-repair` 深度探究：从上游 Issue #821 到我们已有的研究
 
-> 这是对 `answer.md` 中 "社区呼声最高的 Feature Request — `/opsx:repair`" 一条的展开。
-> 来源：GitHub Issue #821、#684、upstream docs（commands.md, reviewing-changes.md）、`/opsx:verify` 实现细节、
+> 这是对 `answer.md` 中 "社区呼声最高的 Feature Request — `/openspec-repair`" 一条的展开。
+> 来源：GitHub Issue #821、#684、upstream docs（commands.md, reviewing-changes.md）、`/openspec-verify-change` 实现细节、
 > 以及我们已有的 `_faq_on_digested/11_keep-specs-aligned/` + `_digested/specs_truth/` + `_digested/workflows/08-verify.md` + `_digested/workflows/12-update.md`。
 
-> **历史边界。** 本文讨论的是 issue 语境中的 Claude `/opsx:*` 与当时机制；Codex 当前为 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`）。文中关于 Apply/Archive “不能接收 config”的旧说法应读作“不接收 artifact rules”；project `context` 与 `operations.apply/archive.guidance` 已分别成为当前 operation input。v1.8.0 未推翻这些边界。
+> **历史边界。** 本文讨论的是 issue 语境中的 Claude `/openspec-*` 与当时机制；Codex 当前为 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`）。文中关于 Apply/Archive “不能接收 config”的旧说法应读作“不接收 artifact rules”；project `context` 与 `operations.apply/archive.guidance` 已分别成为当前 operation input。v1.8.0 未推翻这些边界。
 
 ---
 
 ## 一、Issue #821 到底在说什么
 
-**标题**：Feature Request: Add `/opsx:repair` command to support spec-consistent repair after `/opsx:apply`
+**标题**：Feature Request: Add `/openspec-repair` command to support spec-consistent repair after `/openspec-apply-change`
 
-**核心痛点**：当前标准工作流 `/opsx:propose` → `/opsx:apply` → test → `/opsx:archive` 中间有一个**手工黑洞**。apply 之后本地测试发现 bug 或不一致，开发者必须**手动**指挥 AI 做四件事：
+**核心痛点**：当前标准工作流 `/openspec-propose` → `/openspec-apply-change` → test → `/openspec-archive-change` 中间有一个**手工黑洞**。apply 之后本地测试发现 bug 或不一致，开发者必须**手动**指挥 AI 做四件事：
 
 1. 修代码
 2. 如果 spec 写错了 → 更新 `spec.md`
@@ -21,7 +21,7 @@
 
 每一步都是重复的口头指令（"把 spec 里那条也改一下""tasks 那个 checkbox 还没勾"），而且**四者之间没有自动一致性保证**。修了代码忘了改 spec？下次 apply 读到旧 spec，agent 又被带偏。
 
-**提出的方案**：一个 `/opsx:repair` 命令，由 agent 自动执行：
+**提出的方案**：一个 `/openspec-repair` 命令，由 agent 自动执行：
 
 ```
 发现问题
@@ -38,8 +38,8 @@
 **期望的工作流变化**：
 
 ```
-Before:  /opsx:propose → /opsx:apply → test → (手工修复循环) → /opsx:archive
-After:   /opsx:propose → /opsx:apply → test → /opsx:repair → /opsx:archive
+Before:  /openspec-propose → /openspec-apply-change → test → (手工修复循环) → /openspec-archive-change
+After:   /openspec-propose → /openspec-apply-change → test → /openspec-repair → /openspec-archive-change
 ```
 
 **当前状态**：Feature request，open，尚未实现。
@@ -48,9 +48,9 @@ After:   /opsx:propose → /opsx:apply → test → /opsx:repair → /opsx:archi
 
 ## 二、但上游维护者和社区指出了什么——这不是孤立的
 
-Issue #821 的讨论中，维护者和社区成员指出 `/opsx:repair` 的需求**已经被三个已有命令部分覆盖**。这不是"应该做一个新命令还是不做"的二元问题，而是**三个现有命令各自覆盖了 repair 的一部分，但拼起来仍然有缝**。
+Issue #821 的讨论中，维护者和社区成员指出 `/openspec-repair` 的需求**已经被三个已有命令部分覆盖**。这不是"应该做一个新命令还是不做"的二元问题，而是**三个现有命令各自覆盖了 repair 的一部分，但拼起来仍然有缝**。
 
-### 2.1 `/opsx:verify` — 发现问题，但不修
+### 2.1 `/openspec-verify-change` — 发现问题，但不修
 
 v0.20.0 引入，属于 expanded profile。在 apply 之后、archive 之前运行。按三个维度检查：
 
@@ -64,25 +64,25 @@ v0.20.0 引入，属于 expanded profile。在 apply 之后、archive 之前运�
 
 **关键限制**：verify 只诊断不治疗。它产出报告（CRITICAL / WARNING / SUGGESTION），但**不修任何东西**。发现 spec 和代码不一致时，它只能说"这里有问题"，不会自动判断是改 spec 还是改代码，更不会执行修复。
 
-**和我们的研究对照**：`_digested/workflows/08-verify.md` 已经分析了 verify 的机制，`_digested/specs_truth/06-源码锚点与缺口.md` 明确指出 `validate` 是结构 linter、抓不出 specs↔代码漂移。`/opsx:verify` 比 `openspec validate` 更进一步（agent 驱动的语义检查 vs 纯结构 lint），但它仍然只是**诊断层**。
+**和我们的研究对照**：`_digested/workflows/08-verify.md` 已经分析了 verify 的机制，`_digested/specs_truth/06-源码锚点与缺口.md` 明确指出 `validate` 是结构 linter、抓不出 specs↔代码漂移。`/openspec-verify-change` 比 `openspec validate` 更进一步（agent 驱动的语义检查 vs 纯结构 lint），但它仍然只是**诊断层**。
 
-### 2.2 `/opsx:update` — 修 artifacts，但假设实现是对的
+### 2.2 `/openspec-update-change` — 修 artifacts，但假设实现是对的
 
 v1.6.0 引入（PR #1278）。当你想修改 planning artifacts（proposal/specs/design/tasks）而**不碰代码**时使用。它修改 artifacts 并自动调和依赖产物之间的不一致。
 
-**场景**：propose 产出的 spec 不够好 → `/opsx:update` 修改 spec → 自动更新 design 和 tasks 里受影响的部分 → change 保持内部一致。
+**场景**：propose 产出的 spec 不够好 → `/openspec-update-change` 修改 spec → 自动更新 design 和 tasks 里受影响的部分 → change 保持内部一致。
 
 **关键限制**：update 的隐含前提是"修改 artifacts 去更好地描述**已经确定的**需求"，而不是"实现中发现了 spec 的错误并需要双向修复"。它不分析代码实现，也不判断"到底是代码错了还是 spec 错了"——它假设你在调 artifacts。
 
-### 2.3 `/opsx:continue` — 推进 artifact 生成，但不做修复决策
+### 2.3 `/openspec-continue-change` — 推进 artifact 生成，但不做修复决策
 
-在 `/opsx:new` 创建空 change scaffold 后，逐个生成 artifact。也可以用来重新生成某个 artifact。
+在 `/openspec-new-change` 创建空 change scaffold 后，逐个生成 artifact。也可以用来重新生成某个 artifact。
 
 **关键限制**：continue 按 DAG 拓扑序推进 artifact 生成，但它不执行"对比 spec 和代码 → 判断谁错了 → 修复"这个决策循环。它只是"按 schema 声明继续生成下一个 artifact"。
 
 ### 2.4 三个命令的覆盖矩阵
 
-| 能力 | `/opsx:verify` | `/opsx:update` | `/opsx:continue` | 理想的 `/opsx:repair` |
+| 能力 | `/openspec-verify-change` | `/openspec-update-change` | `/openspec-continue-change` | 理想的 `/openspec-repair` |
 |------|:---:|:---:|:---:|:---:|
 | 发现 spec↔代码不一致 | ✅ 诊断 | ❌ | ❌ | ✅ |
 | 判断根因（spec 错还是代码错） | ❌ | ❌ | ❌ | ✅ |
@@ -104,10 +104,10 @@ v1.6.0 引入（PR #1278）。当你想修改 planning artifacts（proposal/spec
 **官方回答**：
 1. 暂停 apply
 2. 手动编辑 change 目录下的 artifact 文件（`proposal.md`、`specs/<capability>/spec.md`、`design.md`、`tasks.md`）
-3. 重新运行 `/opsx:apply`（它每次调用都会重新读取所有上下文文件——源码 `src/commands/workflow/instructions.ts:595-615`）
-4. 或者用 `/opsx:update`（v1.6.0+）来自动调和关联产物
+3. 重新运行 `/openspec-apply-change`（它每次调用都会重新读取所有上下文文件——源码 `src/commands/workflow/instructions.ts:595-615`）
+4. 或者用 `/openspec-update-change`（v1.6.0+）来自动调和关联产物
 
-**核心态度**：OpenSpec 是"fluid, not phase-locked"——没有阶段锁，随时可以编辑 artifacts 再重新 apply。哲学上是灵活的，但**实操上仍然是手工的**。#821 的 `/opsx:repair` 就是要把这个手工循环自动化。
+**核心态度**：OpenSpec 是"fluid, not phase-locked"——没有阶段锁，随时可以编辑 artifacts 再重新 apply。哲学上是灵活的，但**实操上仍然是手工的**。#821 的 `/openspec-repair` 就是要把这个手工循环自动化。
 
 **关联 issues**：#673（dedicated "clarify" command）、#618（fixing mistakes in completed changes）、#264、#119、#141——都在不同角度描述同一个 gap：**apply 之后的修复循环缺少工具支持**。
 
@@ -119,7 +119,7 @@ v1.6.0 引入（PR #1278）。当你想修改 planning artifacts（proposal/spec
 
 ### 4.1 `_faq_on_digested/11_keep-specs-aligned/answer.md`
 
-我们自己总结的四招修复法（内容失准→propose 改再 archive、漏能力→ADDED 补、噪声 change→挪走、archive not found→grep 对齐）**本质上就是手工版 `/opsx:repair`**。Issue #821 想做的就是把"招一"（发现 spec 说错了→改 spec→改代码→改关联产物→验证）从**人工编排**变成**一条命令**。
+我们自己总结的四招修复法（内容失准→propose 改再 archive、漏能力→ADDED 补、噪声 change→挪走、archive not found→grep 对齐）**本质上就是手工版 `/openspec-repair`**。Issue #821 想做的就是把"招一"（发现 spec 说错了→改 spec→改代码→改关联产物→验证）从**人工编排**变成**一条命令**。
 
 我们的 answer.md 第 54 行写的"修复原语"和 Issue #821 的 automated repair loop 描述的是**同一个工作流，只是自动化程度不同**。
 
@@ -131,11 +131,11 @@ Issue #821 可以被理解为：**社区终于意识到"手工对账"的负担�
 
 ### 4.3 `_digested/specs_truth/03-手段清单-到底有多少种修法.md`
 
-我们列举的修法（纠正型 delta、AUTHOR-NEW、DELETE/SHELVE、手改再基线）都是**操作原语**。Issue #821 的 `/opsx:repair` 想做的是把这些原语封装成一个 **agent 可执行的决策树**——agent 自动选择该用哪种原语，而不是让开发者自己判断"这是 MODIFIED 还是 AUTHOR-NEW"。
+我们列举的修法（纠正型 delta、AUTHOR-NEW、DELETE/SHELVE、手改再基线）都是**操作原语**。Issue #821 的 `/openspec-repair` 想做的是把这些原语封装成一个 **agent 可执行的决策树**——agent 自动选择该用哪种原语，而不是让开发者自己判断"这是 MODIFIED 还是 AUTHOR-NEW"。
 
 ---
 
-## 五、关键判断：`/opsx:repair` 为什么还没做
+## 五、关键判断：`/openspec-repair` 为什么还没做
 
 综合上游讨论和我们的研究，可以推断几个原因：
 
@@ -145,25 +145,25 @@ Issue #821 可以被理解为：**社区终于意识到"手工对账"的负担�
 
 3. **和 OpenSpec 的哲学张力**：OpenSpec 的核心哲学是"specs 是人 + 纪律 + 巡检的责任"（`specs_truth/README.md` 的结论）。做一个自动判断"spec 对还是代码对"的工具，某种程度上是把人类的决策责任外包给 agent——和 OpenSpec "spec 是人类意图的表达"的定位有张力。
 
-4. **`/opsx:verify` + `/opsx:update` 的组合已经覆盖了 80% 的场景**：verify 告诉你哪里不对，update 让你改 artifacts——剩下 20% 是"我不确定该改 spec 还是改代码"的场景。对很多用户来说，这 20% 可以靠 `/opsx:explore`（和 agent 讨论）来解决。
+4. **`/openspec-verify-change` + `/openspec-update-change` 的组合已经覆盖了 80% 的场景**：verify 告诉你哪里不对，update 让你改 artifacts——剩下 20% 是"我不确定该改 spec 还是改代码"的场景。对很多用户来说，这 20% 可以靠 `/openspec-explore`（和 agent 讨论）来解决。
 
 ---
 
 ## 六、对我们自己的启示
 
-1. **`_faq_on_digested/11_keep-specs-aligned/` 的价值被上游验证了**：Issue #821 描述的问题和我们"怎么别让 main specs 和代码对不上"回答的是同一件事。我们的四招修复法可以直接映射到 `/opsx:repair` 期望的自动化流程。
+1. **`_faq_on_digested/11_keep-specs-aligned/` 的价值被上游验证了**：Issue #821 描述的问题和我们"怎么别让 main specs 和代码对不上"回答的是同一件事。我们的四招修复法可以直接映射到 `/openspec-repair` 期望的自动化流程。
 
 2. **`_digested/specs_truth/` 专题的深度超前于社区**：我们在上游 issue 提出之前就已经系统分析了漂移机理（身份模型脆弱性、archive 是唯一写入点、无对账基础设施）。Issue #821 是一个具体 feature request，而 `specs_truth/` 是系统性论证——两者互补。
 
-3. **修复自动化是 SDD 工具的必答题**：如果 OpenSpec 不做 `/opsx:repair`，竞品（SpecKit 的 clarify/review phase、Kiro 的 Spec Check）会在这个维度拉开差距。我们跟踪这个问题可以作为判断 OpenSpec 竞争力的一个指标。
+3. **修复自动化是 SDD 工具的必答题**：如果 OpenSpec 不做 `/openspec-repair`，竞品（SpecKit 的 clarify/review phase、Kiro 的 Spec Check）会在这个维度拉开差距。我们跟踪这个问题可以作为判断 OpenSpec 竞争力的一个指标。
 
 ---
 
 ## 参考来源
 
-- [Issue #821 — `/opsx:repair` feature request](https://github.com/Fission-AI/OpenSpec/issues/821)
+- [Issue #821 — `/openspec-repair` feature request](https://github.com/Fission-AI/OpenSpec/issues/821)
 - [Issue #684 — How to update specifications during apply](https://github.com/Fission-AI/OpenSpec/issues/684)
-- [upstream `docs/commands.md` — `/opsx:verify` 定义](https://github.com/Fission-AI/OpenSpec/blob/main/docs/commands.md)
+- [upstream `docs/commands.md` — `/openspec-verify-change` 定义](https://github.com/Fission-AI/OpenSpec/blob/main/docs/commands.md)
 - [upstream `docs/reviewing-changes.md`](https://github.com/Fission-AI/OpenSpec/blob/main/docs/reviewing-changes.md)
 - [`../../_faq_on_digested/11_keep-specs-aligned/answer.md`](../11_keep-specs-aligned/answer.md) — 我们自己的手工修复四招
 - [`../../_digested/specs_truth/`](../../_digested/specs_truth/) — spec 漂移机理的系统分析

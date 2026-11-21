@@ -17,7 +17,7 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 
 所以关键不是“Explore 调了哪个命令就得到 change name”，而是 agent 在 Explore 中完成了一次 scoped discovery。
 
-> **v1.8.0 当前边界。** Explore 也会读取项目 `config.yaml` 的 `context` 与 artifact `rules`，作为探索时的背景和约束；它没有 `operations.explore`，不会获得 Apply/Archive 专属 guidance。调用名由宿主决定：下文的 `/opsx:*` 是 Claude 示例，Codex 使用相应的 `$openspec-*` skill（v1.8.0 下装在 `.agents/skills/`）。
+> **v1.8.0 当前边界。** Explore 也会读取项目 `config.yaml` 的 `context` 与 artifact `rules`，作为探索时的背景和约束；它没有 `operations.explore`，不会获得 Apply/Archive 专属 guidance。调用名由宿主决定：下文的 `/openspec-*` 是 Claude 示例，Codex 使用相应的 `$openspec-*` skill（v1.8.0 下装在 `.agents/skills/`）。
 
 ## 先分清两件事
 
@@ -33,7 +33,7 @@ OpenSpec CLI 在这里提供的是状态和路径，不提供产品判断：
 
 这意味着：**判断“要不要 propose、propose 几个”主要发生在 Explore 阶段，而不是 Propose 阶段。**
 
-宿主的 propose workflow 只要求理解用户想 build/fix 什么，然后导出 change name、`openspec new change`、按 `status` 和 `instructions` 创建 artifact。Claude 的调用可写作 `/opsx:propose`；它不是用来做长时间问题发现的。
+宿主的 propose workflow 只要求理解用户想 build/fix 什么，然后导出 change name、`openspec new change`、按 `status` 和 `instructions` 创建 artifact。Claude 的调用可写作 `/openspec-propose`；它不是用来做长时间问题发现的。
 
 ![Explore 到 propose 的总览流程](figures/explore-to-propose-overview.svg)
 
@@ -302,8 +302,8 @@ EXP-07 到 EXP-11 的细节见 [`answer-exp07-11.md`](answer-exp07-11.md)：它�
 | 结论 | 什么时候成立 | 下一步 |
 |---|---|---|
 | 继续 Explore | 用户目标不清、代码事实不足、scope 还在变 | 继续查代码、问问题、比较方案 |
-| 更新已有 change | 新发现属于已有 active change 的 scope | 读取并更新相关 artifact，或建议 `/opsx:continue` |
-| Propose 一个新 change | 有一个清晰、可命名、可验证的增量目标 | 建议 `/opsx:propose <name>` |
+| 更新已有 change | 新发现属于已有 active change 的 scope | 读取并更新相关 artifact，或建议 `/openspec-continue-change` |
+| Propose 一个新 change | 有一个清晰、可命名、可验证的增量目标 | 建议 `/openspec-propose <name>` |
 | Propose 多个 changes | 发现多个独立目标，交付/风险/能力边界不同 | 先给拆分方案，再逐个 propose |
 | 不创建 change | 用户只是要理解、一次性调查、极小修补，或还没有行为变化 | 给结论或建议普通代码路径 |
 
@@ -375,7 +375,7 @@ Explore 认为可以 propose 时，agent 不应该只说”我来创建 change�
 - src/routes/oauth/*
 - auth integration tests
 
-如果你认可这个边界，我可以进入 propose workflow（Claude：`/opsx:propose add-oauth-login`；Codex：`$openspec-propose`）。
+如果你认可这个边界，我可以进入 propose workflow（Claude：`/openspec-propose add-oauth-login`；Codex：`$openspec-propose`）。
 ```
 
 这段说明本质上是 proposal 之前的 pre-proposal boundary check。它让用户和 agent 在创建文件前先对齐 scope。
@@ -422,7 +422,7 @@ OpenSpec 的设计是：CLI 保证状态可解释，agent 负责工程判断，�
       给出候选 change name + scope + 拆分理由
       用户确认或继续调整
    ↓
-10. 进入 /opsx:propose
+10. 进入 /openspec-propose
       openspec new change "<name>"
       status / instructions 循环生成 artifacts
 ```
@@ -483,7 +483,7 @@ Explore 能 figure out 要 propose 什么 change，不是因为 OpenSpec 有一�
 
 ## v1.13.1 补充：capture 即确认
 
-v1.11.0 要求写入前「命名 artifacts + 直接问 + 单独等确认」。v1.13.1（`4c369e02`）演进：**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再要求额外一轮 yes/no；其余写操作（改 schema、编辑 config.yaml 等）仍需完整确认流程。同时 explore 在每个 handoff 点名 `/opsx:propose`、`/opsx:apply`。
+v1.11.0 要求写入前「命名 artifacts + 直接问 + 单独等确认」。v1.13.1（`4c369e02`）演进：**用户明确要求 capture 一个 change 即视为该次写入的确认**，不再要求额外一轮 yes/no；其余写操作（改 schema、编辑 config.yaml 等）仍需完整确认流程。同时 explore 在每个 handoff 点名 `/openspec-propose`、`/openspec-apply-change`。
 
 ## v1.14.0 补充：propose 引导耐久的行为型 capability 命名
 

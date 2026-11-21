@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/sync-specs.ts` → `getSyncSpecsSkillTemplate()` + `getOpsxSyncCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:sync [change-name]`；Codex 用 `$openspec-sync-specs`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：技能 `openspec-sync-specs` [change-name]——Claude Code 等工具里 `/openspec-sync` [change-name]，Codex 用 `$openspec-sync-specs`。1.x 写作 `/opsx:sync`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-sync-specs`（skill）/ `OPSX: Sync`（command）
 > **独立 CLI 命令**：无——sync 是纯 agent-driven merge，和 `openspec archive` CLI 的 programmatic merge 是两条独立路径。sync 也会被 host archive workflow inline 调用（sync assessment 阶段）。
 > **profile**：core（大多数用户默认可见）

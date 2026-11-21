@@ -83,7 +83,7 @@ CI 的 OS 矩阵每格现在显式钉 Node 版本：Linux/macOS/Windows 全跑**
 
 对使用者的含义：`engines.node` 是**真的被 CI 覆盖**的下限，不是免责声明。
 
-> **v1.16.0 起下限变了**：`engines.node` 从 `>=20.19.0` 抬到 **`>=22.12.0`**（#2159，CHANGELOG 标 Breaking），`@types/node` 20→22。原因写在发布说明里：Node 20 于 2026-04-30 EOL。影响面很窄——**只有 Node 20 上的 npm 安装**；standalone 二进制不用 Node（自 v1.15.0 起是默认安装方式），Homebrew 会自己管 Node 依赖。CI 矩阵随之以 22.12 为最老受支持版本。
+> **下限变过两次**：v1.16.0 从 `>=20.19.0` 抬到 **`>=22.12.0`**，v2.1.1 再抬到 **`>=22.20.0`**（现值）。以下记录的是 v1.16.0 那次：`engines.node` 从 `>=20.19.0` 抬到 **`>=22.12.0`**（#2159，CHANGELOG 标 Breaking），`@types/node` 20→22。原因写在发布说明里：Node 20 于 2026-04-30 EOL。影响面很窄——**只有 Node 20 上的 npm 安装**；standalone 二进制不用 Node（自 v1.15.0 起是默认安装方式），Homebrew 会自己管 Node 依赖。CI 矩阵随之以 22.12 为最老受支持版本。
 
 ### npm git 安装免 pnpm + Node 20 chalk 兼容
 

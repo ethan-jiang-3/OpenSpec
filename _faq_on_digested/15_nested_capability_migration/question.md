@@ -14,7 +14,7 @@ openspec/specs/
 ...（还有二十几个）
 ```
 
-每次 `/opsx:propose` 或 `/opsx:explore` 时，agent 要么把几十个 capability 全读一遍（浪费上下文），要么跳过 discovery 直接新建了近义 capability（制造漂移）。
+每次 `/openspec-propose` 或 `/openspec-explore` 时，agent 要么把几十个 capability 全读一遍（浪费上下文），要么跳过 discovery 直接新建了近义 capability（制造漂移）。
 
 想把它们组织成有结构的二级目录：
 

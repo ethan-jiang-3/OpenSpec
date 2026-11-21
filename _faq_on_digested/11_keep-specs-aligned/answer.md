@@ -21,7 +21,7 @@
 
 ## 日常就一个圈：explore → propose → apply → archive
 
-不用记复杂规则。日常就一个圈：**explore → propose → apply → archive**——由宿主 workflow 推进，`archive` CLI 完成程序化归档（Claude 的 `/opsx:*` 与 Codex 的 `$openspec-*` 只是不同入口）。`validate`/`list`/`view` 是只读的 CLI 工具命令，偶尔用，**不在圈里**。（CLI 命令 vs host workflow 的完整对照见 [`../../_digested/specs_truth/README.md`](../../_digested/specs_truth/README.md)；`validate` 查什么见 [`06`](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
+不用记复杂规则。日常就一个圈：**explore → propose → apply → archive**——由宿主 workflow 推进，`archive` CLI 完成程序化归档（Claude 的 `/openspec-*` 与 Codex 的 `$openspec-*` 只是不同入口）。`validate`/`list`/`view` 是只读的 CLI 工具命令，偶尔用，**不在圈里**。（CLI 命令 vs host workflow 的完整对照见 [`../../_digested/specs_truth/README.md`](../../_digested/specs_truth/README.md)；`validate` 查什么见 [`06`](../../_digested/specs_truth/06-源码锚点与缺口.md)。）
 
 ```text
 explore    感觉要改、读代码判断要不要动          ← "spec 可能要修" 的入口
@@ -66,7 +66,7 @@ archive    校验 + 把 delta 合进主 spec + 收档      ← ★ specs 只在�
 
 ## 3）怎么修（最常见的几种）
 
-修 specs 的正道就是回到那个圈：用 **propose 写 delta，再 archive**。这里只给平时最常用的**四招**（修复原语 + 清除原语的短版）；另外还有 `/opsx:sync`（LLM 重对齐）、手改再基线（核选项）、前置纪律、巡检——日常用不到，全貌见 [`03`](../../_digested/specs_truth/03-手段清单-到底有多少种修法.md)。
+修 specs 的正道就是回到那个圈：用 **propose 写 delta，再 archive**。这里只给平时最常用的**四招**（修复原语 + 清除原语的短版）；另外还有 `/openspec-sync-specs`（LLM 重对齐）、手改再基线（核选项）、前置纪律、巡检——日常用不到，全貌见 [`03`](../../_digested/specs_truth/03-手段清单-到底有多少种修法.md)。
 
 ### 招一：内容失准（spec 说错了 / 说多了）→ propose 改，再 archive
 
@@ -112,7 +112,7 @@ grep -nE "^### Requirement:" "$PLANNING_ROOT/openspec/specs/<capability>/spec.md
 openspec archive <change> -y
 ```
 
-只有当整段已经面目全非、对不上号时，才升级到宿主 sync workflow（Claude 示例 `/opsx:sync`；让 agent 重对齐），或手改 spec + 再写个 rebaseline change——这是最后手段，平时用不到。
+只有当整段已经面目全非、对不上号时，才升级到宿主 sync workflow（Claude 示例 `/openspec-sync-specs`；让 agent 重对齐），或手改 spec + 再写个 rebaseline change——这是最后手段，平时用不到。
 
 ## 4）写进 delta 的散文，archive 不会带走（v1.14.2 起会告警）
 

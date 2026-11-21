@@ -1,6 +1,6 @@
 # 问题
 
-`/opsx:propose` 跑完了，`tasks.md` 存在了，mechanical apply gate 通过了。但 artifacts 真的能拿来实施吗？
+`/openspec-propose` 跑完了，`tasks.md` 存在了，mechanical apply gate 通过了。但 artifacts 真的能拿来实施吗？
 
 更具体地说：
 

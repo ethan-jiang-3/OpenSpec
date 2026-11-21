@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/apply-change.ts` → `getApplyChangeSkillTemplate()` + `getOpsxApplyCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:apply [change-name]`；Codex 用 `$openspec-apply-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：技能 `openspec-apply-change` [change-name]——Claude Code 等工具里 `/openspec-apply` [change-name]，Codex 用 `$openspec-apply-change`。1.x 写作 `/opsx:apply`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-apply-change`（skill）/ `OPSX: Apply`（command）
 > **独立 CLI 命令**：无——apply 没有对应的 `openspec apply` CLI 命令，它是纯 agent 模板，消费 `openspec instructions apply --json` 的运行时输出。
 > **profile**：core（大多数用户默认可见）

@@ -11,13 +11,13 @@
 | 项 | 值 |
 |----|----|
 | **手册版本** | **v1.15** |
-| **对齐 OpenSpec** | 1.17.0 |
+| **对齐 OpenSpec** | 2.1.1 |
 | **本版日期** | 2026-11 |
 
 **两个版本维度（别混）**：
 
 - **手册版本**（v1.15）：本手册自身的版次。理解加深、内容大修时升版。
-- **对齐 OpenSpec**（1.17.0）：本手册当前对应的 OpenSpec 上游版本。
+- **对齐 OpenSpec**（2.1.1）：本手册当前对应的 OpenSpec 上游版本。
 
 **freshness 约定**：
 
@@ -44,7 +44,8 @@
 | v1.12 | 2026-10 | 1.14.3 | 对齐 v1.14.1–v1.14.3：artifact 创建前先定并校验输出路径（glob 工件必须落在 change 目录内，propose/ff/continue/explore 统一）；glob 工件「done 但文件不全」的补完协议；`all_done` 只报跟踪任务完成、归档前需复核/验证；verify 改按输出路径发现工件，REMOVED requirement 必须先读主 spec 基线；archive 的退役清理失败有独立错误码 `archive_retirement_cleanup_failed`；`openspec/`、`changes/`、`specs/` 与 spec 文件可以是项目内 symlink（`archive/` 不行）；delta 里「归档不会带走」的文本与超长 requirement 升为 WARNING；`.openspec.yaml` 顶层 `x-` 扩展键；glob 引擎由 fast-glob 换到 tinyglobby（brace 嵌套 ≤16、展开 ≤1024）；CLI 按需加载与 Tab 补全跳过遥测；零宽 TTY 不再挂死；view 移除归档分区。 |
 | v1.13 | 2026-10 | 1.14.3 | **两件事：① 26 章扩写改名 ② 全手册重编号。** ① 原 `09-高级-能力身份与specs漂移维护` 扩写并改名为 `26-高级-治理边界与漂移维护`，新增全手册分析轴「**硬能力 vs 软能力**」（代码判定 vs prompt 文字，违反后果不同）；agent 上下文的字段级事实（`instructions` 注入哪些字段、`contextFiles` 只给路径不给正文、注入体不随 specs 规模增长）；三级过滤读与 50 KB `context` 预算（超限整段丢弃）、`rules` 按 artifact id 分流、artifact DAG 门控与「`status` 是文件存在性不是新鲜度」；归档五道机器闸门（validate 规则集分级 / scenario 丢失双闸 / 干跑合并预检 / 全或无写入 / `retire_capabilities`）；跨 change 缺口（依赖与重叠零检测、近似重复 capability 零检测、三个静默 no-op、无陈旧废弃墓碑）；用自定义 schema 给「方向」建硬前置及其边界（门控**存在**而非**一致**）；新增「判断锚点三问」。保留原 capability 身份、两层 name-as-identity、catalog discovery、rebaseline 与维护节奏主体。素材来源：`_faq_on_digested/18_context-rot-and-direction-drift/`。② **全手册按难度层级重编号**：初级 `0N`、中级 `1N`、高级 `2N`、实战 `5N`（`00`/`90`/`99` 不变）。映射 `02→10`；`03→20`、`04→21`、`05→22`、`06→23`、`07→24`、`08→25`、`09→26`；`10→50`、`11→51`、`12→52`、`13→53`、`14→54`、`15→55`。三套文档（`_digested`/`_faq_on_digested`/`_openspec_handbook`）的章节引用、链接与锚点同步更新；宪章区间改为 `00–26 / 50–19 / 20–29 / 50–59 / 90 / 99`；本表历史行一并改用新号，不保留旧号换算。③ **中级段由 1 篇拆为 2 篇**：`10` 承载三层模型（补上原先缺失的 `config.yaml` 概念层）、artifact 与 delta spec；新增 `11-中级-定位节奏与边界` 承载 brownfield-first、Actions-not-phases、四组边界，以及「change 多起来、方向晃过之后」的整体姿势（**收敛 → 打扫 → 治理** + 在途 change 的四种处置）；原 10 章里自述"跟项目模型无关"的 `completion`/`feedback` 段移入 01 初级。 |
 | v1.14 | 2026-10 | 1.15.0 | 对齐 v1.15.0：standalone 单文件安装（8 平台、无需 Node.js）与 `openspec install` 切换；`openspec update --dry-run/--json`（预演与真实更新共用同一条写入路径）；verify 的 REMOVED 基线改为精确规范化名称；`new change` 进度行显示实际 schema；`feedback` 对齐 bug 表单；`--json` 命令不加载 `ora`；99 新增 Q27f（不装 Node.js 能用吗）。依据见 [`0013`](../_digested/_change_log/0013-v1.14.3-to-v1.15.0.md)。 |
-| v1.15 | 2026-11 | 1.17.0 | 对齐 v1.16.0/1.16.1/1.17.0：npm 门槛抬到 **Node 22.12.0**（Node 20 EOL；standalone 不受影响）与 release 改 `.tar.gz`/`.zip` 归档；`update` 能从 0.12 起**任意版本一次升级**、不再需要 `--force`（靠历史产物指纹库，只删没人编辑过的旧文件，永不跨链接）；切 skills-only 不再删用户编辑过的命令文件；**命令文件已标记弃用**（2.0 移除，本版仍生成，`/opsx:*` 仍可用）；`validate` 三条收紧（scenario 缺 WHEN/THEN＝WARNING、未识别 `## ... Requirements` 段＝ERROR 且 archive 拒绝、坏 `config.yaml`＝退出 1）；解析器认闭合 `#` run 与行内三反引号；`version --check` 显式调用不再受遥测/CI 影响、只提示真能装的版本；zsh 补全写 `$ZDOTDIR/.zshrc`；store 提示按 origin 仓库名点名。依据见 [`0014`](../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)。 |
+| v1.15 | 2026-11 | 1.17.0 | 对齐 v1.16.0/1.16.1/1.17.0：npm 门槛抬到 **Node 22.12.0**（Node 20 EOL；standalone 不受影响）与 release 改 `.tar.gz`/`.zip` 归档；`update` 能从 0.12 起**任意版本一次升级**、不再需要 `--force`（靠历史产物指纹库，只删没人编辑过的旧文件，永不跨链接）；切 skills-only 不再删用户编辑过的命令文件；**命令文件已标记弃用**（2.0 移除，本版仍生成，`/openspec-*` 仍可用）；`validate` 三条收紧（scenario 缺 WHEN/THEN＝WARNING、未识别 `## ... Requirements` 段＝ERROR 且 archive 拒绝、坏 `config.yaml`＝退出 1）；解析器认闭合 `#` run 与行内三反引号；`version --check` 显式调用不再受遥测/CI 影响、只提示真能装的版本；zsh 补全写 `$ZDOTDIR/.zshrc`；store 提示按 origin 仓库名点名。依据见 [`0014`](../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)。 |
+| v1.16 | 2026-11 | 2.1.1 | 对齐 v2.0.0/2.1.0/2.1.1：**OpenSpec 2.0 只装 skills，命令文件（`/openspec-*`）已移除**、skills 收成 `.agents/skills/` 单份真身 + 各工具链接（建不了链接退化拷贝）；`delivery` 退役、Amazon Q Developer 退役（读不了 skills，转向 Kiro，`init --tools amazon-q` 报错并指路）；命令生成能力删除但 34 个适配器保留，只用于识别旧文件路径；安装层改用运行时依赖 `skills` 包；2.1 新增 `global`/`project` 两种作用域（记在 `openspec/config.yaml`）与 `known-projects` 清单；2.1.1 修复 archive 空行/归档目标、validate 的 frontmatter 与 500 字符、version 的 Homebrew/Nix 提示，并从 npm 包装 skills（不再 clone）；Node 门槛抬到 **22.20.0**；Windows 链接需 `core.symlinks` 与开发者模式。依据见 [`0015`](../_digested/_change_log/0015-v1.17.0-to-v2.1.1.md)。 |
 
 ---
 
@@ -78,7 +79,7 @@
 
 ## 先把 OpenSpec 和 OPSX 的关系说清楚
 
-手册里会同时出现 `openspec` 和 `/opsx:*`，它们不是两个并列产品。
+手册里会同时出现 `openspec` 和 `/openspec-*`，它们不是两个并列产品。
 
 ```text
 OpenSpec = 整套机制
@@ -88,13 +89,13 @@ OpenSpec = 整套机制
 ```
 
 - `openspec` 是终端 CLI，比如 `openspec init`、`openspec status --change <name> --json`、`openspec archive <name>`。
-- `/opsx:*` 是有 command adapter 的宿主（例如 Claude Code）里的入口，比如 `/opsx:propose`、`/opsx:apply`；它不是所有工具的通用语法。
+- `/openspec-*` 是 Claude Code 等宿主里**调用技能的写法**，例如 `/openspec-propose`、`/openspec-apply-change`；它不是所有工具的通用语法（Codex 用 `$openspec-*`）。1.x 时代这里是 `/opsx:propose`、`/opsx:apply` 这类 command 文件入口，v2.0.0 起命令文件已移除。
 - Codex 在 v1.8.0 起使用 skills-only 投递，入口是 `$openspec-*` skill；v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，v1.14.0 起 Amp 与 GSD 也写入同一棵共享树（六方成员，见下方工具速查）。Zed 是 skills-only，用 `/openspec-*`（以 init 生成文件中的拼法为准）；v1.9.0 新增的 Command Code 仍使用 `.commandcode/skills/` 与 `/opsx-*`。
 - DeepSeek Harness（`dsh`）自 v1.14.0 起是一等目标：skills-only，写入项目级 `.dsh/skills/openspec-*/SKILL.md`；dsh 把项目 `.dsh/skills/` 当最高优先级 skill root，装好后可直接以 `/openspec-*` 呼出。
 - `opsx` 这个名字只是部分工具的 command 命名空间或文件前缀，不是另一套独立系统。
 - 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有与之完全对应的单一命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
 
-所以更准确的说法是：**workflow 的入口语法由宿主决定（`/opsx:*`、`$openspec-*` 或该工具自己的 command 名），`openspec` CLI 才是这些 workflow 读取状态和获取指令的运行时。**
+所以更准确的说法是：**workflow 的入口语法由宿主决定（`/openspec-*`、`$openspec-*` 或该工具自己的 command 名），`openspec` CLI 才是这些 workflow 读取状态和获取指令的运行时。**
 
 ---
 
@@ -236,35 +237,37 @@ graph LR
 
 ## 命令速查
 
-这里的 `/opsx:*` 都是 agent 工具里的 slash command 入口。它们属于 OpenSpec 工作流，但不是终端 CLI 命令。需要直接在终端里运行时，看下面的 `openspec ...` CLI 表。
+这里的 `openspec-*` 都是 **skill**（技能），属于 OpenSpec 工作流，不是终端 CLI 命令。在 agent 工具里按工具支持的拼法调用：Claude Code 等用 `/openspec-<name>`，Codex 用 `$openspec-<name>`；也可以直接用自然语言描述任务，由 agent 按技能描述自己选。
+
+> **v2.1.1 状态注记**：表中的 `/openspec-*` 写法是 **OpenSpec 1.x 的 command 文件形态**，v2.0.0 起已移除。下表同时给出 1.x 写法与现行技能名，便于读旧项目。
 
 ### 日常最常用（core profile，v1.2.0 引入，v1.6.0 起默认 6 个命令）
 
-| 命令 | 作用 | 典型场景 |
+| 技能 | 作用 | 典型场景 |
 |------|------|---------|
-| `/opsx:propose <name>` | 发起一个 change，生成 artifacts | 开始一个新功能或修复 |
-| `/opsx:explore` | 探索/调研模式；默认不写文件，明确要求 capture 时经确认创建 change（v1.13.1） | 了解现有代码、调研技术方案；change 出来后反复打磨 proposal |
-| `/opsx:apply [name]` | 按 tasks 执行实现；也可用于 Markdown/skill/command 等非代码产物 | 开始实施 change |
-| `/opsx:update` | 更新现有 artifact（v1.6.0 纳入 core） | 修改 proposal/specs/design/tasks 中的任意一个 |
-| `/opsx:sync` | 同步 delta spec 到主 spec（v1.4.0 新增纳入 core） | 多人协作时合并 spec 变更 |
-| `/opsx:archive [name]` | 收尾，合并 delta spec 回基线 | 功能完成后归档 |
+| `openspec-propose` <name> | 发起一个 change，生成 artifacts | 开始一个新功能或修复 |
+| `openspec-explore` | 探索/调研模式；默认不写文件，明确要求 capture 时经确认创建 change（v1.13.1） | 了解现有代码、调研技术方案；change 出来后反复打磨 proposal |
+| `openspec-apply-change` [name] | 按 tasks 执行实现；也可用于 Markdown/skill/command 等非代码产物 | 开始实施 change |
+| `openspec-update-change` | 更新现有 artifact（v1.6.0 纳入 core） | 修改 proposal/specs/design/tasks 中的任意一个 |
+| `openspec-sync-specs` | 同步 delta spec 到主 spec（v1.4.0 新增纳入 core） | 多人协作时合并 spec 变更 |
+| `openspec-archive-change` [name] | 收尾，合并 delta spec 回基线 | 功能完成后归档 |
 
 ### 扩展工作流（custom profile）
 
 通过 `openspec config profile` 切换到 custom profile 后，可以启用更多命令：
 
-| 命令 | 作用 |
+| 技能 | 作用 |
 |------|------|
-| `/opsx:new <name>` | 创建新 change（更细粒度） |
-| `/opsx:continue` | 继续当前 change |
-| `/opsx:ff` | 快进到下一个 artifact |
-| `/opsx:verify` | 验证实现与 specs 一致性 |
-| `/opsx:bulk-archive` | 批量归档多个 changes |
-| `/opsx:onboard` | 新成员快速了解项目 |
+| `openspec-new-change` <name> | 创建新 change（更细粒度） |
+| `openspec-continue-change` | 继续当前 change |
+| `openspec-ff-change` | 快进到下一个 artifact |
+| `openspec-verify-change` | 验证实现与 specs 一致性 |
+| `openspec-bulk-archive-change` | 批量归档多个 changes |
+| `openspec-onboard` | 新成员快速了解项目 |
 
 ### CLI 命令（终端直接运行）
 
-| 命令 | 作用 |
+| 技能 | 作用 |
 |------|------|
 | `openspec init [path] [--tools <ids>] [--language <language>]` | 初始化项目；`--language` 只在创建新 config 时写入 artifact 语言 context，不覆盖已有 config |
 | `openspec new change <name>` | 新建一个 change 目录（脚手架；`/opsx:new` 的 CLI 形态） |

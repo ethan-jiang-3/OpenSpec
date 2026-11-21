@@ -2,7 +2,7 @@
 
 ## 一句话
 
-npm 安装走的是 **npm 的 `bin` 字段 + `#!/usr/bin/env node` shebang + Node.js ESM 入口**；没有自定义安装脚本，也没有为 npm 包编译二进制。v1.15.0 起官方另发 **standalone 单文件**（不依赖 Node.js），是独立于 npm 的第二条路径，见文末。npm 这条路的 Node 门槛在 v1.16.0 抬到了 **22.12.0+**——所以“要不要装 Node”这个问题的答案取决于你走哪条路。
+npm 安装走的是 **npm 的 `bin` 字段 + `#!/usr/bin/env node` shebang + Node.js ESM 入口**；没有自定义安装脚本，也没有为 npm 包编译二进制。v1.15.0 起官方另发 **standalone 单文件**（不依赖 Node.js），是独立于 npm 的第二条路径，见文末。npm 这条路的 Node 门槛在 v1.16.0 抬到了 22.12.0+，**v2.1.1 起是 22.20.0+**（现值）——所以“要不要装 Node”这个问题的答案取决于你走哪条路。
 
 ## 完整链路
 
@@ -121,7 +121,7 @@ $ file $(which openspec)
 
 ## v1.15.0 起的第二条路径：standalone 单文件
 
-npm 方式始终需要 Node.js，且**自 v1.16.0 起要求 `>=22.12.0`**（`engines.node`；Node 20 已于 2026-04-30 EOL）。v1.15.0 起每个 release 另外提供 8 个平台的单文件（macOS / Linux glibc / Linux musl / Windows，x64 与 arm64），由 `scripts/binary/build.mjs` 用 Bun 编译，入口是 `scripts/binary/entry.mjs`。
+npm 方式始终需要 Node.js，且**自 v1.16.0 起要求 `>=22.12.0`、v2.1.1 起要求 `>=22.20.0`**（`engines.node`；Node 20 已于 2026-04-30 EOL）。v1.15.0 起每个 release 另外提供 8 个平台的单文件（macOS / Linux glibc / Linux musl / Windows，x64 与 arm64），由 `scripts/binary/build.mjs` 用 Bun 编译，入口是 `scripts/binary/entry.mjs`。
 
 - **安装**：`curl -fsSL https://openspec.dev/cli/install.sh | sh` / `irm https://openspec.dev/cli/install.ps1 | iex`（v1.16.0 起收敛到这个入口；更长、直指 `raw.githubusercontent.com` 的地址仍然可用），或 `openspec install [version]`。安装器校验 `SHA256SUMS` 后把文件放到 `~/.local/bin/openspec`（Windows：`%LOCALAPPDATA%\Programs\openspec`）。
 - **产物格式**：v1.16.0 起 release 资产是**归档**——`openspec-<platform>.tar.gz`（Windows 为 `.zip`），不再是裸二进制。8 个资产名相应变化（如 `openspec-darwin-arm64.tar.gz`、`openspec-windows-x64.zip`）。

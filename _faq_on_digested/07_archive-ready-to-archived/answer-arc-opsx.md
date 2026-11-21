@@ -1,15 +1,15 @@
-# 答案 ARC OPSX：`/opsx:archive` 和 CLI archive 为什么不一样
+# 答案 ARC OPSX：`/openspec-archive-change` 和 CLI archive 为什么不一样
 
 ## 一句话
 
-`/opsx:archive` 是投递给 coding agent 的操作模板；`openspec archive` 是 CLI 程序。它们都叫 archive，但不是同一条执行路径。
+`/openspec-archive-change` 是投递给 coding agent 的操作模板；`openspec archive` 是 CLI 程序。它们都叫 archive，但不是同一条执行路径。
 
 ```text
 openspec archive
   -> ArchiveCommand.execute()
   -> programmatic validate / merge / move
 
-/opsx:archive
+/openspec-archive-change
   -> agent reads template
   -> status / warning / sync assessment / move
 ```
@@ -42,7 +42,7 @@ src/core/specs-apply.ts
 
 CLI 不需要 agent 读 `status --json`，也不需要 `openspec-sync-specs`。
 
-## `/opsx:archive` 模板主线
+## `/openspec-archive-change` 模板主线
 
 OPSX 模板在：
 
@@ -106,7 +106,7 @@ if delta specs exist:
 | MODIFIED 语义 | 完整 requirement block 替换 | 可智能合并局部 intent |
 | 是否移动 change | CLI archive 会移动 | sync 只更新主 specs，change 仍 active |
 
-所以 `/opsx:archive` 先做 sync assessment 是安全网，不是 `ArchiveCommand.execute()` 中的一步。
+所以 `/openspec-archive-change` 先做 sync assessment 是安全网，不是 `ArchiveCommand.execute()` 中的一步。
 
 ## 手动 move 也是模板层行为
 
@@ -130,7 +130,7 @@ CLI archive 则调用 `moveDirectory()`，优先 `fs.rename()`；EPERM/EXDEV 时
 | 你关心的问题 | 应该看哪条路径 |
 |---|---|
 | `openspec archive` 命令实际做什么 | CLI 主线：`ArchiveCommand.execute()` |
-| `/opsx:archive` 为什么让 agent 先检查 status | 模板主线：`archive-change.ts` |
+| `/openspec-archive-change` 为什么让 agent 先检查 status | 模板主线：`archive-change.ts` |
 | delta spec 程序化合并算法 | `specs-apply.ts` |
 | agent 如何智能同步 specs | `sync-specs.ts` 模板 |
 
@@ -140,7 +140,7 @@ CLI archive 则调用 `moveDirectory()`，优先 `fs.rename()`；EPERM/EXDEV 时
 
 | 来源 | 用到的结论 |
 |---|---|
-| `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板步骤、sync assessment、manual move |
+| `src/core/templates/workflows/archive-change.ts` | `/openspec-archive-change` 模板步骤、sync assessment、manual move |
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven spec sync 语义 |
 | `src/core/archive.ts` | CLI archive 与模板路径的差异 |
 | `_digested/internal-spec-driven/04-archive-归档合并.md` | CLI 和 OPSX 两条路径的分层说明 |

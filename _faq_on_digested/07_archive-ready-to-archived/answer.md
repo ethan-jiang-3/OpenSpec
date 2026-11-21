@@ -17,7 +17,7 @@
 
 主角是 CLI。`ArchiveCommand.execute()` 负责验证、合并和移动；agent 或用户负责选择 change、确认 warnings，并理解是否跳过了 spec updates。
 
-> **当前边界**；以下这段描述的是 v1.10.0 时的边界，v1.11–v1.14 的补充见本文件后段。v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/opsx:archive` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
+> **当前边界**；以下这段描述的是 v1.10.0 时的边界，v1.11–v1.14 的补充见本文件后段。v1.8.0 起 capability 可以是嵌套相对 path（如 `identity/session`），不是单层目录名；根级 `changes/<change>/specs/spec.md` 会被 validate/archive 拒绝。archive workflow 应先读 `openspec instructions archive --change <name> --json` 的 project `context` 与 `operations.archive.guidance`；Claude 的 `/openspec-archive-change` 只是一个宿主入口，Codex 使用 `$openspec-archive-change`（装在 `.agents/skills/`）。v1.10.0 修复了 capability retirement 的 blocked-content 诊断；非 TTY 与 `validate --archived` 的 v1.9.0 行为保持不变。
 
 ![Archive-ready 到 archived 的流程](figures/archive-ready-to-archived.svg)
 
@@ -44,7 +44,7 @@
 
 - [`answer-arc03.md`](answer-arc03.md) — `ArchiveCommand.execute()` 的主流程和 flags。
 - [`answer-arc07.md`](answer-arc07.md) — delta spec merge 算法。
-- [`answer-arc-opsx.md`](answer-arc-opsx.md) — `/opsx:archive` 与 CLI 的区别。
+- [`answer-arc-opsx.md`](answer-arc-opsx.md) — `/openspec-archive-change` 与 CLI 的区别。
 - [`answer-arc-guards.md`](answer-arc-guards.md) — 停止、warning、跳过和风险条件。
 
 另外，从 MD/TS 交替协作的视角重新组织了整个流程，含双路径（CLI + OPSX）Mermaid 时序图：[`answer-sequence.md`](answer-sequence.md)。
@@ -378,9 +378,9 @@ openspec/changes/archive/YYYY-MM-DD-<change>/
 
 如果用户跳过 spec updates，则第一条不成立：主 specs 没有被更新，但 change artifacts 仍被移到了 archive。
 
-## Step 14：为什么 `/opsx:archive` 看起来不一样
+## Step 14：为什么 `/openspec-archive-change` 看起来不一样
 
-Claude 的 `/opsx:archive` 是 agent 模板，不是 `ArchiveCommand.execute()` 的逐字封装；Codex 的对应入口是 `$openspec-archive-change`。
+Claude 的 `/openspec-archive-change` 是 agent 模板，不是 `ArchiveCommand.execute()` 的逐字封装；Codex 的对应入口是 `$openspec-archive-change`。
 
 模板会先做：
 
@@ -430,7 +430,7 @@ openspec instructions archive --change "<name>" --json
 
 不一定。`--skip-specs` 或用户拒绝 spec updates 时，change 仍会 archive，但主 `openspec/specs/` 不会吸收 delta。
 
-### 误区 4：CLI archive 和 `/opsx:archive` 是同一个东西
+### 误区 4：CLI archive 和 `/openspec-archive-change` 是同一个东西
 
 不是。CLI 是程序执行路径；OPSX 是 agent 操作模板。它们目标相近，但内部步骤和合并方式不完全相同。
 
@@ -457,7 +457,7 @@ openspec instructions archive --change "<name>" --json
 | `src/utils/change-metadata.ts` | retirement marker 是否可 honor 及安全 reason |
 | `test/core/archive.test.ts` | marker-only、blocked-content、invalid-marker 三分支与 bounded output |
 | `src/cli/index.ts` | `archive [change-name]` command 和 flags |
-| `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板层行为 |
+| `src/core/templates/workflows/archive-change.ts` | `/openspec-archive-change` 模板层行为 |
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven sync 模板 |
 | [`../../_digested/internal-spec-driven/04-archive-归档合并.md`](../../_digested/internal-spec-driven/04-archive-归档合并.md) | archive validate/merge/move 机制消化 |
 | [`../06_apply-ready-to-archive-ready/answer.md`](../06_apply-ready-to-archive-ready/answer.md) | archive-ready 的前置状态 |

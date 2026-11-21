@@ -8,7 +8,7 @@
 >
 > **v1.8.0 对本 FAQ 的追加**：新增 vendor-neutral `agents` 目标（`--tools agents`，与 Codex 共享 `.agents` 根）；GitHub Copilot 一等支持（本地 skill + opt-in cloud coding-agent 文件）；`retire_capabilities` 支持删除已空 capability 的 main spec；`status` 增加 `isPlanningComplete`；validate 的 SHALL/MUST 在 normal 模式降为 guidance、并前置检测 MODIFIED scenario-loss；archive 在无法交互时给出可重跑命令。
 >
-> **v1.7.0 对本 FAQ 的纠偏（仍有效）**：nested capability path 已正式支持；`skip_specs: true`、Apply/Archive operation guidance 和 `instructions archive` 已交付；new spec Purpose 会随 archive 传递；early-sync archive 已幂等；Codex 已改为 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`），不能再把 `/opsx:*` 写成通用入口。
+> **v1.7.0 对本 FAQ 的纠偏（仍有效）**：nested capability path 已正式支持；`skip_specs: true`、Apply/Archive operation guidance 和 `instructions archive` 已交付；new spec Purpose 会随 archive 传递；early-sync archive 已幂等；Codex 已改为 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`），不能再把 `/openspec-*` 写成通用入口。
 >
 > **综合来源**：GitHub Issues/Discussions（Fission-AI/OpenSpec）、官方文档（ROADMAP.md, faq.md, migration-guide.md, workspace-roadmap.md）、Release Notes（历史版本）与社区讨论（HN, Discord, 博客）
 >
@@ -18,13 +18,13 @@
 
 ## 一、Roadmap：上游在做什么
 
-### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v1.17.0）
+### 1.1 已交付（历史至 v1.6，其后逐版补入，最新至 v2.1.1）
 
 | 版本 | 关键交付 | 对应我们的研究 |
 |------|----------|---------------|
-| v1.0.0 | OPSX 品牌迁移：`/openspec:*` → `/opsx:*`，`project.md` → `config.yaml`，线性 phase-lock → 灵活 action 系统 | `_faq_on_digested/04_propose-to-apply-ready/` 研究的正是 OPSX 工作流 |
-| v1.2.0 | Profile 系统（`core` / `custom`），`/opsx:verify` | `_digested/spec_cli/05-config-profile-delivery.md` 覆盖了 profile 机制 |
-| v1.4.0 | `/opsx:update` workflow、Kimi CLI、Mistral Vibe 支持 | `_digested/workflows/` 深挖了 workflow templates |
+| v1.0.0 | OPSX 品牌迁移：`/openspec:*` → `/openspec-*`，`project.md` → `config.yaml`，线性 phase-lock → 灵活 action 系统 | `_faq_on_digested/04_propose-to-apply-ready/` 研究的正是 OPSX 工作流 |
+| v1.2.0 | Profile 系统（`core` / `custom`），`/openspec-verify-change` | `_digested/spec_cli/05-config-profile-delivery.md` 覆盖了 profile 机制 |
+| v1.4.0 | `/openspec-update-change` workflow、Kimi CLI、Mistral Vibe 支持 | `_digested/workflows/` 深挖了 workflow templates |
 | v1.5.0 | Stores（早期 beta）、sync workflow 进 core profile | `_digested/system/03-planning-home-与-store-模型.md` 覆盖了 store 模型 |
 | v1.6.0-beta.1 | Canonical resolution 统一、auto-approve CLI | — |
 | v1.7.0 | nested main specs、`skip_specs`、operation guidance / `instructions archive`、Purpose carry-through、early-sync no-op、Codex skills-only | v1.7.0 同步的当前依据 |
@@ -34,7 +34,7 @@
 | v1.11.0 | `show --diff`、`status --all`、Explore 写入前确认、Antigravity 迁 `.agents` + `resolveSharedSkillWriters()` 通用仲裁、validate Purpose 占位符 warning、archive rename 保序、`schema init --default` 修键+回滚、Fish completion 修、移除本地项目级 agent-dev-driven/requirement-driven（**非上游改动**，见下） | v1.11.0 完整 commit-range 依据（见 [`0008`](../../_digested/_change_log/0008-v1.10.0-to-v1.11.0.md)） |
 | v1.12.0 | `validate --report findings`、validate advisory merge preflight、SourceCraft Code Assistant、`init` 写 `.gitkeep`、共享 ide-restart、propose/ff 先读代码、explore 依赖感知提问、npm git 免 pnpm + Node20 chalk + PowerShell completion 文档 | v1.12.0 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
 | v1.13.0 | apply 无 spec 警告 + `missingPrerequisites`、parser 三修复（重复 section / `*` 与 `+` 列表标记 / 换行 bullet）、archive fence 空行保真、update 检测损坏 command、init 列出遗漏 workflow、propose 加载项目 context、spec-inventory guidance | v1.13.0 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
-| v1.13.1 | 安全加固（config 值注入、恶意文件挂起、`.npmrc` 注册表劫持、`DO_NOT_TRACK` 口径、completion 路径引用、git probe 限额）；task checkbox 认所有列表标记且未识别标记算未完成；archive/parser 拒收（仅大小写不同的 requirement 名、畸形 RENAMED、无正文 scenario、section 外 requirement、merge path 读不到的 delta）；`status` 给 `Next:` 行；explore「capture 即确认」并点名 propose/apply；`/opsx:update` 先起草（step 4）确认后写入（step 5）；workflow 不擅自 `init` 项目、skills 只提 profile 内 workflow；artifact 模板带顶层标题；store / `EDITOR` 带参 / bash completion 逐字节还原等修复 | v1.13.1 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
+| v1.13.1 | 安全加固（config 值注入、恶意文件挂起、`.npmrc` 注册表劫持、`DO_NOT_TRACK` 口径、completion 路径引用、git probe 限额）；task checkbox 认所有列表标记且未识别标记算未完成；archive/parser 拒收（仅大小写不同的 requirement 名、畸形 RENAMED、无正文 scenario、section 外 requirement、merge path 读不到的 delta）；`status` 给 `Next:` 行；explore「capture 即确认」并点名 propose/apply；`/openspec-update-change` 先起草（step 4）确认后写入（step 5）；workflow 不擅自 `init` 项目、skills 只提 profile 内 workflow；artifact 模板带顶层标题；store / `EDITOR` 带参 / bash completion 逐字节还原等修复 | v1.13.1 依据（见 [`0009`](../../_digested/_change_log/0009-v1.11.0-to-v1.13.1.md)） |
 | v1.13.2 | 正确性收尾（patch）：CRLF 保持（写回文件行尾不再被重写成全文件 diff）、Windows archive 的 EPERM/EXDEV 复制回退（fingerprint + snapshots 回滚）、Kilo Code 命令目录修正（`.kilo/command/`）、artifact 输出认 brace expansion/extglob、归档工作流认 schema-aware 任务进度、Continue 命令开头改「直接跟随 workflow」、fast-forward/onboarding 确认口径统一 | v1.13.2 依据（见 [`0011`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)） |
 | v1.14.0 | 工具生态大扩张 + 可观测性（minor）：10 个新 `--tools` 目标（`dsh`/`codestudio`/`gigacode`/`atomcode`/`easycode`/`gsd`/`amp`/`grok`/`warp`/`veai`，`.agents` 共享 root 变六方）、`list --archived/--all`、view 显示 workflow status 与归档分区、`openspec version --check --json`、apply 任务源定位（`sourcePath`/`line`）、archive workflow 的 sync 阻塞语义与 sync 后结构验证、verify 模板按 status 契约重写（Not applicable 语义）、`.openspec.yaml` 未知键告警、IBM Bob 改名 | v1.14.0 依据（见 [`0011`](../../_digested/_change_log/0011-v1.13.1-to-v1.14.0.md)） |
 | v1.14.1 | 补丁：requirement / ADDED 正文 >500 字从 INFO 升 WARNING；退役清理失败改用独立错误码 `archive_retirement_cleanup_failed`（文案分清"已归档"与"清理未完成"）；glob 工件「done 但文件不全」的补完协议（`PARTIAL_ARTIFACT_CHECK`）与 specs 逐文件写入；apply `all_done` 不再暗示可归档 + tasks 模板新增 `## Workflow follow-up`；verify 按输出路径发现工件；CLI 按需加载（`--help` 485→24 模块）；`view` 撤回归档分区；CI 钉 Node 20/22/24 | v1.14.1 依据（见 [`0012`](../../_digested/_change_log/0012-v1.14.0-to-v1.14.3.md)） |
@@ -44,6 +44,9 @@
 | v1.16.0 | 基础设施 + 校验收紧（minor，含一个 Breaking）：npm 包要求 **Node 22.12.0+**（Node 20 EOL）、release 资产改 `.tar.gz` / `.zip` 归档、安装入口收敛到 `openspec.dev/cli`、`validate` 三条收紧（scenario 无 WHEN/THEN → WARNING；未识别 `## ... Requirements` 段 → ERROR 且 archive 拒绝；坏 `config.yaml` → 退出 1）、parser 三修复（行内三反引号、无空格 `###Requirement:`、闭合 `#` run）、store 提示按 origin 仓库名点名、zsh 补全写 `$ZDOTDIR/.zshrc` | v1.16.0 依据（见 [`0014`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)） |
 | v1.16.1 | 补丁：显式 `version --check` 不再受遥测/CI 影响、standalone 只提示有 `SHA256SUMS` 的版本（HTTP 改 `node:http(s)` 以免 abort 后句柄滞留）、`validate` 拒绝未识别 delta 段（从“警告并静默丢弃”改为 ERROR）、闭合 `#` run 支持 | v1.16.1 依据（见 [`0014`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)） |
 | v1.17.0 | **迁移基础设施**（minor）：历史产物指纹库（2867 指纹 / 1130 路径 / 42 个版本，4010 行生成物）+ 旧文件清扫，使 `update` 从 0.12 以来任意版本一次升级、**不再需要 `--force`**；切换 skills-only 不再删用户编辑过的 command 文件；**command 文件标记弃用**（2.0 移除，本版仍生成）；上游自家 19 个 change 归档 | v1.17.0 依据（见 [`0014`](../../_digested/_change_log/0014-v1.15.0-to-v1.17.0.md)） |
+| v2.0.0 | **大版本：只装 skills**（major）：`/openspec-*` command 文件不再生成；skills 收成 `.agents/skills/` 单份真身，各工具用自己的 `skills/` 目录指链接（建不了链接退化拷贝）；`delivery` 退役；Amazon Q Developer 退役（读不了 skills，转 Kiro）；命令生成能力删除但 34 个适配器保留、只做旧文件路径解析；Windows 需 `core.symlinks` 与开发者模式。另有补丁：cmd.exe 不再改写 PowerShell 配置、多行 task 不再被截断 | v2.0.0 依据（见 [`0015`](../../_digested/_change_log/0015-v1.17.0-to-v2.1.1.md)） |
+| v2.1.0 | 全局 skills（minor）：技能作用域 `global` / `project` 记在 `openspec/config.yaml`；安装改走 `skills` 包（`getSupportedAgents`），新增 `known-projects` 本机项目清单（永不使命令失败） | v2.1.0 依据（见 [`0015`](../../_digested/_change_log/0015-v1.17.0-to-v2.1.1.md)） |
+| v2.1.1 | 补丁：archive 在 `## Purpose` 后补空行、先定归档目标再同步；validate 允许 delta 顶部 frontmatter、MODIFIED 超 500 字符给警告；version 不再让 Homebrew/Nix 用 npm 升级；**从 npm 包装 skills（不再 clone，离线可用）**并能刷新 `npx skills add` 装进去的技能。Node 门槛抬到 22.20.0 | v2.1.1 依据（见 [`0015`](../../_digested/_change_log/0015-v1.17.0-to-v2.1.1.md)） |
 
 ### 1.2 近期待交付（从 Discussion #111 和维护者确认）
 
@@ -53,20 +56,20 @@
 - **TUI dashboard** — 探索 `opentui` 做终端可视化。
 - **Native integration** — 所有支持自定义 slash command 的 AI 工具的深度集成。
 
-### 1.2b 已经写死的下一步：OpenSpec 2.0（issue #2022）
+### 1.2b OpenSpec 2.0 的五步分批计划（issue #2022）
 
-这是目前**唯一有公开分批计划**的方向，也是理解 v1.16–v1.17 的关键：那两版不是随意排的，是在替它清路。维护者（TabishB）在 #2022 里列了五步：
+这是目前**唯一有公开分批计划**的方向，也是理解 v1.16–v2.1 的关键：先有 1.16/1.17 清路，才有 2.0 落刀，2.1 再补全局安装。维护者（TabishB）在 #2022 里列了五步：
 
 | # | 版本 | 内容 | 状态 |
 |---|------|------|------|
 | 1–2 | **1.17.0** | `update` 能从 0.12 起任意版本一次升级；没人编辑过的旧文件删掉、编辑过的保留；`update` 预告 command 文件在 2.0 消失 | **已交付**（#2213） |
-| 3 | **2.0** | 每个 skill 只留一份真身放 `.agents/skills/`，14 个只读自己目录的工具用软链指回来；不再生成 command 文件；Amazon Q Developer 退役（AWS 已转向 Kiro） | #2223，已合并进 2.0 线 |
-| 4 | 2.x | 可选的**每机全局** skill 安装，对齐 `npx skills` | 设计中 |
-| 5 | 2.x | router skill + references，然后是更瘦的 skill | 第 4 步之后，每次改动前先量 |
+| 3 | **2.0** | 每个 skill 只留一份真身放 `.agents/skills/`，只读自己目录的工具用软链指回来；不再生成 command 文件；Amazon Q Developer 退役（AWS 已转向 Kiro） | **已交付**（#2223，2.0.0） |
+| 4 | **2.1** | 可选的**每机全局** skill 安装，对齐 `npx skills` | **已交付**（#2241，2.1.0；2.1.1 改为从 npm 包装而不 clone） |
+| 5 | 2.x | router skill + references，然后是更瘦的 skill | 未交付：第 4 步之后，每次改动前先量 |
 
 **为什么是这个顺序**：2.0 要删掉 command 文件，而 1.x 项目里堆着两个版本布局的残留（同一套 workflow 一份 skill 一份 command）。如果用户带着这些残留直接进 2.0，要么丢文件要么看到重复。所以 1.17.0 必须先让 `update` 具备「证明这个文件没人改过」的能力——这就是那个 4000 行指纹库的由来。**它不是内务，是迁移的前置条件。**
 
-**风险分级（维护者自评）**：第 1–2 步低（只在内容匹配某发布版时才删）；第 3 步中（习惯 `/opsx:propose` 的人要改说 skill 名；Windows 软链依赖 git 的 `core.symlinks`，没有就退化成写真副本）。
+**风险分级（维护者自评）**：第 1–2 步低（只在内容匹配某发布版时才删）；第 3 步中（习惯 `/openspec-propose` 的人要改说 skill 名；Windows 软链依赖 git 的 `core.symlinks`，没有就退化成写真副本）。
 
 ### 1.3 Workspace & Multi-Repo 四阶段路线图
 
@@ -95,7 +98,7 @@
 
 | 需求 | 对应 Issue | 和我们已有研究的关联 |
 |------|-----------|---------------------|
-| `/opsx:repair` — 规范化 spec 对齐修复循环 | [#821](https://github.com/Fission-AI/OpenSpec/issues/821) | **直接命中** `_faq_on_digested/11_keep-specs-aligned/` 和 `_digested/specs_truth/` 的核心结论 |
+| `/openspec-repair` — 规范化 spec 对齐修复循环 | [#821](https://github.com/Fission-AI/OpenSpec/issues/821) | **直接命中** `_faq_on_digested/11_keep-specs-aligned/` 和 `_digested/specs_truth/` 的核心结论 |
 | Brownfield baseline — 从已有代码逆向生成 spec | [#434](https://github.com/Fission-AI/OpenSpec/issues/434) | — |
 | Constitution/steering docs — 类似 Spec-Kit 的治理层 | [#434](https://github.com/Fission-AI/OpenSpec/issues/434) | — |
 | 子 agent 上下文窗口管理 | 社区讨论 | `_digested/system/08-对照常见-SDD-与-AI-Coding.md` 提到过 agent memory vs 显式 spec 的取舍 |
@@ -113,8 +116,8 @@
 这是我们 `_digested/specs_truth/` 专题的核心结论，而上游 GitHub Issues 和社区反馈完全印证了这一点：
 
 - **现状**：spec 只在 `archive` 时写入；requirement 没有稳定 ID（只有 Markdown 标题文本）；没有任何持续对账工具。`openspec validate` 只是结构 linter，抓不出 specs↔代码漂移。
-- **上游态度**：Issue #821（`/opsx:repair`）说明上游意识到这个问题，但目前给出的方案仍然是"人 + 纪律 + 巡检"，没有自动化对账的计划。
-- **社区 workaround**：手动运行 `/opsx:verify`，但 verify 也只是让 agent 对比 specs 和代码，不是结构化 diff 工具。
+- **上游态度**：Issue #821（`/openspec-repair`）说明上游意识到这个问题，但目前给出的方案仍然是"人 + 纪律 + 巡检"，没有自动化对账的计划。
+- **社区 workaround**：手动运行 `/openspec-verify-change`，但 verify 也只是让 agent 对比 specs 和代码，不是结构化 diff 工具。
 
 > 和我们 `_digested/specs_truth/README.md` 的结论一致：**"漂移是默认状态——把 specs 弄对根本上是用 delta + archive 重新表达，不是手搓 spec 文件；长期对齐是人 + 纪律 + 巡检的责任，不是某个命令的责任。"**
 
@@ -122,8 +125,8 @@
 
 这是我们在 `_faq_on_digested/06_apply-ready-to-archive-ready/` 和 `07_archive-ready-to-archived/` 中独立发现的，而上游的行为确认了这一点：
 
-- `/opsx:apply` 只检查 4 个 artifact 文件**是否存在**，不检查 tasks 是否真正完成。
-- `/opsx:archive` 报告 "All tasks complete" 即使所有 checkbox 都未勾选。
+- `/openspec-apply-change` 只检查 4 个 artifact 文件**是否存在**，不检查 tasks 是否真正完成。
+- `/openspec-archive-change` 报告 "All tasks complete" 即使所有 checkbox 都未勾选。
 - `openspec archive` 默认会程序化合并 delta specs；宿主 archive workflow 也会先评估/验证 inline sync。用户可显式 `--skip-specs` 或拒绝确认，因此“archived”仍不必然代表 main specs 已更新。
 
 这不是 bug，而是**刻意的轻量化设计取舍**。代价是：workflow 的"完成"信号不可靠，依赖人工 review。
@@ -138,7 +141,7 @@
 
 - **Windsurf 用 workflows 而非 commands**：OpenSpec 生成的 `commands/opsx` 文件对 Windsurf 不兼容（[#591](https://github.com/Fission-AI/OpenSpec/issues/591)）。v1.0.2 甚至删除了用户已有的工作 Windsurf 配置。
 - **Cursor 双重加载**：从 `.claude/` 和 `.cursor/` 同时加载 skills 导致重复。
-- **Codex 历史 slash-command 回归**：[#890] 反映旧 `/opsx:*` 投递的问题；当前交付是 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`），不应再把它当 Codex 问题的现行 workaround。
+- **Codex 历史 slash-command 回归**：[#890] 反映旧 `/openspec-*` 投递的问题；当前交付是 `$openspec-*` skills-only（v1.8.0 下装在 `.agents/skills/`），不应再把它当 Codex 问题的现行 workaround。
 - **多项目配置失败**：只有第一个项目生成 slash commands（[#195](https://github.com/Fission-AI/OpenSpec/issues/195)）。
 
 **根本原因**：OpenSpec 的 "universal delivery" 抽象层（同一套 workflow semantics → skills → commands → per-tool adapters）在面对真实工具差异时，adapter 层的健壮性不足。每增加一个工具支持，不是"零成本"，而是可能引入新的断裂点。
@@ -157,7 +160,7 @@
 
 v1.0.0 是迄今为止最大的 breaking change：
 
-- **命令重命名**：`/openspec:proposal` → `/opsx:propose`，`/openspec:apply` → `/opsx:apply`，`/openspec:archive` → `/opsx:archive`
+- **命令重命名**：`/openspec:proposal` → `/openspec-propose`，`/openspec:apply` → `/openspec-apply-change`，`/openspec:archive` → `/openspec-archive-change`
 - **文件变化**：不再生成 `CLAUDE.md` / `.cursorrules` / `AGENTS.md`；`project.md` 被 `config.yaml` 取代
 - **工作流模型变化**：从线性 phase-lock 变为灵活 action 系统
 - **手动步骤**：`project.md` 不会自动删除，用户需要手动把有用内容迁移到 `config.yaml` 的 `context:` 字段
@@ -176,14 +179,14 @@ v1.0.0 是迄今为止最大的 breaking change：
 | OpenSpec 是什么？ | 在 AI 写代码前让开发者和 AI 在 spec 上达成一致的轻量层 | `_digested/system/01-系统心智模型.md` |
 | 绑死某个 AI 工具吗？ | 否，支持 25+ 工具 | `_digested/system/04-agent-contract-与工具投递.md` |
 | 能在已有大项目上用吗？ | 是，brownfield-first：只 spec 每次改动触及的部分 | `_digested/system/08-对照常见-SDD-与-AI-Coding.md` |
-| 最简单的用法是什么？ | explore（可选）→ propose → apply → archive；Claude 可用 `/opsx:*`，Codex 用 `$openspec-*` | `_faq_on_digested/03` 到 `07` 覆盖了每一步 |
+| 最简单的用法是什么？ | explore（可选）→ propose → apply → archive；Claude 可用 `/openspec-*`，Codex 用 `$openspec-*` | `_faq_on_digested/03` 到 `07` 覆盖了每一步 |
 
 ### 3.2 混淆高发区
 
 | Q | A |
 |---|---|
 | Slash commands 不出现怎么办？ | 运行 `openspec update`；仅当输出提示更新了 IDE-resident commands/skills 时重启 IDE。CLI-only 工具更新通常不需重启。再检查目标工具目录，并确认在 AI chat 里输入（不是终端） |
-| Terminal vs AI Chat 的区别？ | `openspec ...` 在终端；agent 入口由宿主决定（Claude `/opsx:*`，Codex `$openspec-*`） |
+| Terminal vs AI Chat 的区别？ | `openspec ...` 在终端；agent 入口由宿主决定（Claude `/openspec-*`，Codex `$openspec-*`） |
 | 怎么升级？ | `openspec version --check` 看安装形态与升级命令（npm 全局用 `npm install -g @fission-ai/openspec@latest`；standalone 用 `openspec install`），升完在每个项目里先 `openspec update --dry-run` 预演、再 `openspec update` |
 | 怎么自定义？ | `openspec/config.yaml` 的 `context:` / `rules:` / `operations:` / `schema:` 字段；自定义 schema 用 `openspec schema fork spec-driven my-workflow` |
 
@@ -233,7 +236,7 @@ v1.0.0 是迄今为止最大的 breaking change：
 - [Official FAQ](https://github.com/Fission-AI/OpenSpec/blob/main/docs/faq.md)
 - [Troubleshooting Guide](https://github.com/Fission-AI/OpenSpec/blob/main/docs/troubleshooting.md)
 - [Migration Guide](https://github.com/Fission-AI/OpenSpec/blob/main/docs/migration-guide.md)
-- [Issue #821 — /opsx:repair](https://github.com/Fission-AI/OpenSpec/issues/821)
+- [Issue #821 — /openspec-repair](https://github.com/Fission-AI/OpenSpec/issues/821)
 - [Issue #434 — Advanced spec/plan generation](https://github.com/Fission-AI/OpenSpec/issues/434)
 - [Issue #890 — Codex CLI regression](https://github.com/Fission-AI/OpenSpec/issues/890)
 - [Issue #591 — Windsurf/Cursor incompatibility](https://github.com/Fission-AI/OpenSpec/issues/591)

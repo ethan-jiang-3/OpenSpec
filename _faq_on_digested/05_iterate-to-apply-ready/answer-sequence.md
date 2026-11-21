@@ -65,7 +65,7 @@ sequenceDiagram
             alt 小修（补 scenario/细化 task/改文件名）
                 MD->>FS: 直接编辑 artifact 文件
             else 补缺失 artifact
-                MD->>TS: /opsx:continue（按 schema 规则补充）
+                MD->>TS: /openspec-continue-change（按 schema 规则补充）
                 TS-->>MD: instructions + 操作包
                 MD->>FS: 写新 artifact
             else scope 需要重定义
@@ -80,7 +80,7 @@ sequenceDiagram
         rect rgb(240, 255, 240)
             Note over User,FS: ══════ 真正 apply-ready · 交棒 ══════
             MD->>MD: 确认六项全部通过：<br/>✓ scope 和代码一致<br/>✓ specs 每个 requirement 有可测 scenario<br/>✓ design（如需）技术决策明确<br/>✓ tasks 具体可执行<br/>✓ artifacts 间无矛盾<br/>✓ 代码校验无遗漏
-            MD-->>User: "artifacts 已审核通过。<br/>可以进入 /opsx:apply。"
+            MD-->>User: "artifacts 已审核通过。<br/>可以进入 /openspec-apply-change。"
         end
     end
 ```
@@ -103,7 +103,7 @@ Iterate 是唯一一个 TS 几乎不参与核心工作的阶段。TS 的 artifac
 MD 读 artifact → MD 读代码 → MD 对照 → MD 发现 gap → MD 修 → MD 再审
 ```
 
-这是本阶段的核心模式。TS 只有在 MD 需要补 artifact（`/opsx:continue`→`openspec instructions`）或确认状态（`openspec status`）时才被调用。大部分时候 TS 不参与。
+这是本阶段的核心模式。TS 只有在 MD 需要补 artifact（`/openspec-continue-change`→`openspec instructions`）或确认状态（`openspec status`）时才被调用。大部分时候 TS 不参与。
 
 ### 模式 2：代码事实是最终裁判
 
@@ -119,7 +119,7 @@ MD 判断：proposal impact 不准确 → 更新 proposal.md
 
 ```text
 MD 发现 design.md 需要推翻重来
-  → 可能需要 /opsx:continue 重新生成 design artifact
+  → 可能需要 /openspec-continue-change 重新生成 design artifact
   → MD → TS: openspec instructions design --change "X" --json
   → TS → MD: template + instruction + dependencies
   → MD 写新 design.md
@@ -132,7 +132,7 @@ MD 发现 design.md 需要推翻重来
 | 来源 | 用到的结论 |
 |---|---|
 | `src/core/templates/workflows/explore.ts` | Explore stance：可读代码、可审视架构、不可实施 |
-| `src/core/templates/workflows/continue-change.ts` | `/opsx:continue` 的 artifact 补充机制 |
+| `src/core/templates/workflows/continue-change.ts` | `/openspec-continue-change` 的 artifact 补充机制 |
 | `src/commands/workflow/instructions.ts` | artifact instructions 的生成 |
 | [`answer.md`](answer.md) | 主流程和 ITR 节点说明 |
 | [`answer-itr03.md`](answer-itr03.md) | 批判性阅读 artifacts |

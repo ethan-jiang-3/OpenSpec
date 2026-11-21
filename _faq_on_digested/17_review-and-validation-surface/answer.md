@@ -109,6 +109,12 @@
 
 ---
 
+## 六之二、v2.1.1 补充：MODIFIED 增长告警、frontmatter 放宽、archive 两处修正
+
+- **MODIFIED 超长改为「相对基线」告警**（#2265）：MODIFIED requirement 相对主 spec 里的基线**增长超过 500 字符**时给 WARNING，让 `validate <change> --strict` 在 archive 之前就能拦住。这不是把 MODIFIED 也按绝对长度卡死——基线本身可能就长，卡绝对长度只会逼人重写既有正文。
+- **delta 顶部允许 frontmatter**（#2273）：`validate --strict` 不再因 delta spec 开头有 frontmatter 块而失败。archive 仍会把该块留在归档的 change 里，并**在结果里点名说明**——不是静默保留。
+- **archive 的两处修正**：#2267 新建主 spec 时在 `## Purpose` 之后补一个空行，让输出直接通过 Prettier 与 markdownlint MD022，不需要再格式化；#2277 改为**先定位归档目录、再写主 spec**，避免写了一半才失败。
+
 ## 六、v1.14.0 补充：verify 按 status 契约重写、metadata 未知键告警、500 字符引导
 
 ### verify 模板重写（status 契约 + Not applicable + advisory）
@@ -132,7 +138,7 @@ verify 不再自己解析 checkbox。它改读 **`openspec instructions apply --
 
 ### requirements 500 字符引导口径
 
-500 字符上限（`MAX_REQUIREMENT_TEXT_LENGTH`）早就存在，v1.14.0 把"怎么写短"写进了 specs instruction 与 validate 提示：新 requirement 一条只写一个行为，示例和边界情况移进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` 块；validate 对超长 requirement 的 flag 现在是 **WARNING**（v1.14.1 起，此前 INFO；`--strict` 会失败），仍不是 error；同一限制也作用于 change 里的 ADDED requirement，所以超长在 authoring 阶段就暴露。MODIFIED 不受此检查（避免逼人拆动既有正文），且保持既有 requirement block 完整，**不为凑长度拆写、裁剪或重写已有文本**；确需拆分时按 specs instruction：保留 header 与全部 scenario，正文收敛到一个行为，被移除的行为各自作为新的 ADDED requirement。
+500 字符上限（`MAX_REQUIREMENT_TEXT_LENGTH`）早就存在，v1.14.0 把"怎么写短"写进了 specs instruction 与 validate 提示：新 requirement 一条只写一个行为，示例和边界情况移进 scenario，覆盖多个行为的 requirement 拆成多个 `### Requirement:` 块；validate 对超长 requirement 的 flag 现在是 **WARNING**（v1.14.1 起，此前 INFO；`--strict` 会失败），仍不是 error；同一限制也作用于 change 里的 ADDED requirement，所以超长在 authoring 阶段就暴露。MODIFIED 原本不受此检查（避免逼人拆动既有正文），且保持既有 requirement block 完整，**不为凑长度拆写、裁剪或重写已有文本**；确需拆分时按 specs instruction：保留 header 与全部 scenario，正文收敛到一个行为，被移除的行为各自作为新的 ADDED requirement。
 
 ## 七、v1.14.1–v1.14.3 补充：归档前能看见的失真又多了两类
 

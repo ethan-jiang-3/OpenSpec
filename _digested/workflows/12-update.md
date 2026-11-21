@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/update-change.ts` → `getUpdateChangeSkillTemplate()` + `getOpsxUpdateCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:update [change-name]`；Codex 用 `$openspec-update-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：技能 `openspec-update-change` [change-name]——Claude Code 等工具里 `/openspec-update` [change-name]，Codex 用 `$openspec-update-change`。1.x 写作 `/opsx:update`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-update-change`（skill）/ `OPSX: Update`（command）
 > **独立 CLI 命令**：无——update 是纯 agent 模板，修订已有 planning artifacts，不改代码。
 > **profile**：custom（需显式启用，不在默认 core 里）

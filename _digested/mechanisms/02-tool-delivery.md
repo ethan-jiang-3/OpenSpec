@@ -40,7 +40,7 @@ workflow 文本来自 `src/core/templates/workflows/`。每个 workflow 通常�
 
 filter 来自 profile resolved workflow ids。
 
-skill 生成链：
+skill 生成链（**v1.x**：每个工具各写一份）：
 
 ```text
 SkillTemplate
@@ -49,7 +49,20 @@ SkillTemplate
   → <tool skillsDir>/skills/<dirName>/SKILL.md
 ```
 
-command 生成链：
+skill 生成链（**v2.x：一份真身 + 链接**）：
+
+```text
+SkillTemplate
+  → generateSkillContent(template, version, transformToSharedSkillReferences)
+  → YAML frontmatter + instructions
+  → .agents/skills/<dirName>/SKILL.md        # 唯一真身
+  → <tool skillsDir>/skills/<dirName> → 链接指回真身
+                                          # 建不了链接则退化为拷贝
+```
+
+`shared-skill-install.ts` 负责共享目录的安装与比对，`skill-links.ts` 负责链接与退化；安装动作本身交给运行时依赖 `skills` 包（v2.1.0 起，`skill-installer.ts`）。
+
+command 生成链（**v2.0.0 起已移除，保留仅为读旧项目**）：
 
 ```text
 CommandTemplate
@@ -64,13 +77,15 @@ CommandTemplate
 
 ## profile 与 delivery
 
-repo-local init/update 根据 global config 的 `delivery` 分流：
+**v1.x** 的 repo-local init/update 根据 global config 的 `delivery` 分流（下表是历史形态）：
 
 | delivery | 行为 |
 |----------|------|
 | `skills` | 只生成 skills，并删除 managed commands |
 | `commands` | 只生成 commands，并删除 managed skills |
 | `both` | 两者都生成 |
+
+**v2.0.0 起 `delivery` 退役**（#2223）：配置里不再有这一项，一律 skills。写入被接受但不再改变任何东西。init/update 现在的分流只剩两个问题——这个工具怎么读 skills、以及旧文件该怎么清。
 
 这张表描述的是投递策略，不是每个工具都必然支持三种形态。v1.8.0 的 Codex 是 **skills-only**：无论全局 `delivery` 设为 `skills`、`commands` 还是 `both`，OpenSpec 都生成 `.agents/skills/openspec-*/SKILL.md`（v1.7.0 时代是 `.codex/skills/`），不生成 command/prompt 文件；`update` 会在有匹配 replacement skill 时清理旧的托管 Codex prompts。
 
@@ -161,7 +176,7 @@ profile 决定安装哪些 workflow，delivery 决定以什么形态投递。两
 
 - global profile 从 `core` 改成 `custom`。
 - custom workflows 列表变化。
-- delivery 从 `both` 改成 `skills` 或 `commands`。
+- delivery 从 `both` 改成 `skills` 或 `commands`。（**1.x 形态**；2.0 起 `delivery` 退役，只剩 skills。）
 - 某个工具目录里还留有不再选择的 workflow。
 
 这解释了为什么版本没变时也可能需要 update。OpenSpec 管理的是声明式投递状态，不只是“当前 CLI 版本是否更新”。
@@ -226,13 +241,15 @@ v1.9.0/.11.0 起，遗留迁移路径遵守同一条 one-writer 规则：若 `.a
 | `skills-invocable` | 没有 command adapter，但能用 skills 调用 | `codex`、`warp` |
 | `none` | 两者都没有 | — |
 
-四条判定由 `delivery` × 能力矩阵驱动：`shouldGenerateSkillsForTool` / `shouldRemoveSkillsForTool` / `shouldGenerateCommandsForTool` / `shouldReconcileCommandFilesForTool`。
+四条判定由 `delivery` × 能力矩阵驱动：`shouldGenerateSkillsForTool` / `shouldRemoveSkillsForTool` / `shouldGenerateCommandsForTool` / `shouldReconcileCommandFilesForTool`。（**这是 v1.17.0 的形态**；2.0 起 `delivery` 退役，`shouldGenerateCommandsForTool` 已从代码中移除。）
 
-**提示文案的触发条件**（`formatCommandDeprecationNotice`，v1.17.0）：只在“某个已配置工具**现在会得到** command 文件、且切到 `skills` 后**不再得到**”时打印。skills-only 项目不提示；Codex 这类只有 skills 的工具不提示（劝它切等于劝它离开唯一能用的接口）。时机选在 `update`：它是在升级时跑的，所以这条能在 2.0 删除发生前触达用户，又不会天天唠叨。
+**提示文案的触发条件**（`formatCommandDeprecationNotice`，v1.17.0 的历史形态；2.0 起该函数已不存在）：只在“某个已配置工具**现在会得到** command 文件、且切到 `skills` 后**不再得到**”时打印。skills-only 项目不提示；Codex 这类只有 skills 的工具不提示（劝它切等于劝它离开唯一能用的接口）。时机选在 `update`：它是在升级时跑的，所以这条能在 2.0 删除发生前触达用户，又不会天天唠叨。
 
 **配套的保命改动**（#2087 折叠进 #2213）：切到 skills-only 时**不再删用户编辑过的 command 文件**。`classifyCommandFiles` 用同一套指纹判断，结果分三类——`removed`（OpenSpec 生成、删）、`kept`（内容对不上，用户改过，保留并列出）、`unchecked`（读不了、删不了、symlink 无法证明在项目内）。逻辑很直接：提示让人**现在**就切，如果不修这个，切换就会删掉编辑过的文件。
 
-**状态口径**：v1.17.0 仍然生成 command 文件、`/opsx:*` 仍然可用，只是被标记弃用；2.0（#2223）才真正停止生成并清理。资料里**不要写成「已移除」**。
+**状态口径（v2.1.1）**：command 文件**已停止生成**，`/opsx:*` 不再由 OpenSpec 提供；`delivery` 配置项退役，一律装 skills（#2223，2.0.0）。旧项目里由早期版本生成的 command 文件，在 `openspec update` 时按指纹清理：没人改过的删掉，改过的保留并列出。
+
+**适配器层没有删除**。`src/core/command-generation/adapters/` 下 34 个适配器仍在，但职责从「生成」变成「知道旧文件曾经写在哪里」，调用方只剩 `command-surface.ts`、`migration.ts`、`command-reconcile.ts`、`tool-detection.ts`、`profile-sync-drift.ts`、`released-output-sweep.ts`。**能力删了，路径知识留着**——这正是 2.0 能安全做大规模删除的前提。
 
 ## GitHub Copilot：本地 skill 与 opt-in cloud coding-agent
 

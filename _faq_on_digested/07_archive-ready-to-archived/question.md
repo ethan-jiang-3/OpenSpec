@@ -10,12 +10,12 @@ Implementation 已经完成，`tasks.md` 里的 checkbox 也都完成了。接�
 - change 里的 delta specs 怎么合并到主 `openspec/specs/`？
 - `ADDED`、`MODIFIED`、`REMOVED`、`RENAMED` 的合并顺序为什么重要？
 - 什么情况下会跳过 spec updates，或者 archive 了但 specs 没有更新？
-- `/opsx:archive` 为什么看起来会先做 status 和 sync assessment？
+- `/openspec-archive-change` 为什么看起来会先做 status 和 sync assessment？
 - 最终 archived 的文件系统状态是什么？
 
 # 背景
 
-`apply-ready-to-archive-ready/` 已经回答了：`/opsx:apply` 如何读取 planning artifacts、实施 pending tasks、更新 checkbox，并走到 archive-ready。
+`apply-ready-to-archive-ready/` 已经回答了：`/openspec-apply-change` 如何读取 planning artifacts、实施 pending tasks、更新 checkbox，并走到 archive-ready。
 
 这个问题从下一步开始：**implementation 已经存在，change 要退出 active workflow，正式进入 archived 状态。**
 
@@ -27,4 +27,4 @@ Implementation 已经完成，`tasks.md` 里的 checkbox 也都完成了。接�
 终点：主 openspec/specs/ 成为新的 baseline，change 进入 openspec/changes/archive/
 ```
 
-本 FAQ 的主视角是 CLI 主线：`openspec archive` / `ArchiveCommand.execute()`。`/opsx:archive` 是相关但不同的 agent 模板路径，会在单独答案里解释。
+本 FAQ 的主视角是 CLI 主线：`openspec archive` / `ArchiveCommand.execute()`。`/openspec-archive-change` 是相关但不同的 agent 模板路径，会在单独答案里解释。

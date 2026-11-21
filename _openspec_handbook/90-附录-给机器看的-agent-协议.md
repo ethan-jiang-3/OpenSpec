@@ -22,7 +22,7 @@
 
 > **OpenSpec 自己不是 LLM，它是 prompt 编排器和状态引擎。**
 
-这里也要避免一个术语误会：`/opsx:*` 只是支持 command adapter 的宿主采用的一种命名空间，不是另一套运行时。Codex 在 v1.8.0 使用 `$openspec-*` skills，不生成 `/opsx:*` command。机器协议里的事实来源仍然是 `openspec` CLI 和 `openspec/` 文件状态。
+这里也要避免一个术语误会：`/openspec-*` 只是宿主里调用**技能**的一种写法，不是另一套运行时。1.x 时代另有 `/opsx:*` command 文件入口，v2.0.0 起已移除。Codex 在 v1.8.0 使用 `$openspec-*` skills，不生成 `/openspec-*` command。机器协议里的事实来源仍然是 `openspec` CLI 和 `openspec/` 文件状态。
 
 ---
 
@@ -76,7 +76,7 @@ sequenceDiagram
     participant LLM as 宿主模型
     participant FS as 文件系统
 
-    User->>Host: /opsx:propose add-feature
+    User->>Host: /openspec-propose add-feature
     Host->>CLI: openspec status --change add-feature --json
     CLI->>FS: 读取 openspec/ 状态
     FS-->>CLI: change/schema/artifact 状态
@@ -222,9 +222,9 @@ sequenceDiagram
 - skill/command 是"投递方式"
 - CLI 是"运行时事实来源"
 
-`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/opsx:propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，使用 `/openspec-propose`。共享 `.agents/skills/` 树的成员现在是 Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 六方，OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`（Amp 以 `.amp`/`.agents/skills` 检测、GSD 以 `.gsd` 检测，都写同一棵树）。
+`OPSX: Propose`、`OPSX: Apply` 这类名字只是部分工具中的 workflow 显示标签。Claude Code 等工具可用 `/openspec-propose`；Codex 使用 `$openspec-propose`；Zed Agent 是 skills-only，使用 `/openspec-propose`。共享 `.agents/skills/` 树的成员现在是 Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 六方，OpenSpec 只管理 `openspec-*` 目录和 ownership marker，不改根 `AGENTS.md`（Amp 以 `.amp`/`.agents/skills` 检测、GSD 以 `.gsd` 检测，都写同一棵树）。
 
-skills-only（无 command 文件、用 `/openspec-*` 直呼）的还有 DeepSeek Harness（`dsh`，写 `.dsh/skills/`，dsh 把项目 `.dsh/skills/` 当最高优先级 skill root）、Grok Build（`.grok/`）与 Veai（`.veai/`）。Warp 与 Codex 同属 skills-invocable surface：skills 写 `.warp/`，自然语言或 `/openspec-*` 都能触发。带 command 文件的 adapter 家族继续扩大：Code Studio 写 `.codestudio/prompts/opsx-<id>.prompt.md`，GigaCode 写 `.gigacode/commands/opsx-<id>.md`，AtomCode 写 `/opsx-<id>` Markdown 命令，EasyCode 写 TOML 命令（`/opsx:<id>`）。
+skills-only（无 command 文件、用 `/openspec-*` 直呼）的还有 DeepSeek Harness（`dsh`，写 `.dsh/skills/`，dsh 把项目 `.dsh/skills/` 当最高优先级 skill root）、Grok Build（`.grok/`）与 Veai（`.veai/`）。Warp 与 Codex 同属 skills-invocable surface：skills 写 `.warp/`，自然语言或 `/openspec-*` 都能触发。（**1.x 历史**）带 command 文件的 adapter 家族曾经继续扩大：Code Studio 写 `.codestudio/prompts/opsx-<id>.prompt.md`，GigaCode 写 `.gigacode/commands/opsx-<id>.md`，AtomCode 写 `/opsx-<id>` Markdown 命令，EasyCode 写 TOML 命令（`/opsx:<id>`）。
 
 OpenCode 同时有 skills 和 `.opencode/commands/opsx-*.md` command。v1.10.0 的 adapter 会在生成 command 时加入 `$ARGUMENTS`，把用户在 command 后输入的参数交给 workflow；模板正文已有等价参数占位时不会再重复追加。不要把这个占位符复制到 Claude、Codex 或 Zed 的调用语法里。
 

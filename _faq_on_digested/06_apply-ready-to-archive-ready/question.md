@@ -1,10 +1,10 @@
 # 问题
 
-`propose` 已经完整生成 artifacts，change 已经 apply-ready。接下来运行 `/opsx:apply` 时，OpenSpec 和 coding agent 到底怎么从 planning artifacts 进入真实代码实施？
+`propose` 已经完整生成 artifacts，change 已经 apply-ready。接下来运行 `/openspec-apply-change` 时，OpenSpec 和 coding agent 到底怎么从 planning artifacts 进入真实代码实施？
 
 更具体地说：
 
-- `/opsx:apply` 如何选择要实施的 change？
+- `/openspec-apply-change` 如何选择要实施的 change？
 - 为什么 apply 还要先跑 `openspec status --change "<name>" --json`？
 - `openspec instructions apply --change "<name>" --json` 返回了什么？
 - agent 为什么必须先读 `contextFiles`？
@@ -17,7 +17,7 @@
 
 `propose-to-apply-ready/` 已经回答了：propose 如何创建 change、生成 proposal/specs/design/tasks，并让 apply 可以开始。
 
-这个问题从下一秒开始：**`/opsx:apply` 已经可以运行，agent 如何安全地改真实项目代码？**
+这个问题从下一秒开始：**`/openspec-apply-change` 已经可以运行，agent 如何安全地改真实项目代码？**
 
 这里的边界是：
 

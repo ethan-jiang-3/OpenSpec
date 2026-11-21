@@ -4,7 +4,7 @@
 
 这带来一个看似矛盾的问题：
 
-1. 下一次 `/opsx:propose`、`/opsx:explore` 或 `/opsx:apply` 若要理解既有系统，是否必须读完所有 main specs？
+1. 下一次 `/openspec-propose`、`/openspec-explore` 或 `/openspec-apply-change` 若要理解既有系统，是否必须读完所有 main specs？
 2. 若把整个 `openspec/specs/` 塞进 agent context，几十个 capability 或一个很长的 spec 很快会耗尽上下文；不塞又可能漏掉已有契约、重复造 capability，或破坏跨域约束。
 3. OpenSpec 现在是否已有分片、目录索引、按需读取或 token budget 的正式机制？若没有，项目应如何组织 specs 和工作流，才不会把积累的主 specs 变成 agent 根本用不起来的档案？
 

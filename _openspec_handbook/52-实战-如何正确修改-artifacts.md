@@ -8,7 +8,7 @@
 
 OpenSpec 有两种 profile（配置模式）：
 
-这里列出的 `/opsx:*` 是 Claude 的 OpenSpec workflow command，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`；Codex v1.8.0 使用 `$openspec-*` skills。下文命令表要按宿主 adapter 理解，不能把 slash 语法推广到所有工具。
+这里列出的 `/openspec-*` 是 Claude 的 OpenSpec workflow command，不是另一套叫 OPSX 的独立工具。终端里的底层 CLI 仍然是 `openspec ...`；Codex v1.8.0 使用 `$openspec-*` skills。下文命令表要按宿主 adapter 理解，不能把 slash 语法推广到所有工具。
 
 > **v1.13.1 artifact 边界。** specs 可以是嵌套 capability path；`skip_specs: true` 是没有 spec-level 行为变化时的 metadata。每条 task 自带 verification；capability 退役若仍有未归属内容会被阻止。配置方面，artifact `rules` 只影响 artifact 生成，Apply/Archive 读 project `context` 与对应 operation guidance。
 > **v1.13.1 update 守卫。** `/opsx:update` 现在先起草修订（step 4），经你确认后才写入文件（step 5）——与 explore 的 capture 确认同属「写前确认」护栏。
@@ -33,23 +33,23 @@ openspec config profile
 ### Core Profile 的 6 个命令
 
 ```bash
-/opsx:propose <name>   # 创建 change + 生成所有 artifacts
-/opsx:explore          # 探索/调研模式
-/opsx:apply [name]     # 实现 tasks
+/openspec-propose <name>   # 创建 change + 生成所有 artifacts
+/openspec-explore          # 探索/调研模式
+/openspec-apply-change [name]     # 实现 tasks
 /opsx:update           # 更新现有 artifact（v1.6.0 纳入 core）
 /opsx:sync             # 同步 delta specs（v1.4.0 从 custom 移入 core）
-/opsx:archive [name]   # 归档 change
+/openspec-archive-change [name]   # 归档 change
 ```
 
 ### Custom Profile 的额外命令
 
 ```bash
-/opsx:new <name>       # 只创建 change 目录
-/opsx:continue         # 逐个生成 artifact
-/opsx:ff               # 快速生成所有 artifacts
-/opsx:verify           # 验证实现与 specs 一致性
-/opsx:bulk-archive     # 批量归档
-/opsx:onboard          # 新成员快速了解项目
+/openspec-new-change <name>       # 只创建 change 目录
+/openspec-continue-change         # 逐个生成 artifact
+/openspec-ff-change               # 快速生成所有 artifacts
+/openspec-verify-change           # 验证实现与 specs 一致性
+/openspec-bulk-archive-change     # 批量归档
+/openspec-onboard          # 新成员快速了解项目
 ```
 
 ### 如何切换到 Custom Profile
@@ -72,7 +72,7 @@ openspec update
 
 ### 本文档的假设
 
-**本文档中的某些示例使用 custom profile 的命令**（如 `/opsx:continue`）。
+**本文档中的某些示例使用 custom profile 的命令**（如 `/openspec-continue-change`）。
 
 如果你使用 **core profile**（默认），请参考每个场景下的"Core Profile 替代方案"。
 
@@ -103,7 +103,7 @@ openspec show <candidate-path> --type spec --json --requirement <n>
 
 ## 为什么需要这一篇
 
-如果你已经读过前面的文档，会用 `/opsx:propose`、`/opsx:apply`、`/opsx:archive`，但可能还有这些困惑：
+如果你已经读过前面的文档，会用 `/openspec-propose`、`/openspec-apply-change`、`/openspec-archive-change`，但可能还有这些困惑：
 
 | 困惑 | 典型问题 |
 |------|---------|
@@ -255,7 +255,7 @@ for offline reconciliation and sharing with the finance department.
 rm openspec/changes/add-task-csv-export/proposal.md
 
 # 步骤 2：在 Claude Code 里重新生成
-/opsx:continue
+/openspec-continue-change
 ```
 
 **示例场景（Core Profile 替代方案）**：
@@ -270,19 +270,19 @@ rm openspec/changes/add-task-csv-export/proposal.md
 
 # 或者，如果想重新开始整个 change
 rm -rf openspec/changes/add-task-csv-export/
-/opsx:propose add-task-csv-export
+/openspec-propose add-task-csv-export
 ```
 
 
 ---
 
-## `/opsx:update`：修改 artifact 的正式工作流
+## `/openspec-update-change`：修改 artifact 的正式工作流
 
-上面三种方式告诉你"怎么动手改"，但它们各自独立——手动改了 proposal，design 和 tasks 可能已经不一致了。`/opsx:update` 解决的就是这个问题。
+上面三种方式告诉你"怎么动手改"，但它们各自独立——手动改了 proposal，design 和 tasks 可能已经不一致了。`/openspec-update-change` 解决的就是这个问题。
 
 ### 它做什么
 
-`/opsx:update` 读一遍 change 的全部已有 artifact，按你的意图改目标文件，然后**检查并修复其他 artifact 的一致性**。它不创建新 artifact（那是 `/opsx:continue` 的事），也不改代码（那是 `/opsx:apply` 的事）——它的边界就是"planning artifact 内部的自洽"。
+`/openspec-update-change` 读一遍 change 的全部已有 artifact，按你的意图改目标文件，然后**检查并修复其他 artifact 的一致性**。它不创建新 artifact（那是 `/openspec-continue-change` 的事），也不改代码（那是 `/openspec-apply-change` 的事）——它的边界就是"planning artifact 内部的自洽"。
 
 ```
 propose 产出第一版 → explore 发现漏洞 → update 修 proposal + specs + design + tasks
@@ -296,7 +296,7 @@ propose 产出第一版 → explore 发现漏洞 → update 修 proposal + specs
 
 实际场景：
 
-> 以 BuildFlow 为例——`add-qc-check` 这个 change 的 proposal 说"质检员在 App 上打勾就行"，design 写了一套拍照+GPS 定位的验收流程。propose 阶段没人发现这个矛盾。跑完 explore 后你意识到 proposal 太乐观了，`/opsx:update add-qc-check` 会同时修 proposal（把约束写实）和 design（让拍照流程能追溯到 proposal 里的 requirement），而不是改一个留一个。
+> 以 BuildFlow 为例——`add-qc-check` 这个 change 的 proposal 说"质检员在 App 上打勾就行"，design 写了一套拍照+GPS 定位的验收流程。propose 阶段没人发现这个矛盾。跑完 explore 后你意识到 proposal 太乐观了，`/openspec-update-change add-qc-check` 会同时修 proposal（把约束写实）和 design（让拍照流程能追溯到 proposal 里的 requirement），而不是改一个留一个。
 
 ### 什么时候用它
 
@@ -305,8 +305,8 @@ propose 产出第一版 → explore 发现漏洞 → update 修 proposal + specs
 | explore 后发现 proposal 不够 | **update** |
 | 实现中发现 design 不现实，要回头改 | **update**（改完再 apply） |
 | 说"update"看看有没有不一致 | **update**（先做 coherence review） |
-| 要加一个全新的 artifact（比如补 design） | `/opsx:continue`，不是 update |
-| 整个 change 的方向错了 | `/opsx:new`，不是 update |
+| 要加一个全新的 artifact（比如补 design） | `/openspec-continue-change`，不是 update |
+| 整个 change 的方向错了 | `/openspec-new-change`，不是 update |
 
 核心判断：**改的是已有 artifact 的内容 → update；要创建还不存在的 artifact → continue**。
 
@@ -317,13 +317,13 @@ propose 产出第一版 → explore 发现漏洞 → update 修 proposal + specs
 | 情形 | 规则 |
 |---|---|
 | 改已有文件 | 只编辑 `artifactPaths.<id>.existingOutputPaths` 里列出的**具体文件**；glob 的 `resolvedOutputPath` 还是 pattern，绝不能当写入目标 |
-| 某个 capability 确实少了 spec 文件 | 这是一条**明确的例外**：先起草 → 问用户确认 → 在 change 目录内选一个不存在的具体路径（要匹配 `outputPath`、且解析 symlink 后仍在 change 目录内）创建。这也是 update 唯一允许建新文件的口子，其余"还没有文件"的 artifact 交给 `/opsx:continue` |
+| 某个 capability 确实少了 spec 文件 | 这是一条**明确的例外**：先起草 → 问用户确认 → 在 change 目录内选一个不存在的具体路径（要匹配 `outputPath`、且解析 symlink 后仍在 change 目录内）创建。这也是 update 唯一允许建新文件的口子，其余"还没有文件"的 artifact 交给 `/openspec-continue-change` |
 
 顺带说明为什么这个例外要写两遍：step 2 原本只说"只编辑 `existingOutputPaths`"，而例外要建的文件按定义不在其中——照字面执行会把流程自己要求做的事否掉。所以现在 step 2 与 guardrails 两处口径一致。
 
 ### 一句话
 
-`/opsx:update` 是"迭代打磨 planning"的正式入口。它把"改 proposal → 改 design → 改 tasks"这个容易三步各写各的流程，锁成一次自洽操作。
+`/openspec-update-change` 是"迭代打磨 planning"的正式入口。它把"改 proposal → 改 design → 改 tasks"这个容易三步各写各的流程，锁成一次自洽操作。
 
 ---
 
@@ -520,7 +520,7 @@ schema: spec-driven
 **如何验证修改是否生效**：
 ```bash
 # 创建一个新 change
-/opsx:propose test-new-schema
+/openspec-propose test-new-schema
 
 # 检查生成的 artifacts
 ls openspec/changes/test-new-schema/
@@ -626,7 +626,7 @@ rm -rf openspec/changes/test-config-runtime/
 **Custom Profile**：
 ```bash
 # 创建一个测试 change
-/opsx:propose test-config-output
+/openspec-propose test-config-output
 
 # 检查生成的 proposal 是否符合新的 rules
 cat openspec/changes/test-config-output/proposal.md
@@ -638,7 +638,7 @@ rm -rf openspec/changes/test-config-output/
 **Core Profile**：
 ```bash
 # 创建一个测试 change（会生成所有 artifacts）
-/opsx:propose test-config-output
+/openspec-propose test-config-output
 
 # 检查生成的 proposal 是否符合新的 rules
 cat openspec/changes/test-config-output/proposal.md
@@ -804,7 +804,7 @@ which is error-prone and time-consuming (30+ minutes per report).
 - Export filtered order data
 
 # 创建新的 change
-/opsx:propose add-task-pdf-export
+/openspec-propose add-task-pdf-export
 ```
 
 **为什么推荐选择 2**：
@@ -975,7 +975,7 @@ Use streaming CSV generation with Papa Parse library.
 rm openspec/changes/add-task-csv-export/proposal.md
 
 # 2. 在 Claude Code 里重新生成
-/opsx:continue
+/openspec-continue-change
 ```
 
 **重新生成的步骤（Core Profile）**：
@@ -988,7 +988,7 @@ rm openspec/changes/add-task-csv-export/proposal.md
 
 # 或者，重新开始整个 change
 rm -rf openspec/changes/add-task-csv-export/
-/opsx:propose add-task-csv-export
+/openspec-propose add-task-csv-export
 ```
 
 ---

@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/explore.ts` → `getExploreSkillTemplate()` + `getOpsxExploreCommandTemplate()`
 
-> **用户怎么调**：`/opsx:explore [想法|change名|空]`
+> **调用方式**：技能 `openspec-explore` [想法|change名|空]——Claude Code 等工具里 `/openspec-explore` [想法|change名|空]，Codex 用 `$openspec-explore`。1.x 写作 `/opsx:explore`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-explore`（skill）/ `OPSX: Explore`（command）
 > **独立 CLI 命令**：无——explore 没有对应的 `openspec explore` CLI 命令，它是纯 agent 模板。
 > **profile**：core（大多数用户默认可见）

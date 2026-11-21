@@ -74,7 +74,7 @@ propose 多个？
 - 新发现是 callback failure handling，属于同一用户可观察能力。
 - 应该更新 specs/auth/spec.md 和 tasks.md。
 
-下一步建议用 /opsx:continue add-oauth-login 补 artifacts。
+下一步建议用 /openspec-continue-change add-oauth-login 补 artifacts。
 ```
 
 更新已有 change 的价值是避免 planning 分叉。
@@ -196,7 +196,7 @@ Change C 暂缓: centralize-permission-checks
 我不建议创建 OpenSpec change。
 
 原因：
-- 这次只是确认 archive CLI 和 /opsx:archive 的执行路径差异。
+- 这次只是确认 archive CLI 和 /openspec-archive-change 的执行路径差异。
 - 没有要改变用户可观察行为或 OpenSpec 文件协议。
 - 结论可以记录在 FAQ，不需要 proposal/specs/tasks。
 ```
@@ -208,7 +208,7 @@ Change C 暂缓: centralize-permission-checks
 | 分流 | 核心问题 | 结果 |
 |---|---|---|
 | 继续 Explore | 事实或决策还不足吗？ | 继续调查、提问、比较方案。 |
-| 更新已有 change | 已有 active change 覆盖同一 scope 吗？ | 用 `/opsx:continue` 或更新 artifacts。 |
+| 更新已有 change | 已有 active change 覆盖同一 scope 吗？ | 用 `/openspec-continue-change` 或更新 artifacts。 |
 | propose 一个 | 是否有一个清晰、可验证的增量目标？ | 建议一个 change name 和 scope。 |
 | propose 多个 | 是否存在多个独立交付/风险/能力边界？ | 先给拆分方案，再逐个 formalize。 |
 | 不创建 change | 是否只是理解、调查或无需规格化？ | 输出结论，不制造 change。 |
@@ -239,8 +239,8 @@ Open questions:
   还需要用户确认什么
 
 Next:
-  /opsx:propose <name>
-  或 /opsx:continue <name>
+  /openspec-propose <name>
+  或 /openspec-continue-change <name>
   或继续 Explore
 ```
 

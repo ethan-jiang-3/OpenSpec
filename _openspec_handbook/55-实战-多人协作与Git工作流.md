@@ -55,10 +55,10 @@ feature/csv-export     ←→  changes/add-csv-export/
 git checkout -b feature/add-dark-mode
 
 # 2. 在 Claude Code 里发起 change
-/opsx:propose add-dark-mode
+/openspec-propose add-dark-mode
 
 # 3. 实现功能
-/opsx:apply add-dark-mode
+/openspec-apply-change add-dark-mode
 
 # 4. 提交代码和 specs
 git add openspec/changes/add-dark-mode/
@@ -72,7 +72,7 @@ gh pr create --title "Add dark mode"
 # 6. PR 合并后，archive change
 git checkout main
 git pull
-/opsx:archive add-dark-mode
+/openspec-archive-change add-dark-mode
 
 # 7. 提交 archive 结果
 git add openspec/specs/
@@ -170,10 +170,10 @@ B 依赖 A 的结果。
 ```bash
 # 1. 创建分支和 change
 git checkout -b feature/add-auth-foundation
-/opsx:propose add-auth-foundation
+/openspec-propose add-auth-foundation
 
 # 2. 实现并提交
-/opsx:apply
+/openspec-apply-change
 git add openspec/changes/add-auth-foundation/
 git add src/auth/
 git commit -m "Add authentication foundation"
@@ -185,7 +185,7 @@ gh pr create --title "Add authentication foundation"
 # 4. PR 合并后立即 archive
 git checkout main
 git pull
-/opsx:archive add-auth-foundation
+/openspec-archive-change add-auth-foundation
 git add openspec/
 git commit -m "Archive add-auth-foundation"
 git push
@@ -203,7 +203,7 @@ git pull
 git checkout -b feature/add-authorization
 
 # 3. 发起 change（此时可以看到 A 的 specs）
-/opsx:propose add-authorization
+/openspec-propose add-authorization
 
 # 4. 在 proposal 里明确依赖关系
 # 编辑 openspec/changes/add-authorization/proposal.md
@@ -212,7 +212,7 @@ git checkout -b feature/add-authorization
 This change depends on `add-auth-foundation` being archived first.
 
 # 5. 实现功能
-/opsx:apply
+/openspec-apply-change
 
 # 6. 提交并创建 PR
 git add openspec/changes/add-authorization/
@@ -224,7 +224,7 @@ gh pr create --title "Add authorization"
 # 7. PR 合并后 archive
 git checkout main
 git pull
-/opsx:archive add-authorization
+/openspec-archive-change add-authorization
 git add openspec/
 git commit -m "Archive add-authorization"
 git push
@@ -295,8 +295,8 @@ sequenceDiagram
 
 # 成员 A
 git checkout -b feature/add-request-filter
-/opsx:propose add-request-filter
-/opsx:apply
+/openspec-propose add-request-filter
+/openspec-apply-change
 git add openspec/ src/
 git commit -m "Add request filter"
 git push -u origin feature/add-request-filter
@@ -305,7 +305,7 @@ gh pr create --title "Add request filter"
 # PR 合并后立即 archive
 git checkout main
 git pull
-/opsx:archive add-request-filter
+/openspec-archive-change add-request-filter
 git add openspec/
 git commit -m "Archive add-request-filter"
 git push
@@ -314,7 +314,7 @@ git push
 git checkout main
 git pull  # 拿到 A 的 specs 更新
 git checkout -b feature/add-request-sort
-/opsx:propose add-request-sort
+/openspec-propose add-request-sort
 # ... 后续流程相同
 ```
 
@@ -335,7 +335,7 @@ git checkout feature/add-request-sort
 git pull origin main  # 拉取 A 的更新
 
 # 运行 sync 命令（core profile 默认可用）
-/opsx:sync add-request-sort
+/openspec-sync-specs add-request-sort
 
 # 手动处理冲突（当前做法）
 # 1. 查看 A 的 delta spec
@@ -348,13 +348,13 @@ cat openspec/changes/archive/*-add-request-filter/specs/requests/submission/spec
 # 3. 提交并 archive
 git add openspec/
 git commit -m "Sync with add-request-filter changes"
-/opsx:archive add-request-sort
+/openspec-archive-change add-request-sort
 ```
 
 **关键点**：
 - 尽量错开时间，避免并行修改同一个 spec
-- 如果必须并行，后 archive 的人要用 `/opsx:sync` 同步，并手动审查 delta spec 是否仍然准确
-- `/opsx:sync` 在当前 core profile 中默认可用
+- 如果必须并行，后 archive 的人要用 `/openspec-sync-specs` 同步，并手动审查 delta spec 是否仍然准确
+- `/openspec-sync-specs` 在当前 core profile 中默认可用
 - **退役 vs 在途修改**：若某人退役整个 capability，而另一个 in-flight change 仍在 MODIFIED 它——后者可能到 archive 才因 target 不存在而失败。退役 PR 必须盘点同 path 的 active changes，先完成/取消/重基线，而不是把 marker 当作抢占所有权。
 - **退役 vs orphan content（v1.10.0）**：即使 `retire_capabilities: true` 已声明，main spec 里的 `## Notes`、orphan paragraph/section 等未归属内容也会阻止删除。CLI 会列 blocking lines；团队要先决定迁入 `## Purpose`/canonical requirement 还是经 review 删除，不能让退役者单方面抹掉其他人的治理信息。
 
@@ -463,7 +463,7 @@ git push
 **解决**：
 ```bash
 # 1. 先回去 archive change-a
-/opsx:archive change-a
+/openspec-archive-change change-a
 git add openspec/
 git commit -m "Archive change-a (late)"
 git push
@@ -471,7 +471,7 @@ git push
 # 2. 如果 change-b 已经开始，需要重新生成 specs
 # 方式 1：重新 propose（如果还没写太多）
 rm -rf openspec/changes/change-b/
-/opsx:propose change-b
+/openspec-propose change-b
 
 # 方式 2：手动更新 delta spec（如果已经写了很多）
 # 编辑 openspec/changes/change-b/specs/
@@ -532,8 +532,8 @@ git pull
 git checkout -b bugfix/critical-issue
 
 # 3. 快速修复
-/opsx:propose fix-critical-issue
-/opsx:apply
+/openspec-propose fix-critical-issue
+/openspec-apply-change
 git add openspec/ src/
 git commit -m "Fix critical issue"
 git push -u origin bugfix/critical-issue
@@ -544,7 +544,7 @@ gh pr create --title "Fix critical issue"
 # 5. PR 合并后 archive
 git checkout main
 git pull
-/opsx:archive fix-critical-issue
+/openspec-archive-change fix-critical-issue
 git add openspec/
 git commit -m "Archive fix-critical-issue"
 git push
@@ -664,7 +664,7 @@ Blocking rule:
 
 ---
 
-## `/opsx:sync`：不等 archive 就把 spec 合并回主线
+## `/openspec-sync-specs`：不等 archive 就把 spec 合并回主线
 
 ### 为什么需要它
 
@@ -683,7 +683,7 @@ Bob:   add-qc-report    → 也改 specs/quality/spec.md（修改 Requirement: R
 
 ### 它做什么
 
-`/opsx:sync` 把当前 change 的全部 delta spec 按 ADDED/MODIFIED/REMOVED/RENAMED 语义合并到 `openspec/specs/` 的对应 main spec 中。关键行为：
+`/openspec-sync-specs` 把当前 change 的全部 delta spec 按 ADDED/MODIFIED/REMOVED/RENAMED 语义合并到 `openspec/specs/` 的对应 main spec 中。关键行为：
 
 - **智能合并，不是文件覆盖**——MODIFIED 只改提到的 requirement，不改的保留原样。ADDED 如果 main spec 已经有了同名 requirement 就当 MODIFIED 处理（sync workflow 模板原文：`If requirement already exists → update it to match (treat as implicit MODIFIED)`，`sync-specs.ts:114`。注意这是 **sync workflow 的行为**；程序化合并路径遇到同名 ADDED 会直接抛 `<spec> ADDED failed for header "### Requirement: X" - already exists`，`specs-apply.ts:577`）
 - **幂等**——同样的 delta 跑两次 sync，结果一样
@@ -702,7 +702,7 @@ Bob:   add-qc-report    → 也改 specs/quality/spec.md（修改 Requirement: R
 
 ### 一句话
 
-`/opsx:sync` 把 spec 的合并时机从 archive 提前到"现在"，让并行开发的人看到彼此已经确定的 spec 变更，减少 archive 时的冲突——它是多人协作中"spec 级别的 rebase"。
+`/openspec-sync-specs` 把 spec 的合并时机从 archive 提前到"现在"，让并行开发的人看到彼此已经确定的 spec 变更，减少 archive 时的冲突——它是多人协作中"spec 级别的 rebase"。
 
 ---
 

@@ -4,7 +4,7 @@
 
 Propose 的 mechanical apply gate（tasks.md 存在）只是一个文件系统事实。真正能开始实施的 artifacts 需要经过一轮或多轮 Explore 审视——把 artifacts 当成 Explore 的调查对象，拿真实代码去校验，发现 gap 就修，修完再审，直到 artifacts 足够具体、一致、可实现。
 
-> **补充。** `skip_specs: true` 是“本 change 没有 spec-level 行为变化”的正式 metadata，不是漏写 specs 的容错；此时 status 的 specs 是 `skipped`，迭代审视应确认这一判断本身成立。下面 `/opsx:*` 仍是 Claude 示例；Codex 以对应 `$openspec-*` skill 运行（装在 `.agents/skills/`）。
+> **补充。** `skip_specs: true` 是“本 change 没有 spec-level 行为变化”的正式 metadata，不是漏写 specs 的容错；此时 status 的 specs 是 `skipped`，迭代审视应确认这一判断本身成立。下面 `/openspec-*` 仍是 Claude 示例；Codex 以对应 `$openspec-*` skill 运行（装在 `.agents/skills/`）。
 
 ```text
 Propose 产出 artifacts（mechanical apply-ready）
@@ -32,7 +32,7 @@ Propose 产出 artifacts（mechanical apply-ready）
 | ITR-06 | 修 gap | 按 gap 类型选策略：直接编辑 / 宿主 update workflow / continue workflow / 回 Explore / 拆 change。 |
 | ITR-07 | 重审循环 | 修完回到 ITR-03 再审；有 gap 继续循环，无 gap 进入 ITR-08。通常 1-3 轮。 |
 | ITR-08 | 真正 apply-ready gate | scope 和代码一致、specs 可测、design 明确、tasks 具体、无矛盾。 |
-| ITR-09 | 交棒 apply | `/opsx:apply` 可以开始，artifacts 已经过代码校验。 |
+| ITR-09 | 交棒 apply | `/openspec-apply-change` 可以开始，artifacts 已经过代码校验。 |
 
 关键节点的细节单独展开在：
 
@@ -114,7 +114,7 @@ ITR-03 和 ITR-04 的输出汇总后，按六种类型分类。详细方法见 [
 | artifacts 不一致 | proposal 和 specs scope 不同 | proposal 写只做 GitHub OAuth，tasks 出现 Google OAuth |
 | 遗漏 artifact | DAG 允许缺失但实际需要 | 复杂 change 缺 design |
 
-修复策略取决于 gap 严重度：小修直接编辑文件或用宿主 update workflow（逐 artifact 确认后写入，并自动检查一致性），中修用 continue workflow 补 artifact，大修回 Explore 重新讨论 scope。Claude 示例是 `/opsx:update` / `/opsx:continue`；Codex 使用相应 `$openspec-*` skills。
+修复策略取决于 gap 严重度：小修直接编辑文件或用宿主 update workflow（逐 artifact 确认后写入，并自动检查一致性），中修用 continue workflow 补 artifact，大修回 Explore 重新讨论 scope。Claude 示例是 `/openspec-update-change` / `/openspec-continue-change`；Codex 使用相应 `$openspec-*` skills。
 
 ## Step 6：重审循环
 
@@ -140,7 +140,7 @@ ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
 - artifacts 之间没有矛盾（proposal scope = specs 覆盖 = tasks 范围）
 - 用真实代码校验过，没有"artifact 说存在但代码里不存在"的文件或接口
 
-满足所有条件后→ ITR-09：交棒宿主 apply workflow（Claude：`/opsx:apply`；Codex：`$openspec-apply-change`）。
+满足所有条件后→ ITR-09：交棒宿主 apply workflow（Claude：`/openspec-apply-change`；Codex：`$openspec-apply-change`）。
 
 ## 和四个阶段的衔接
 
@@ -197,8 +197,8 @@ ITR-03 审视 → ITR-04 校验 → ITR-05 发现 gap
 |---|---|
 | `src/core/templates/workflows/explore.ts` | Explore stance：可读代码、可审视架构、不可实施 |
 | `src/core/templates/workflows/propose.ts` | Propose 的 artifact 生成和 mechanical gate |
-| `src/core/templates/workflows/continue-change.ts` | `/opsx:continue` 的 artifact 补充机制 |
-| `src/core/templates/workflows/update-change.ts` | `/opsx:update` — 新增的 planning artifact 修订 workflow，不改代码 |
+| `src/core/templates/workflows/continue-change.ts` | `/openspec-continue-change` 的 artifact 补充机制 |
+| `src/core/templates/workflows/update-change.ts` | `/openspec-update-change` — 新增的 planning artifact 修订 workflow，不改代码 |
 | `src/core/artifact-graph/outputs.ts` | mechanical apply-ready 的判定（文件存在性） |
 | `src/commands/workflow/instructions.ts` | apply instructions 的 state 判定和 contextFiles |
 | `schemas/spec-driven/schema.yaml` | proposal/specs/design/tasks 的 template 和 instruction 定义 |

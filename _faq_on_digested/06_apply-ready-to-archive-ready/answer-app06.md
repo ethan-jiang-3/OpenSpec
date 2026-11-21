@@ -153,7 +153,7 @@ state: "all_done"
 
 ```text
 run tests / review changes
-then /opsx:archive
+then /openspec-archive-change
 ```
 
 archive 仍然需要用户显式触发。

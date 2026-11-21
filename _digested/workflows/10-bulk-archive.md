@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/bulk-archive-change.ts` → `getBulkArchiveChangeSkillTemplate()` + `getOpsxBulkArchiveCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:bulk-archive`；Codex 用 `$openspec-bulk-archive-change`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：技能 `openspec-bulk-archive-change`——Claude Code 等工具里 `/openspec-bulk-archive`，Codex 用 `$openspec-bulk-archive-change`。1.x 写作 `/opsx:bulk-archive`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-bulk-archive-change`（skill）/ `OPSX: Bulk Archive`（command）
 > **独立 CLI 命令**：无——没有 `openspec bulk-archive` CLI 命令。这是纯 agent 模板，批量编排 archive + sync + 冲突解决。
 > **profile**：custom（需显式启用，不在默认 core 里）

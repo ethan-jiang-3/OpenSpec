@@ -2,7 +2,7 @@
 
 ## 一句话
 
-`/opsx:apply` 不是”无论如何把 tasks 全部做完”。它有明确 guardrails：如果 planning 不完整、task 不清楚、设计被代码事实推翻、实施出错或用户中断，agent 应该暂停，而不是猜。
+`/openspec-apply-change` 不是”无论如何把 tasks 全部做完”。它有明确 guardrails：如果 planning 不完整、task 不清楚、设计被代码事实推翻、实施出错或用户中断，agent 应该暂停，而不是猜。
 
 ## blocked：不能开始实施
 
@@ -12,7 +12,7 @@
 
 | 原因 | 说明 | 下一步 |
 |---|---|---|
-| 缺 required artifact | `apply.requires` 中的 artifact 没有输出文件。 | 用 `/opsx:continue` 或 openspec-continue-change 补 artifact。 |
+| 缺 required artifact | `apply.requires` 中的 artifact 没有输出文件。 | 用 `/openspec-continue-change` 或 openspec-continue-change 补 artifact。 |
 | 缺 tracking file | schema 配了 `tracks: tasks.md`，但文件不存在。 | 生成或修复 tasks artifact。 |
 | tracking file 没有 checkbox | `tasks.md` 存在，但没有 `- [ ]` / `- [x]` task。 | 添加 tasks 或重新生成 tasks.md。 |
 
@@ -27,7 +27,7 @@ agent 不应该继续改代码，而应该：
 ```text
 总结完成状态
 建议运行测试 / review
-建议 /opsx:archive
+建议 /openspec-archive-change
 ```
 
 archive 会合并 specs 并移动 change，这是后续动作。

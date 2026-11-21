@@ -156,7 +156,7 @@ domain 不承担：继承、默认 requirement、自动聚合、自动加载所�
 openspec list
 ```
 
-如果有 change 处于 apply-ready（即已通过 `/opsx:apply` 实施了代码、等待 archive）、或已经走在 archive 流程中，先完成或取消它们。迁移期间不应该有并发的 archive 操作。
+如果有 change 处于 apply-ready（即已通过 `/openspec-apply-change` 实施了代码、等待 archive）、或已经走在 archive 流程中，先完成或取消它们。迁移期间不应该有并发的 archive 操作。
 
 ### Step 2：清点所有触及旧 path 的 active changes
 
@@ -392,7 +392,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ### agent 的 discovery 协议
 
-下面这份协议应写入项目的 AGENTS.md（见 Phase 3 Step 6）。它在每次 `/opsx:propose` 和 `/opsx:explore` 的 discovery 阶段执行——不是在 propose 之前单独跑一遍，而是 propose workflow 内部的前几步：
+下面这份协议应写入项目的 AGENTS.md（见 Phase 3 Step 6）。它在每次 `/openspec-propose` 和 `/openspec-explore` 的 discovery 阶段执行——不是在 propose 之前单独跑一遍，而是 propose workflow 内部的前几步：
 
 ```text
 1. 读 openspec/config.yaml → 知道全局不能破坏什么

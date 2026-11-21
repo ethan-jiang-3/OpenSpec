@@ -4,7 +4,7 @@
 
 Archive 是四个阶段里 TS 比重最高的。前三个阶段（Explore、Propose、Apply）都是 MD 主导、TS 提供状态和指令；archive 反了过来——TS 的 `ArchiveCommand.execute()` 程序化执行验证、合并、移动，MD（agent 或用户）只出现在决策点：选择 change、确认 warning、决定是否跳过 spec updates。
 
-但还有第二条路径：`/opsx:archive` agent 模板会在调 CLI 之前做 MD 主导的 pre-flight checks（status、sync assessment），形成一段短的 MD↔TS 交替前奏。
+但还有第二条路径：`/openspec-archive-change` agent 模板会在调 CLI 之前做 MD 主导的 pre-flight checks（status、sync assessment），形成一段短的 MD↔TS 交替前奏。
 
 ## 时序图（双路径）
 
@@ -121,9 +121,9 @@ sequenceDiagram
 
     %% ===== Path B: OPSX 模板 =====
     rect rgb(250, 255, 250)
-        Note over User,FS: ══════ 路径 B · /opsx:archive（agent 模板，MD↔TS 交替前奏） ══════
+        Note over User,FS: ══════ 路径 B · /openspec-archive-change（agent 模板，MD↔TS 交替前奏） ══════
 
-        User->>MD: /opsx:archive [change-name]
+        User->>MD: /openspec-archive-change [change-name]
         MD->>MD: 读 archive skill template
 
         rect rgb(245, 245, 255)
@@ -163,7 +163,7 @@ sequenceDiagram
 | Apply | 高 | 中 | MD 实施代码；TS 提供 gate 和进度追踪 |
 | **Archive** | **低** | **极高** | TS 程序化执行 validate → merge → move；MD 只在决策点出现 |
 
-这不是设计缺陷，而是 archive 的工程本质决定的：merge delta specs 到 main specs 是一个机械操作（RENAMED → REMOVED → MODIFIED → ADDED），不需要智力判断。真正需要智力的是 "merge 之前 delta 和 main 是否已经合理同步"——这个判断在 `/opsx:archive` 路径里由 MD 的 sync assessment 完成，在 CLI 直调路径里由用户承担。
+这不是设计缺陷，而是 archive 的工程本质决定的：merge delta specs 到 main specs 是一个机械操作（RENAMED → REMOVED → MODIFIED → ADDED），不需要智力判断。真正需要智力的是 "merge 之前 delta 和 main 是否已经合理同步"——这个判断在 `/openspec-archive-change` 路径里由 MD 的 sync assessment 完成，在 CLI 直调路径里由用户承担。
 
 ## 关键交替模式
 
@@ -261,7 +261,7 @@ archive 的 guard 不是二元 "通过/不通过"。它有明确分层：
 | `src/core/parsers/requirement-blocks.ts` | delta spec parsing、requirement block 解析 |
 | `src/core/parsers/spec-structure.ts` | main spec structure guard（delta header 混入检测） |
 | `src/utils/task-progress.ts` | archive 阶段 task checkbox 统计 |
-| `src/core/templates/workflows/archive-change.ts` | `/opsx:archive` 模板层行为 |
+| `src/core/templates/workflows/archive-change.ts` | `/openspec-archive-change` 模板层行为 |
 | `src/core/templates/workflows/sync-specs.ts` | agent-driven sync 模板 |
 | [`answer-arc03.md`](answer-arc03.md) | CLI 主流程和 flags |
 | [`answer-arc07.md`](answer-arc07.md) | delta merge 算法细节 |

@@ -89,7 +89,7 @@ apply 阶段需要的 artifact 输出文件存在
 
 ## `instructions apply` 会再做一层 apply 检查
 
-当用户运行 `/opsx:apply`，apply skill 会调用：
+当用户运行 `/openspec-apply-change`，apply skill 会调用：
 
 ```bash
 openspec instructions apply --change "<name>" --json

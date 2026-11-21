@@ -25,7 +25,7 @@ sequenceDiagram
     %% ===== Phase 0: 入口 =====
     rect rgb(240, 248, 255)
         Note over User,FS: ══════ Phase 0 · 入口 · 选择 change ══════
-        User->>MD: /opsx:apply [change-name]
+        User->>MD: /openspec-apply-change [change-name]
         MD->>MD: 读 apply skill template
         MD->>MD: 确定 change：<br/>① 用户显式传入 name<br/>② 从对话上下文推断<br/>③ 唯一 active change → 自动选中<br/>④ 多个 → openspec list → 让用户选
         MD-->>User: "Using change: add-oauth-login"
@@ -54,12 +54,12 @@ sequenceDiagram
         rect rgb(255, 240, 240)
             Note over User,FS: ══════ blocked · 不能实施 ══════
             MD->>MD: 原因：缺 required artifact /<br/>缺 tasks.md / tasks.md 无 checkbox
-            MD-->>User: "Apply blocked。<br/>建议 /opsx:continue 补 artifact。"
+            MD-->>User: "Apply blocked。<br/>建议 /openspec-continue-change 补 artifact。"
         end
     else state = "all_done"
         rect rgb(240, 255, 240)
             Note over User,FS: ══════ all_done · 无需实施 ══════
-            MD-->>User: "所有 tasks 已完成。<br/>建议 review + test 后<br/>/opsx:archive。"
+            MD-->>User: "所有 tasks 已完成。<br/>建议 review + test 后<br/>/openspec-archive-change。"
         end
     else state = "ready"
         rect rgb(245, 255, 245)
@@ -134,7 +134,7 @@ sequenceDiagram
                 FS-->>TS: 全部 - [x]
                 TS->>TS: complete == total → state: "all_done"
                 TS-->>MD: state: "all_done",<br/>progress: {total:N, complete:N, remaining:0}
-                MD-->>User: "Implementation Complete<br/>Change: add-oauth-login<br/>N/N tasks complete<br/>建议 review + test 后<br/>/opsx:archive"
+                MD-->>User: "Implementation Complete<br/>Change: add-oauth-login<br/>N/N tasks complete<br/>建议 review + test 后<br/>/openspec-archive-change"
             end
         end
     end

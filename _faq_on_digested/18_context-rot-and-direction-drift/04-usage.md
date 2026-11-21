@@ -18,7 +18,7 @@ expanded（可选）   + new  continue  ff  verify  bulk-archive  onboard
                   启用：openspec config profile  →  openspec update
 ```
 
-**所以开箱没有 `/opsx:verify`**，也没有 `new`/`continue`/`ff`/`bulk-archive`/`onboard`。
+**所以开箱没有 `/openspec-verify-change`**，也没有 `new`/`continue`/`ff`/`bulk-archive`/`onboard`。
 
 > **注意**：CLI 命令（`validate`/`show`/`status`/`instructions`/`list`/`archive`/`doctor`/`context`/`store`/`workset`/`schema`…）**不受 profile 影响**，始终可用。profile 只决定投递哪些 skill / slash command。
 
@@ -30,7 +30,7 @@ expanded（可选）   + new  continue  ff  verify  bulk-archive  onboard
 
 ```text
 "Because the plan lives in files (not only in chat history), you can clear your
- context, start a fresh AI session, and pick up with `/opsx:apply`; it reads the
+ context, start a fresh AI session, and pick up with `/openspec-apply-change`; it reads the
  artifacts and resumes from the first unchecked task. … Keeping a clean context
  window also produces better results; clear it before implementation."
 ```
@@ -77,7 +77,7 @@ schema 明确要求"摘要看完必须读全文再决定改什么"——但那�
 
 ---
 
-## 5 · 走 `/opsx:update` 做双向复核，不要单文件孤立地改 `[软]`（core）
+## 5 · 走 `/openspec-update-change` 做双向复核，不要单文件孤立地改 `[软]`（core）
 
 这是自带能力里**唯一**的一致性通道。它允许"改后面回头改前面"、不推进 frontier、不碰代码、逐条确认、已自洽则不修订。见 §[03 B2](03-direction-drift.md)。
 
@@ -117,7 +117,7 @@ openspec validate --all             # 顺带读 INFO：Archive would refuse this
 
 ---
 
-## 9 · 想要 `/opsx:verify` 就开 expanded profile `[软]`
+## 9 · 想要 `/openspec-verify-change` 就开 expanded profile `[软]`
 
 ```bash
 openspec config profile      # 选 expanded

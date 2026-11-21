@@ -78,7 +78,7 @@
 记录在此以免被后续笔记复用：
 
 1. 曾把 `test/vocabulary-sweep.test.ts` 当作"防概念回流的机制"——它保护的是 **OpenSpec 自己的源码**，对用户项目无作用。
-2. 曾把 `/opsx:verify` 当默认能力讲——它**不在 core profile**（见 §[04](04-usage.md)）。
+2. 曾把 `/openspec-verify-change` 当默认能力讲——它**不在 core profile**（见 §[04](04-usage.md)）。
 3. 曾把 `work/`、`initiatives/`、`runbook.md`、`deletion-ledger.md` 混入"机制"清单——它们是**项目管理产物**，不是产品能力。
 4. 曾断言"方向完全没有机器表示"——**这条在本次 review 中被推翻**：自定义 schema 可以把 `direction` 变成一等 artifact 并接入 DAG 门控，见 §[03.4](03-direction-drift.md)。准确说法是"**内置 schema 里没有方向概念**"。
 

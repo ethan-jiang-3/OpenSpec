@@ -13,12 +13,12 @@ change name / description
   -> agent 写 artifact 文件
   -> status loop 重新解释文件状态
   -> applyRequires 满足
-  -> /opsx:apply 可以开始
+  -> /openspec-apply-change 可以开始
 ```
 
 OpenSpec CLI 不写 proposal/specs/design/tasks 的创造性内容。CLI 负责创建 change 容器、解释 schema 和文件状态、给出路径和 instructions；agent 负责读取上下文、生成 artifact 内容并写文件。
 
-> **当前边界。** `/opsx:apply` 是 Claude 写法；Codex 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；若 resolved schema 根本不生成 specs artifact，`new change` 会自动写入该 marker。真实行为变化仍不能借 marker 绕过 specs。`openspec instructions apply` 在无 delta specs 且未声明 `skip_specs` 时会警告，被前置 artifact 挡住时给出完整 `missingPrerequisites` 缺失链。
+> **当前边界。** `/openspec-apply-change` 是 Claude 写法；Codex 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。同级 ready 的 `specs` 与 `design` 仍可并行，但内置 schema 的推荐显示顺序是 specs 后 design。没有 spec-level 行为变化时，可在 `.openspec.yaml` 声明 `skip_specs: true`；若 resolved schema 根本不生成 specs artifact，`new change` 会自动写入该 marker。真实行为变化仍不能借 marker 绕过 specs。`openspec instructions apply` 在无 delta specs 且未声明 `skip_specs` 时会警告，被前置 artifact 挡住时给出完整 `missingPrerequisites` 缺失链。
 
 ![Propose 到 apply-ready 的流程](figures/propose-to-apply-ready.svg)
 
@@ -352,7 +352,7 @@ resolveArtifactOutputs(changeDir, "tasks.md").length > 0
 
 ## Step 8：进入 apply 前会发生什么
 
-当用户运行宿主 apply workflow（Claude 示例为 `/opsx:apply`），它会：
+当用户运行宿主 apply workflow（Claude 示例为 `/openspec-apply-change`），它会：
 
 ```bash
 openspec status --change "<name>" --json
@@ -404,7 +404,7 @@ planning artifacts 已经足够让 apply skill 读取上下文和任务清单
 
 ### 误区 4：apply-ready 等于实现完成
 
-不是。apply-ready 只是“可以开始 implementation”。实现完成发生在 `/opsx:apply` 逐项完成 tasks 后。
+不是。apply-ready 只是“可以开始 implementation”。实现完成发生在 `/openspec-apply-change` 逐项完成 tasks 后。
 
 ### 误区 5：`context` 和 `rules` 应该写进 artifact
 

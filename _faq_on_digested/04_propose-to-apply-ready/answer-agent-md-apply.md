@@ -6,7 +6,7 @@ OpenSpec 的 apply runtime 可以借给 agent、Markdown、skill、command 这�
 
 | 路径 | 改动成本 | 适用场景 | 主要风险 | 推荐度 |
 |---|---:|---|---|---|
-| [01 不大改](answer-agent-md-apply-01-no-change.md) | 最低 | 想马上试，用默认 `spec-driven` 跑 agent/MD 任务 | 概念名和默认 `/opsx:apply` 文案偏代码/spec | 可试，但不适合长期沉淀 |
+| [01 不大改](answer-agent-md-apply-01-no-change.md) | 最低 | 想马上试，用默认 `spec-driven` 跑 agent/MD 任务 | 概念名和默认 `/openspec-apply-change` 文案偏代码/spec | 可试，但不适合长期沉淀 |
 | [02 稍微改](answer-agent-md-apply-02-light-touch.md) | 中低 | 想低成本稳定使用，不想碰 OpenSpec 源码 | 仍受默认 artifact 名称约束 | **推荐第一步** |
 | [03 项目级 schema 大改](answer-agent-md-apply-03-project-schema.md) | 中等 | agent/skill/Markdown 已是长期主流程，需要自己的 artifact DAG | 需要维护 schema/templates | 推荐作为第二阶段 |
 
@@ -24,7 +24,7 @@ OpenSpec 的 apply runtime 可以借给 agent、Markdown、skill、command 这�
 
 证据在 `src/commands/workflow/instructions.ts` 的 `generateApplyInstructions()`：apply runtime 从 schema 读取 `apply.requires`、`apply.tracks`、`apply.instruction`，再把已有 artifact 输出整理成 `contextFiles`。也就是说，CLI 不硬编码“只能改程序代码”。
 
-限制在 `src/core/templates/workflows/apply-change.ts`：默认 `/opsx:apply` / `openspec-apply-change` 模板仍带有代码实现措辞，例如 “Make the code changes required”。这属于 tool delivery 文案偏置，不是 runtime 硬限制。
+限制在 `src/core/templates/workflows/apply-change.ts`：默认 `/openspec-apply-change` / `openspec-apply-change` 模板仍带有代码实现措辞，例如 “Make the code changes required”。这属于 tool delivery 文案偏置，不是 runtime 硬限制。
 
 所以问题不是“能不能用”，而是“你愿意在哪一层做多少适配”：
 

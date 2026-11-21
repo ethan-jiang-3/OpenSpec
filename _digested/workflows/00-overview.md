@@ -54,9 +54,9 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 | onboard | `/opsx:onboard` | `openspec-onboard` | 无 | custom |
 | **update** | `/opsx:update [name]` | `openspec-update-change` | 无 | **core**（新增；现已进入默认集） |
 
-> 表中 `/opsx:*` 是 command adapter（例如 Claude Code）的示例，不是通用调用语法。Codex 使用 `$openspec-*`；Zed Agent 使用 `/openspec-*` 或 `@openspec-*`。Codex、Zed Agent 与 vendor-neutral `agents` 三方共享 `.agents/skills/`（见 `../mechanisms/02-tool-delivery.md`）；其他 host 应以实际安装的 command/skill 名为准。
+> 表中 `/opsx:*` 一列是 **1.x 的历史形态**（command adapter 时代，例如 Claude Code 的 `/opsx:propose`），v2.0.0 起 command 文件不再生成，该列只用于读旧项目。**当前唯一形态是 skill**：Claude Code 等工具里按 `/openspec-<name>` 调用，Codex 用 `$openspec-<name>`，Zed Agent 用 `/openspec-*` 或 `@openspec-*`；也可以直接用自然语言要求（「帮我 propose 一个 change」），由 agent 自行选择技能。所有工具的 skills 只有一份真身在 `.agents/skills/`，其余目录放指向它的链接（建不了链接退化为拷贝），见 `../mechanisms/02-tool-delivery.md`。
 
-> **v1.17.0 状态注记：command 文件已标记弃用，但本版仍然可用。** 上表左右两列（`/opsx:*` 与 `openspec-*`）描述的都是**当前 release 的状态**：`/opsx:*` 命令文件仍会生成、仍能触发；同一份 workflow 也仍然有等价的 skill。OpenSpec 2.0 才停止生成 command 文件，届时统一用 skill 调用（细节见 issue #2022）。`openspec update` 会在配置仍会得到 command 文件时打印一条弃用提示，并给出 `openspec config set delivery skills && openspec update` 的提前切换命令。
+> **v2.1.1 状态注记：command 文件已移除。** `delivery` 配置项随之退役（1.x 的 skills / commands / both 三态不再存在），一律装 skills。升级旧项目时 `openspec update` 会按指纹清理早期版本生成的 command 文件：没人改过的删掉，改过的保留并列出。**这是 packaging 的变化，不是 workflow 的变化**——两列指向的是同一份 template。
 >
 > 注意不要让这层状态影响对**机制**的理解：command 与 skill 只是同一份 template 的两种 packaging，两者内部都在调用 CLI（`openspec instructions` / `openspec status` / `openspec archive` …）。**精确的校验与合并发生在 CLI，不发生在 prompt 里。**
 

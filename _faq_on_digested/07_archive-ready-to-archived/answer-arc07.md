@@ -186,7 +186,7 @@ Validator.validateSpecContent(specName, rebuilt)
 
 这个边界要说精确：全量预构建和全量 rebuilt validation 都在 mutation 前完成。进入 mutation 后若任一写入、retirement 或最终 move 失败，CLI 用 snapshots 恢复已尝试的主-spec mutation，并在需要时把 change 从 archive 移回 active。它是尽力事务式回滚；并发修改导致 fingerprint 不再匹配时会显式报告 rollback failure，而不是静默覆盖现场。
 
-## 和 `/opsx:sync` 的差异
+## 和 `/openspec-sync-specs` 的差异
 
 CLI archive 的 merge 是 programmatic merge：
 
@@ -194,13 +194,13 @@ CLI archive 的 merge 是 programmatic merge：
 - 无法智能理解“只新增一个 scenario”。
 - 结果可预测，规则严格。
 
-`/opsx:sync` 是 agent-driven merge：
+`/openspec-sync-specs` 是 agent-driven merge：
 
 - agent 读 delta spec 和 main spec。
 - 可以智能合并局部变化。
 - 依赖 agent 判断和用户 review。
 
-所以两者不是同一个机制。`/opsx:archive` 模板会在 archive 前做 sync assessment，就是为了避免用户误以为移动 change 等于 specs 一定已经合理同步。
+所以两者不是同一个机制。`/openspec-archive-change` 模板会在 archive 前做 sync assessment，就是为了避免用户误以为移动 change 等于 specs 一定已经合理同步。
 
 ## 参考来源
 

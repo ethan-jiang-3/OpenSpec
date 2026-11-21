@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-- **计划状态**：Phase A 完成、E1/E2 已跑；Phase B–E 其余未开始
+- **计划状态**：Phase A 完成、Phase B–D 主要落点已回填、E1/E2 已跑；剩余 B9/C5/C6/D4/D5 校验项与 E3–E7 收尾未完成
 - **本地分支**：`ethan`
 - **旧基线**：OpenSpec `v1.17.0`，tag/commit `579fcac5`
 - **目标基线**：OpenSpec `v2.1.1`，tag/commit `0c737dc1`
@@ -93,30 +93,30 @@ git diff --cached --name-only --diff-filter=A -- . ":!_\*" ":!CONTEXT.md"
 
 ### Phase B：`_digested/` 更新
 
-- [ ] B1 `README.md`：SSOT 基线行 → `v2.1.1`（`0c737dc1`）
-- [ ] B2 `spec_cli/01-human-facing-cli.md`（🔴）：`update` 的 2.0 行为；命令文件已移除；`delivery` 退役
-- [ ] B3 安装与位置（🔴）：`.agents/skills/` 单份真身 + 链接；Windows 前提；全局作用域
-- [ ] B4 `system/06-源码地图与扩展点.md`（🔴）：新增 `skill-installer.ts`、`global-skills.ts`、`known-projects.ts`、`shared-skill-install.ts`、`skill-links.ts`、`retired-tools.ts`、`project-skills-scope.ts`、`project-dir.ts`；删除 `optional-workflow.ts`；**写明适配器层只做路径解析**
-- [ ] B5 `mechanisms/`（🟡）：`skills` 包依赖与安装流程；指纹设施在 `skill-links` 里的复用
-- [ ] B6 `workflows/`（🔴）：命令→技能的对应表；`/openspec-<name>` 调用形式
-- [ ] B7 工具面（🟡）：退役机制与 Amazon Q → Kiro
-- [ ] B8 `_coverage/`（🟡）：计数更新（249 files / 6510 tests）；说明测试数为何下降
+- [x] B1 `README.md`：SSOT 基线行 → `v2.1.1`（`0c737dc1`）
+- [x] B2 `spec_cli/01-human-facing-cli.md`（🔴）：`update` 的 2.0 行为；命令文件已移除；`delivery` 退役
+- [x] B3 安装与位置（🔴）：`.agents/skills/` 单份真身 + 链接；Windows 前提；全局作用域
+- [x] B4 `system/06-源码地图与扩展点.md`（🔴）：新增 `skill-installer.ts`、`global-skills.ts`、`known-projects.ts`、`shared-skill-install.ts`、`skill-links.ts`、`retired-tools.ts`、`project-skills-scope.ts`、`project-dir.ts`；删除 `optional-workflow.ts`；**写明适配器层只做路径解析**
+- [x] B5 `mechanisms/`（🟡）：`skills` 包依赖与安装流程；指纹设施在 `skill-links` 里的复用
+- [x] B6 `workflows/`（🔴）：命令→技能的对应表；`/openspec-<name>` 调用形式
+- [x] B7 工具面（🟡）：退役机制与 Amazon Q → Kiro
+- [x] B8 `_coverage/`（🟡）：计数更新（249 files / 6510 tests）；说明测试数为何下降
 - [ ] B9 checkpoint：抽查 B2/B3/B4；`grep` 确认没有残留「已标记弃用」「delivery 三态」
 
 ### Phase C：`_faq_on_digested/` 更新
 
-- [ ] C1 `01_openspec-executable`（🔴）：Node 22.20；安装层变化
-- [ ] C2 `12_upstream-roadmap-and-issues`（🟡）：版本表到 2.1.1；链接 0015
-- [ ] C3 `16_upgrade-openspec-cli-and-projects`（🔴）：2.0 升级步骤、命令文件处理、改过的文件保留、Windows 链接
-- [ ] C4 `17_review-and-validation-surface`（🟡）：2.1.1 的 validate/archive 修复
+- [x] C1 `01_openspec-executable`（🔴）：Node 22.20；安装层变化
+- [x] C2 `12_upstream-roadmap-and-issues`（🟡）：版本表到 2.1.1；链接 0015
+- [x] C3 `16_upgrade-openspec-cli-and-projects`（🔴）：2.0 升级步骤、命令文件处理、改过的文件保留、Windows 链接
+- [x] C4 `17_review-and-validation-surface`（🟡）：2.1.1 的 validate/archive 修复
 - [ ] C5 其余目录 `[~]` 核实并写依据；`README.md` 基线脚注
 - [ ] C6 checkpoint：抽查 C3/C4
 
 ### Phase D：`_openspec_handbook/` 更新
 
-- [ ] D1 `00-index.md`（🔴）：版本表加 2.0.0 / 2.1.0 / 2.1.1；链接 0015
-- [ ] D2 `99-FAQ-常见问题.md`（🔴）：命令文件没了怎么办、skills 在哪、怎么全局装
-- [ ] D3 `50-实战-claude-code 里的 openspec 到底怎么落地.md`（🔴）：调用形式从 `/opsx:*` 改为技能名
+- [x] D1 `00-index.md`（🔴）：版本表加 2.0.0 / 2.1.0 / 2.1.1；链接 0015
+- [x] D2 `99-FAQ-常见问题.md`（🔴）：命令文件没了怎么办、skills 在哪、怎么全局装
+- [x] D3 `50-实战-claude-code 里的 openspec 到底怎么落地.md`（🔴）：调用形式从 `/opsx:*` 改为技能名
 - [ ] D4 其余章节 `[~]` 核实并写依据
 - [ ] D5 checkpoint：全局 grep 无 `/opsx:` 的现行用法（历史溯源除外）
 
@@ -143,4 +143,6 @@ git diff --cached --name-only --diff-filter=A -- . ":!_\*" ":!CONTEXT.md"
 - **源码同步**：`git merge --squash @fission-ai/openspec@2.1.1`，56 处冲突全部共享文件、全部取上游；三步验收中第二、三步都触发告警并已修正；同步提交 `1fb874fb`，`package.json`=2.1.1。
 - **验证（E1/E2）**：`pnpm install --frozen-lockfile` 成功（2.9s，`prepare` 顺带构建）；`node bin/openspec.js --version` = `2.1.1`；`pnpm test` **248 passed | 1 skipped（249 files）、6491 passed | 19 skipped（6510 tests）**，122.91s。相对上一轮基线（242 files / 6947 tests）测试**净减 437 个**，因命令生成能力的覆盖随代码一起删除。
 - **审计（Phase A）**：确认 2.0 删掉了命令生成能力但保留 34 个适配器做路径解析；安装层改为依赖 `skills` 包；0015 写入。
-- **下一步**：Phase B–D 三套资料回填。
+- **Phase B–D（2026-11-21）**：`_digested` 回填基线、命令移除、skills 单份共享、delivery 退役、源码地图 8 个新模块与适配器新职责、12 个 workflow 的调用头；`_faq_on_digested` 回填 Node 22.20、2.x 升级段、校验面 2.1.1 三项、版本表 3 行与 2.0 五步路线图状态；`_openspec_handbook` 回填版本表、命令速查改技能名、Q27h、01/50/52/55/90 的 `/opsx:*` → `/openspec-*`。全库相对链接 0 断链。
+- **一处口径反转**：`_coverage/doc-assertions.md` 里「不得写已移除」的旧口径已作废并改写——那是 v1.17.0 轮的要求，2.0 起 command 文件真的没了。
+- **下一步**：B9/C5/C6/D4/D5 的抽查与全局 grep，再走 E3–E7。

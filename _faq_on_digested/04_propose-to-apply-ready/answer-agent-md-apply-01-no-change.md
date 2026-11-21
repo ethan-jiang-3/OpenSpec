@@ -27,7 +27,7 @@ proposal -> specs/design -> tasks -> apply
 | `specs/**/*.md` | 如果确实有”capability 基线”要维护，就写 behavior requirements；如果只是一次性内容产物，可以写得很轻。 |
 | `tasks.md` | 明确列出要创建/修改的 Markdown、`SKILL.md`、command 模板、验证文件。 |
 
-最关键的是 `tasks.md`。默认 `/opsx:apply` 会根据 checkbox 执行任务，所以 task 必须把目标文件说清楚：
+最关键的是 `tasks.md`。默认 `/openspec-apply-change` 会根据 checkbox 执行任务，所以 task 必须把目标文件说清楚：
 
 ```markdown
 - [ ] 1.1 Create `skills/research-agent/SKILL.md` with trigger rules, workflow steps, and guardrails — verify: inspect every required section
@@ -57,7 +57,7 @@ instruction
 这条路的代价是“概念不贴脸”：
 
 - `proposal/specs/design/tasks` 这套命名仍然偏软件 change。
-- 默认 `/opsx:apply` 文案仍然偏代码。
+- 默认 `/openspec-apply-change` 文案仍然偏代码。
 - `archive` 仍然主要围绕 spec delta merge 和 move change dir。
 - `config.yaml` 和 schema 都没给非代码 apply 提供更强约束。
 

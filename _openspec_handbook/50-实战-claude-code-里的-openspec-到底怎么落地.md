@@ -2,6 +2,8 @@
 
 > 这一篇回答的是"放进 Claude Code 以后，它到底长什么样"。
 
+> **v2.1.1 状态注记（2026-11）**：本篇大量示例用 `/opsx:propose` 这种**命令文件**写法，那是 OpenSpec 1.x 的入口。**2.0 起命令文件已移除**，入口统一成同名 skill：在 Claude Code 里按 `/openspec-propose` 触发（Codex 用 `$openspec-propose`），也可以直接描述任务让 agent 自己选。skills 的真身只有一份，在 `.agents/skills/`，`.claude/skills/` 下是指向它的链接（建不了链接时是拷贝）。下文的命令文件路径与调用形式，请按这个前提读。
+
 ---
 
 ## 先把最容易想错的地方说透
@@ -102,9 +104,9 @@ openspec/
 
 - `openspec/` 保存事实
 - `.claude/skills/` 保存 agent 可发现的 workflow 说明
-- `.claude/commands/opsx/` 保存用户可触发的 slash command 入口
+- `.claude/skills/openspec-*/` 是用户可触发的技能入口（指向 `.agents/skills/` 真身的链接）；1.x 的 `.claude/commands/opsx/` 已在 2.0 移除
 
-这里的 `opsx` 只是 OpenSpec 在 Claude Code 里的命令命名空间。它不是一套独立于 OpenSpec 的系统，也不是另一个 CLI；`/opsx:propose` 这样的入口最终仍然围绕 `openspec` CLI 和 `openspec/` 文件状态工作。
+`opsx` 是 OpenSpec 1.x 在 Claude Code 里的命令命名空间（2.0 起已随命令文件一起退出），它不是一套独立于 OpenSpec 的系统，也不是另一个 CLI；`/opsx:propose`（现为 `/openspec-propose` 技能）这样的入口最终仍然围绕 `openspec` CLI 和 `openspec/` 文件状态工作。
 
 ### 这层怎么生成
 
@@ -163,7 +165,7 @@ my-app/
 graph TB
     subgraph Claude_Code_入口层
     A[".claude/skills/<br/>（OpenSpec skills）"]
-    B[".claude/commands/opsx/<br/>（/opsx:* slash commands）"]
+    B[".claude/skills/openspec-*<br/>（链接到 .agents/skills/ 真身）"]
     end
 
     subgraph 项目事实层
@@ -224,7 +226,7 @@ sequenceDiagram
 所以 Claude Code 本身不是 OpenSpec。
 它只是 OpenSpec 被人触发、被模型读取的宿主环境之一。
 
-同样，`/opsx:propose` 也不是 `openspec propose` 的别名。OpenSpec CLI 里没有一个单独的 `propose` 子命令；Claude Code 触发 `/opsx:propose` 后，会按照 skill/command 里的 workflow 说明调用 `openspec new change`、`openspec status`、`openspec instructions` 等 CLI 能力。然后由 Claude Code 读项目代码、生成 Markdown artifacts、写回 `openspec/changes/`。
+同样，`/openspec-propose`（1.x 写作 `/opsx:propose`）也不是 `openspec propose` 的别名。OpenSpec CLI 里没有一个单独的 `propose` 子命令；Claude Code 触发该技能后，会按照 skill/command 里的 workflow 说明调用 `openspec new change`、`openspec status`、`openspec instructions` 等 CLI 能力。然后由 Claude Code 读项目代码、生成 Markdown artifacts、写回 `openspec/changes/`。
 
 ---
 
@@ -235,7 +237,7 @@ Claude Code 下通常会同时投递 skills 和 commands。
 | 层 | 例子 | 作用 |
 |---|---|---|
 | skill | `.claude/skills/openspec-propose/SKILL.md` | 告诉 Claude Code：什么时候该使用这个 OpenSpec workflow，以及执行步骤是什么 |
-| command | `.claude/commands/opsx/propose.md` | 给用户一个 `/opsx:propose` 入口 |
+| skill | `.claude/skills/openspec-propose/`（链接到 `.agents/skills/`） | 给用户一个 `/openspec-propose` 入口（1.x 是 `.claude/commands/opsx/propose.md`） |
 | CLI | `openspec status --change <name> --json`、`openspec instructions <artifact> --change <name> --json` | 返回真实状态、路径、依赖、模板、context/rules |
 | 文件系统 | `openspec/specs/`、`openspec/changes/` | 保存项目事实和 change 状态 |
 

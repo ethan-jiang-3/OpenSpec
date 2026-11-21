@@ -23,7 +23,7 @@
 **A**: 不是。OpenSpec 是整套机制；`opsx` 是 Claude 等 adapter 的一个 workflow command 命名空间，不是所有 agent 工具的通用语法。
 
 - `openspec`：终端 CLI，例如 `openspec init`、`openspec status --change <name> --json`、`openspec archive <name>`
-- `/opsx:*`：Claude 等宿主里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
+- `/openspec-*`：Claude 等宿主里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
 - `$openspec-*`：Codex v1.8.0 的 skills-only 入口（装在 `.agents/skills/`），例如 `$openspec-propose`、`$openspec-apply-change`
 - `.claude/commands/opsx/`：Claude Code 里保存这些入口文件的位置
 
@@ -35,7 +35,7 @@
 - CLI 里没有 `openspec propose` 这个等价命令
 - 对应的底层步骤通常是 `openspec new change <name>`，再用 `openspec status --change <name> --json` 和 `openspec instructions <artifact> --change <name> --json` 生成 artifacts
 - 机器协议层面（status/instructions 返回什么、agent 怎么跑多步），详见 [90 附录·给机器看的 agent 协议](90-附录-给机器看的-agent-协议.md)
-- **状态注记（v1.17.0）**：`/opsx:*` 这类**命令文件**已标记弃用，2.0 起不再生成；同一份 workflow 的 **skill**（如 `openspec-propose`）会保留，两者内容几乎相同。所以“宿主 workflow 和 CLI 的关系”这条结论不变——变的只是宿主侧的调用形式。详见 [Q27h](#q27h-提示说command-files-are-deprecated-and-go-away-in-openspec-20我的-cli-要没了)。
+- **状态注记（v2.1.1）**：`/openspec-*` 这类**命令文件**已移除，2.0 起不再生成；同一份 workflow 的 **skill**（如 `openspec-propose`）保留，两者内容几乎相同。所以“宿主 workflow 和 CLI 的关系”这条结论不变——变的只是宿主侧的调用形式。现在用 `/openspec-propose`（Claude Code 等）或 `$openspec-propose`（Codex），也可以直接描述任务让 agent 自己选。详见 [Q27h](#q27h-提示说command-files-are-deprecated-and-go-away-in-openspec-20我的-cli-要没了)。
 
 ### Q6: 我必须按 propose → apply → archive 的顺序吗？
 **A**: 不是必须的。这是推荐顺序，但你可以：
@@ -299,9 +299,11 @@ npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction`
 
 `/opsx:propose` 这类东西是 AI 工具里的斜杠命令，由 `.claude/commands/opsx/propose.md` 这种 markdown 文件定义；`openspec validate` / `archive` / `update` / `instructions` 是真正的 CLI 子命令，一个都没少，2.0 也不动它们。
 
-同一份 workflow 本来就有两种 packaging：command 文件（`/opsx:propose`）和 skill（`openspec-propose`），内容几乎相同，**内部都是在指挥 CLI**。2.0 停止生成前者，保留后者，并将技能收成 `.agents/skills/` 一份真身 + 14 个工具的软链。
+同一份 workflow 本来就有两种 packaging：command 文件（`/opsx:propose`）和 skill（`openspec-propose`），内容几乎相同，**内部都是在指挥 CLI**。2.0 已停止生成前者，保留后者，并把技能收成 `.agents/skills/` 一份真身 + 各工具目录的链接（建不了链接退化为拷贝）。
 
-**v1.17.0 仍然生成命令文件，`/opsx:*` 仍然可用**，提示是预告。想提前适应就按提示跑 `openspec config set delivery skills && openspec update`——它只删 OpenSpec 生成的命令文件，你改过的保留并列出。
+**这条提示已经过时了**：它在 v1.17.0 是预告，v2.0.0 起 command 文件**真的不再生成**。升级时 `openspec update` 会按内容指纹清理早期版本留下的 command 文件——没人改过的删掉，你改过的保留并列出。`delivery` 配置项也随之退役，不要再写 `openspec config set delivery ...`。
+
+**怎么调用**：Claude Code 等工具里 `/openspec-propose`，Codex 里 `$openspec-propose`；或者直接说「帮我 propose 一个 change」，由 agent 按技能描述自己选。详见 [0015](../_digested/_change_log/0015-v1.17.0-to-v2.1.1.md)。
 
 ### Q27i: 升级后 `validate` 突然报错了，是回归吗？
 **A**: 大概率是 v1.16 的三条收紧，修的是“看起来通过、实际什么都没查”的 bug。分三个级别看：

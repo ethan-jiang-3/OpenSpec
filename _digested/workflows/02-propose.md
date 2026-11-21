@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/propose.ts` → `getOpsxProposeSkillTemplate()` + `getOpsxProposeCommandTemplate()`
 
-> **调用方式**：command adapter 可为 `/opsx:propose <change-name 或描述>`；Codex 用 `$openspec-propose`。下文的 `/opsx:` 仅表示前者。
+> **调用方式**：技能 `openspec-propose` <change-name 或描述>——Claude Code 等工具里 `/openspec-propose` <change-name 或描述>，Codex 用 `$openspec-propose`。1.x 写作 `/opsx:propose`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-propose`（skill）/ `OPSX: Propose`（command）
 > **独立 CLI 命令**：无——propose 内调 `openspec new change`，但 propose 本身没有对应的 CLI 命令。
 > **profile**：core（大多数用户默认可见）

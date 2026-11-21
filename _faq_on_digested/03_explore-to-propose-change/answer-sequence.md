@@ -111,7 +111,7 @@ sequenceDiagram
         MD-->>User: "还不建议 propose。<br/>先查 X 和 Y，再决定。"
         Note right of MD: 回到 Phase 3 或 4
     else EXP-08 · 命中已有 change → 更新
-        MD-->>User: "这属于已有 change X。<br/>建议 /opsx:continue 补 artifacts。"
+        MD-->>User: "这属于已有 change X。<br/>建议 /openspec-continue-change 补 artifacts。"
     else EXP-09 · 一个清晰边界 → propose 一个
         MD->>MD: change name 候选、scope、<br/>impact、not-included、open questions
         MD-->>User: "建议 propose 一个 change：<br/>add-github-oauth-login<br/>Scope: … Not included: …"
@@ -148,7 +148,7 @@ sequenceDiagram
                 TS-->>MD: 更新后的 artifact 状态
             end
 
-            MD-->>User: 全部 artifacts 生成完毕<br/>可以进入 /opsx:apply
+            MD-->>User: 全部 artifacts 生成完毕<br/>可以进入 /openspec-apply-change
         end
     end
 ```

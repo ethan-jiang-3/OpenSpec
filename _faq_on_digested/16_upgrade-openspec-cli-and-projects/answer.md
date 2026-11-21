@@ -39,7 +39,7 @@ CLI 会识别自己是**怎么被装的**（`getCliInstallInfo()` 的 scope/pack
 | git clone 源码 | 没有升级建议——版本就是分支说的，`git pull`/切 tag 即可 |
 | standalone 单文件（v1.15.0+） | `openspec install`（原地重装；`version --check` 会给出这条命令） |
 
-v1.15.0 起 CLI 也可能是 standalone 安装：`openspec version` 会标 `(standalone)`，`--json` 的 `install.scope` 为 `standalone`，升级命令是 `openspec install`（若 PATH 上的 `openspec` 是别的副本，会给带全路径的重装命令）。standalone 不需要 Node.js；npm 等包管理器方式需要 Node.js **22.12.0+**（v1.16.0 起；Node 20 已 EOL，且只有 Node 20 上的 npm 安装受影响）。
+v1.15.0 起 CLI 也可能是 standalone 安装：`openspec version` 会标 `(standalone)`，`--json` 的 `install.scope` 为 `standalone`，升级命令是 `openspec install`（若 PATH 上的 `openspec` 是别的副本，会给带全路径的重装命令）。standalone 不需要 Node.js；npm 等包管理器方式需要 Node.js **22.20.0+**（v2.1.1 起；v1.16.0–v2.1.0 是 22.12.0；Node 20 已 EOL，且只有 Node 20 上的 npm 安装受影响）。
 
 ### 交互式 npm 全局：`openspec update` 可以替你升级
 
@@ -59,11 +59,12 @@ skills/commands 是 CLI **用自己当前版本的模板生成**的，生成文�
 2. **迁移 legacy 工具目录**：`migrateLegacyToolDirs`（如 `.kimi` → `.kimi-code`）。
 3. **迁移已安装工具**：`migrateIfNeededShared`——v1.8.0 里最典型的就是 **Codex 的 `.codex` skill 树原地迁到共享的 `.agents/skills/`**，保留用户定制文件。
 4. **智能检测哪个工具该重生成**：比较项目里已生成文件的版本戳与当前 CLI 版本，只重生成过期的；全部 up-to-date 且没新工具时输出「All tools are up to date」并收工。
-5. **按 delivery 重新生成**：`skills` / `commands` / `both` 由全局 config 的 `delivery` 决定。
-6. **处理共享根 ownership**：`.agents/skills` 被 `agents`、`codex` 与 v1.10.0 的 `zed` 三方共用时，用 `.openspec-target` marker 判定谁是 active writer，避免互相覆盖（`src/core/shared-skill-target.ts`）。Zed 是 skills-only，使用 `/openspec-*` 或 `@openspec-*`；Codex 仍用 `$openspec-*`，不要混写。
+5. **按 delivery 重新生成**（1.x）：`skills` / `commands` / `both` 由全局 config 的 `delivery` 决定。**v2.0.0 起 `delivery` 退役**（#2223）：一律装 skills，配置里不再有这一项，command 文件不再生成。
+6. **处理共享根 ownership**：`.agents/skills` 被 `agents`、`codex` 与 v1.10.0 的 `zed` 三方共用时，用 `.openspec-target` marker 判定谁是 active writer，避免互相覆盖（`src/core/shared-skill-target.ts`）。调用形式一律走技能名：Claude Code 等用 `/openspec-<name>`，Zed 用 `/openspec-*` 或 `@openspec-*`，Codex 用 `$openspec-*`，不要混写。（1.x 的 `/openspec-*` command 文件在 2.0 已移除。）
 7. **legacy 清理**：删掉 OpenSpec 历史上留的托管文件（v1.8.0 修了 CoStrict/Junie 目录误删 bug，现在只删 `openspec-*.md` 这类可识别托管文件，**永不删用户内容**）。**v1.17.0 起判据升级为内容指纹**：只有“内容等于某个已发布版本原样写出过”的文件才会被当作无主旧产物；路径上任何一段是链接就完全不碰，即使加 `--force`。
 8. **清扫旧版本产物**（v1.17.0）：删掉“当前版本根本不会写”的路径上、且没人编辑过的文件（同一套指纹判据），并回收留下的空目录。这一步让 `update` 能从 **0.12 以来任意版本一次跑完**。
-9. **命令弃用提示**（v1.17.0）：若某个已配置工具仍会得到 command 文件，打印一条「2.0 移除，建议现在切 skills」的提示。**1.17.0 仍然生成 command 文件**，提示只是预告。
+9. **命令弃用提示**（v1.17.0，历史形态；该函数在 2.0 已删除）：若某个已配置工具仍会得到 command 文件，打印一条「2.0 移除，建议现在切 skills」的提示。
+9b. **移除 command 文件**（v2.0.0 #2223）：不再生成，按指纹清理早期版本留下的——没人改过的删掉，改过的保留并列出。skills 收成 `.agents/skills/` 单份真身，其他工具目录放链接（建不了链接退化为拷贝）。
 10. **Copilot cloud 文件**：`openspec update` 从不提示——只刷新「已 opt-in」或「旧项目已存在 managed cloud 文件（视为隐含 opt-in）」的 Copilot 项目；用户自己改过的文件永不覆盖/删除；opt-out 只删 managed 文件。
 
 ### 先预演：`openspec update --dry-run`
@@ -105,13 +106,24 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 - **升级后可用的新命令面**：`openspec version [--json] [--check]` 自查版本/安装方式/是否有更新；`openspec list --archived` / `--all` 浏览归档 change；`view` 显示 active change 的 workflow status（v1.14.3 起不再有末尾的归档分区）。
 - **`.openspec.yaml` 卫生（v1.14.0 口径，已被 0012 扩展）**：v1.14.0 起未知顶层键在 status/validate/archive 都会告警，`validate --strict` 直接失败——升级前把旧项目 metadata 里的实验性键清掉或改名（已知键：`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）。
 
+## v2.0.0–v2.1.1 的具体提醒（来自同步记录 0015）
+
+- **命令文件没了，skills 顶上**：`/openspec-propose` 这类 command 文件在 2.0 不再生成。每个命令都有同名技能，内容等价：`/openspec-propose` → `openspec-propose`，`/openspec-apply-change` → `openspec-apply-change`，`/openspec-update-change` → `openspec-update-change`，`/openspec-sync-specs` → `openspec-sync-specs`，`/openspec-archive-change` → `openspec-archive-change`。调用方式：Claude Code 等用 `/openspec-propose`，Codex 用 `$openspec-propose`。
+- **也可以不点名**：直接说「帮我 propose 一个 change」，agent 会按技能描述自己选。技能被 agent 自行选中、而项目没初始化时，它会安静放弃 OpenSpec 按普通请求回答；你点名 OpenSpec 时它才会停下来问你怎么做。
+- **skills 只有一份**：真身在 `.agents/skills/`，其他工具用自己的 `skills/` 目录指向它；建不了链接就退化为拷贝（功能一样，只是不去重）。Windows 上 checkout 这些链接需要 `git config --global core.symlinks true` 并开启开发者模式，否则链接会变成普通小文件。
+- **`delivery` 退役**：不要再写 `openspec config set delivery ...`，配置里没有这一项了。
+- **Amazon Q Developer 退役**：它读不了 skills。`--tools amazon-q` 会报错并指路 Kiro。
+- **全局技能**（v2.1.0）：`openspec update` 在终端里会问技能装在哪——「留在这个项目」或「切到全局」。选择记在 `openspec/config.yaml`，团队不会被重复询问；CI 或 agent 里不弹问题，就地刷新。
+- **从 npm 包装技能**（v2.1.1 #2283）：`init` / `update` 不再 clone，离线可用、不依赖 Git、版本与 CLI 一致。
+- **Node 门槛**：npm 包需要 **22.20.0+**。standalone 仍不需要 Node。
+
 ## v1.16.0–v1.17.0 的具体提醒（来自同步记录 0014）
 
 - **从任意版本一次升级**：`openspec update` 现在能从 **0.12 以来任意版本**跑完，不必逐版本爬。中途版本变过四次默认 workflow 集（`ten` → `four` → `five` → `six`）、也换过工具目录布局（Cline/Qwen 的 commands 在上一级、Codex 的 `.codex`、Antigravity 的 `.agent`），这些都能一次性认出来。
 - **不再需要 `--force`**：删除只针对「没人编辑过的旧 OpenSpec 文件」——判据是内容指纹，不是版本戳（命令文件根本没有版本戳）。编辑过的旧文件**保留并列出**；读不了/删不了的单独报 `unchecked`。`~` 里的共享 prompt 仍需 `--force` 或终端确认。
 - **失败模式倒向“留着”**：工具更新失败、或你拒绝过清扫，整个清扫会跳过；忘记录入新版本指纹（上游发版后没重跑 `capture-released-fingerprints.mjs`）也是安全的——新版本的文件会被当成“改过”保留。
-- **命令文件已标记弃用，但本版仍生成**：`update` 会打印「2.0 移除，现在可以切 skills」的提示和切换命令。`/opsx:*` 在 1.17.0 完全可用。**没有弃用的是 CLI 本身**——`openspec validate` / `archive` / `update` 等子命令一个都没少。
-- **Node 门槛**：npm 包需要 **22.12.0+**（Node 20 已 EOL）。standalone 二进制完全不需要 Node。Homebrew 会自己管 Node 依赖。
+- **命令文件在 1.17.0 已标记弃用，但那一版仍生成**（**这是历史**；v2.0.0 起已不再生成）：`update` 当版会打印「2.0 移除，现在可以切 skills」的提示和切换命令，`/opsx:*` 在 1.17.0 完全可用。**没有弃用的是 CLI 本身**——`openspec validate` / `archive` / `update` 等子命令一个都没少。
+- **Node 门槛**：npm 包需要 **22.12.0+**（Node 20 已 EOL）。standalone 二进制完全不需要 Node。Homebrew 会自己管 Node 依赖。（**现值**：v2.1.1 起是 **22.20.0+**。）
 - **安装产物改归档**：v1.16.0 起 release 资产是 `.tar.gz`（Windows `.zip`），不是裸二进制；安装入口收敛到 `openspec.dev/cli/install.sh`。
 - **`version --check` 两条修正**：显式 `--check` 不再被遥测开关和 CI 检测挡住（只有 `OPENSPEC_NO_UPDATE_CHECK` 能挡）；standalone 只提示**真能装上**的版本（有 `SHA256SUMS` 的那个），不再出现“npm 说有新版、但资产没挂上”的情况。
 - **校验变严会挡住旧 change**：升级后跑 `validate` 可能冒出以前没有的报错——`#### Scenario:` 缺 WHEN/GIVEN 或 THEN 是 WARNING（`--strict` 才失败），但 delta 里 requirement 落在 `## DEPRECATED Requirements` 这类未识别段下是 **ERROR，`archive` 会拒绝**。这是修 bug，不是回归。
@@ -144,7 +156,7 @@ v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题
 - **v1.13.0 是 archive/delta parser 正确性大修**：`*`/`+` 列表标记的 REMOVED/RENAMED 之前被静默忽略、重复 delta section 只应用一份、fence 内空行被重写——如果你有「validate 过了但 archive 后没生效」的历史疑惑，大概率是这些 bug，升级后行为修复。
 - propose/ff 变成 code-grounded 且 context-first；无 OpenSpec root 时 propose 停止并提示 init。
 - explore 会列出 spec inventory；用户明确要求 capture 即视为写入确认。
-- `/opsx:update` 先起草、确认后才写入。
+- `/openspec-update-change` 先起草、确认后才写入。
 - 新工具 SourceCraft（`--tools codeassistant`）。
 - 安全加固：恶意仓库不能再注入 agent 指令或挂起 CLI。
 - 工具链：`packageManager` 升至 pnpm@10.34.5（corepack 用户首次运行会自动下载）。

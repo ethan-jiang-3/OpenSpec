@@ -2,7 +2,7 @@
 
 > 目标不是研究源码，而是先把它当工具用顺手。如果第一反应是"改个功能干嘛这么折腾"——很正常，这一篇先帮你把这股别扭解开。
 
-> **宿主入口提示。** 本章把 `/opsx:*` 保留为 Claude 的示例入口；Codex 使用 `$openspec-*`，Zed Agent 使用 `/openspec-*`，DeepSeek Harness（`--tools dsh`）也是 skills-only、装进 `.dsh/skills/` 后用 `/openspec-*` 直呼。Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，都是宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
+> **宿主入口提示。** 本章用 `/openspec-*` 作为 Claude 的示例写法（1.x 的 `/opsx:*` command 文件入口已在 v2.0.0 移除）；Codex 使用 `$openspec-*`，Zed Agent 使用 `/openspec-*`，DeepSeek Harness（`--tools dsh`）也是 skills-only、装进 `.dsh/skills/` 后用 `/openspec-*` 直呼。Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，都是宿主 workflow 驱动同一套 `openspec` CLI / 文件状态，不要把 slash 命令当作所有工具的统一语法。
 
 ---
 
@@ -62,12 +62,12 @@ OpenSpec 做的事，就是给"改代码"也加上装修那套**"先想清楚，
 先记这三步就够了：
 
 ```text
-/opsx:propose  →  /opsx:apply  →  /opsx:archive
+/openspec-propose  →  /openspec-apply-change  →  /openspec-archive-change
 ```
 
-这里的 `/opsx:*` 不是另一套叫 OPSX 的工具，而是 Claude 等宿主的 command 入口。你在终端里直接运行的是 `openspec ...` CLI；在 agent 对话里触发工作流要使用宿主安装的入口（Codex 为 `$openspec-*` skills）。
+这里的 `/openspec-*` 不是另一套叫 OPSX 的工具，而是 Claude 等宿主里**技能**的调用写法（1.x 的 `/opsx:*` command 入口已被 2.0 移除）。你在终端里直接运行的是 `openspec ...` CLI；在 agent 对话里触发工作流要使用宿主安装的入口（Codex 为 `$openspec-*` skills）。
 
-> **v1.17.0 状态注记**：`/opsx:*` 这类**命令文件**已被标记弃用，OpenSpec 2.0 起不再生成；同一份工作流的 **skill**（如 `openspec-propose`）会保留，两者内容是同一份模板的两种包装。本版**仍然生成命令文件，`/opsx:*` 仍然可用**。CLI 本身（`openspec validate` / `archive` / `update` …）不受影响，2.0 也不动它。详见 [99 FAQ Q27h](99-FAQ-常见问题.md)。
+> **v2.1.1 状态注记**：`/openspec-*` 这类**命令文件**已移除，OpenSpec 2.0 起不再生成；同一份工作流的 **skill**（如 `openspec-propose`）保留下来，两者本来就是同一份模板的两种包装。**现在唯一形态是 skill**：Claude Code 等工具里按 `/openspec-propose` 调用，Codex 用 `$openspec-propose`，也可以直接用自然语言让 agent 自己选。CLI 本身（`openspec validate` / `archive` / `update` …）一个子命令都没少。详见 [99 FAQ Q27h](99-FAQ-常见问题.md)。
 
 ---
 
@@ -78,11 +78,11 @@ OpenSpec 做的事，就是给"改代码"也加上装修那套**"先想清楚，
 ```mermaid
 stateDiagram-v2
     [*] --> 空白: openspec init
-    空白 --> 规划中: /opsx:propose "功能名"
+    空白 --> 规划中: /openspec-propose "功能名"
     规划中 --> 规划中: 修改 proposal/specs/design/tasks
-    规划中 --> 实现中: /opsx:apply
+    规划中 --> 实现中: /openspec-apply-change
     实现中 --> 规划中: 发现问题，回头调整
-    实现中 --> archive 完成: /opsx:archive
+    实现中 --> archive 完成: /openspec-archive-change
     archive 完成 --> 空白: specs/ 已更新，准备下一个 change
     
     note right of 规划中
@@ -94,7 +94,7 @@ stateDiagram-v2
     end note
 ```
 
-### 1. `/opsx:propose`
+### 1. `/openspec-propose`
 
 用来**发起一个 change**，并把规划类文件先搭起来。
 
@@ -106,7 +106,7 @@ stateDiagram-v2
 典型例子：
 
 ```text
-/opsx:propose add-dark-mode
+/openspec-propose add-dark-mode
 ```
 
 通常会得到这样一组文件：
@@ -121,7 +121,7 @@ openspec/changes/add-dark-mode/
         └── spec.md
 ```
 
-### 2. `/opsx:apply`
+### 2. `/openspec-apply-change`
 
 用来**按 `tasks.md` 真正实现代码**。
 
@@ -136,7 +136,7 @@ openspec/changes/add-dark-mode/
 - 现在不是"讨论要做什么"
 - 而是"拿着已经形成的 change 文件，开始干活"
 
-### 3. `/opsx:archive`
+### 3. `/openspec-archive-change`
 
 用来**收尾**。
 
@@ -154,7 +154,7 @@ openspec/changes/add-dark-mode/
 
 ### 别把三个动作误解成三条终端命令
 
-`propose / apply / archive` 是宿主 agent 的工作流动作。Claude 可能把它们显示为 `/opsx:*`，Codex 则显示为 `$openspec-*` skill；它们会按步骤读取和写入文件。终端 CLI 是你随时可以拿来核对状态的确定性工具。
+`propose / apply / archive` 是宿主 agent 的工作流动作。Claude 可能把它们显示为 `/openspec-*`，Codex 则显示为 `$openspec-*` skill；它们会按步骤读取和写入文件。终端 CLI 是你随时可以拿来核对状态的确定性工具。
 
 | 你想确认什么 | 先用什么 | 它不会替你做什么 |
 |---|---|---|
@@ -295,7 +295,7 @@ openspec init --tools dsh
 ### 第一步：发起 change
 
 ```text
-/opsx:propose add-dark-mode
+/openspec-propose add-dark-mode
 ```
 
 这时 AI 会围绕这次 change 生成几类文件：
@@ -326,7 +326,7 @@ openspec init --tools dsh
 ### 第二步：实现
 
 ```text
-/opsx:apply add-dark-mode
+/openspec-apply-change add-dark-mode
 ```
 
 这一步才开始真正改代码。
@@ -334,7 +334,7 @@ openspec init --tools dsh
 ### 第三步：archive
 
 ```text
-/opsx:archive add-dark-mode
+/openspec-archive-change add-dark-mode
 ```
 
 这一步结束后，这次 change 的结果会变成项目正式 spec 的一部分。

@@ -87,7 +87,9 @@
 - v1.15.0 起，全局包管理器安装的用户在 update 后可能在 stderr 看到一次 standalone 提示（非 TTY/CI 延迟显示；只提示，不自动切换）。
 - v1.17.0 起，`update` 能从 **0.12 以来任意版本一次跑完**，且**不再需要 `--force`**。删旧文件的判据不是版本戳（命令文件根本没有版本戳），而是内容指纹：内容归一化后，等于某个已发布版本原样写出过的文件才删。编辑过的旧文件**保留并列出**（`kept`），读不了/删不了的单独列为 `unchecked`。例外是 `~` 里的共享 prompt 文件——它被同一台机器的多个项目共用，仍然只在 `--force` 或终端确认时删除。
 - v1.17.0 起，清扫**永不跨链接**：路径上任何一段是 symlink 就不搜索、不判断、不删除，即使加了 `--force` 也一样。工具更新失败或用户拒绝过清扫时，整个清扫跳过——旧文件可能还是该工具能用的唯一一份。
-- v1.17.0 起，命令文件**已标记弃用**（2.0 移除），`update` 在“某个已配置工具仍会得到命令文件、且切到 skills-only 确实会改变它”时打印一条提示，并给出 `openspec config set delivery skills && openspec update`。**这是预告，不是已经删**：1.17.0 仍然生成命令文件，`/opsx:*` 仍然可用。skills-only 项目不提示，Codex 这类本来就只有 skills 的工具也不提示（劝它切等于劝它离开唯一能用的接口）。
+- v1.17.0 起，命令文件被标记弃用，`update` 在“某个已配置工具仍会得到命令文件”时打印提示（历史形态；该提示函数在 2.0 已删除）。
+- v2.0.0 起（#2223），**命令文件不再生成**，`delivery` 配置项退役——skills / commands / both 三态不再存在，一律装 skills。`update` 按指纹清理早期版本生成的 command 文件：没人改过的删掉，改过的保留并列出。skills 只有一份真身，在 `.agents/skills/`；其他工具用自己的 `skills/` 目录放指向它的链接，建不了链接时退化为拷贝。
+- v2.1.0 起（#2241），技能作用域分 `global` 与 `project`，选择记在 `openspec/config.yaml`，团队不再被重复询问；非交互环境（CI、agent 调用）不弹问题，就地刷新。`init` / `update` 从 npm 包装 skills（v2.1.1 #2283），不再 clone——离线可用、不依赖 Git、版本永远一致。
 
 ### `openspec install [version]`
 
@@ -117,7 +119,7 @@
 - 它不是“升级项目里的 OpenSpec 工作流文件”——那是 `openspec update`。
 - 它不会替你卸载旧的全局包，只给命令。
 - 它默认装“最新完整 release”，不是 `main` 分支快照；`latest` 也要等 `SHA256SUMS` 已上传才认。
-- 单文件不需要 Node.js；但 `npm install -g` 方式需要 Node.js **22.12.0+**（v1.16.0 起；Node 20 已于 2026-04-30 EOL）。release 资产自 v1.16.0 起是 `.tar.gz`（Windows `.zip`）归档，不是裸二进制。
+- 单文件不需要 Node.js；但 `npm install -g` 方式需要 Node.js **22.20.0+**（v2.1.1 起；v1.16.0–v2.1.0 是 22.12.0；Node 20 已于 2026-04-30 EOL）。release 资产自 v1.16.0 起是 `.tar.gz`（Windows `.zip`）归档，不是裸二进制。
 
 ### `openspec version`
 
@@ -326,7 +328,7 @@ v1.12.0 新增 `--report findings`（bulk scope 下只输出 findings 列表）�
 重点不是业务 change，而是工作流投递策略：
 
 - `profile`: 选哪些 workflows。
-- `delivery`: 以 skills、commands 还是 both 的方式投递。v1.17.0 起 `commands` 进入弃用通道（2.0 移除命令文件）；切到 `skills` 时只删 OpenSpec 生成的命令文件，用户编辑过的保留并列出。
+- `delivery`: 以 skills、commands 还是 both 的方式投递。**v2.0.0 起该配置项退役**（#2223）：一律 skills，配置里不再有这一项；写入它不再改变任何行为。v1.17.0 曾把 `commands` 标记弃用，切换时只删 OpenSpec 生成的命令文件、用户编辑过的保留并列出——这段处理逻辑随 2.0 一并移除。
 - `workflows`: 自定义 profile 时启用哪些工作流。
 
 输入：

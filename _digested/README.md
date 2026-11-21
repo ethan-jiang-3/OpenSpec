@@ -2,7 +2,7 @@
 
 这个目录是对 OpenSpec 源码的**消化分析**：从 TypeScript 源码出发，理解机制、架构和设计意图。它不是用户指南——想学怎么用 OpenSpec 去 `_openspec_handbook/`。
 
-> **当前源码基线**：本文档集以 OpenSpec `v1.17.0`（upstream/release tag `v1.17.0` = `579fcac5`）为准。版本演进和旧行为只记录在 [`_change_log/`](./_change_log/README.md)；正文中的机制结论描述当前 release。
+> **当前源码基线**：本文档集以 OpenSpec `v2.1.1`（upstream/release tag `v2.1.1` = `0c737dc1`）为准。版本演进和旧行为只记录在 [`_change_log/`](./_change_log/README.md)；正文中的机制结论描述当前 release。
 
 ### 版本约定
 
@@ -10,6 +10,7 @@
 - **正文与版本解耦**：正文用现在时描述当前行为。机制结论以本 README 的基线为准，不随文件内的版本号变化。
 - **历史溯源保留但不可变**：`v1.11.0 起支持 X` 这类是历史事实，不随发版变化，可留在正文；它们**不需要**在升级时改动。
 - **版本敏感文件**：若某文件整体只对特定版本范围有效，登记在下表，而不是写在文件里。
+- **`/opsx:*` 的读法（v2.1.1 起）**：正文里出现的 `/opsx:propose` 这类写法，**默认指 1.x 的 command 文件形态**，用于解释历史或新旧对照。**当前唯一形态是 skill**：Claude Code 等工具里 `/openspec-propose`，Codex 里 `$openspec-propose`，也可以直接用自然语言让 agent 自己选。v2.0.0 起 command 文件不再生成（#2223）。凡以现在时描述「命令文件」的语句，都应写成「已移除 / 不再生成」。
 
 | 文件 | 适用版本 |
 |------|----------|

@@ -9,7 +9,7 @@ Explore 已经把一个想法收敛成了明确 change，接下来触发 propose
 - agent 如何知道先写 proposal，再写 specs/design，最后写 tasks？
 - `openspec instructions <artifact> --change <name> --json` 到底给了 agent 什么？
 - 什么情况下算 propose 完整完成？
-- 完成后为什么就可以进入 `/opsx:apply`？
+- 完成后为什么就可以进入 `/openspec-apply-change`？
 
 # 背景
 
@@ -20,7 +20,7 @@ Explore 已经把一个想法收敛成了明确 change，接下来触发 propose
 ```text
 schema.apply.requires 中要求的 artifacts 都已完成
 openspec instructions apply --change "<name>" --json 能返回可执行上下文
-agent 可以开始 /opsx:apply
+agent 可以开始 /openspec-apply-change
 ```
 
 需要把 skill prompt、CLI、schema、artifact DAG、文件状态和 agent 写文件之间的配合讲完整。

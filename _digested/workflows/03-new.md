@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/new-change.ts` → `getNewChangeSkillTemplate()` + `getOpsxNewCommandTemplate()`
 
-> **用户怎么调**：`/opsx:new <change-name 或描述>`
+> **调用方式**：技能 `openspec-new-change` <change-name 或描述>——Claude Code 等工具里 `/openspec-new` <change-name 或描述>，Codex 用 `$openspec-new-change`。1.x 写作 `/opsx:new`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-new-change`（skill）/ `OPSX: New`（command）
 > **独立 CLI 命令**：有——`openspec new change "<name>"` 是 CLI 命令，`/opsx:new` 是围绕它的 agent 模板。两者不同：CLI 只创建目录；template 创建后还展示 instructions。
 > **profile**：custom（需在 `customWorkflows` 中显式启用，不在默认 core 里）

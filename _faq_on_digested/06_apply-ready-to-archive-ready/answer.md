@@ -2,7 +2,7 @@
 
 ## 一句话
 
-宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段。下文 `/opsx:apply` 是 Claude 示例；Codex v1.8.0 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。它的核心循环是：
+宿主的 apply workflow 是从 planning artifacts 进入真实代码修改的阶段。下文 `/openspec-apply-change` 是 Claude 示例；Codex v1.8.0 使用 `$openspec-apply-change`（装在 `.agents/skills/`）。它的核心循环是：
 
 ```text
 选择 change
@@ -48,10 +48,10 @@ CLI 不直接改业务代码。CLI 提供 apply gate、上下文文件列表、�
 
 ## Step 1：选择 change
 
-Claude 的 `/opsx:apply` 可带 change name（其他宿主使用自己的 invocation）：
+Claude 的 `/openspec-apply-change` 可带 change name（其他宿主使用自己的 invocation）：
 
 ```text
-/opsx:apply add-oauth-login
+/openspec-apply-change add-oauth-login
 ```
 
 如果没有显式 name，apply skill 的优先级是：
@@ -124,7 +124,7 @@ tasks.md
 
 | state | 含义 | agent 行为 |
 |---|---|---|
-| `blocked` | 缺 required artifact、缺 tracking file，或 tracking file 没有 checkbox tasks。 | 停止实施，建议 `/opsx:continue` 或修复 planning artifact。 |
+| `blocked` | 缺 required artifact、缺 tracking file，或 tracking file 没有 checkbox tasks。 | 停止实施，建议 `/openspec-continue-change` 或修复 planning artifact。 |
 | `ready` | required artifacts 存在，并且有 pending tasks。 | 读取 context files，开始实施。 |
 | `all_done` | tracking file 中所有 checkbox tasks 都完成。 | 不再实施，建议 review/test 后 archive。 |
 
