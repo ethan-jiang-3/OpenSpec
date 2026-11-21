@@ -75,6 +75,9 @@ git diff --cached --name-only --diff-filter=A -- . ":!_\*" ":!CONTEXT.md"
 - **Node 门槛**：`>=22.20.0`
 - **Windows**：链接需要 `core.symlinks` 与开发者模式，否则退化为拷贝
 
+> **Phase B–D 由 [`_plan-14`](./_plan-14-v2.1.1-doc-complete-sync.md) 接续。**
+> 本文件的 B–D 是最初的粗清单；plan-14 给出了逐文件分级与可跑验收，以 plan-14 为准。
+
 ## 二、执行阶段
 
 ### Phase A：upstream 行为审计 → `_change_log/0015-v1.17.0-to-v2.1.1.md`
