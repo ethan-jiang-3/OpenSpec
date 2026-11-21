@@ -1,5 +1,33 @@
 # Change Log · 上游同步记录
 
+## 当前工作状态（从这里开始）
+
+> **给未来的自己**：上下文会断，先读这一块，再决定做什么。不要把这张表当历史——它是**实时状态**，每次推进都要改。
+
+| 项 | 值 |
+|---|---|
+| **本地源码基线** | `v2.1.1`（`0c737dc1`，2026-11-19 发布） |
+| **上游是否有更新** | 需 `git fetch upstream --tags` 复核；上次核对时 `upstream/main` 正好停在 `v2.1.1` |
+| **源码同步提交** | `1fb874fb`（`chore: sync upstream v2.1.1`） |
+| **本区间审计记录** | [`0015`](./0015-v1.17.0-to-v2.1.1.md)（v1.17.0 → v2.1.1，23 提交） |
+| **当前进行中的计划** | [`_plan-14`](./_plan-14-v2.1.1-doc-complete-sync.md) — 三套资料对齐 2.1.1 |
+| **计划的上游** | [`_plan-13`](./_plan-13-v2.1.1-full-sync.md)（源码同步，Phase B–D 已移交 plan-14） |
+| **资料回填进度** | 主要落点已完成（`9e4b0dc5`，66 文件）；plan-14 的 Phase B–G 未完成 |
+| **下一步** | plan-14 Phase B：`_coverage/src-coverage.md`、`system/04-agent-contract-与工具投递.md`、`_coverage/tests-coverage.md`、`internal-spec-driven/00-四条命令的共有机制.md`、`spec_cli/05-config-profile-delivery.md`、`spec_cli/06-opsx-call-chains.md`、`workflows/12-update.md` |
+
+**恢复动作**（按顺序，别跳）：
+
+```bash
+git -C /Users/bowhead/OpenSpec status -sb          # 确认工作区干净、在 ethan
+git -C /Users/bowhead/OpenSpec fetch upstream --tags  # 复核有没有更新的发行 tag
+node bin/openspec.js --version                      # 应为 2.1.1
+# 然后翻开 _plan-14，从第一个未勾选的 Phase 继续
+```
+
+**三条不能违反的约定**：基线只写在 `_digested/README.md`；`v1.x 起` 是历史、不改；handbook 受《内容宪章》约束。
+
+---
+
 ## 同步方式（长期约定，先读这个）
 
 **从 v1.15.0 起，新增同步只用 `git merge --squash <tag>`：不再新增真正的 `merge` 或 `rebase`。历史里已有的 merge（如 v1.14.3 的 `95b7f247`）保留不改写。**
