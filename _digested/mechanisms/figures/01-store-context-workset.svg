@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="810" viewBox="0 0 1420 810" role="img" aria-labelledby="title desc">
+  <title id="title">跨仓协同三概念对照：Store vs openspec context vs openspec workset</title>
+  <desc id="desc">并排对比 OpenSpec 跨仓库协同的三个独立概念：Store（独立 Git 规划仓与注册表）、Working Set（openspec context 实时计算的只读上下文视图）与 Workset（openspec workset 个人多目录启动器）。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .col-title { font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .col-sub { font: 600 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .sec-label { font: 700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .body { font: 400 12.8px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #1e293b; }
+    .body-muted { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .footer-text { font: 600 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #92400e; }
+  </style>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1418" height="808" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="36" y="42">跨仓协同三概念对照：Store vs openspec context vs openspec workset</text>
+  <text class="sub" x="36" y="68">三者各司其职、互不替代：Store 管共享规格仓登记，context 管跨仓只读引用组装，workset 管个人编辑器多目录会话。</text>
+
+  <!-- ==================== COLUMN 1: STORE ==================== -->
+  <rect x="32" y="96" width="432" height="624" rx="14" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="32" y="96" width="432" height="64" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text class="col-title" x="248" y="124" text-anchor="middle" fill="#4c1d95">Store（openspec store）</text>
+  <text class="col-sub" x="248" y="148" text-anchor="middle" fill="#6d28d9">独立 Git 规划仓 + 本机检出登记表</text>
+
+  <!-- Row 1: Role -->
+  <rect x="48" y="176" width="400" height="84" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.3"/>
+  <text class="sec-label" x="64" y="200" fill="#5b21b6">① 核心角色与承载内容</text>
+  <text class="body" x="64" y="224">承载跨项目共享的 openspec/specs/ 基线</text>
+  <text class="body" x="64" y="248">或集中式跨仓 openspec/changes/ 增量</text>
+
+  <!-- Row 2: Files & Truth -->
+  <rect x="48" y="274" width="400" height="146" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.3"/>
+  <text class="sec-label" x="64" y="298" fill="#5b21b6">② 真相源与触碰的文件</text>
+  <text class="body" x="64" y="322">• &lt;store&gt;/.openspec-store/store.yaml</text>
+  <text class="body-muted" x="78" y="346">记录 id 与团队 canonical remote（进 Git）</text>
+  <text class="body" x="64" y="370">• &lt;store&gt;/openspec/ (specs, changes, config)</text>
+  <text class="body" x="64" y="394">• $XDG_DATA_HOME/openspec/stores/registry.yaml</text>
+
+  <!-- Row 3: Sharing Scope -->
+  <rect x="48" y="434" width="400" height="86" rx="8" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.3"/>
+  <text class="sec-label" x="64" y="458" fill="#5b21b6">③ 团队共享 vs 本机私有</text>
+  <text class="body" x="64" y="482">store.yaml 与 openspec/ 随该仓 Git 团队共享；</text>
+  <text class="body" x="64" y="506">registry.yaml 仅记录本机 local_path 映射</text>
+
+  <!-- Row 4: CLI & Boundaries -->
+  <rect x="48" y="534" width="400" height="170" rx="8" fill="#ede9fe" stroke="#a78bfa" stroke-width="1.3"/>
+  <text class="sec-label" x="64" y="558" fill="#4c1d95">④ 关键命令与行为红线</text>
+  <text class="body" x="64" y="582">• setup / register / list / unregister /</text>
+  <text class="body" x="78" y="606">remove（防误删嵌套 store）/ doctor</text>
+  <text class="body" x="64" y="630">• 绝不自动 git clone 远端仓库</text>
+  <text class="body" x="64" y="654">• register 绝不自动改业务仓 config.yaml</text>
+  <text class="body-muted" x="64" y="678">（须手工在业务仓声明 references: 或 store:）</text>
+
+  <!-- ==================== COLUMN 2: WORKING SET (CONTEXT) ==================== -->
+  <rect x="494" y="96" width="432" height="624" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <rect x="494" y="96" width="432" height="64" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text class="col-title" x="710" y="124" text-anchor="middle" fill="#14532d">Working Set（openspec context）</text>
+  <text class="col-sub" x="710" y="148" text-anchor="middle" fill="#15803d">按需实时计算的跨仓只读规格关系视图</text>
+
+  <!-- Row 1: Role -->
+  <rect x="510" y="176" width="400" height="84" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.3"/>
+  <text class="sec-label" x="526" y="200" fill="#166534">① 核心角色与承载内容</text>
+  <text class="body" x="526" y="224">将当前生效 root 与其声明依赖的上游 Store</text>
+  <text class="body" x="526" y="248">组装成供 Agent 和人消费的只读规格目录</text>
+
+  <!-- Row 2: Files & Truth -->
+  <rect x="510" y="274" width="400" height="146" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.3"/>
+  <text class="sec-label" x="526" y="298" fill="#166534">② 真相源与触碰的文件</text>
+  <text class="body" x="526" y="322">• 只读输入：当前 root 的 openspec/config.yaml</text>
+  <text class="body-muted" x="540" y="346">中的 references: [&lt;store-id&gt;, ...]</text>
+  <text class="body" x="526" y="370">• 关联解析：stores/registry.yaml → Store specs/</text>
+  <text class="body" x="526" y="394">• 默认零落盘（传 --code-workspace 才导出视图）</text>
+
+  <!-- Row 3: Sharing Scope -->
+  <rect x="510" y="434" width="400" height="86" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.3"/>
+  <text class="sec-label" x="526" y="458" fill="#166534">③ 团队共享 vs 本机私有</text>
+  <text class="body" x="526" y="482">references: 声明随业务仓 Git 团队共享；</text>
+  <text class="body" x="526" y="506">每次运行按本机实际检出状态实时计算</text>
+
+  <!-- Row 4: CLI & Boundaries -->
+  <rect x="510" y="534" width="400" height="170" rx="8" fill="#dcfce7" stroke="#4ade80" stroke-width="1.3"/>
+  <text class="sec-label" x="526" y="558" fill="#14532d">④ 关键命令与行为红线</text>
+  <text class="body" x="526" y="582">• openspec context [--json] [--store &lt;id&gt;]</text>
+  <text class="body" x="526" y="606">• openspec context --code-workspace [file]</text>
+  <text class="body" x="526" y="630">• 仅抽首行 Purpose 摘要 + fetch 命令（≤50KB）</text>
+  <text class="body" x="526" y="654">• 纯查询不同步、不合并；未注册 Store 仅报</text>
+  <text class="body-muted" x="540" y="678">reference_unresolved 警告与可粘贴修复命令</text>
+
+  <!-- ==================== COLUMN 3: WORKSET ==================== -->
+  <rect x="956" y="96" width="432" height="624" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <rect x="956" y="96" width="432" height="64" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text class="col-title" x="1172" y="124" text-anchor="middle" fill="#1e3a8a">Workset（openspec workset）</text>
+  <text class="col-sub" x="1172" y="148" text-anchor="middle" fill="#1d4ed8">纯个人手工编排的多目录启动器</text>
+
+  <!-- Row 1: Role -->
+  <rect x="972" y="176" width="400" height="84" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.3"/>
+  <text class="sec-label" x="988" y="200" fill="#1e40af">① 核心角色与承载内容</text>
+  <text class="body" x="988" y="224">把日常联调需要同时打开的多个本地目录</text>
+  <text class="body" x="988" y="248">存为命名会话，一键拉起编辑器或 Agent</text>
+
+  <!-- Row 2: Files & Truth -->
+  <rect x="972" y="274" width="400" height="146" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.3"/>
+  <text class="sec-label" x="988" y="298" fill="#1e40af">② 真相源与触碰的文件</text>
+  <text class="body" x="988" y="322">• &lt;globalDataDir&gt;/worksets/worksets.yaml</text>
+  <text class="body" x="988" y="346">• open 时在文件锁内按存活目录动态重生成：</text>
+  <text class="body-muted" x="1002" y="370">&lt;globalDataDir&gt;/worksets/&lt;name&gt;.code-workspace</text>
+  <text class="body" x="988" y="394">• 绝对零侵入：不向任何成员目录写文件</text>
+
+  <!-- Row 3: Sharing Scope -->
+  <rect x="972" y="434" width="400" height="86" rx="8" fill="#ffffff" stroke="#93c5fd" stroke-width="1.3"/>
+  <text class="sec-label" x="988" y="458" fill="#1e40af">③ 团队共享 vs 本机私有</text>
+  <text class="body" x="988" y="482">100% 开发者个人本机私有视图，</text>
+  <text class="body" x="988" y="506">不进任何 Git 仓库，也不参与指令注入</text>
+
+  <!-- Row 4: CLI & Boundaries -->
+  <rect x="972" y="534" width="400" height="170" rx="8" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.3"/>
+  <text class="sec-label" x="988" y="558" fill="#1e3a8a">④ 关键命令与行为红线</text>
+  <text class="body" x="988" y="582">• create / list / show / add / remove / open</text>
+  <text class="body" x="988" y="606">• open 交接终端，显式拒绝 --json</text>
+  <text class="body-muted" x="1002" y="630">（报错 workset_open_json_unsupported）</text>
+  <text class="body" x="988" y="654">• 默认启用 code / cursor；CLI Agent 启动器</text>
+  <text class="body-muted" x="1002" y="678">需 OPENSPEC_ENABLE_CLI_AGENT_OPENERS=1</text>
+
+  <!-- ==================== BOTTOM COORDINATION SUMMARY ==================== -->
+  <rect x="32" y="736" width="1356" height="50" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.6"/>
+  <text class="footer-text" x="710" y="766" text-anchor="middle">一句话区分：Store 是「登记在册的规格仓」，openspec context 是「按 references: 算出的只读关系图」，openspec workset 是「个人桌面快捷多开夹」。</text>
+</svg>

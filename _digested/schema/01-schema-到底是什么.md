@@ -40,6 +40,8 @@
 
 ## 一张图看懂
 
+![内置 spec-driven 产物依赖 DAG 与四态判定机](figures/02-spec-driven-dag.svg)
+
 ```
 schema.yaml 定义的 artifact 依赖图（spec-driven 为例）：
 

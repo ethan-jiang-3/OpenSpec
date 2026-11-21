@@ -20,6 +20,8 @@ interface PlanningHome {
 
 **会误报空项目通过的命令关掉了这条 fallback**：`list` 只在 cwd 仍有遗留 `openspec/project.md` 时允许 implicit；`validate --all/--changes/--specs` 设 `allowImplicitRoot: false`。项目外跑它们会非零退出，不再 exit 0 报空列表。单条 `validate <name>` 和其他有意使用 implicit root 的工作流不变。`openspec schemas` 走同一套 canonical root selection，并接受 `--store <id>`。
 
+![resolveOpenSpecRoot() 五级寻根优先级与只读 references: 边界](figures/03-root-resolution.svg)
+
 ## Store 模型
 
 多仓库协同通过 store 模型实现：

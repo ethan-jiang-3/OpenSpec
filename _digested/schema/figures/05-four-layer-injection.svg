@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="820" viewBox="0 0 1300 820" role="img" aria-labelledby="title desc">
+  <title id="title">generateInstructions() 上下文与模板多层装配流水线</title>
+  <desc id="desc">左侧展示 config.yaml 的 context、references、rules[artifactId]，ArtifactGraph 依赖状态，以及 schema.yaml 的 instruction 和 template 六路输入；中间展示 generateInstructions 与 skipped 短路门；右侧展示 printInstructionsText 生成的有序 artifact XML 指令信封。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .group-blue { fill: #ffffff; stroke: #93c5fd; stroke-width: 1.5; }
+    .group-slate { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+    .group-green { fill: #ffffff; stroke: #86efac; stroke-width: 1.5; }
+    .envelope { fill: #ffffff; stroke: #475569; stroke-width: 1.8; }
+    .title { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+    .subtitle { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #475569; }
+    .group-h { font: 700 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+    .box-h { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "PingFang SC", monospace; }
+    .box-t { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .tag-root { font: 700 13px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; fill: #0f172a; }
+    .blue-box { fill: #dbeafe; stroke: #2563eb; stroke-width: 1.6; }
+    .purple-box { fill: #ede9fe; stroke: #7c3aed; stroke-width: 1.6; }
+    .amber-box { fill: #fef3c7; stroke: #d97706; stroke-width: 1.6; }
+    .slate-box { fill: #f1f5f9; stroke: #475569; stroke-width: 1.6; }
+    .green-box { fill: #dcfce7; stroke: #16a34a; stroke-width: 1.6; }
+    .orange-box { fill: #ffedd5; stroke: #ea580c; stroke-width: 1.6; }
+    .red-dash { fill: #fee2e2; stroke: #dc2626; stroke-width: 1.6; stroke-dasharray: 6,3; }
+    .engine-box { fill: #dcfce7; stroke: #16a34a; stroke-width: 2; }
+    .footer-box { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 1.2; }
+    .bus { stroke: #64748b; stroke-width: 2; fill: none; }
+    .arrow-main { stroke: #16a34a; stroke-width: 2.4; fill: none; marker-end: url(#arrowGreen); }
+    .arrow-bus { stroke: #64748b; stroke-width: 2.2; fill: none; marker-end: url(#arrowSlate); }
+    .arrow-short { stroke: #dc2626; stroke-width: 2; stroke-dasharray: 5,3; fill: none; marker-end: url(#arrowRed); }
+  </style>
+  <defs>
+    <marker id="arrowSlate" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="1" y="1" width="1298" height="818" rx="16"/>
+
+  <!-- Header -->
+  <text class="title" x="650" y="38" text-anchor="middle">generateInstructions() 上下文与模板多层装配流水线</text>
+  <text class="subtitle" x="650" y="64" text-anchor="middle">六路输入源经 CLI 确定性组装为 JSON 载荷与有序 &lt;artifact&gt; 指令信封（四层核心注入 + 依赖路径与跨仓索引）</text>
+
+  <!-- ==================== LEFT: 6 INPUTS ==================== -->
+  <!-- Group 1: Project Config -->
+  <rect class="group-blue" x="24" y="86" width="420" height="292" rx="12"/>
+  <text class="group-h" x="40" y="112">项目配置输入（&lt;root&gt;/openspec/config.yaml）</text>
+
+  <rect class="blue-box" x="40" y="126" width="388" height="72" rx="8"/>
+  <text class="box-h" x="54" y="150" fill="#1e40af">① config.context  [第 1 层 · 全局背景]</text>
+  <text class="box-t" x="54" y="176" fill="#1e3a8a">UTF-8 ≤ 50KB；超限整段忽略并告警（不截断）</text>
+
+  <rect class="purple-box" x="40" y="208" width="388" height="74" rx="8"/>
+  <text class="box-h" x="54" y="232" fill="#4c1d95">② config.references  [跨仓只读索引]</text>
+  <text class="box-t" x="54" y="258" fill="#5b21b6">实时抽取被引用 Store 的 ## Purpose 首行索引（≤ 50KB）</text>
+
+  <rect class="amber-box" x="40" y="292" width="388" height="72" rx="8"/>
+  <text class="box-h" x="54" y="316" fill="#92400e">③ config.rules[artifactId]  [第 2 层 · 规则]</text>
+  <text class="box-t" x="54" y="342" fill="#78350f">仅精确匹配当前 artifact ID；无 all 通配，不进 apply</text>
+
+  <!-- Group 2: Runtime DAG -->
+  <rect class="group-slate" x="24" y="392" width="420" height="114" rx="12"/>
+  <text class="group-h" x="40" y="418">运行态依赖图（ArtifactGraph + 磁盘扫描）</text>
+
+  <rect class="slate-box" x="40" y="432" width="388" height="60" rx="8"/>
+  <text class="box-h" x="54" y="456" fill="#1e293b">④ ArtifactGraph 依赖路径状态（dependencies）</text>
+  <text class="box-t" x="54" y="480" fill="#334155">直接 requires 的路径与状态：done / missing / skipped</text>
+
+  <!-- Group 3: Schema & Templates -->
+  <rect class="group-green" x="24" y="520" width="420" height="226" rx="12"/>
+  <text class="group-h" x="40" y="546">工作流骨架输入（schemas/&lt;name&gt;/）</text>
+
+  <rect class="green-box" x="40" y="560" width="388" height="78" rx="8"/>
+  <text class="box-h" x="54" y="584" fill="#14532d">⑤ schema.yaml → artifact.instruction  [第 3 层]</text>
+  <text class="box-t" x="54" y="610" fill="#166534">定义本制品写什么、章节契约与质量边界（核心方法层）</text>
+
+  <rect class="orange-box" x="40" y="650" width="388" height="82" rx="8"/>
+  <text class="box-h" x="54" y="676" fill="#9a3412">⑥ templates/&lt;template&gt;.md  [第 4 层 · 骨架]</text>
+  <text class="box-t" x="54" y="702" fill="#7c2d12">输出文件的 Markdown 结构起点（保留 &lt;!-- 提示注释 --&gt;）</text>
+
+  <!-- Input Bus -->
+  <path class="bus" d="M 428,162 L 458,162"/>
+  <path class="bus" d="M 428,245 L 458,245"/>
+  <path class="bus" d="M 428,328 L 458,328"/>
+  <path class="bus" d="M 428,462 L 458,462"/>
+  <path class="bus" d="M 428,599 L 458,599"/>
+  <path class="bus" d="M 428,691 L 458,691"/>
+  <path class="bus" d="M 458,162 L 458,691"/>
+  <path class="arrow-bus" d="M 458,418 L 480,418"/>
+
+  <!-- ==================== CENTER: ENGINE & SHORT-CIRCUIT ==================== -->
+  <!-- Short-circuit box at top aligned with <warning> -->
+  <rect class="red-dash" x="482" y="106" width="276" height="122" rx="12"/>
+  <text class="box-h" x="620" y="132" text-anchor="middle" fill="#991b1b">skipped 短路门</text>
+  <text class="box-t" x="620" y="156" text-anchor="middle" fill="#7f1d1d">若 .openspec.yaml 声明</text>
+  <text class="box-t" x="620" y="178" text-anchor="middle" fill="#7f1d1d">skip_specs: true 跳过本制品：</text>
+  <text class="box-t" x="620" y="202" text-anchor="middle" fill="#991b1b">仅输出 &lt;warning&gt; 立即 return！</text>
+
+  <path class="arrow-short" d="M 620,272 L 620,230"/>
+  <text class="box-t" x="630" y="256" fill="#b91c1c">skipped: true</text>
+  <path class="arrow-short" d="M 758,154 L 810,154"/>
+
+  <!-- Main assembly engine -->
+  <rect class="engine-box" x="482" y="272" width="276" height="292" rx="14"/>
+  <text class="box-h" x="620" y="302" text-anchor="middle" fill="#14532d">generateInstructions()</text>
+  <text class="box-t" x="620" y="326" text-anchor="middle" fill="#15803d">(instruction-loader.ts)</text>
+  <line x1="500" y1="342" x2="740" y2="342" stroke="#86efac" stroke-width="1.4"/>
+  <text class="box-t" x="500" y="368" fill="#14532d">1. 校验 artifactId 存在于 Schema</text>
+  <text class="box-t" x="500" y="394" fill="#14532d">2. 容错读取 config.yaml 不抛错</text>
+  <text class="box-t" x="500" y="420" fill="#14532d">3. 对照全量可用 Schema 校验 rules</text>
+  <text class="box-t" x="500" y="446" fill="#14532d">4. 分离 context / rules / 模板字段</text>
+  <text class="box-t" x="500" y="472" fill="#14532d">5. 返回 JSON 或交由命令层</text>
+  <text class="box-h" x="500" y="498" fill="#15803d">   printInstructionsText()</text>
+  <text class="box-t" x="500" y="524" fill="#14532d">   按固定顺序包裹 XML 信封</text>
+
+  <path class="arrow-main" d="M 758,418 L 792,418"/>
+
+  <!-- ==================== RIGHT: ORDERED ENVELOPE ==================== -->
+  <rect class="envelope" x="796" y="86" width="480" height="660" rx="14"/>
+  <text class="tag-root" x="814" y="114">&lt;artifact id="..." change="..." schema="..."&gt;</text>
+
+  <!-- Slot 0: warning -->
+  <rect class="red-dash" x="814" y="126" width="444" height="54" rx="8"/>
+  <text class="box-h" x="828" y="148" fill="#991b1b">[&lt;warning&gt;]  短路禁写警告 / 或 blocked 缺失前置提示</text>
+  <text class="box-t" x="828" y="170" fill="#7f1d1d">skipped: true 时输出禁写原因并直接闭合 &lt;/artifact&gt;</text>
+
+  <!-- Slot 1: task -->
+  <rect class="slate-box" x="814" y="188" width="444" height="42" rx="8"/>
+  <text class="box-h" x="828" y="214" fill="#1e293b">1. &lt;task&gt;  目标 artifactId、所属 Change 与角色简述</text>
+
+  <!-- Slot 2: project_context -->
+  <rect class="blue-box" x="814" y="238" width="444" height="52" rx="8"/>
+  <text class="box-h" x="828" y="260" fill="#1e40af">2. &lt;project_context&gt;  ← ① config.context</text>
+  <text class="box-t" x="828" y="282" fill="#1e3a8a">&lt;!-- 背景约束：Do NOT include this in your output --&gt;</text>
+
+  <!-- Slot 3: referenced_stores -->
+  <rect class="purple-box" x="814" y="298" width="444" height="44" rx="8"/>
+  <text class="box-h" x="828" y="325" fill="#4c1d95">3. &lt;referenced_stores&gt;  ← ② 上游 Store Purpose 索引</text>
+
+  <!-- Slot 4: rules -->
+  <rect class="amber-box" x="814" y="350" width="444" height="52" rx="8"/>
+  <text class="box-h" x="828" y="372" fill="#92400e">4. &lt;rules&gt;  ← ③ config.rules[artifactId]</text>
+  <text class="box-t" x="828" y="394" fill="#78350f">&lt;!-- 制品专属规则：Do NOT include this in your output --&gt;</text>
+
+  <!-- Slot 5: dependencies -->
+  <rect class="slate-box" x="814" y="410" width="444" height="44" rx="8"/>
+  <text class="box-h" x="828" y="437" fill="#1e293b">5. &lt;dependencies&gt;  ← ④ 依赖路径（done/missing/skipped）</text>
+
+  <!-- Slot 6: output -->
+  <rect class="slate-box" x="814" y="462" width="444" height="42" rx="8"/>
+  <text class="box-h" x="828" y="488" fill="#334155">6. &lt;output&gt;  Write to: &lt;resolvedOutputPath&gt;</text>
+
+  <!-- Slot 7: instruction -->
+  <rect class="green-box" x="814" y="512" width="444" height="46" rx="8"/>
+  <text class="box-h" x="828" y="540" fill="#14532d">7. &lt;instruction&gt;  ← ⑤ schema.yaml 写作指导（方法层）</text>
+
+  <!-- Slot 8: template -->
+  <rect class="orange-box" x="814" y="566" width="444" height="52" rx="8"/>
+  <text class="box-h" x="828" y="588" fill="#9a3412">8. &lt;template&gt;  ← ⑥ templates/&lt;template&gt;.md</text>
+  <text class="box-t" x="828" y="610" fill="#7c2d12">唯一进入最终落盘文件的 Markdown 章节结构骨架</text>
+
+  <!-- Slot 9: unlocks -->
+  <rect class="slate-box" x="814" y="626" width="444" height="46" rx="8"/>
+  <text class="box-h" x="828" y="654" fill="#1e293b">9. &lt;success_criteria&gt; + &lt;unlocks&gt;  ← 解锁下游产物</text>
+
+  <text class="tag-root" x="814" y="698">&lt;/artifact&gt;</text>
+  <text class="box-t" x="814" y="726" fill="#64748b">旁路：Apply / Archive 不走此信封，改走 context 与 operations 指引</text>
+
+  <!-- Footer -->
+  <rect class="footer-box" x="24" y="762" width="1252" height="42" rx="10"/>
+  <text class="box-t" x="650" y="788" text-anchor="middle" fill="#334155">四层分工口诀：context 给稳定背景 · rules 给单制品约束 · instruction 给写作方法 · template 给输出形状（背景与规则严禁写进产物）。</text>
+</svg>

@@ -31,7 +31,7 @@
 | 4 | 行号锚点 | `` `(src\|schemas\|scripts\|test)/...:N` `` 的 N 不得超过文件行数，且该行内容需与上下文描述相符 | 132 处（含 40 个唯一反引号锚点），0 越界 |
 | 5 | 相对链接 | 剥掉围栏代码块与行内代码后匹配 markdown 链接语法，按文件所在目录解析，须存在 | 243 文件，0 失效 |
 | 6 | 锚点 fragment | `#frag`（含同文件 `#frag`）需存在于目标文件的标题 slug 集合中 | 同上，0 失效 |
-| 7 | 代码围栏与 SVG | 每文件 ``` 计数配平；全部 `.svg` 通过 XML 解析 | 243 MD / 24 SVG，0 异常 |
+| 7 | 代码围栏与 SVG | 每文件 ``` 计数配平；全部 `.svg` 通过 XML 解析 | 243 MD / 42 SVG，0 异常 |
 
 ### 误判排除
 
@@ -99,7 +99,7 @@ PY
 | 轮次 | 修掉 | 提交 |
 |------|------|------|
 | 0012 收尾 | 5 个转录错误的 sha（跨 7 文件 4 目录）、`$openspec-propose-change` 残留 3 处、虚构子命令 `workset save` | `e5f66e0f`、`10c62a4e` |
-| 0015 二轮全库精校 | 批量替换导致的 `/opsx:*`→`/openspec-*` 反义污染与步骤重编号误伤（`第 50..54 步` / `00–26 / 50–19`）、`0015` 漏记第 9 组修复 `#2266`、`#2265` 增长判据误译、`10_schema-requirement` 占用 `specs/` 导致 `validate` 硬败、`53-实战` 4 份 delta spec 误用 `## Requirements`、`18_` 过期 `v1.17.0` 实测数字与缺失 CLI/config 字段、`_coverage/*` 14 个源文件与 7 个 capability 缺口、`_runbook/upgrade-all.sh` 非交互挂起与 `--clean` 指纹误删风险 | 见 git log |
+| 0015 二轮全库精校 | 批量替换导致的 `/opsx:*`→`/openspec-*` 反义污染与步骤重编号误伤（`第 50..54 步` / `00–26 / 50–19`）、`0015` 漏记第 9 组修复 `#2266`、`#2265` 增长判据误译、`10_schema-requirement` 占用 `specs/` 导致 `validate` 硬败、`53-实战` 4 份 delta spec 误用 `## Requirements`、`18_` 过期 `v1.17.0` 实测数字与缺失 CLI/config 字段、`_coverage/*` 14 个源文件与 7 个 capability 缺口、`_runbook/upgrade-all.sh` 非交互挂起与 `--clean` 指纹误删风险；另为 `_digested/` 全部 8 个核心子目录补齐 `figures/*.svg`（新增 18 张架构/流转 SVG，总计 42 张） | `a316b45c` + 图解提交 |
 
 已知的 sha 更正对照：
 

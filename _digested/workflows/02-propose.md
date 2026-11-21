@@ -15,6 +15,8 @@ propose 是**带前置上下文与规划边界的默认完整规划路径**：�
 
 ## 和 new / continue / ff 的粒度区别
 
+![三条规划路径对比：propose vs ff vs new + continue](figures/02-planning-modes-compare.svg)
+
 ```text
 propose:  澄清实质歧义 + context 预加载 + 新建 change + 生成传递必需集全部 artifact → STOP（严守规划边界）
 new:      新建 change + 展示首个 ready 模板 → STOP（scaffold）
@@ -140,7 +142,7 @@ artifact 循环里 `resolvedOutputPath` 有两副面孔：**具体路径**，或
 | Guardrail | 含义 |
 |---|---|
 | **Planning boundary（规划边界）**：触发本工作流的请求只授权规划，任何实现/apply 指令均不跨阶段结转 | 严禁在本轮修改业务代码或自动启动 apply；写完产物必须停止并等待新一轮用户指令 |
-| 创建传递必需集内全部 artifacts（`applyRequires` + 沿 `requires` 边的传递闭包，而非只看 `applyRequires`） | 防止先写 `tasks.md` 漏掉上游 `specs`（#2089）；支持对不满足条件的 `design.md` 做有意识条件跳过 |
+| 创建传递必需集内全部 artifacts（`applyRequires` + 沿 `requires` 边的传递闭包，而非只看 `applyRequires`） | 防止先写 `tasks.md` 漏掉上游 `specs`（#1412）；支持对不满足条件的 `design.md` 做有意识条件跳过 |
 | 写之前重读依赖（从磁盘，不从对话记忆） | 用户可能已编辑过 |
 | **实质性歧义先停下问用户，细节假设记录在案** | 凡影响范围、外部可观测行为、兼容性或验收标准的歧义必须在创建 change 前问清（"优先保持 momentum" 是 `ff` 的策略，不是 `propose` 的） |
 | change 同名时询问用户是继续已有 change 还是另起新名 | 避免覆盖 |

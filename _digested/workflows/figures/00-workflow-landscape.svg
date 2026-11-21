@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="880" viewBox="0 0 1360 880" role="img" aria-labelledby="title desc">
+  <title id="title">12 个官方工作流技能全景与统一前置守卫</title>
+  <desc id="desc">展示全部 12 个工作流技能共享的前置守卫（STORE_SELECTION_GUIDANCE 与 PROJECT_ROOT_GUARD），以及按生命周期四阶段分组的 6 个 core 默认技能与 6 个 custom 扩展技能，附 feedback.ts 内部模板说明。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #475569; }
+    .gate-hdr { font: 700 14.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #0f172a; }
+    .stage-title { font: 700 14.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .stage-sub { font: 500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .skill-name { font: 700 13px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+    .badge { font: 700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .body { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .foot { font: 500 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #475569; }
+  </style>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1358" height="878" rx="16"/>
+
+  <!-- Header & Legend -->
+  <text class="h1" x="680" y="40" text-anchor="middle">12 个官方工作流技能全景与统一前置守卫</text>
+
+  <rect x="348" y="54" width="290" height="26" rx="13" fill="#dbeafe" stroke="#2563eb" stroke-width="1.6"/>
+  <text class="badge" x="493" y="71" text-anchor="middle" fill="#1e3a8a">实线蓝框 [core]：默认开箱安装（6 个）</text>
+
+  <rect x="662" y="54" width="350" height="26" rx="13" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="5,3"/>
+  <text class="badge" x="837" y="71" text-anchor="middle" fill="#5b21b6">虚线紫框 [custom]：按需自选扩展（6 个）</text>
+
+  <!-- ==================== TOP SHARED GATE BANNER ==================== -->
+  <rect x="34" y="92" width="1292" height="152" rx="14" fill="#ffffff" stroke="#475569" stroke-width="1.8"/>
+  <rect x="34" y="92" width="1292" height="38" rx="14" fill="#f1f5f9" stroke="#475569" stroke-width="1.8"/>
+  <text class="gate-hdr" x="680" y="116" text-anchor="middle">全部 12 个工作流技能强制共享的前置守卫（首次写操作前必经）</text>
+
+  <!-- Gate 1: STORE_SELECTION_GUIDANCE -->
+  <rect x="52" y="142" width="446" height="88" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text class="stage-title" x="70" y="166" fill="#4c1d95">① STORE_SELECTION_GUIDANCE</text>
+  <text class="body" x="70" y="190" fill="#5b21b6">• 涉及独立 Store 时先跑 openspec store list --json</text>
+  <text class="body" x="70" y="214" fill="#5b21b6">• 将 --store &lt;id&gt; 作为粘性参数贯穿后续全部 CLI 调用</text>
+
+  <line x1="498" y1="186" x2="534" y2="186" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Gate 2: PROJECT_ROOT_GUARD -->
+  <rect x="538" y="142" width="770" height="88" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text class="stage-title" x="556" y="166" fill="#92400e">② PROJECT_ROOT_GUARD（运行 openspec list --json 检查 root）</text>
+  <text class="body" x="556" y="190" fill="#92400e">• 坏或未注册 store: 指针（报 Declared in / Invalid store declaration）→ 立即报错停止并展示 fix</text>
+  <text class="body" x="556" y="214" fill="#b45309">• 普通无 openspec/：Agent 自发命中技能则静默退让普通作答；用户点名调用则停下询问初始化或选 Store</text>
+
+  <!-- Arrow from Gate to Stages -->
+  <line x1="680" y1="244" x2="680" y2="268" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STAGE 1: DISCOVERY & ONBOARD ==================== -->
+  <rect x="34" y="272" width="1292" height="100" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="34" y="272" width="184" height="100" rx="12" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text class="stage-title" x="126" y="314" text-anchor="middle" fill="#1e293b">探索与导览</text>
+  <text class="stage-sub" x="126" y="340" text-anchor="middle" fill="#475569">（1 core + 1 custom）</text>
+
+  <!-- openspec-explore [core] -->
+  <rect x="236" y="284" width="526" height="76" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="skill-name" x="254" y="310" fill="#1e3a8a">openspec-explore</text>
+  <rect x="412" y="295" width="56" height="20" rx="10" fill="#2563eb"/>
+  <text class="badge" x="440" y="309" text-anchor="middle" fill="#ffffff">core</text>
+  <text class="body" x="254" y="340" fill="#1e40af">开放式探索姿态：读活跃 change 与主 specs 清单，经确认可就地捕获产物</text>
+
+  <!-- openspec-onboard [custom] -->
+  <rect x="780" y="284" width="528" height="76" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="6,3"/>
+  <text class="skill-name" x="798" y="310" fill="#4c1d95">openspec-onboard</text>
+  <rect x="974" y="295" width="68" height="20" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="badge" x="1008" y="309" text-anchor="middle" fill="#5b21b6">custom</text>
+  <text class="body" x="798" y="340" fill="#5b21b6">11 阶段教学向导：挑真实小任务走完 new → 四产物 → 实施 → archive --yes</text>
+
+  <!-- ==================== STAGE 2: PLANNING & REVISION ==================== -->
+  <rect x="34" y="386" width="1292" height="182" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="34" y="386" width="184" height="182" rx="12" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.5"/>
+  <text class="stage-title" x="126" y="468" text-anchor="middle" fill="#1e3a8a">发起与规划</text>
+  <text class="stage-sub" x="126" y="494" text-anchor="middle" fill="#1d4ed8">（2 core + 3 custom）</text>
+
+  <!-- Row 2A: 2 Core Planning Skills -->
+  <rect x="236" y="398" width="526" height="74" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="skill-name" x="254" y="424" fill="#1e3a8a">openspec-propose</text>
+  <rect x="412" y="409" width="56" height="20" rx="10" fill="#2563eb"/>
+  <text class="badge" x="440" y="423" text-anchor="middle" fill="#ffffff">core</text>
+  <text class="body" x="254" y="454" fill="#1e40af">默认规划：预读 context + 问清实质歧义 → 写完传递必需集 → 停在规划边界</text>
+
+  <rect x="780" y="398" width="528" height="74" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="skill-name" x="798" y="424" fill="#1e3a8a">openspec-update-change</text>
+  <rect x="1020" y="409" width="56" height="20" rx="10" fill="#2563eb"/>
+  <text class="badge" x="1048" y="423" text-anchor="middle" fill="#ffffff">core</text>
+  <text class="body" x="798" y="454" fill="#1e40af">双向自洽修订：修改已有 change 的规划产物（含补缺失 glob），绝不改业务代码</text>
+
+  <!-- Row 2B: 3 Custom Planning Skills -->
+  <rect x="236" y="482" width="344" height="74" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="6,3"/>
+  <text class="skill-name" x="252" y="508" fill="#4c1d95">openspec-new-change</text>
+  <rect x="440" y="493" width="66" height="20" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="badge" x="473" y="507" text-anchor="middle" fill="#5b21b6">custom</text>
+  <text class="body" x="252" y="538" fill="#5b21b6">只搭空目录并展示首模板即停（零产物写入）</text>
+
+  <rect x="596" y="482" width="356" height="74" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="6,3"/>
+  <text class="skill-name" x="612" y="508" fill="#4c1d95">openspec-continue-change</text>
+  <rect x="836" y="493" width="66" height="20" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="badge" x="869" y="507" text-anchor="middle" fill="#5b21b6">custom</text>
+  <text class="body" x="612" y="538" fill="#5b21b6">增量推进：先补半写 glob，否则每次写 1 个产物</text>
+
+  <rect x="968" y="482" width="340" height="74" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="6,3"/>
+  <text class="skill-name" x="984" y="508" fill="#4c1d95">openspec-ff-change</text>
+  <rect x="1164" y="493" width="66" height="20" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="badge" x="1197" y="507" text-anchor="middle" fill="#5b21b6">custom</text>
+  <text class="body" x="984" y="538" fill="#5b21b6">仅限新建：倾向合理假设快进写完传递必需集</text>
+
+  <!-- ==================== STAGE 3: APPLY & VERIFY ==================== -->
+  <rect x="34" y="582" width="1292" height="100" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="34" y="582" width="184" height="100" rx="12" fill="#dcfce7" stroke="#4ade80" stroke-width="1.5"/>
+  <text class="stage-title" x="126" y="624" text-anchor="middle" fill="#14532d">实施与验证</text>
+  <text class="stage-sub" x="126" y="650" text-anchor="middle" fill="#15803d">（1 core + 1 custom）</text>
+
+  <!-- openspec-apply-change [core] -->
+  <rect x="236" y="594" width="526" height="76" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="skill-name" x="254" y="620" fill="#1e3a8a">openspec-apply-change</text>
+  <rect x="456" y="605" width="56" height="20" rx="10" fill="#2563eb"/>
+  <text class="badge" x="484" y="619" text-anchor="middle" fill="#ffffff">core</text>
+  <text class="body" x="254" y="650" fill="#1e40af">唯一改业务代码的常规技能：按 sourcePath:line 逐项实施并勾选任务</text>
+
+  <!-- openspec-verify-change [custom] -->
+  <rect x="780" y="594" width="528" height="76" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="6,3"/>
+  <text class="skill-name" x="798" y="620" fill="#4c1d95">openspec-verify-change</text>
+  <rect x="1006" y="605" width="68" height="20" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="badge" x="1040" y="619" text-anchor="middle" fill="#5b21b6">custom</text>
+  <text class="body" x="798" y="650" fill="#5b21b6">归档前建议性核验：对照真实代码评估完整性、正确性、一致性三维对齐</text>
+
+  <!-- ==================== STAGE 4: SYNC & ARCHIVE ==================== -->
+  <rect x="34" y="696" width="1292" height="100" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="34" y="696" width="184" height="100" rx="12" fill="#ffedd5" stroke="#fb923c" stroke-width="1.5"/>
+  <text class="stage-title" x="126" y="738" text-anchor="middle" fill="#9a3412">同步与归档</text>
+  <text class="stage-sub" x="126" y="764" text-anchor="middle" fill="#c2410c">（2 core + 1 custom）</text>
+
+  <!-- openspec-sync-specs [core] -->
+  <rect x="236" y="708" width="344" height="76" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="skill-name" x="252" y="734" fill="#1e3a8a">openspec-sync-specs</text>
+  <rect x="438" y="719" width="56" height="20" rx="10" fill="#2563eb"/>
+  <text class="badge" x="466" y="733" text-anchor="middle" fill="#ffffff">core</text>
+  <text class="body" x="252" y="764" fill="#1e40af">智能合并 delta 至主 specs + validate --specs</text>
+
+  <!-- openspec-archive-change [core] -->
+  <rect x="596" y="708" width="356" height="76" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="skill-name" x="612" y="734" fill="#1e3a8a">openspec-archive-change</text>
+  <rect x="832" y="719" width="56" height="20" rx="10" fill="#2563eb"/>
+  <text class="badge" x="860" y="733" text-anchor="middle" fill="#ffffff">core</text>
+  <text class="body" x="612" y="764" fill="#1e40af">单变更收尾：#2277 目标预检 + 同步评估 + mv</text>
+
+  <!-- openspec-bulk-archive-change [custom] -->
+  <rect x="968" y="708" width="340" height="76" rx="8" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="6,3"/>
+  <text class="skill-name" x="984" y="734" fill="#4c1d95">openspec-bulk-archive-change</text>
+  <rect x="1230" y="719" width="64" height="20" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="badge" x="1262" y="733" text-anchor="middle" fill="#5b21b6">custom</text>
+  <text class="body" x="984" y="764" fill="#5b21b6">批量归档：基于代码库证据消解跨变更冲突</text>
+
+  <!-- ==================== FOOTNOTE ==================== -->
+  <rect x="34" y="810" width="1292" height="48" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.3"/>
+  <text class="foot" x="680" y="839" text-anchor="middle">源码目录注记：src/core/templates/workflows/ 下另含未部署内部模板 feedback.ts（不在 12 个可安装技能内），以及共享模块 store-selection.ts、project-root.ts。</text>
+</svg>

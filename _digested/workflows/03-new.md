@@ -17,6 +17,8 @@ new 是**最轻量的规划 workflow**：只创建 change scaffold（目录 + `.
 
 ## 和 propose 的关键区别
 
+![三条规划路径对比：propose vs ff vs new + continue](figures/02-planning-modes-compare.svg)
+
 | | propose | new |
 |---|---|---|
 | 创建 change 目录 | ✓ | ✓ |

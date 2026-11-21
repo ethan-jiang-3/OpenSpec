@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="880" viewBox="0 0 1420 880" role="img" aria-labelledby="title desc">
+  <title id="title">resolveOpenSpecRoot() 五级寻根优先级与只读 references: 边界</title>
+  <desc id="desc">展示 OpenSpec 常规命令解析规划根目录的五级瀑布流优先级（--store、最近 openspec/ 的本地真根或 store: 指针、全局 defaultStore、已注册 Store 提示报错、隐式 cwd 回退），以及右侧只读 references: 上下文索引的正交边界。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .step-title { font: 700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .body { font: 400 12.8px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #1e293b; }
+    .body-muted { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .edge-label { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #334155; }
+  </style>
+  <defs>
+    <marker id="arr-down" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#475569"/>
+    </marker>
+    <marker id="arr-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arr-red" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#dc2626"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1418" height="878" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="36" y="42">resolveOpenSpecRoot() 五级寻根优先级与只读 references: 边界</text>
+  <text class="sub" x="36" y="68">所有常规命令（new / status / instructions / list / show / validate / archive / view / schemas）统一走此瀑布流决定唯一写入根。</text>
+
+  <!-- Entry Pill -->
+  <rect x="68" y="92" width="380" height="44" rx="22" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text class="step-title" x="258" y="119" text-anchor="middle" fill="#166534">入口：resolveOpenSpecRoot(options)</text>
+  <text class="body-muted" x="468" y="119">（注：传 --store-path 直接拒绝报错 store_path_not_supported）</text>
+
+  <line x1="258" y1="136" x2="258" y2="164" stroke="#475569" stroke-width="2" marker-end="url(#arr-down)"/>
+
+  <!-- ==================== PRIORITY 1 ==================== -->
+  <rect x="36" y="166" width="448" height="84" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="step-title" x="56" y="196" fill="#1e40af">Priority 1 · 显式传入 --store &lt;id&gt; ？</text>
+  <text class="body-muted" x="56" y="222">最高优先级，强制指定本次命令读写的已注册 Store</text>
+
+  <line x1="484" y1="208" x2="546" y2="208" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text class="edge-label" x="515" y="196" text-anchor="middle" fill="#15803d">是</text>
+
+  <rect x="548" y="166" width="424" height="84" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+  <text class="step-title" x="568" y="192" fill="#166534">命中注册 Store（source: "store"）</text>
+  <text class="body-muted" x="568" y="216">核验 registry + store.yaml 身份与 root 健康度；</text>
+  <text class="body-muted" x="568" y="239">未注册或身份失配直接报 RootSelectionError</text>
+
+  <line x1="258" y1="250" x2="258" y2="280" stroke="#475569" stroke-width="2" marker-end="url(#arr-down)"/>
+  <text class="edge-label" x="272" y="270">否</text>
+
+  <!-- ==================== PRIORITY 2 ==================== -->
+  <rect x="36" y="282" width="448" height="190" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+  <text class="step-title" x="56" y="310" fill="#9a3412">Priority 2 · 向上查找最近合格 openspec/</text>
+  <text class="body" x="56" y="335">findQualifyingRootSync(startPath)</text>
+  <text class="body-muted" x="56" y="359">• 必须含 specs/、changes/ 目录，或含 config.yaml|.yml</text>
+  <text class="body-muted" x="56" y="383">• 裸 ~/openspec/ 容器目录无规划形态且无配置文件，</text>
+  <text class="body-muted" x="70" y="407">会被自动跳过，绝不把 $HOME 误判成幽灵根</text>
+  <text class="body-muted" x="56" y="432">• 找到后按 classifyOpenSpecDir() 分流 2a / 2b：</text>
+
+  <!-- Branch 2a -->
+  <path d="M484,328 L546,328" stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#arr-green)"/>
+  <text class="edge-label" x="515" y="316" text-anchor="middle" fill="#15803d">2a</text>
+
+  <rect x="548" y="282" width="424" height="88" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+  <text class="step-title" x="568" y="308" fill="#166534">2a 有本地规划形态（含 specs/ 或 changes/）</text>
+  <text class="body" x="568" y="332">→ 本地真根胜出（source: "nearest"）</text>
+  <text class="body-muted" x="568" y="355">若同时写了 store: 指针，忽略该指针并向 stderr 告警</text>
+
+  <!-- Branch 2b -->
+  <path d="M484,424 L546,424" stroke="#7c3aed" stroke-width="2" fill="none" marker-end="url(#arr-purple)"/>
+  <text class="edge-label" x="515" y="412" text-anchor="middle" fill="#6d28d9">2b</text>
+
+  <rect x="548" y="382" width="424" height="90" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.8"/>
+  <text class="step-title" x="568" y="408" fill="#5b21b6">2b 仅含配置文件（无 specs/ 与 changes/）</text>
+  <text class="body" x="568" y="432">声明 store: &lt;id&gt; → 解析目标（source: "declared"）</text>
+  <text class="body-muted" x="568" y="455">未声明 → "nearest"；坏指针直接报 invalid_store_pointer</text>
+
+  <line x1="258" y1="472" x2="258" y2="502" stroke="#475569" stroke-width="2" marker-end="url(#arr-down)"/>
+  <text class="edge-label" x="272" y="492">未找到合格 openspec/</text>
+
+  <!-- ==================== PRIORITY 3 ==================== -->
+  <rect x="36" y="504" width="448" height="86" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.8"/>
+  <text class="step-title" x="56" y="532" fill="#5b21b6">Priority 3 · 全局配置设有 defaultStore ？</text>
+  <text class="body-muted" x="56" y="558">config.json 机器级兜底（绝不覆盖本地真根）</text>
+
+  <line x1="484" y1="547" x2="546" y2="547" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text class="edge-label" x="515" y="535" text-anchor="middle" fill="#15803d">是</text>
+
+  <rect x="548" y="504" width="424" height="86" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+  <text class="step-title" x="568" y="530" fill="#166534">命中全局默认 Store（source: "global_default"）</text>
+  <text class="body-muted" x="568" y="554">若该 Store 已注销，报错提示重新注册或执行</text>
+  <text class="body-muted" x="568" y="577">openspec config unset defaultStore</text>
+
+  <line x1="258" y1="590" x2="258" y2="620" stroke="#475569" stroke-width="2" marker-end="url(#arr-down)"/>
+  <text class="edge-label" x="272" y="610">未设置</text>
+
+  <!-- ==================== PRIORITY 4 ==================== -->
+  <rect x="36" y="622" width="448" height="94" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.8"/>
+  <text class="step-title" x="56" y="650" fill="#0f172a">Priority 4 · 本机已注册任何 Store ？</text>
+  <text class="body-muted" x="56" y="674">一旦机器启用了 Store 协作，禁止在未知目录</text>
+  <text class="body-muted" x="56" y="697">静默把当前目录当成隐式规划根</text>
+
+  <line x1="484" y1="669" x2="546" y2="669" stroke="#dc2626" stroke-width="2" marker-end="url(#arr-red)"/>
+  <text class="edge-label" x="515" y="657" text-anchor="middle" fill="#b91c1c">是</text>
+
+  <rect x="548" y="622" width="424" height="94" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.8"/>
+  <text class="step-title" x="568" y="648" fill="#991b1b">报错 no_root_with_registered_stores</text>
+  <text class="body-muted" x="568" y="672">按 git remote origin 仓库名匹配同名 Store 作候选提示</text>
+  <text class="body-muted" x="568" y="695">（#2077：仅写入报错建议，绝不自动替用户盲选写入）</text>
+
+  <line x1="258" y1="716" x2="258" y2="746" stroke="#475569" stroke-width="2" marker-end="url(#arr-down)"/>
+  <text class="edge-label" x="272" y="736">无注册 Store</text>
+
+  <!-- ==================== PRIORITY 5 ==================== -->
+  <rect x="36" y="748" width="448" height="96" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.8"/>
+  <text class="step-title" x="56" y="776" fill="#0f172a">Priority 5 · 最终回退：检查 allowImplicitRoot</text>
+  <text class="body-muted" x="56" y="800">• validate --all/--changes/--specs 显式设为 false</text>
+  <text class="body-muted" x="56" y="824">• list 仅在 cwd 仍有遗留 openspec/project.md 时允许</text>
+
+  <line x1="484" y1="796" x2="546" y2="796" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <text class="edge-label" x="515" y="784" text-anchor="middle" fill="#b45309">判定</text>
+
+  <rect x="548" y="748" width="424" height="96" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.8"/>
+  <text class="step-title" x="568" y="776" fill="#92400e">允许 → 回退 cwd（source: "implicit"）</text>
+  <text class="body" x="568" y="800" fill="#991b1b">禁止 → 报错 no_openspec_root（非零退出）</text>
+  <text class="body-muted" x="568" y="824">防止在项目外误跑校验却报「0 错误通过」</text>
+
+  <!-- ==================== RIGHT CALLOUT: REFERENCES BOUNDARY ==================== -->
+  <rect x="1000" y="166" width="384" height="678" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <rect x="1000" y="166" width="384" height="46" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text class="step-title" x="1192" y="195" text-anchor="middle" fill="#92400e">正交边界：references: 只读索引</text>
+
+  <text class="body" x="1020" y="238">当前根的 openspec/config.yaml 可声明：</text>
+  <rect x="1020" y="252" width="344" height="62" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="1.2"/>
+  <text class="body" x="1036" y="276">references:</text>
+  <text class="body" x="1052" y="300">- platform-api   # 已注册的 store id</text>
+
+  <line x1="1192" y1="314" x2="1192" y2="348" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <text class="edge-label" x="1206" y="336" fill="#92400e">单层只读扫描</text>
+
+  <rect x="1020" y="350" width="344" height="98" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text class="step-title" x="1036" y="376" fill="#5b21b6">读取上游 Store 的 openspec/specs/</text>
+  <text class="body-muted" x="1036" y="400">• 抽取每个 spec ID 与首行 Purpose 摘要</text>
+  <text class="body-muted" x="1036" y="424">• 生成按需拉取命令：show &lt;id&gt; --store &lt;id&gt;</text>
+
+  <line x1="1192" y1="448" x2="1192" y2="482" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <text class="edge-label" x="1206" y="470" fill="#92400e">注入提示词与视图</text>
+
+  <rect x="1020" y="484" width="344" height="96" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text class="step-title" x="1036" y="510" fill="#166534">instructions / context 只读消费</text>
+  <text class="body-muted" x="1036" y="534">• 渲染为轻量规格索引（UTF-8 上限 ≤ 50KB）</text>
+  <text class="body-muted" x="1036" y="558">• 绝不内联完整规格全文，防止撑爆上下文</text>
+
+  <!-- 4 Hard Rules -->
+  <rect x="1020" y="598" width="344" height="226" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4"/>
+  <text class="step-title" x="1036" y="624" fill="#92400e">四条铁律（与左侧寻根彻底解耦）</text>
+  <text class="body" x="1036" y="650">1. 绝不改变当前写入 root 归属</text>
+  <text class="body" x="1036" y="676">2. 单层非传递：A→B→C 时 A 不见 C</text>
+  <text class="body" x="1036" y="702">3. 缺失降级：未注册仅报 warning，不阻断</text>
+  <text class="body" x="1036" y="728">4. 安全修复提示：仅在 remote URL 无</text>
+  <text class="body-muted" x="1054" y="752">shell 元字符时拼出可直接粘贴的</text>
+  <text class="body-muted" x="1054" y="776">git clone + openspec store register</text>
+  <text class="body-muted" x="1054" y="800">命令（绝对路径展开 ~）</text>
+</svg>

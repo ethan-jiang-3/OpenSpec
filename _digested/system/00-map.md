@@ -14,6 +14,8 @@ OpenSpec 当前不是单一的”spec 文件夹工具”，而是一套本地协
 
 如果你已经熟悉 SDD、AI Coding、agent workflow，但还没建立 OpenSpec 的概念体系，建议先读 `07-OpenSpec-工程思想.md` 和 `08-对照常见-SDD-与-AI-Coding.md`。这两篇不是新机制，而是把下面五层模型翻译成更容易迁移的工程直觉。
 
+![OpenSpec 四角色闭环与职责边界](figures/01-triad-mental-model.svg)
+
 ## 五层系统模型
 
 ```text

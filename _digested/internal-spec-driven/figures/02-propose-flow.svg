@@ -150,7 +150,7 @@
   <rect x="185" y="506" width="520" height="58" rx="4" fill="#f0fdf4" stroke="#86efac" stroke-width="0.8"/>
   <text x="195" y="520" font-size="8" fill="#16a34a">spec-driven 的 artifact DAG：proposal (入度0) → specs / design (入度1) → tasks (入度2, apply gate)</text>
   <text x="195" y="534" font-size="8" fill="#16a34a">getBuildOrder() 用 Kahn 算法对 requires 做拓扑排序，确定推荐创建顺序</text>
-  <text x="195" y="548" font-size="8" fill="#16a34a">propose 循环终止判定：沿 artifacts[].requires 展开 applyRequires 传递闭包（#2089）</text>
+  <text x="195" y="548" font-size="8" fill="#16a34a">propose 循环终止判定：沿 artifacts[].requires 展开 applyRequires 传递闭包（#1412）</text>
   <text x="195" y="560" font-size="8" fill="#16a34a">applyRequires: [tasks] 意味着 tasks 文件存在即解锁 apply gate；design 不满足条件时可条件跳过</text>
 
   <!-- ========== PHASE C: DONE ========== -->

@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1340" height="770" viewBox="0 0 1340 770" role="img" aria-labelledby="title desc">
+  <title id="title">OpenSpec 四角色闭环与职责边界（谁推理 · 谁判态 · 谁存真相）</title>
+  <desc id="desc">展示 User、Host Agent、OpenSpec CLI 与文件系统（openspec/ 仓库事实层及技能投递壳层）之间的闭环交互与严格职责边界。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .card-title { font: 700 15.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .card-sub { font: 600 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .body { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #1e293b; }
+    .body-bold { font: 600 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .edge-label { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #334155; }
+    .edge-sub { font: 400 11.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #64748b; }
+  </style>
+  <defs>
+    <marker id="arr-slate" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#475569"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#ea580c"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#7c3aed"/>
+    </marker>
+  </defs>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1338" height="768" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="36" y="42">OpenSpec 四角色闭环与职责边界（谁推理 · 谁判态 · 谁存真相）</text>
+  <text class="sub" x="36" y="68">核心分工：Host Agent 负责语义推理与读写代码；OpenSpec CLI 提供确定性状态计算与校验；openspec/ 保存唯一项目事实。</text>
+
+  <!-- ==================== 1. USER (Top-Left) ==================== -->
+  <rect x="36" y="96" width="268" height="256" rx="12" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <rect x="36" y="96" width="268" height="42" rx="12" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+  <text class="card-title" x="170" y="123" text-anchor="middle" fill="#0f172a">① User（开发者）</text>
+
+  <text class="body" x="54" y="166">• 提出功能意图或架构探索问题</text>
+  <text class="body" x="54" y="191">• 显式调用 openspec-* 技能，</text>
+  <text class="body" x="66" y="215">或用自然语言直接描述诉求</text>
+  <text class="body" x="54" y="240">• 审阅 proposal / specs /</text>
+  <text class="body" x="66" y="264">design / tasks 规划产物</text>
+  <rect x="52" y="292" width="236" height="42" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.2"/>
+  <text class="body-bold" x="170" y="318" text-anchor="middle" fill="#334155">职责边界：意图源头与最终确认</text>
+
+  <!-- Arrows: User <-> Host Agent -->
+  <line x1="304" y1="186" x2="418" y2="186" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arr-blue)"/>
+  <text class="edge-label" x="361" y="172" text-anchor="middle" fill="#1d4ed8">意图 / 触发技能</text>
+
+  <line x1="420" y1="268" x2="306" y2="268" stroke="#475569" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr-slate)"/>
+  <text class="edge-label" x="361" y="254" text-anchor="middle" fill="#475569">澄清 / 审阅确认</text>
+
+  <!-- ==================== 2. HOST AGENT (Top-Right) ==================== -->
+  <rect x="420" y="96" width="884" height="256" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <rect x="420" y="96" width="884" height="42" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text class="card-title" x="442" y="123" fill="#1e40af">② Host Agent（宿主 AI 代理：Claude Code / Codex / Cursor / Antigravity …）</text>
+
+  <!-- Left inside Host Agent -->
+  <text class="card-sub" x="442" y="166" fill="#1d4ed8">创造性推理与执行职责（LLM 驱动）</text>
+  <text class="body" x="442" y="192">• 自动发现并加载 openspec-* SKILL.md 调度手册</text>
+  <text class="body" x="442" y="216">• 阅读业务代码库，理解上下文并做技术方案权衡</text>
+  <text class="body" x="442" y="240">• 调用 OpenSpec CLI (--json) 获取 DAG 状态与指令包</text>
+  <text class="body" x="442" y="264">• 起草或修订 proposal / specs / design / tasks 产物</text>
+  <text class="body" x="442" y="288">• 在 apply 阶段按任务清单修改业务源码并勾选 [x]</text>
+
+  <!-- Right inside Host Agent: Hard Boundary -->
+  <rect x="932" y="154" width="352" height="180" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+  <text class="body-bold" x="1108" y="180" text-anchor="middle" fill="#1e3a8a">严守边界：绝不自造状态规则</text>
+  <text class="body" x="950" y="206">• 不靠猜目录结构判断当前阶段</text>
+  <text class="body" x="950" y="230">• 不私自编造 schema 依赖顺序</text>
+  <text class="body" x="950" y="254">• 规划阶段（propose/ff）绝不偷改代码</text>
+  <text class="body" x="950" y="278">• 归档时交由 CLI 确定性合并主 specs</text>
+  <text class="edge-sub" x="1108" y="314" text-anchor="middle">精确性留在 CLI，语义推理留在 Agent</text>
+
+  <!-- ==================== MIDDLE CHANNEL ARROWS (y=352..456) ==================== -->
+  <!-- Agent -> CLI (Request) -->
+  <line x1="468" y1="352" x2="468" y2="454" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text class="edge-label" x="454" y="392" text-anchor="end" fill="#15803d">调 CLI (--json)</text>
+  <text class="edge-sub" x="454" y="416" text-anchor="end">status / instructions / validate / archive</text>
+
+  <!-- CLI -> Agent (Response) -->
+  <line x1="556" y1="456" x2="556" y2="354" stroke="#2563eb" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr-blue)"/>
+  <text class="edge-label" x="570" y="392" fill="#1d4ed8">返回结构化 JSON</text>
+  <text class="edge-sub" x="570" y="416">DAG 状态 · 4 层指令包 · 校验诊断</text>
+
+  <!-- Agent -> Repo Truth (Write Markdown & Code) -->
+  <line x1="864" y1="352" x2="864" y2="454" stroke="#ea580c" stroke-width="2.2" marker-end="url(#arr-orange)"/>
+  <text class="edge-label" x="878" y="392" fill="#c2410c">起草 change 产物</text>
+  <text class="edge-sub" x="878" y="416">并在 apply 阶段读写业务源码</text>
+
+  <!-- Skills Shell -> Agent (Load SKILL.md) -->
+  <line x1="1156" y1="456" x2="1156" y2="354" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr-purple)"/>
+  <text class="edge-label" x="1170" y="392" fill="#6d28d9">加载 SKILL.md</text>
+  <text class="edge-sub" x="1170" y="416">发现工作流入口</text>
+
+  <!-- ==================== 3. OPENSPEC CLI (Bottom-Left) ==================== -->
+  <rect x="36" y="456" width="580" height="260" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <rect x="36" y="456" width="580" height="42" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text class="card-title" x="56" y="483" fill="#166534">③ OpenSpec CLI（本地确定性运行时 API）</text>
+
+  <text class="body" x="54" y="524">• status：按 Kahn 拓扑排序计算 artifact DAG 完成度与 apply 门禁</text>
+  <text class="body" x="54" y="548">• instructions：组装 context / rules / instruction / template 执行包</text>
+  <text class="body" x="54" y="572">• validate：词法防线 + Zod Schema + 分级业务规则校验</text>
+  <text class="body" x="54" y="596">• archive：buildUpdatedSpec() 四步事务合并 delta 并归档</text>
+  <text class="body" x="54" y="620">• init / update：离线投递标准 SKILL.md 并按指纹清扫历史旧壳</text>
+
+  <rect x="54" y="638" width="544" height="60" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.4"/>
+  <text class="body-bold" x="326" y="662" text-anchor="middle" fill="#14532d">严守边界：零 LLM 调用 · 纯确定性状态机（同输入必得同输出）</text>
+  <text class="edge-sub" x="326" y="686" text-anchor="middle">失败时保留现场或按快照原子回滚，绝不静默丢数据</text>
+
+  <!-- Arrows: CLI <-> Filesystem -->
+  <line x1="616" y1="548" x2="718" y2="548" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text class="edge-label" x="667" y="534" text-anchor="middle" fill="#15803d">原子写 / 归档</text>
+
+  <line x1="720" y1="624" x2="618" y2="624" stroke="#ea580c" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arr-orange)"/>
+  <text class="edge-label" x="667" y="610" text-anchor="middle" fill="#c2410c">读文件判态</text>
+
+  <!-- ==================== 4. FILESYSTEM (Bottom-Right) ==================== -->
+  <rect x="720" y="456" width="584" height="260" rx="12" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+  <rect x="720" y="456" width="584" height="42" rx="12" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <text class="card-title" x="740" y="483" fill="#0f172a">④ 文件系统（严格区分「项目事实」与「投递外壳」）</text>
+
+  <!-- Sub-card 4A: Repo Truth (Orange) -->
+  <rect x="736" y="512" width="270" height="186" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+  <rect x="736" y="512" width="270" height="34" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+  <text class="card-sub" x="871" y="534" text-anchor="middle" fill="#9a3412">openspec/ 仓库事实层（进 Git）</text>
+  <text class="body" x="750" y="568">• specs/&lt;cap&gt;/spec.md 主基线</text>
+  <text class="body" x="750" y="592">• changes/&lt;id&gt;/ 增量工作区</text>
+  <text class="body" x="750" y="616">• changes/archive/ 归档账本</text>
+  <text class="body" x="750" y="640">• config.yaml 与可选 schemas/</text>
+  <text class="body-bold" x="871" y="676" text-anchor="middle" fill="#c2410c">文件存在即状态 · 唯一事实源</text>
+
+  <!-- Sub-card 4B: Skill Delivery Shell (Purple) -->
+  <rect x="1020" y="512" width="268" height="186" rx="10" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.8"/>
+  <rect x="1020" y="512" width="268" height="34" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/>
+  <text class="card-sub" x="1154" y="534" text-anchor="middle" fill="#5b21b6">技能投递壳层（可重生成）</text>
+  <text class="body" x="1034" y="568">• ~/.agents/skills/ (全局默认)</text>
+  <text class="body" x="1034" y="592">• .agents/skills/ (项目级)</text>
+  <text class="body" x="1034" y="616">• 各工具目录软链或拷贝</text>
+  <text class="body" x="1034" y="640">• init / update 负责同步清扫</text>
+  <text class="body-bold" x="1154" y="676" text-anchor="middle" fill="#6d28d9">纯投递外壳 · 删改不伤业务事实</text>
+
+  <!-- Bottom Legend / Takeaway -->
+  <text class="sub" x="36" y="744">图例：实线箭头（→）表示主动调用或落盘写入；虚线箭头（⇢）表示读取文件、加载技能或返回结构化结果。</text>
+</svg>

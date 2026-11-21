@@ -147,6 +147,8 @@ openspec instructions <artifact-id> --change <change> --json
 
 ### 注入矩阵
 
+![openspec/config.yaml 八大字段在各阶段的精确消费路由图](figures/06-config-routing.svg)
+
 | 消费 surface | config `context` | 匹配的 `rules.*` | `operations.*.guidance` | config `references` | change-local 文件上下文 |
 |---|---:|---:|---:|---:|---|
 | `instructions proposal` | 是 | `rules.proposal` | 否 | 索引非空时 | 无直接 dependency |

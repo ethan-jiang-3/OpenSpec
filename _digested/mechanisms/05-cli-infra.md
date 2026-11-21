@@ -16,6 +16,8 @@ CLI infra
 
 如果核心机制是 OpenSpec 的协议层，那么 CLI infra 是协议能否被顺畅使用和维护的支撑层。
 
+![CLI 运行时底座：按需懒加载 · 双发行通道 · 网络门控漏斗](figures/05-cli-runtime-infra.svg)
+
 ## shell completion：独立的命令模型
 
 completion 不是 commander runtime 自动导出的副产品。它有自己的命令 registry：

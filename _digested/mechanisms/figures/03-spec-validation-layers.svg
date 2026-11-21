@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="840" viewBox="0 0 1440 840" role="img" aria-labelledby="title desc">
+  <title id="title">Spec 解析防线与三层校验 / 合并流水线</title>
+  <desc id="desc">自上而下展示 OpenSpec 把原始 Markdown 经词法预处理防线、主规格与四段增量双轨解析、Zod 与 Validator 三级校验门禁（ERROR / WARNING / INFO），最终送入 buildUpdatedSpec() 执行 RENAMED→REMOVED→MODIFIED→ADDED 四步确定性合并的完整流水线。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .layer-title { font: 700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .card-title { font: 700 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .body { font: 400 12.6px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #1e293b; }
+    .body-muted { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+  </style>
+  <defs>
+    <marker id="arr-down" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#475569"/>
+    </marker>
+    <marker id="arr-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#16a34a"/>
+    </marker>
+  </defs>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1438" height="838" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="36" y="42">Spec 解析防线与三层校验 / 合并流水线</text>
+  <text class="sub" x="36" y="68">文件存人类可读的 Git Markdown，CLI 将其解析为严格受检的本地协议结构，绝不靠 LLM 自由改写来做归档合并。</text>
+
+  <!-- ==================== LAYER 1: LEXICAL PREPROCESSING ==================== -->
+  <rect x="36" y="92" width="1368" height="132" rx="12" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <rect x="36" y="92" width="1368" height="36" rx="12" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+  <text class="layer-title" x="56" y="116" fill="#0f172a">① 词法预处理防线（Raw Markdown → 抗干扰清洗 · 全程保留精确行号）</text>
+
+  <!-- Chip 1A -->
+  <rect x="54" y="140" width="428" height="72" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+  <text class="card-title" x="70" y="164" fill="#0f172a">buildCodeFenceMask() 代码块掩码</text>
+  <text class="body-muted" x="70" y="190">屏蔽 ``` 与 ~~~ 围栏内的示例标题，防止误判为真实需求</text>
+
+  <!-- Chip 1B -->
+  <rect x="506" y="140" width="428" height="72" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+  <text class="card-title" x="522" y="164" fill="#0f172a">stripClosingSequence() + 剥离 BOM</text>
+  <text class="body-muted" x="522" y="190">剥离尾部空白领起的闭合 # 串（保留 C# 等词尾 # 及大小写）</text>
+
+  <!-- Chip 1C -->
+  <rect x="958" y="140" width="428" height="72" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+  <text class="card-title" x="974" y="164" fill="#0f172a">findFrontmatterEnd() 容忍头部元数据（#2273）</text>
+  <text class="body-muted" x="974" y="190">跳过顶部 YAML frontmatter；archive 时告警且不带入主 spec</text>
+
+  <line x1="720" y1="224" x2="720" y2="248" stroke="#475569" stroke-width="2.2" marker-end="url(#arr-down)"/>
+
+  <!-- ==================== LAYER 2: STRUCTURAL PARSING ==================== -->
+  <rect x="36" y="250" width="1368" height="152" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <rect x="36" y="250" width="1368" height="36" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text class="layer-title" x="56" y="274" fill="#1e40af">② 双轨结构解析（discoverSpecFiles() 统一递归发现 specs/&lt;area&gt;/&lt;cap&gt;/spec.md）</text>
+
+  <!-- Left: Main Spec Parser -->
+  <rect x="54" y="298" width="652" height="92" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.4"/>
+  <text class="card-title" x="72" y="322" fill="#1e3a8a">主规格解析：MarkdownParser + extractRequirementsSection()</text>
+  <text class="body" x="72" y="346">• 抽取 ## Purpose、## Requirements 下的 ### Requirement: 块与 #### Scenario:</text>
+  <text class="body-muted" x="72" y="370">• spec-structure.ts 检查结构完整性，输出对象进入 SpecSchema.safeParse()</text>
+
+  <!-- Right: Delta Spec Parser -->
+  <rect x="734" y="298" width="652" height="92" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.4"/>
+  <text class="card-title" x="752" y="322" fill="#1e3a8a">增量解析：ChangeParser + parseDeltaSpec()（有序列表，非覆盖字典）</text>
+  <text class="body" x="752" y="346">• 按书写顺序收集全部 ADDED / MODIFIED / REMOVED / RENAMED 段（同名段全保留）</text>
+  <text class="body-muted" x="752" y="370">• 接受全部 CommonMark 列表符（- / * / +），段内严格配对 FROM/TO 防跨段串配</text>
+
+  <line x1="720" y1="402" x2="720" y2="426" stroke="#475569" stroke-width="2.2" marker-end="url(#arr-down)"/>
+
+  <!-- ==================== LAYER 3: ZOD + VALIDATOR GRADED GATE ==================== -->
+  <rect x="36" y="428" width="1368" height="222" rx="12" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+  <rect x="36" y="428" width="1368" height="36" rx="12" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <text class="layer-title" x="56" y="452" fill="#0f172a">③ Zod + Validator 三级校验门禁（openspec validate [--strict] · validate 与 archive 共用同一套读法）</text>
+
+  <!-- Severity 1: ERROR -->
+  <rect x="54" y="476" width="436" height="160" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.8"/>
+  <text class="card-title" x="70" y="500" fill="#991b1b">ERROR（无条件阻断 · 退出码非零）</text>
+  <text class="body" x="70" y="524">• 缺必填章节、零 delta、根目录裸 specs/spec.md</text>
+  <text class="body" x="70" y="548">• ADDED / MODIFIED 缺 Scenario；MODIFIED 丢既有场景</text>
+  <text class="body" x="70" y="572">• 段内同名重复、跨段冲突、未配对 RENAMED</text>
+  <text class="body" x="70" y="596">• 未识别 ## ... Requirements 段；config.yaml 损坏</text>
+  <text class="body-muted" x="70" y="620">• skip_specs: true 与真实 delta 文件共存冲突</text>
+
+  <!-- Severity 2: WARNING -->
+  <rect x="508" y="476" width="452" height="160" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.8"/>
+  <text class="card-title" x="524" y="500" fill="#92400e">WARNING（普通放行 · --strict 下阻断）</text>
+  <text class="body" x="524" y="524">• 缺 SHALL / MUST 规范词；Scenario 缺 WHEN / THEN</text>
+  <text class="body" x="524" y="548">• ADDED &gt;500 字符；MODIFIED &gt;500 字符且长于基线(#2265)</text>
+  <text class="body" x="524" y="572">• Purpose 过短（&lt;50 字符）或遗留 TBD / TODO 占位符</text>
+  <text class="body" x="524" y="596">• 未归属散文、非标准区孤立需求块、tasks 缺复选框</text>
+  <text class="body-muted" x="524" y="620">• 兼顾日常起草灵活性与 CI / 归档前严格守门</text>
+
+  <!-- Severity 3: INFO -->
+  <rect x="978" y="476" width="408" height="160" rx="10" fill="#f0f9ff" stroke="#0284c7" stroke-width="1.8"/>
+  <text class="card-title" x="994" y="500" fill="#075985">INFO（干跑合并预检 · 不改退出码）</text>
+  <text class="body" x="994" y="524">• findArchiveBlockers 执行只读合并预检</text>
+  <text class="body" x="994" y="548">• 提前亮出 archive 会拒绝的基线目标缺失、</text>
+  <text class="body-muted" x="1008" y="572">近义拼写失配或 ADDED 已存在同名块</text>
+  <text class="body" x="994" y="596">• 文件系统真实读盘错误仍保留为 ERROR，</text>
+  <text class="body-muted" x="1008" y="620">绝不降级伪装成「目标 spec 不存在」</text>
+
+  <line x1="720" y1="650" x2="720" y2="674" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+
+  <!-- ==================== LAYER 4: 4-STEP DETERMINISTIC MERGE ==================== -->
+  <rect x="36" y="676" width="1368" height="136" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <rect x="36" y="676" width="1368" height="36" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text class="layer-title" x="56" y="700" fill="#166534">④ buildUpdatedSpec() 四步确定性合并（openspec archive 事务写入 · 异常时 captureSpecSnapshots 全量回滚）</text>
+
+  <!-- Step 1: RENAMED -->
+  <rect x="54" y="724" width="308" height="72" rx="8" fill="#ffffff" stroke="#22c55e" stroke-width="1.6"/>
+  <text class="card-title" x="208" y="748" text-anchor="middle" fill="#15803d">1. RENAMED（先改名）</text>
+  <text class="body-muted" x="208" y="774" text-anchor="middle">原地更新标题，保留块序（兼容提前 sync）</text>
+
+  <line x1="362" y1="760" x2="392" y2="760" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+
+  <!-- Step 2: REMOVED -->
+  <rect x="394" y="724" width="308" height="72" rx="8" fill="#ffffff" stroke="#22c55e" stroke-width="1.6"/>
+  <text class="card-title" x="548" y="748" text-anchor="middle" fill="#15803d">2. REMOVED（再删除）</text>
+  <text class="body-muted" x="548" y="774" text-anchor="middle">移除匹配块；全空时核验无散文才退役文件</text>
+
+  <line x1="702" y1="760" x2="732" y2="760" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+
+  <!-- Step 3: MODIFIED -->
+  <rect x="734" y="724" width="308" height="72" rx="8" fill="#ffffff" stroke="#22c55e" stroke-width="1.6"/>
+  <text class="card-title" x="888" y="748" text-anchor="middle" fill="#15803d">3. MODIFIED（整块替换）</text>
+  <text class="body-muted" x="888" y="774" text-anchor="middle">按改名后的新标题整块替换原需求与场景</text>
+
+  <line x1="1042" y1="760" x2="1072" y2="760" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+
+  <!-- Step 4: ADDED -->
+  <rect x="1074" y="724" width="312" height="72" rx="8" fill="#ffffff" stroke="#22c55e" stroke-width="1.6"/>
+  <text class="card-title" x="1230" y="748" text-anchor="middle" fill="#15803d">4. ADDED（追加落盘）</text>
+  <text class="body-muted" x="1230" y="774" text-anchor="middle">追加新块，matchLineEnding 保持原行尾</text>
+</svg>

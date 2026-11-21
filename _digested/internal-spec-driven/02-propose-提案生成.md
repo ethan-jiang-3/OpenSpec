@@ -94,7 +94,7 @@ openspec status --change "<name>" --json
 
 注意每个条目都携带直接依赖边 `requires`，同时顶层返回 `planningHome`、`changeRoot`、`artifactPaths` 与 `actionContext`（禁止硬编码假设 repo-local 路径）。
 
-### Step 6：核心循环 —— 构建 `applyRequires` 的传递依赖闭包（`propose.ts:100-143`，#2089）
+### Step 6：核心循环 —— 构建 `applyRequires` 的传递依赖闭包（`propose.ts:100-143`，#1412）
 
 这是 propose 最关键的部分。早期只检查 `applyRequires` 是否 `done` 有一个严重漏洞：`status` 只看文件是否存在，若先写了 `tasks.md`，`tasks` 就变成 `done`，但 `specs` 可能根本没写！因此当前循环以**传递必需集合（transitive required set）**为准：
 

@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1460" height="810" viewBox="0 0 1460 810" role="img" aria-labelledby="title desc">
+  <title id="title">v2.1 技能投递管线：离线包生成 · 双作用域分流 · 87 工具适配与指纹清扫</title>
+  <desc id="desc">展示 OpenSpec v2.1 从 12 个工作流模板生成恒定 SKILL.md 文本、经本地临时目录离线暂存交由 skills@1.8.1 引擎分流至 Global 默认作用域或 Project 作用域（33 个直读 + 54 个软链/拷贝），以及 openspec update 基于 2,867 个历史指纹安全清扫 1.x 旧产物的全流程。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .box-title { font: 700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .sub-title { font: 700 12.8px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .body { font: 400 12.6px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #1e293b; }
+    .body-muted { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+  </style>
+  <defs>
+    <marker id="arr-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1458" height="808" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="36" y="42">v2.1 技能投递管线：离线包生成 · 双作用域分流 · 87 工具适配与指纹清扫</text>
+  <text class="sub" x="36" y="68">v2.0 起全面停产 1.x /opsx:* 命令文件；v2.1 接入 skills@1.8.1 并实现 #2283 纯本地离线安装，默认落入本机全局作用域。</text>
+
+  <!-- ==================== STEP 1: 12 WORKFLOW TEMPLATES ==================== -->
+  <rect x="32" y="176" width="268" height="260" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <rect x="32" y="176" width="268" height="38" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text class="box-title" x="166" y="201" text-anchor="middle" fill="#1e40af">① 12 个工作流模板</text>
+
+  <text class="sub-title" x="48" y="238" fill="#1d4ed8">profile: core（默认 6 个）</text>
+  <text class="body" x="48" y="262">propose · explore · apply</text>
+  <text class="body" x="48" y="286">archive · sync · update</text>
+
+  <text class="sub-title" x="48" y="320" fill="#1d4ed8">profile: custom（可选全集 12）</text>
+  <text class="body" x="48" y="344">+ new / continue / ff / verify</text>
+  <text class="body" x="48" y="368">+ bulk-archive / onboard</text>
+  <text class="body-muted" x="48" y="406">src/core/templates/workflows/</text>
+
+  <line x1="300" y1="306" x2="328" y2="306" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+
+  <!-- ==================== STEP 2: CONSTANT SKILL GENERATION ==================== -->
+  <rect x="330" y="176" width="268" height="260" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <rect x="330" y="176" width="268" height="38" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text class="box-title" x="464" y="201" text-anchor="middle" fill="#166534">② 单一恒定 SKILL.md</text>
+
+  <text class="body" x="346" y="238">• generateSkillContent()</text>
+  <text class="body-muted" x="360" y="262">统一转换为共享技能引用</text>
+  <text class="body" x="346" y="288">• stripVolatileFrontmatter()</text>
+  <text class="body-muted" x="360" y="312">剥离易变的 generatedBy: 行</text>
+  <text class="body" x="346" y="338">• 正文不受 profile 或工具影响</text>
+  <text class="body" x="346" y="364">• 与仓库静态 skills/*/SKILL.md</text>
+  <text class="body-muted" x="360" y="388">逐字节一致（parity 测试门禁）</text>
+
+  <line x1="598" y1="306" x2="626" y2="306" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+
+  <!-- ==================== STEP 3: OFFLINE STAGING + SKILLS ENGINE ==================== -->
+  <rect x="628" y="176" width="264" height="260" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <rect x="628" y="176" width="264" height="38" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text class="box-title" x="760" y="201" text-anchor="middle" fill="#166534">③ 离线暂存与安装引擎</text>
+
+  <text class="body" x="644" y="238">• 本地离线暂存（#2283）：</text>
+  <text class="body-muted" x="658" y="262">os.tmpdir()/openspec-skills-*</text>
+  <text class="body-muted" x="658" y="286">零网络请求 · 无需本机装 git</text>
+  <text class="body" x="644" y="312">• skills@1.8.1 安装引擎驱动</text>
+  <text class="body" x="644" y="338">• 覆盖 87 个公开 --tools 目标</text>
+  <text class="body-muted" x="658" y="362">(49 内置 + 38 skills 包追加)</text>
+  <text class="body-muted" x="644" y="388">• windsurf→devin；拒 amazon-q</text>
+
+  <!-- Bifurcation Arrows to Global & Project Scopes -->
+  <path d="M892,258 L918,258 L918,198 L940,198" stroke="#7c3aed" stroke-width="2.2" fill="none" marker-end="url(#arr-purple)"/>
+  <path d="M892,354 L918,354 L918,426 L940,426" stroke="#2563eb" stroke-width="2.2" fill="none" marker-end="url(#arr-blue)"/>
+
+  <!-- ==================== STEP 4A: GLOBAL SCOPE ==================== -->
+  <rect x="942" y="96" width="486" height="208" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="942" y="96" width="486" height="38" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text class="box-title" x="960" y="121" fill="#4c1d95">④A Global Scope（新项目 init 默认 · 不进 Git）</text>
+
+  <text class="body" x="960" y="158">• 真身写入 ~/.agents/skills/openspec-*/SKILL.md</text>
+  <text class="body" x="960" y="182">• 同步各工具全局技能目录（持 global-skills.lock 互斥锁）</text>
+  <text class="body" x="960" y="206">• 树哈希记入 $XDG_STATE_HOME/skills/.skill-lock.json</text>
+  <text class="body-muted" x="976" y="230">（回退 ~/.agents/.skill-lock.json）并登记 projects.json</text>
+  <text class="body-muted" x="960" y="254">• 自动回退 Project 例外：--copilot-cloud 或 eve / promptscript</text>
+  <text class="body-muted" x="960" y="278">• 已有全局技能时，openspec update 可在任意无根目录刷新</text>
+
+  <!-- ==================== STEP 4B: PROJECT SCOPE ==================== -->
+  <rect x="942" y="320" width="486" height="232" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <rect x="942" y="320" width="486" height="38" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text class="box-title" x="960" y="345" fill="#1e3a8a">④B Project Scope（--scope project / skillsScope）</text>
+
+  <text class="body" x="960" y="382">• 唯一真身：&lt;repo&gt;/.agents/skills/openspec-*/SKILL.md</text>
+  <text class="body" x="960" y="406">• 工具清单：.agents/skills/.openspec-target（每行一个 ID）</text>
+
+  <!-- Sub-card: 33 Universal -->
+  <rect x="958" y="424" width="220" height="112" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.4"/>
+  <text class="sub-title" x="1068" y="448" text-anchor="middle" fill="#1e40af">33 个 Universal 工具</text>
+  <text class="body-muted" x="972" y="472">codex / cursor / gemini</text>
+  <text class="body-muted" x="972" y="496">copilot / opencode / zed...</text>
+  <text class="body" x="1068" y="520" text-anchor="middle" fill="#1d4ed8">直读 .agents/skills/ 零软链</text>
+
+  <!-- Sub-card: 54 Linked -->
+  <rect x="1192" y="424" width="220" height="112" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.4"/>
+  <text class="sub-title" x="1302" y="448" text-anchor="middle" fill="#9a3412">54 个 Linked 工具</text>
+  <text class="body-muted" x="1206" y="472">claude / kiro / roo</text>
+  <text class="body-muted" x="1206" y="496">codestudio / commandcode...</text>
+  <text class="body" x="1302" y="520" text-anchor="middle" fill="#c2410c">相对软链（Win / eve 拷贝）</text>
+
+  <!-- ==================== BOTTOM LANE: FINGERPRINT SWEEP ==================== -->
+  <rect x="32" y="574" width="1396" height="204" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <rect x="32" y="574" width="1396" height="38" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text class="box-title" x="54" y="599" fill="#92400e">⑤ openspec update 声明式同步与 2,867 指纹库安全清扫（支持 --dry-run [--json]）</text>
+
+  <!-- Step 5A -->
+  <rect x="52" y="628" width="424" height="130" rx="10" fill="#ffffff" stroke="#f59e0b" stroke-width="1.5"/>
+  <text class="sub-title" x="68" y="652" fill="#92400e">A. 内容归一化与发布指纹比对</text>
+  <text class="body" x="68" y="676">• 剥 BOM + CRLF 折 LF + generatedBy 版本号归一</text>
+  <text class="body" x="68" y="700">• 匹配 2,867 个真实历史发布指纹（1,130 条路径，</text>
+  <text class="body-muted" x="82" y="724">覆盖 v0.12.0 → v1.16.1 共 42 个历史版本）</text>
+
+  <line x1="476" y1="693" x2="514" y2="693" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-amber)"/>
+
+  <!-- Step 5B -->
+  <rect x="516" y="628" width="436" height="130" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text class="sub-title" x="532" y="652" fill="#166534">B. 原样托管旧壳自动清除（removed）</text>
+  <text class="body" x="532" y="676">• 清理未改动的 1.x /opsx:* 命令文件（34 个旧适配器）</text>
+  <text class="body" x="532" y="700">• 清理取消选择的技能、旧目录（.agent/.codex）</text>
+  <text class="body-muted" x="546" y="724">及退役工具遗留（如 .amazonq），回收空目录</text>
+
+  <line x1="952" y1="693" x2="990" y2="693" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-amber)"/>
+
+  <!-- Step 5C -->
+  <rect x="992" y="628" width="416" height="130" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+  <text class="sub-title" x="1008" y="652" fill="#0f172a">C. 失败倒向保留（kept / unchecked）</text>
+  <text class="body" x="1008" y="676">• 指纹不匹配（用户改过）→ 原样保留并列为 kept</text>
+  <text class="body" x="1008" y="700">• 无法读取或含外部软链 → 归入 unchecked 跳过</text>
+  <text class="body-muted" x="1008" y="724">• 绝不用猜测做删除：零误伤业务与手改提示词</text>
+</svg>

@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="920" viewBox="0 0 1360 920" role="img" aria-labelledby="title desc">
+  <title id="title">归档的双轨机制对照：宿主技能 openspec-archive-change vs 终端 CLI openspec archive</title>
+  <desc id="desc">左右并排对比宿主技能 openspec-archive-change（只读 CLI 查询 + Agent 智能合并 + Shell mv，绝不调用 openspec archive）与终端命令 openspec archive（.openspec-archive.lock 加锁、delta 硬校验、内存 buildUpdatedSpec 重建与校验、captureSpecSnapshots 快照及失败全量回滚）。</desc>
+  <defs>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#ea580c"/>
+    </marker>
+  </defs>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 21px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #0f172a; }
+    .alert-txt { font: 700 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #991b1b; }
+    .col-title { font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .col-sub { font: 500 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .step-title { font: 700 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .cmd { font: 600 12px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+    .body { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .foot { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+  </style>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1358" height="918" rx="16"/>
+
+  <!-- Title -->
+  <text class="h1" x="680" y="42" text-anchor="middle">归档的双轨机制对照：宿主技能 openspec-archive-change vs 终端 CLI openspec archive</text>
+
+  <!-- Misconception Callout Banner -->
+  <rect x="36" y="60" width="1288" height="44" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.6"/>
+  <text class="alert-txt" x="680" y="87" text-anchor="middle">关键边界澄清：宿主技能 openspec-archive-change 全程【绝不调用】openspec archive 命令！两条轨道独立实现、各司其职</text>
+
+  <!-- ==================== LEFT TRACK: SKILL ARCHIVE ==================== -->
+  <rect x="36" y="120" width="622" height="702" rx="14" fill="#ffffff" stroke="#2563eb" stroke-width="1.8"/>
+  <rect x="36" y="120" width="622" height="64" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="col-title" x="347" y="147" text-anchor="middle" fill="#1e3a8a">左轨 · 宿主技能 openspec-archive-change</text>
+  <text class="col-sub" x="347" y="171" text-anchor="middle" fill="#1d4ed8">对话式语义归档（AI 编排 + 只读 CLI 查询 + Shell mv） · 日常会话结项</text>
+
+  <!-- Step L1 -->
+  <rect x="58" y="198" width="578" height="82" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.3"/>
+  <text class="step-title" x="76" y="221" fill="#14532d">① 读取归档上下文：instructions archive --json</text>
+  <text class="body" x="76" y="245" fill="#166534">只读获取选定根的 context 与 operations.archive.guidance（不改文件）</text>
+  <text class="body" x="76" y="268" fill="#15803d">（若未指定 change 且有多个活跃变更，先跑 list --json 请用户选择）</text>
+
+  <line x1="347" y1="280" x2="347" y2="298" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step L2 -->
+  <rect x="58" y="300" width="578" height="82" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.3"/>
+  <text class="step-title" x="76" y="323" fill="#14532d">② 核查未完成产物与任务：status --json &amp; list --json</text>
+  <text class="body" x="76" y="347" fill="#166534">• status --json 检查既非 done 也非 skipped 的产物及 planningHome</text>
+  <text class="body" x="76" y="370" fill="#166534">• list --json 核对 completedTasks / totalTasks；未完则警告并询问</text>
+
+  <line x1="347" y1="382" x2="347" y2="400" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step L3 -->
+  <rect x="58" y="402" width="578" height="82" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text class="step-title" x="76" y="425" fill="#92400e">③ 写前先核查 archive/&lt;target-name&gt; 未占用（#2277）</text>
+  <text class="body" x="76" y="449" fill="#92400e">• 计算目标名 YYYY-MM-DD-&lt;name&gt;（已有日期前缀保持原样不叠加）</text>
+  <text class="body" x="76" y="472" fill="#b45309">• 若目标已存在则【立即停止】，确保主 specs/ 与活跃 change 零污染</text>
+
+  <line x1="347" y1="484" x2="347" y2="502" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step L4 -->
+  <rect x="58" y="504" width="578" height="130" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text class="step-title" x="76" y="528" fill="#1e3a8a">④ 评估同步状态 + Agent 智能合并 Delta 至主 specs/</text>
+  <text class="body" x="76" y="552" fill="#1e40af">• 调 instructions specs --json 获取 rules.specs 快照，内联跑 sync</text>
+  <text class="body" x="76" y="575" fill="#1e40af">• 未装 sync 时走内联兜底：遵守 retire_capabilities 护栏 + 合并后跑</text>
+  <text class="cmd" x="76" y="598" fill="#1d4ed8">  openspec validate --specs   （#1977 硬校验）</text>
+  <text class="body" x="76" y="621" fill="#1e40af">• 复核无残留 delta 标题；若同步阻塞则立即中止，绝不移动目录</text>
+
+  <line x1="347" y1="634" x2="347" y2="652" stroke="#2563eb" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Step L5 -->
+  <rect x="58" y="654" width="578" height="110" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+  <text class="step-title" x="76" y="678" fill="#9a3412">⑤ Shell 移动归档目录（全程不调 openspec archive！）</text>
+  <text class="cmd" x="76" y="702" fill="#c2410c">mkdir -p "&lt;changesDir&gt;/archive"</text>
+  <text class="cmd" x="76" y="725" fill="#c2410c">mv "&lt;changeRoot&gt;" "&lt;changesDir&gt;/archive/&lt;target-name&gt;"</text>
+  <text class="body" x="76" y="749" fill="#9a3412">再次确认目标未占用后直接 mv，向用户汇总同步与归档结果</text>
+
+  <rect x="58" y="776" width="578" height="32" rx="6" fill="#dbeafe"/>
+  <text class="foot" x="347" y="797" text-anchor="middle" fill="#1e3a8a">特长：支持跨段落语义整合与交互确认（bulk-archive 还能基于代码消解冲突）</text>
+
+  <!-- ==================== CENTER DIVIDER ==================== -->
+  <line x1="680" y1="130" x2="680" y2="442" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6,4"/>
+  <rect x="658" y="446" width="44" height="32" rx="16" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text class="step-title" x="680" y="467" text-anchor="middle" fill="#334155">VS</text>
+  <line x1="680" y1="482" x2="680" y2="812" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6,4"/>
+
+  <!-- ==================== RIGHT TRACK: CLI ARCHIVE ==================== -->
+  <rect x="702" y="120" width="622" height="702" rx="14" fill="#ffffff" stroke="#16a34a" stroke-width="1.8"/>
+  <rect x="702" y="120" width="622" height="64" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+  <text class="col-title" x="1013" y="147" text-anchor="middle" fill="#14532d">右轨 · 终端命令 openspec archive &lt;name&gt;</text>
+  <text class="col-sub" x="1013" y="171" text-anchor="middle" fill="#15803d">确定性事务归档（块级解析器 + 快照回滚） · 人类 / CI / onboard Phase 10</text>
+
+  <!-- Step R1 -->
+  <rect x="724" y="198" width="578" height="82" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+  <text class="step-title" x="742" y="221" fill="#92400e">① 预检目标与互斥加锁（.openspec-archive.lock）</text>
+  <text class="body" x="742" y="245" fill="#92400e">检查 archive/&lt;target-name&gt; 未占用，以 wx 原子创建 pid+nonce 锁文件</text>
+  <text class="body" x="742" y="268" fill="#b45309">（--json 模式严格非交互：遇未完任务等确认点直接报 archive_* + exit 1）</text>
+
+  <line x1="1013" y1="280" x2="1013" y2="298" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Step R2 -->
+  <rect x="724" y="300" width="578" height="82" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.3"/>
+  <text class="step-title" x="742" y="323" fill="#14532d">② Delta 规范硬门禁校验（validateChangeDeltaSpecs）</text>
+  <text class="body" x="742" y="347" fill="#166534">• 严格解析 ### Requirement: 标题块与 #### Scenario: 用例块</text>
+  <text class="body" x="742" y="370" fill="#166534">• 拦截空 delta、同文件重复/冲突操作，以及 skip_specs 与 delta 并存</text>
+
+  <line x1="1013" y1="382" x2="1013" y2="400" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Step R3 -->
+  <rect x="724" y="402" width="578" height="106" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text class="step-title" x="742" y="425" fill="#14532d">③ 内存块级重建与全量预校验（写盘前零副作用）</text>
+  <text class="cmd" x="742" y="449" fill="#166534">buildUpdatedSpec(): RENAMED → REMOVED → MODIFIED → ADDED</text>
+  <text class="body" x="742" y="473" fill="#166534">• 对全部重建后的主 spec 在内存中跑 validateSpecContent() 完整校验</text>
+  <text class="body" x="742" y="496" fill="#15803d">• 结合 retire_capabilities 元数据判定 write / retire / skip 三态</text>
+
+  <line x1="1013" y1="508" x2="1013" y2="526" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Step R4 -->
+  <rect x="724" y="528" width="578" height="86" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.4"/>
+  <text class="step-title" x="742" y="552" fill="#5b21b6">④ 拍取写入前快照与指纹（captureSpecSnapshots）</text>
+  <text class="body" x="742" y="576" fill="#4c1d95">• 校验不同 capability 未经别名撞上同一目标（assertDistinctMutationTargets）</text>
+  <text class="body" x="742" y="600" fill="#4c1d95">• 保存目标原内容、mode/symlink、既有最深祖先目录边界与并发指纹</text>
+
+  <line x1="1013" y1="614" x2="1013" y2="632" stroke="#16a34a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- Step R5 -->
+  <rect x="724" y="634" width="578" height="130" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5"/>
+  <text class="step-title" x="742" y="658" fill="#9a3412">⑤ 写主 spec / 退役空能力 + 移动目录（失败全量回滚）</text>
+  <text class="body" x="742" y="682" fill="#c2410c">• 写入重建主 spec 或处理 retire_capabilities → 移动目录并释放锁</text>
+  <rect x="742" y="696" width="542" height="56" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.2"/>
+  <text class="body" x="756" y="719" fill="#991b1b" font-weight="700">事务回滚：任一步失败或遇外部并发改动 → restoreSpecSnapshots()</text>
+  <text class="body" x="756" y="742" fill="#991b1b">逆序恢复全部主 spec 原文件并裁剪新建空目录，拒绝覆盖并发改动</text>
+
+  <rect x="724" y="776" width="578" height="32" rx="6" fill="#dcfce7"/>
+  <text class="foot" x="1013" y="797" text-anchor="middle" fill="#14532d">特长：100% 确定性无幻觉、毫秒级本地执行、具备文件级事务回滚保障</text>
+
+  <!-- ==================== CONVERGENCE FOOTER ==================== -->
+  <line x1="347" y1="822" x2="347" y2="842" stroke="#ea580c" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <line x1="1013" y1="822" x2="1013" y2="842" stroke="#ea580c" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+  <rect x="36" y="846" width="1288" height="52" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+  <text class="step-title" x="680" y="877" text-anchor="middle" fill="#9a3412">收敛于同一仓库真相态：openspec/specs/&lt;capability-path&gt;/spec.md 更新完毕 + openspec/changes/archive/YYYY-MM-DD-&lt;name&gt;/ 归档定格</text>
+</svg>

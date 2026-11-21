@@ -4,6 +4,8 @@
 
 OpenSpec 需要确定"用哪个 schema"时，走两层解析。理解这两层是避免"改了配置但没生效"这类问题的关键。
 
+![两阶段 Schema 解析漏斗：先定名字（4 级）· 再找目录（3 层）](figures/04-schema-resolution.svg)
+
 ---
 
 ## 第一层：确定 schema 名字

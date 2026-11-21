@@ -6,6 +6,8 @@ OpenSpec 的核心 workflow 语义不应绑定在某个 AI Coding 工具上。Cl
 
 Tool delivery 这一层的核心判断是：**稳定资产是 workflow 语义；skills（及 1.x 已退役的 commands）只是投递外壳。**
 
+![v2.1 技能投递管线：离线包生成 · 双作用域分流 · 87 工具适配与指纹清扫](figures/02-skill-delivery-v2.svg)
+
 ```text
 profile / workflows
   → workflow templates

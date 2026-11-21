@@ -75,6 +75,8 @@ const ProjectConfigSchema = z.object({
 
 当前项目级 `openspec/config.yaml` 的已消费顶层字段共有**八个**：`schema`、`context`、`rules`、`operations`、`store`、`references`、`githubCopilot` 与 **`skillsScope`**。其中 `rules` 只属于 artifact prompt 注入层；`context` 同时进入 artifact 与 operation input；`operations` 只为 Apply/Archive 提供 advisory guidance；`schema` 属于 workflow schema 选择层；`store` / `references` 处理 root 与跨 store 上下文；`githubCopilot` 控制云端 agent 文件生成；`skillsScope` 记录技能安装作用域。
 
+![openspec/config.yaml 八大字段在各阶段的精确消费路由图](figures/06-config-routing.svg)
+
 如果 YAML 顶层额外写了其他 key，例如 `team:`、`metadata:`、`owner:`，当前实现会被 YAML parser 读到，但不会成为 OpenSpec 的运行时配置。结果就是：**静默忽略，不报错，也不生效**；不要把自定义 metadata 与上述已消费字段混在一起期待它被 workflow 使用。
 
 ### 50KB 限制（`context` 与 `references` 索引共享）

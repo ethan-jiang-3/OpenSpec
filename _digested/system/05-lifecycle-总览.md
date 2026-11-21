@@ -11,6 +11,8 @@ OpenSpec 当前有两条相关但不同的生命周期：
 
 两者可以衔接，但不能混成一条自动流水线。store 提供跨仓库的上下文引用；repo-local change 仍然是具体实现和 archive 的主要承载。
 
+![单次 Change 从探索到归档沉淀的全生命周期闭环](figures/05-lifecycle-overview.svg)
+
 ## repo-local workflow 地图
 
 当前 workflow ids 在 `src/core/profiles.ts`：

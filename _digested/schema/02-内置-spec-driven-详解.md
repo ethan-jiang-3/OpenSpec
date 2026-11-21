@@ -207,6 +207,8 @@ apply:
 
 ## 依赖图
 
+![内置 spec-driven 产物依赖 DAG 与四态判定机](figures/02-spec-driven-dag.svg)
+
 ```text
 proposal (root)
    ├──→ specs ───────┐

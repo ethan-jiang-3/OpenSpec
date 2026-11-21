@@ -14,6 +14,8 @@
 - workflows
 - delivery
 
+![工作流选择（profile）与技能安装位置（skillsScope）双轴判定图](figures/05-profile-and-scope.svg)
+
 ## 2. `profile` 是选什么 workflow
 
 `profile` 决定“启用哪些工作流”。

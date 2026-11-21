@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="780" viewBox="0 0 1240 780" role="img" aria-labelledby="title desc">
+  <title id="title">核心工作流共用的运行时骨架：前置守卫 · 状态轮询 · 指令装配 · 落盘推进</title>
+  <desc id="desc">展示 explore、propose、apply、archive 共享的两阶段运行时模型：顶部 Preflight 包含 STORE_SELECTION_GUIDANCE 与 PROJECT_ROOT_GUARD；底部 Core Loop 展示 Host Agent 调用 openspec status、openspec instructions、结合代码起草或勾选任务、再以磁盘文件变化驱动下一轮状态跃迁的闭环。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .panel { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+    .panel-loop { fill: #ffffff; stroke: #93c5fd; stroke-width: 1.8; }
+    .title { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+    .subtitle { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #475569; }
+    .band-h { font: 700 14.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+    .card-h { font: 700 13.5px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "PingFang SC", monospace; }
+    .card-t { font: 400 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .edge-t { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #334155; }
+    .blue-box { fill: #dbeafe; stroke: #2563eb; stroke-width: 1.8; }
+    .green-box { fill: #dcfce7; stroke: #16a34a; stroke-width: 1.8; }
+    .purple-box { fill: #ede9fe; stroke: #7c3aed; stroke-width: 1.8; }
+    .amber-box { fill: #fef3c7; stroke: #d97706; stroke-width: 1.8; }
+    .orange-box { fill: #ffedd5; stroke: #ea580c; stroke-width: 1.8; }
+    .slate-box { fill: #f1f5f9; stroke: #475569; stroke-width: 1.6; }
+    .footer-box { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 1.2; }
+    .arrow-slate { stroke: #475569; stroke-width: 2.2; fill: none; marker-end: url(#arrSlate); }
+    .arrow-blue { stroke: #2563eb; stroke-width: 2.2; fill: none; marker-end: url(#arrBlue); }
+    .arrow-green { stroke: #16a34a; stroke-width: 2.2; fill: none; marker-end: url(#arrGreen); }
+    .arrow-purple { stroke: #7c3aed; stroke-width: 2.2; fill: none; marker-end: url(#arrPurple); }
+    .arrow-orange { stroke: #ea580c; stroke-width: 2.2; stroke-dasharray: 6,3; fill: none; marker-end: url(#arrOrange); }
+  </style>
+  <defs>
+    <marker id="arrSlate" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrBlue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrGreen" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrPurple" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrOrange" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#ea580c"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="1" y="1" width="1238" height="778" rx="16"/>
+
+  <!-- Header -->
+  <text class="title" x="620" y="38" text-anchor="middle">核心工作流共用的运行时骨架：前置守卫 · 状态轮询 · 指令装配 · 落盘推进</text>
+  <text class="subtitle" x="620" y="64" text-anchor="middle">explore · propose · apply · archive 四条主线技能运行在同一套「前置守卫 + CLI 确定性计算 + 文件系统状态机」之上</text>
+
+  <!-- ==================== BAND 1: PREFLIGHT ==================== -->
+  <rect class="panel" x="28" y="84" width="1184" height="196" rx="14"/>
+  <text class="band-h" x="48" y="112">Phase 1 · Preflight 共享前置守卫（内联注入每份生成的 SKILL.md 顶部）</text>
+
+  <!-- 1A: Store selection -->
+  <rect class="purple-box" x="48" y="126" width="462" height="138" rx="10"/>
+  <text class="card-h" x="66" y="152" fill="#4c1d95">1A · STORE_SELECTION_GUIDANCE</text>
+  <text class="card-t" x="66" y="178" fill="#5b21b6">· 用户指定注册 Store 时先调 openspec store list --json</text>
+  <text class="card-t" x="66" y="202" fill="#5b21b6">· 一旦选定，--store &lt;id&gt; 在整轮工作流粘性传递（sticky）</text>
+  <text class="card-t" x="66" y="226" fill="#5b21b6">· 覆盖 list / status / instructions / new / archive 等命令</text>
+  <text class="card-t" x="66" y="250" fill="#5b21b6">· 未选 Store 时默认作用于最近的本地 openspec/ 规划根</text>
+
+  <path class="arrow-slate" d="M 510,195 L 544,195"/>
+
+  <!-- 1B: Project root guard -->
+  <rect class="amber-box" x="546" y="126" width="646" height="138" rx="10"/>
+  <text class="card-h" x="564" y="152" fill="#92400e">1B · PROJECT_ROOT_GUARD（首次写操作前跑 openspec list --json 验 root）</text>
+  <text class="card-t" x="564" y="178" fill="#166534">· root 为对象 → 项目已初始化，放行进入下方核心循环</text>
+  <text class="card-t" x="564" y="202" fill="#78350f">· root: null（模型自动选中技能）→ 静默退让并正常回答，绝不弹窗要求 init</text>
+  <text class="card-t" x="564" y="226" fill="#78350f">· root: null（用户点名调用）→ 停下询问：openspec init / --store &lt;id&gt; / 普通回答</text>
+  <text class="card-t" x="564" y="250" fill="#991b1b">· config.yaml 声明了不可解析的 store: 指针 → 直接展示报错与 fix，禁止副效应建根</text>
+
+  <!-- Transition Arrow -->
+  <path class="arrow-slate" d="M 620,280 L 620,310"/>
+  <text class="edge-t" x="634" y="300">root 校验通过</text>
+
+  <!-- ==================== BAND 2: CORE LOOP ==================== -->
+  <rect class="panel-loop" x="28" y="312" width="1184" height="392" rx="14"/>
+  <text class="band-h" x="48" y="340" fill="#1e3a8a">Phase 2 · Core Loop 核心运行时闭环（Host Agent ↔ OpenSpec CLI ↔ 文件系统唯一事实源）</text>
+
+  <!-- Step 1: status -->
+  <rect class="blue-box" x="48" y="360" width="468" height="132" rx="10"/>
+  <text class="card-h" x="64" y="386" fill="#1e40af">① 状态轮询：openspec status --change "&lt;id&gt;" --json</text>
+  <text class="card-t" x="64" y="412" fill="#1e3a8a">· 读取 DAG 四态（done / skipped / ready / blocked）</text>
+  <text class="card-t" x="64" y="436" fill="#1e3a8a">· 读取 actionContext.allowedEditRoots 锁定合法编辑目录边界</text>
+  <text class="card-t" x="64" y="460" fill="#1e3a8a">· 回答「下一步该做什么」（推荐 ready 产物或判定可否 apply）</text>
+
+  <!-- Step 2: instructions -->
+  <rect class="green-box" x="724" y="360" width="468" height="132" rx="10"/>
+  <text class="card-h" x="740" y="386" fill="#14532d">② 指令装配：openspec instructions &lt;target&gt; --json</text>
+  <text class="card-t" x="740" y="412" fill="#166534">· &lt;artifact&gt;：按需装配 context / references / rules / 模板</text>
+  <text class="card-t" x="740" y="436" fill="#166534">· apply / archive：装配 context + guidance + contextFiles</text>
+  <text class="card-t" x="740" y="460" fill="#166534">· 回答「怎么做」—— 局部精准注入，无需盲读整棵 specs/ 树</text>
+
+  <!-- Step 3: Host Agent execution -->
+  <rect class="purple-box" x="724" y="552" width="468" height="132" rx="10"/>
+  <text class="card-h" x="740" y="578" fill="#4c1d95">③ 智能执行：Host Agent 结合真实代码起草或实施</text>
+  <text class="card-t" x="740" y="604" fill="#5b21b6">· propose / explore（确认捕获）：按契约起草规划产物文件</text>
+  <text class="card-t" x="740" y="628" fill="#5b21b6">· apply：修改业务代码并逐项将 tasks.md 的 [ ] 勾为 [x]</text>
+  <text class="card-t" x="740" y="652" fill="#5b21b6">· archive：核验完成度与 delta，调用 CLI 确定性合并与移档</text>
+
+  <!-- Step 4: Disk mutation drives state -->
+  <rect class="orange-box" x="48" y="552" width="468" height="132" rx="10"/>
+  <text class="card-h" x="64" y="578" fill="#9a3412">④ 落盘推进：文件系统即状态机（无 .state.json / 无锁）</text>
+  <text class="card-t" x="64" y="604" fill="#7c2d12">· 产物文件写入 changeDir → detectCompleted() 自动判为 done</text>
+  <text class="card-t" x="64" y="628" fill="#7c2d12">· tasks.md 勾选落盘 → parseTaskLines() 实时推进实施进度</text>
+  <text class="card-t" x="64" y="652" fill="#7c2d12">· 磁盘文件变化直接驱动下一轮 status 拓扑解锁与状态跃迁</text>
+
+  <!-- Center Hub -->
+  <rect class="slate-box" x="530" y="476" width="180" height="92" rx="12"/>
+  <text class="card-h" x="620" y="502" text-anchor="middle" fill="#0f172a">三方职责边界</text>
+  <text class="card-t" x="620" y="526" text-anchor="middle" fill="#334155">CLI = 确定性计算</text>
+  <text class="card-t" x="620" y="550" text-anchor="middle" fill="#334155">Agent = 推理与写作</text>
+
+  <!-- Clockwise Cycle Arrows -->
+  <path class="arrow-blue" d="M 516,426 L 722,426"/>
+  <text class="edge-t" x="620" y="416" text-anchor="middle" fill="#1d4ed8">选定目标产物或操作</text>
+
+  <path class="arrow-green" d="M 958,492 L 958,550"/>
+  <text class="edge-t" x="972" y="526" fill="#15803d">返回局部指令包</text>
+
+  <path class="arrow-purple" d="M 724,618 L 518,618"/>
+  <text class="edge-t" x="620" y="608" text-anchor="middle" fill="#6d28d9">写产物 / 勾 [x] / 归档</text>
+
+  <path class="arrow-orange" d="M 282,552 L 282,494"/>
+  <text class="edge-t" x="296" y="526" fill="#c2410c">下一轮轮询直至达成</text>
+
+  <!-- Footer -->
+  <rect class="footer-box" x="28" y="720" width="1184" height="42" rx="10"/>
+  <text class="card-t" x="620" y="746" text-anchor="middle" fill="#334155">架构精髓：status 负责回答「做什么」，instructions 负责按需供给「怎么做」，文件系统负责持久化「做完没」—— 三者闭环不留影子状态。</text>
+</svg>

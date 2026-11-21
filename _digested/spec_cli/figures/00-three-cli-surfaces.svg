@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="840" viewBox="0 0 1360 840" role="img" aria-labelledby="title desc">
+  <title id="title">OpenSpec CLI 的三层职责切面与 JSON 命名契约</title>
+  <desc id="desc">展示 openspec 二进制围绕统一的 ResolvedOpenSpecRoot 暴露的三层切面（人类交互与运维面、确定性审阅与机器巡检面、Agent 工作流运行时 API），以及底部 docs/agent-contract.md 的单文档 JSON 输出与键名大小写规范。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #475569; }
+    .col-title { font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .col-sub { font: 500 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .card-title { font: 700 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .cmd { font: 600 12px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+    .body { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .foot { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .bar-title { font: 700 14.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+  </style>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1358" height="838" rx="16"/>
+
+  <!-- Main Header -->
+  <text class="h1" x="680" y="42" text-anchor="middle">OpenSpec CLI 的三层职责切面与 JSON 命名契约</text>
+  <text class="sub" x="680" y="68" text-anchor="middle">同一个 openspec 二进制围绕统一的 ResolvedOpenSpecRoot 暴露三张职责面孔，并遵守单一 JSON 信封契约</text>
+
+  <!-- ==================== COLUMN 1: HUMAN & OPS (01) ==================== -->
+  <rect x="34" y="88" width="414" height="456" rx="14" fill="#ffffff" stroke="#475569" stroke-width="1.8"/>
+  <rect x="34" y="88" width="414" height="62" rx="14" fill="#f1f5f9" stroke="#475569" stroke-width="1.8"/>
+  <text class="col-title" x="241" y="114" text-anchor="middle" fill="#0f172a">01 · 人类交互与运维面</text>
+  <text class="col-sub" x="241" y="138" text-anchor="middle" fill="#475569">交互向导 · 终端仪表盘 · 环境初始化与技能投递</text>
+
+  <!-- Subcard 1A -->
+  <rect x="52" y="164" width="378" height="78" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="card-title" x="68" y="186" fill="#0f172a">环境初始化、同步与单文件安装</text>
+  <text class="cmd" x="68" y="210" fill="#1e293b">init · update [--dry-run] · install</text>
+  <text class="body" x="68" y="232" fill="#475569">离线投递标准 SKILL.md 至全局 ~/.agents 或项目内</text>
+
+  <!-- Subcard 1B -->
+  <rect x="52" y="254" width="378" height="78" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="card-title" x="68" y="276" fill="#5b21b6">本机全局偏好与 Profile 配置（XDG）</text>
+  <text class="cmd" x="68" y="300" fill="#4c1d95">config [profile|list|get|set|unset|edit]</text>
+  <text class="body" x="68" y="322" fill="#5b21b6">读写全局 config.json（profile / skillsScope）</text>
+
+  <!-- Subcard 1C -->
+  <rect x="52" y="344" width="378" height="78" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="card-title" x="68" y="366" fill="#0f172a">终端仪表盘、补全与问题反馈</text>
+  <text class="cmd" x="68" y="390" fill="#1e293b">view · completion · feedback · schema</text>
+  <text class="body" x="68" y="412" fill="#475569">交互式 TUI 总览看板、Shell 补全安装与 Schema 定制</text>
+
+  <!-- Subcard 1D -->
+  <rect x="52" y="434" width="378" height="76" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="card-title" x="68" y="456" fill="#0f172a">多仓工作集打开视图</text>
+  <text class="cmd" x="68" y="479" fill="#1e293b">workset open · workset [create|list|remove]</text>
+  <text class="body" x="68" y="502" fill="#475569">保存并一键恢复跨 Store 多仓库编辑器视图</text>
+
+  <text class="foot" x="241" y="531" text-anchor="middle" fill="#475569">主要受众：开发者终端手动操作（详见 01 篇）</text>
+
+  <!-- ==================== COLUMN 2: DETERMINISTIC MACHINE CLI (02) ==================== -->
+  <rect x="473" y="88" width="414" height="456" rx="14" fill="#ffffff" stroke="#16a34a" stroke-width="1.8"/>
+  <rect x="473" y="88" width="414" height="62" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+  <text class="col-title" x="680" y="114" text-anchor="middle" fill="#14532d">02 · 确定性审阅与机器巡检面</text>
+  <text class="col-sub" x="680" y="138" text-anchor="middle" fill="#15803d">CI 门禁 · 脚本消费 · 跨仓巡检 · 原子落盘</text>
+
+  <!-- Subcard 2A -->
+  <rect x="491" y="164" width="378" height="78" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.2"/>
+  <text class="card-title" x="507" y="186" fill="#14532d">清单检索与需求级差异审阅</text>
+  <text class="cmd" x="507" y="210" fill="#166534">list [--specs|--archived|--all]</text>
+  <text class="cmd" x="507" y="232" fill="#166534">show [--diff|--no-scenarios|--deltas-only]</text>
+
+  <!-- Subcard 2B -->
+  <rect x="491" y="254" width="378" height="78" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.2"/>
+  <text class="card-title" x="507" y="276" fill="#14532d">结构合规门禁与版本检查</text>
+  <text class="cmd" x="507" y="300" fill="#166534">validate [--strict|--report findings]</text>
+  <text class="cmd" x="507" y="322" fill="#166534">version [--check]   # 门禁不过返回 exit 1</text>
+
+  <!-- Subcard 2C -->
+  <rect x="491" y="344" width="378" height="78" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.2"/>
+  <text class="card-title" x="507" y="366" fill="#14532d">确定性事务归档（块解析 + 快照回滚）</text>
+  <text class="cmd" x="507" y="390" fill="#166534">archive &lt;name&gt; [--yes|--skip-specs]</text>
+  <text class="body" x="507" y="412" fill="#15803d">加锁校验 delta → 内存重建主 spec → 原子落盘移入</text>
+
+  <!-- Subcard 2D -->
+  <rect x="491" y="434" width="378" height="76" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="card-title" x="507" y="456" fill="#5b21b6">跨仓 Store 管理与健康度诊断</text>
+  <text class="cmd" x="507" y="479" fill="#4c1d95">doctor · context · store *</text>
+  <text class="body" x="507" y="502" fill="#5b21b6">store [setup|register|list|doctor|remove]</text>
+
+  <text class="foot" x="680" y="531" text-anchor="middle" fill="#15803d">主要受众：CI 门禁 / 自动化脚本 / 人类审阅（详见 02 篇）</text>
+
+  <!-- ==================== COLUMN 3: AGENT RUNTIME API (03) ==================== -->
+  <rect x="912" y="88" width="414" height="456" rx="14" fill="#ffffff" stroke="#2563eb" stroke-width="1.8"/>
+  <rect x="912" y="88" width="414" height="62" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="col-title" x="1119" y="114" text-anchor="middle" fill="#1e3a8a">03 · Agent 工作流运行时 API</text>
+  <text class="col-sub" x="1119" y="138" text-anchor="middle" fill="#1d4ed8">供 openspec-* 技能在对话循环中按需拉取状态与信封</text>
+
+  <!-- Subcard 3A -->
+  <rect x="930" y="164" width="378" height="78" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+  <text class="card-title" x="946" y="186" fill="#1e3a8a">实例化变更生命周期容器</text>
+  <text class="cmd" x="946" y="210" fill="#1d4ed8">new change &lt;name&gt; [--schema|--goal]</text>
+  <text class="body" x="946" y="232" fill="#1e40af">创建 changes/&lt;name&gt;/ 与记录 schema 的元数据</text>
+
+  <!-- Subcard 3B -->
+  <rect x="930" y="254" width="378" height="78" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+  <text class="card-title" x="946" y="276" fill="#1e3a8a">ArtifactGraph 拓扑状态图查询</text>
+  <text class="cmd" x="946" y="300" fill="#1d4ed8">status [--change &lt;name&gt; | --all] --json</text>
+  <text class="body" x="946" y="322" fill="#1e40af">计算 done/ready/blocked/skipped 与 applyRequires</text>
+
+  <!-- Subcard 3C -->
+  <rect x="930" y="344" width="378" height="78" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="card-title" x="946" y="366" fill="#1e3a8a">可执行上下文信封与实施工作单编译</text>
+  <text class="cmd" x="946" y="390" fill="#1d4ed8">instructions &lt;artifact|apply|archive&gt;</text>
+  <text class="body" x="946" y="412" fill="#1e40af">注入 context + rules + instruction + template 信封</text>
+
+  <!-- Subcard 3D -->
+  <rect x="930" y="434" width="378" height="76" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+  <text class="card-title" x="946" y="456" fill="#1e3a8a">工作流 Schema 与模板路径发现</text>
+  <text class="cmd" x="946" y="479" fill="#1d4ed8">schemas [--json] · templates [--json]</text>
+  <text class="body" x="946" y="502" fill="#1e40af">发现项目/内置可用 Schema 及各产物模板落点</text>
+
+  <text class="foot" x="1119" y="531" text-anchor="middle" fill="#1d4ed8">主要受众：宿主 Coding Agent 技能循环（详见 03 篇）</text>
+
+  <!-- ==================== ARROWS TO SHARED ROOT ==================== -->
+  <line x1="241" y1="544" x2="241" y2="574" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="680" y1="544" x2="680" y2="574" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="1119" y1="544" x2="1119" y2="574" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== SHARED ROOT BAR ==================== -->
+  <rect x="34" y="578" width="1292" height="92" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+  <text class="bar-title" x="56" y="604" fill="#9a3412">共享寻根底座 · ResolvedOpenSpecRoot（业务命令统一按 5 级优先级解析规划根，读写仓库 openspec/ 或外部 Store）</text>
+  <text class="body" x="56" y="629" fill="#c2410c">① --store &lt;id&gt;（显式注册表根） → ② 最近祖先 openspec/（本地规划目录 nearest，或仅声明 store: 指针的 declared） → ③ 全局 defaultStore</text>
+  <text class="body" x="56" y="653" fill="#9a3412">④ 无本地根但本机有已注册 Store → 报 no_root_with_registered_stores · ⑤ 无根兜底（list/doctor/context 报 no_openspec_root；init/config/install 独立于寻根）</text>
+
+  <!-- ==================== BOTTOM AGENT CONTRACT BAR ==================== -->
+  <rect x="34" y="686" width="1292" height="132" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.8"/>
+  <text class="bar-title" x="56" y="712" fill="#92400e">机器输出与命名契约底线（docs/agent-contract.md）</text>
+
+  <!-- Contract Left Box -->
+  <rect x="54" y="724" width="612" height="80" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+  <text class="card-title" x="72" y="746" fill="#92400e">--json 单文档 stdout 输出与错误信封</text>
+  <text class="body" x="72" y="770" fill="#334155">• stdout 永远单文档输出（Store 横幅、提示、动画全走 stderr）</text>
+  <text class="body" x="72" y="793" fill="#334155">• 错误走 status: [{severity, code, message, fix}] + exit 1</text>
+
+  <!-- Contract Right Box -->
+  <rect x="690" y="724" width="616" height="80" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.2"/>
+  <text class="card-title" x="708" y="746" fill="#92400e">表面相关的 JSON 键名大小写规则</text>
+  <text class="body" x="708" y="770" fill="#334155">• 工作流命令（status / instructions / new / list / validate）用 camelCase</text>
+  <text class="body" x="708" y="793" fill="#334155">• Store / Doctor / Context 用 snake_case；唯独 root.store_id 固定 snake_case</text>
+</svg>

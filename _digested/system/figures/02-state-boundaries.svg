@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="800" viewBox="0 0 1360 800" role="img" aria-labelledby="title desc">
+  <title id="title">OpenSpec 四块文件状态域与 Git / 本机边界</title>
+  <desc id="desc">对照展示项目规划真相域、项目级技能投递域、用户级全局技能域与本机 XDG 配置及注册表域的文件路径、共享范围与职责边界。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .macro-title { font: 700 15.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .zone-title { font: 700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .body { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #1e293b; }
+    .body-muted { font: 400 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .tag { font: 600 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+  </style>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1358" height="798" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="36" y="42">OpenSpec 四块文件状态域与 Git / 本机边界</text>
+  <text class="sub" x="36" y="68">判断任意文件能不能改、该不该进 Git，先看它落在哪一块状态域：业务规划事实 vs 技能投递外壳 vs 本机私有环境。</text>
+
+  <!-- ==================== LEFT MACRO: GIT TRACKED ==================== -->
+  <rect x="32" y="92" width="632" height="632" rx="14" fill="#f1f5f9" stroke="#64748b" stroke-width="1.8" stroke-dasharray="7,4"/>
+  <rect x="48" y="106" width="600" height="34" rx="8" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.2"/>
+  <text class="macro-title" x="348" y="128" text-anchor="middle" fill="#0f172a">项目仓库边界（随 Git 提交 · 团队成员共享）</text>
+
+  <!-- Zone 1: Repo Planning Truth (Orange) -->
+  <rect x="48" y="154" width="600" height="290" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <rect x="48" y="154" width="600" height="40" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text class="zone-title" x="68" y="180" fill="#9a3412">① 项目规划真相域（&lt;repo&gt;/openspec/ · 必进 Git）</text>
+
+  <text class="body" x="68" y="220">• config.yaml | config.yml — 默认 schema、context/rules 注入、</text>
+  <text class="body-muted" x="84" y="244">references: 上游依赖、skillsScope、可选 store: 指针</text>
+  <text class="body" x="68" y="269">• specs/&lt;cap&gt;/spec.md — 当前已承认的行为合同基线（支持嵌套路径）</text>
+  <text class="body" x="68" y="294">• changes/&lt;id&gt;/ — 活跃增量工作区（.openspec.yaml + 规划产物）</text>
+  <text class="body" x="68" y="319">• changes/archive/YYYY-MM-DD-&lt;id&gt;/ — 已归档变更历史账本</text>
+  <text class="body" x="68" y="344">• schemas/&lt;name&gt;/（可选） — 项目自定义 schema.yaml 与模板</text>
+  <text class="body-muted" x="68" y="369">• .gitkeep — 锚定空 specs/ 与 changes/archive/ 供新克隆仓库直接使用</text>
+
+  <rect x="68" y="388" width="560" height="38" rx="8" fill="#ffedd5" stroke="#fb923c" stroke-width="1.2"/>
+  <text class="tag" x="348" y="412" text-anchor="middle" fill="#9a3412">核心业务事实源（Source of Truth）· 不可随意丢弃</text>
+
+  <!-- Zone 2: Project Skill Delivery (Blue) -->
+  <rect x="48" y="460" width="600" height="248" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <rect x="48" y="460" width="600" height="40" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text class="zone-title" x="68" y="486" fill="#1e40af">② 项目级技能投递域（--scope project 时进 Git）</text>
+
+  <text class="body" x="68" y="526">• &lt;repo&gt;/.agents/skills/openspec-*/SKILL.md — 项目内唯一真身</text>
+  <text class="body" x="68" y="551">• &lt;repo&gt;/.agents/skills/.openspec-target — 已配置工具 ID 清单</text>
+  <text class="body" x="68" y="576">• 33 个 Universal 工具 — 直接读取 .agents/skills/（零冗余目录）</text>
+  <text class="body" x="68" y="601">• 54 个 Linked 工具 — &lt;tool&gt;/skills/ 建相对软链（Win / eve 拷贝）</text>
+  <text class="body-muted" x="68" y="626">• 可选 .github/ — GitHub Copilot Cloud Agent opt-in 工作流文件</text>
+
+  <rect x="68" y="648" width="560" height="40" rx="8" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.2"/>
+  <text class="tag" x="348" y="673" text-anchor="middle" fill="#1d4ed8">纯工具投递外壳 · 随时可由 openspec update 无损重生成</text>
+
+  <!-- ==================== RIGHT MACRO: MACHINE LOCAL ==================== -->
+  <rect x="696" y="92" width="632" height="632" rx="14" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.8" stroke-dasharray="7,4"/>
+  <rect x="712" y="106" width="600" height="34" rx="8" fill="#ede9fe" stroke="#a78bfa" stroke-width="1.2"/>
+  <text class="macro-title" x="1012" y="128" text-anchor="middle" fill="#4c1d95">开发者本机边界（Machine-Local · 绝不进业务项目 Git）</text>
+
+  <!-- Zone 3: Global Skills Scope (Purple) -->
+  <rect x="712" y="154" width="600" height="248" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="712" y="154" width="600" height="40" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text class="zone-title" x="732" y="180" fill="#5b21b6">③ 用户级全局技能域（v2.1 init 默认 · 不进项目 Git）</text>
+
+  <text class="body" x="732" y="220">• ~/.agents/skills/openspec-*/SKILL.md — 本机全局共享技能真身</text>
+  <text class="body" x="732" y="245">• 各工具全局技能目录 — 如 ~/.claude/skills/ 等由 skills 包同步</text>
+  <text class="body" x="732" y="270">• $XDG_STATE_HOME/skills/.skill-lock.json — 技能版本树哈希记录</text>
+  <text class="body-muted" x="748" y="294">（未设 XDG_STATE_HOME 时回退至 ~/.agents/.skill-lock.json）</text>
+  <text class="body-muted" x="732" y="319">• 自动回退项目域例外：--copilot-cloud，或选用 eve / promptscript</text>
+
+  <rect x="732" y="342" width="560" height="40" rx="8" fill="#ede9fe" stroke="#a78bfa" stroke-width="1.2"/>
+  <text class="tag" x="1012" y="367" text-anchor="middle" fill="#5b21b6">一次安装跨仓复用 · 让业务仓库保持干净零技能文件</text>
+
+  <!-- Zone 4: Local XDG Config, Data & External Store Checkouts (Amber) -->
+  <rect x="712" y="418" width="600" height="290" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <rect x="712" y="418" width="600" height="40" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text class="zone-title" x="732" y="444" fill="#92400e">④ 本机 XDG 配置、注册表与外部 Store 检出域</text>
+
+  <text class="body" x="732" y="482">• $XDG_CONFIG_HOME/openspec/config.json（回退 ~/.config/openspec/）</text>
+  <text class="body-muted" x="748" y="506">用户级偏好：profile、workflows、skillsScope、defaultStore、telemetry</text>
+  <text class="body" x="732" y="531">• $XDG_DATA_HOME/openspec/（回退 ~/.local/share/openspec/）</text>
+  <text class="body-muted" x="748" y="555">stores/registry.yaml · worksets/worksets.yaml · projects.json</text>
+  <text class="body-muted" x="748" y="579">schemas/（用户级 schema）· global-skills.lock · binary-schemas/&lt;hash&gt;/</text>
+  <text class="body" x="732" y="604">• 用户自管 Store 检出目录（推荐 ~/openspec/&lt;id&gt;/ · 独立 Git 仓）</text>
+  <text class="body-muted" x="748" y="628">内含 .openspec-store/store.yaml 身份与该 Store 自身的 openspec/ 真相</text>
+
+  <rect x="732" y="650" width="560" height="38" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2"/>
+  <text class="tag" x="1012" y="674" text-anchor="middle" fill="#92400e">XDG 目录纯属本机私有；外部 Store 检出按其独立 Git 仓库协作</text>
+
+  <!-- Bottom Summary Strip -->
+  <rect x="32" y="738" width="1296" height="42" rx="10" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.2"/>
+  <text class="tag" x="680" y="764" text-anchor="middle" fill="#1e293b">黄金法则：openspec/ 是项目承认的规格事实；.agents/skills/ 是可重生成的投递层；~/.config 与 ~/.local/share 是本机视角与注册表。</text>
+</svg>

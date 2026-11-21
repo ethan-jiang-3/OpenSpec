@@ -14,6 +14,8 @@ workflow template                 ← MD 智力层的操作手册
 
 CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 怎么操作（策略性的），agent 负责实际执行（智能的）。三层分离让行为可解释但不完全硬编码。
 
+![12 个官方工作流技能全景与统一前置守卫](figures/00-workflow-landscape.svg)
+
 ## 全部 workflow 一览
 
 源码目录：`src/core/templates/workflows/`

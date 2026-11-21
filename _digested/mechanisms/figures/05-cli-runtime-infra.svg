@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+  <title id="title">CLI 运行时底座：按需懒加载 · 双发行通道 · 网络门控漏斗</title>
+  <desc id="desc">分三块面板展示 OpenSpec CLI 的运行时基础设施：Commander 元数据与动态 import 分离的按需懒加载架构、Node 包管理器与 Bun 8 平台单文件二进制双发行通道、以及显式 version --check 与后台检查/PostHog 遥测的双层网络门控漏斗。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .panel-title { font: 700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .card-title { font: 700 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .body { font: 400 12.6px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #1e293b; }
+    .body-muted { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .edge-label { font: 600 11.8px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+  </style>
+  <defs>
+    <marker id="arr-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1438" height="818" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="36" y="42">CLI 运行时底座：按需懒加载 · 双发行通道 · 网络门控漏斗</text>
+  <text class="sub" x="36" y="68">支撑 Agent 高频调用的底层保障：毫秒级冷启动、无 Node 环境自愈单文件运行、严格可预期的隐私与网络门控。</text>
+
+  <!-- ==================== PANEL 1: LAZY-LOAD STARTUP ARCHITECTURE ==================== -->
+  <rect x="36" y="92" width="1368" height="232" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <rect x="36" y="92" width="1368" height="36" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text class="panel-title" x="56" y="116" fill="#166534">① 按需懒加载启动架构（命令注册定义与业务实现彻底解耦）</text>
+
+  <!-- Entry Box -->
+  <rect x="54" y="166" width="184" height="88" rx="10" fill="#ffffff" stroke="#22c55e" stroke-width="1.6"/>
+  <text class="card-title" x="146" y="200" text-anchor="middle" fill="#14532d">bin/openspec.js</text>
+  <text class="body-muted" x="146" y="226" text-anchor="middle">或 standalone entry.mjs</text>
+
+  <line x1="238" y1="210" x2="270" y2="210" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+
+  <!-- Commander Shell Box -->
+  <rect x="272" y="148" width="348" height="124" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+  <text class="card-title" x="446" y="176" text-anchor="middle" fill="#14532d">src/cli/index.ts + cli/commands/*.ts</text>
+  <text class="body" x="290" y="202">• 纯 Commander 选项与帮助元数据</text>
+  <text class="body" x="290" y="226">• 零静态命令实现 import（E2E 测试锁死）</text>
+  <text class="body-muted" x="290" y="250">• default-schema 独立抽离免拉起重模块</text>
+
+  <!-- 3 Routed Arrows -->
+  <path d="M620,180 L648,180 L648,160 L674,160" stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#arr-green)"/>
+  <line x1="620" y1="216" x2="674" y2="216" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <path d="M620,248 L648,248 L648,278 L674,278" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arr-blue)"/>
+
+  <!-- Fast Path A -->
+  <rect x="676" y="138" width="708" height="44" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.4"/>
+  <text class="body" x="694" y="165" fill="#14532d">--version / --help  →  仅加载 ~24 个基础模块即刻返回（原 485 个模块）</text>
+
+  <!-- Fast Path B -->
+  <rect x="676" y="194" width="708" height="44" rx="8" fill="#ffffff" stroke="#86efac" stroke-width="1.4"/>
+  <text class="body" x="694" y="221" fill="#14532d">openspec __complete  →  仅加载 ~48 个模块（2s 候选缓存），完全跳过遥测与首次提示</text>
+
+  <!-- Action Path C -->
+  <rect x="676" y="250" width="708" height="58" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text class="card-title" x="694" y="274" fill="#1e40af">命中具体 .action() 才 await import('src/commands/...')</text>
+  <text class="body-muted" x="694" y="297">--json 分支跳过加载 ora（保单一 JSON 输出）；零宽 TTY（columns === 0）禁 spinner 防死循环</text>
+
+  <!-- ==================== PANEL 2: DUAL DISTRIBUTION CHANNELS ==================== -->
+  <rect x="36" y="346" width="664" height="444" rx="14" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+  <rect x="36" y="346" width="664" height="36" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text class="panel-title" x="56" y="370" fill="#4c1d95">② 双发行通道与内置 Schema 自愈装载</text>
+
+  <!-- Channel A: Node Package -->
+  <rect x="54" y="398" width="628" height="170" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6"/>
+  <text class="card-title" x="72" y="424" fill="#1e40af">通道 A · Node 包管理器发行（engines.node &gt;= 22.20.0）</text>
+  <text class="body" x="72" y="450">• 布局：dist/ 编译产物 + 包内静态 schemas/（无 npm postinstall 脚本）</text>
+  <text class="body" x="72" y="475">• git 源码安装：prepare 走 node build.js（免本机预装 pnpm）</text>
+  <text class="body" x="72" y="500">• 安装源识别（#2264）：version-check 区分 npm / pnpm / bun / yarn / volta</text>
+  <text class="body-muted" x="86" y="524">并将 Cellar 识别为 homebrew（brew upgrade openspec）、</text>
+  <text class="body-muted" x="86" y="548">/nix/store 识别为 nix（禁止把只读存储误判成 npm 全局安装）</text>
+
+  <!-- Channel B: Standalone Binary -->
+  <rect x="54" y="584" width="628" height="190" rx="10" fill="#ffffff" stroke="#7c3aed" stroke-width="1.8"/>
+  <text class="card-title" x="72" y="610" fill="#5b21b6">通道 B · Bun 单文件独立二进制（8 平台目标 · 免 Node 运行时）</text>
+  <text class="body-muted" x="72" y="634">目标：Linux x64/arm64（glibc 与 musl）· macOS x64/arm64 · Windows x64/arm64</text>
+  <text class="body" x="72" y="659">• 构建期：build.mjs 将 schemas/ 序列化注入 OPENSPEC_EMBEDDED_SCHEMAS</text>
+  <text class="body" x="72" y="684">• 启动自愈（entry.mjs）：按 SHA-256 前 16 位哈希校验并原子重命名解压至</text>
+  <text class="body-muted" x="86" y="708">&lt;globalDataDir&gt;/binary-schemas/&lt;hash&gt;/（文件缺失或被改立即自动重建）</text>
+  <text class="body" x="72" y="733">• 只读家目录兜底：自动退化解压至 os.tmpdir()/openspec-schemas-*</text>
+  <text class="body-muted" x="86" y="757">并在进程退出时自动清理，确保受限 CI 容器照常可用</text>
+
+  <!-- ==================== PANEL 3: DUAL NETWORK GATING FUNNEL ==================== -->
+  <rect x="724" y="346" width="680" height="444" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <rect x="724" y="346" width="680" height="36" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text class="panel-title" x="744" y="370" fill="#92400e">③ 双网络门控对比漏斗（超时熔断 · 失败静默 · 绝不阻塞命令）</text>
+
+  <!-- Gate 1 -->
+  <rect x="742" y="398" width="644" height="112" rx="10" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+  <text class="card-title" x="760" y="422" fill="#991b1b">第一道硬门控：OPENSPEC_NO_UPDATE_CHECK 已定义 或 NODE_ENV=test</text>
+  <text class="body" x="760" y="447">• 命中 → 直接关闭一切版本检查（含自升级子进程防死循环重入）</text>
+  <text class="body" x="760" y="472" fill="#166534">• 未命中且为显式 openspec version --check → 直接放行！（仅受此层限制）</text>
+  <text class="body-muted" x="774" y="496">查询 npm registry（仅认 HTTPS，防仓库 .npmrc 劫持）或 GitHub Releases Atom</text>
+
+  <line x1="1064" y1="510" x2="1064" y2="536" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-amber)"/>
+  <text class="edge-label" x="1078" y="528" fill="#92400e">后台自动请求继续向下过滤</text>
+
+  <!-- Gate 2 -->
+  <rect x="742" y="538" width="644" height="112" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.6"/>
+  <text class="card-title" x="760" y="562" fill="#92400e">第二道环境与隐私门控（update 后台检查 与 PostHog 遥测共用）</text>
+  <text class="body" x="760" y="587">以下任一成立即静默拦截：</text>
+  <text class="body" x="760" y="611">• CI 真值 · DO_NOT_TRACK（非显式 off）· OPENSPEC_TELEMETRY=0（非显式 on）</text>
+  <text class="body-muted" x="760" y="635">• 全局 config.json 设 telemetry.enabled: false，或 config.json 损坏无法解析</text>
+
+  <line x1="1064" y1="650" x2="1064" y2="676" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text class="edge-label" x="1078" y="668" fill="#15803d">全部未拦截（默认开启 opt-out 模型）</text>
+
+  <!-- Allowed Outbound Surfaces -->
+  <rect x="742" y="678" width="644" height="96" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+  <text class="body" x="760" y="703">• update 后台版本提示：仅默认官方 npm 全局安装 + 交互式 TTY 才询问自升级</text>
+  <text class="body" x="760" y="727">• PostHog 匿名遥测（https://edge.openspec.dev，1s 超时无重试）：仅上报命令名</text>
+  <text class="body-muted" x="774" y="751">与版本号（零参数/零路径）；首次向 stderr 告知（--json 推迟告知保纯净 stdout）</text>
+</svg>

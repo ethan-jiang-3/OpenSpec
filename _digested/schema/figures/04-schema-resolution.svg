@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="720" viewBox="0 0 1240 720" role="img" aria-labelledby="title desc">
+  <title id="title">两阶段 Schema 解析漏斗：先定名字（4 级）· 再找目录（3 层）</title>
+  <desc id="desc">第一阶段通过 resolveSchemaForChange 按 CLI --schema、change 目录 .openspec.yaml、项目 openspec/config.yaml|.yml、默认 spec-driven 四级优先级决定 Schema 名字；第二阶段通过 getSchemaDir 按项目级、XDG 用户级、包内置（含 standalone 二进制解压目录）三层查找对应的 schema.yaml 目录。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .stage-blue { fill: #ffffff; stroke: #93c5fd; stroke-width: 1.6; }
+    .stage-green { fill: #ffffff; stroke: #86efac; stroke-width: 1.6; }
+    .title { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #0f172a; }
+    .subtitle { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #475569; }
+    .banner-h { font: 700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .banner-sub { font: 600 12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .card-h { font: 700 13.5px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "PingFang SC", monospace; }
+    .card-t { font: 400 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .warn-t { font: 700 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #b91c1c; }
+    .step-note { font: 400 11.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; fill: #64748b; }
+    .blue-box { fill: #dbeafe; stroke: #2563eb; stroke-width: 1.8; }
+    .purple-box { fill: #ede9fe; stroke: #7c3aed; stroke-width: 1.8; }
+    .amber-box { fill: #fef3c7; stroke: #d97706; stroke-width: 1.8; }
+    .green-box { fill: #dcfce7; stroke: #16a34a; stroke-width: 1.8; }
+    .slate-box { fill: #f1f5f9; stroke: #475569; stroke-width: 1.8; }
+    .sub-box { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.2; }
+    .footer-box { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 1.2; }
+    .arrow-down { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#arrowSlate); }
+    .arrow-bridge { stroke: #2563eb; stroke-width: 2.6; fill: none; marker-end: url(#arrowBlue); }
+  </style>
+  <defs>
+    <marker id="arrowSlate" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="1" y="1" width="1238" height="718" rx="16"/>
+
+  <!-- Header -->
+  <text class="title" x="620" y="38" text-anchor="middle">两阶段 Schema 解析漏斗：先定名字（4 级）· 再找目录（3 层）</text>
+  <text class="subtitle" x="620" y="64" text-anchor="middle">彻底分清「当前 Change 选用哪个 Schema 名」与「同名 Schema 目录从磁盘哪一层加载」</text>
+
+  <!-- ==================== STAGE 1: PICK NAME ==================== -->
+  <rect class="stage-blue" x="24" y="86" width="536" height="558" rx="14"/>
+
+  <rect class="blue-box" x="44" y="104" width="496" height="54" rx="10"/>
+  <text class="banner-h" x="292" y="126" text-anchor="middle" fill="#1e3a8a">Stage 1 · 决定当前 Change 用哪个 Schema 名字</text>
+  <text class="banner-sub" x="292" y="148" text-anchor="middle" fill="#1d4ed8">resolveSchemaForChange()  (src/utils/change-metadata.ts)</text>
+
+  <!-- Level 1 -->
+  <rect class="blue-box" x="48" y="176" width="488" height="70" rx="10"/>
+  <text class="card-h" x="292" y="202" text-anchor="middle" fill="#1e40af">1. CLI 显式参数  --schema &lt;name&gt;</text>
+  <text class="card-t" x="292" y="228" text-anchor="middle" fill="#1e3a8a">单次命令最高覆盖权；忽略元数据与项目配置</text>
+
+  <path class="arrow-down" d="M 292,246 L 292,272"/>
+  <text class="step-note" x="306" y="264">未传参则回退</text>
+
+  <!-- Level 2 -->
+  <rect class="purple-box" x="64" y="274" width="456" height="74" rx="10"/>
+  <text class="card-h" x="292" y="300" text-anchor="middle" fill="#4c1d95">2. &lt;changeDir&gt;/.openspec.yaml 的 schema</text>
+  <text class="card-t" x="292" y="326" text-anchor="middle" fill="#5b21b6">锁定已有 Change 名字；new change 创建时尚不存在故跳过</text>
+
+  <path class="arrow-down" d="M 292,348 L 292,374"/>
+  <text class="step-note" x="306" y="366">无元数据则回退</text>
+
+  <!-- Level 3 -->
+  <rect class="amber-box" x="80" y="376" width="424" height="74" rx="10"/>
+  <text class="card-h" x="292" y="402" text-anchor="middle" fill="#92400e">3. openspec/config.yaml|.yml 的 schema</text>
+  <text class="card-t" x="292" y="428" text-anchor="middle" fill="#78350f">项目默认工作流（先找 .yaml，不存在才回退读 .yml）</text>
+
+  <path class="arrow-down" d="M 292,450 L 292,476"/>
+  <text class="step-note" x="306" y="468">未配置则兜底</text>
+
+  <!-- Level 4 -->
+  <rect class="slate-box" x="96" y="478" width="392" height="68" rx="10"/>
+  <text class="card-h" x="292" y="504" text-anchor="middle" fill="#1e293b">4. 内置硬编码默认  "spec-driven"</text>
+  <text class="card-t" x="292" y="528" text-anchor="middle" fill="#334155">DEFAULT_SCHEMA 常量兜底，保证零配置开箱即用</text>
+
+  <!-- Stage 1 Note -->
+  <rect class="sub-box" x="44" y="562" width="496" height="64" rx="8"/>
+  <text class="card-t" x="292" y="586" text-anchor="middle" fill="#334155">Stage 1 产出：唯一确定的 Schema 名称字符串 &lt;name&gt;</text>
+  <text class="step-note" x="292" y="610" text-anchor="middle">边界：XDG 用户目录不参与选名；.openspec.yaml 只锁名字，不存文件快照</text>
+
+  <!-- ==================== BRIDGE ==================== -->
+  <rect class="blue-box" x="568" y="320" width="88" height="30" rx="15"/>
+  <text class="banner-sub" x="612" y="340" text-anchor="middle" fill="#1e40af">&lt;name&gt;</text>
+  <path class="arrow-bridge" d="M 560,368 L 660,368"/>
+  <text class="step-note" x="612" y="390" text-anchor="middle">按名寻址</text>
+
+  <!-- ==================== STAGE 2: FIND DIR ==================== -->
+  <rect class="stage-green" x="664" y="86" width="552" height="558" rx="14"/>
+
+  <rect class="green-box" x="684" y="104" width="512" height="54" rx="10"/>
+  <text class="banner-h" x="940" y="126" text-anchor="middle" fill="#14532d">Stage 2 · 按名字查找 &lt;name&gt;/schema.yaml 目录</text>
+  <text class="banner-sub" x="940" y="148" text-anchor="middle" fill="#15803d">getSchemaDir() / resolveSchema()  (artifact-graph/resolver.ts)</text>
+
+  <!-- Layer 1: Project -->
+  <rect class="green-box" x="684" y="176" width="512" height="104" rx="10"/>
+  <text class="card-h" x="704" y="202" fill="#14532d">1. 项目级  &lt;root&gt;/openspec/schemas/&lt;name&gt;/</text>
+  <text class="card-t" x="704" y="228" fill="#166534">Source: project · schema fork / schema init 的落点（随仓库版本化）</text>
+  <text class="card-t" x="704" y="254" fill="#166534">命中即返回，直接 shadow（影子覆盖）下方用户级与包内置同名目录</text>
+
+  <path class="arrow-down" d="M 940,280 L 940,308"/>
+  <text class="step-note" x="954" y="300">不存在则下探</text>
+
+  <!-- Layer 2: User XDG -->
+  <rect class="amber-box" x="684" y="310" width="512" height="126" rx="10"/>
+  <text class="card-h" x="704" y="336" fill="#92400e">2. 用户级  $XDG_DATA_HOME/openspec/schemas/&lt;name&gt;/</text>
+  <text class="card-t" x="704" y="362" fill="#78350f">Unix / macOS 默认：~/.local/share/openspec/schemas/&lt;name&gt;/</text>
+  <text class="card-t" x="704" y="386" fill="#78350f">Windows 默认：%LOCALAPPDATA%\openspec\schemas\&lt;name&gt;\</text>
+  <text class="warn-t" x="704" y="412">易错点：遵循 XDG 数据目录规范，绝非 ~/.openspec/schemas/！</text>
+
+  <path class="arrow-down" d="M 940,436 L 940,464"/>
+  <text class="step-note" x="954" y="456">不存在则下探</text>
+
+  <!-- Layer 3: Package / Binary -->
+  <rect class="slate-box" x="684" y="466" width="512" height="100" rx="10"/>
+  <text class="card-h" x="704" y="492" fill="#1e293b">3. 包内置  &lt;pkg&gt;/schemas/&lt;name&gt;/</text>
+  <text class="card-t" x="704" y="518" fill="#334155">Source: package · npm 安装读取包内 schemas/ 目录</text>
+  <text class="card-t" x="704" y="542" fill="#334155">standalone 二进制首次运行解压至 &lt;dataDir&gt;/binary-schemas/&lt;hash&gt;/</text>
+
+  <!-- Stage 2 Note -->
+  <rect class="sub-box" x="684" y="580" width="512" height="46" rx="8"/>
+  <text class="card-t" x="940" y="608" text-anchor="middle" fill="#334155">核验：openspec schema which &lt;name&gt; [--all] [--json]（查来源与遮蔽）</text>
+
+  <!-- Footer -->
+  <rect class="footer-box" x="24" y="660" width="1192" height="42" rx="10"/>
+  <text class="card-t" x="620" y="686" text-anchor="middle" fill="#334155">排错口诀：改 config.yaml 的 schema 对老 Change 不生效 → 看 Stage 1 的 .openspec.yaml；内置行为异常 → 看 Stage 2 是否被项目级目录 shadow。</text>
+</svg>

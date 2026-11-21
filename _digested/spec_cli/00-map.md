@@ -11,6 +11,8 @@
 - 对 IDE / AI 工具集成来说，它还是一个“投递目标”，`init` / `update` 会把工作流模板安装成标准 skills（1.x 曾含 commands，v2.0.0 起不再生成）。
 - 对 store operator 来说，它提供跨仓库上下文引用接口，`store register`/`context`/`workset` 负责管理多仓库 spec 引用。
 
+![OpenSpec CLI 的三层职责切面与 JSON 命名契约](figures/00-three-cli-surfaces.svg)
+
 ## 三类受众
 
 ### 1. 人类用户

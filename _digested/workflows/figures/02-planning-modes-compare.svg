@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="890" viewBox="0 0 1400 890" role="img" aria-labelledby="title desc">
+  <title id="title">三条规划路径对比：propose vs ff vs new + continue</title>
+  <desc id="desc">从 Profile 归属、适用目标与重名处理、前置探测与歧义策略、单次推进粒度与停止点四个维度，横向对比 openspec-propose（core）、openspec-ff-change（custom）与 openspec-new-change + openspec-continue-change（custom）三条规划路径。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #475569; }
+    .col-hdr { font: 700 15.5px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+    .col-sub { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .dim-title { font: 700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #1e293b; }
+    .dim-sub { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #475569; }
+    .cell-title { font: 700 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .body { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .cmd { font: 600 11.5px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+  </style>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1398" height="888" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="700" y="42" text-anchor="middle">三条规划路径对比：propose vs ff vs new + continue</text>
+  <text class="sub" x="700" y="68" text-anchor="middle">共享同一套 Schema ArtifactGraph 与 #2104 输出路径校验，按「前置预检、歧义容忍度、单轮推进粒度」提供三种切入节奏</text>
+
+  <!-- ==================== COLUMN HEADERS (PROFILE) ==================== -->
+  <rect x="30" y="88" width="186" height="78" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text class="dim-title" x="123" y="122" text-anchor="middle">对比维度</text>
+  <text class="dim-sub" x="123" y="146" text-anchor="middle">Profile 归属</text>
+
+  <!-- Header 1: propose -->
+  <rect x="232" y="88" width="372" height="78" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.8"/>
+  <text class="col-hdr" x="418" y="118" text-anchor="middle" fill="#1e3a8a">openspec-propose</text>
+  <text class="col-sub" x="418" y="145" text-anchor="middle" fill="#1d4ed8">[core 默认可见] · 稳健完整规划路径</text>
+
+  <!-- Header 2: ff -->
+  <rect x="620" y="88" width="372" height="78" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" stroke-dasharray="6,3"/>
+  <text class="col-hdr" x="806" y="118" text-anchor="middle" fill="#4c1d95">openspec-ff-change</text>
+  <text class="col-sub" x="806" y="145" text-anchor="middle" fill="#5b21b6">[custom 扩展] · 极速快进规划（Fast-Forward）</text>
+
+  <!-- Header 3: new + continue -->
+  <rect x="1008" y="88" width="362" height="78" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" stroke-dasharray="6,3"/>
+  <text class="col-hdr" x="1189" y="118" text-anchor="middle" fill="#4c1d95">new-change + continue</text>
+  <text class="col-sub" x="1189" y="145" text-anchor="middle" fill="#5b21b6">[custom 扩展] · 脚手架占位 + 逐件审阅推进</text>
+
+  <!-- ==================== ROW 1: TARGET & COLLISION ==================== -->
+  <rect x="30" y="180" width="186" height="114" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4"/>
+  <text class="dim-title" x="123" y="230" text-anchor="middle">1. 适用目标</text>
+  <text class="dim-sub" x="123" y="254" text-anchor="middle">新建 vs 已有 change</text>
+
+  <!-- R1C1 -->
+  <rect x="232" y="180" width="372" height="114" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.4"/>
+  <text class="cell-title" x="250" y="206" fill="#1e3a8a">新建为主（重名提示切更新/继续）</text>
+  <text class="body" x="250" y="231" fill="#334155">• 调 openspec new change "&lt;name&gt;" 创建容器</text>
+  <text class="body" x="250" y="255" fill="#334155">• 同名已存在时停下询问：继续/更新该已有</text>
+  <text class="body" x="250" y="279" fill="#334155">  change，还是另起新名称</text>
+
+  <!-- R1C2 -->
+  <rect x="620" y="180" width="372" height="114" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.4"/>
+  <text class="cell-title" x="638" y="206" fill="#92400e">【仅限新建 change】（绝不续写旧变更）</text>
+  <text class="body" x="638" y="231" fill="#92400e">• 调 openspec new change "&lt;name&gt;" 创建容器</text>
+  <text class="body" x="638" y="255" fill="#b45309">• 若同名 change 已存在：直接停下并提示</text>
+  <text class="body" x="638" y="279" fill="#b45309">  改用 continue 推进该已有 change</text>
+
+  <!-- R1C3 -->
+  <rect x="1008" y="180" width="362" height="114" rx="10" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.4"/>
+  <text class="cell-title" x="1026" y="206" fill="#4c1d95">拆分为「新建容器」+「续写已有」两步</text>
+  <text class="body" x="1026" y="231" fill="#334155">• new：只搭空目录 + .openspec.yaml（重名提示切）</text>
+  <text class="body" x="1026" y="255" fill="#334155">• continue：作用于已有活跃 change（绝不新建）</text>
+  <text class="body" x="1026" y="279" fill="#475569">• 唯一活跃变更自动选中；多变更时列清单询问</text>
+
+  <!-- ==================== ROW 2: PREFLIGHT & CONTEXT ==================== -->
+  <rect x="30" y="308" width="186" height="126" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4"/>
+  <text class="dim-title" x="123" y="364" text-anchor="middle">2. 前置探测</text>
+  <text class="dim-sub" x="123" y="388" text-anchor="middle">context 与 config 预检</text>
+
+  <!-- R2C1 -->
+  <rect x="232" y="308" width="372" height="126" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text class="cell-title" x="250" y="334" fill="#14532d">完整前置预检（7 步标准流）</text>
+  <text class="cmd" x="250" y="359" fill="#166534">openspec context --json  # 定位权威 root.path</text>
+  <text class="body" x="250" y="383" fill="#166534">• 建目录前先读 &lt;root.path&gt;/openspec/config.yaml</text>
+  <text class="body" x="250" y="407" fill="#166534">• 按需跑 schemas --json + 起草前只读探查代码库</text>
+
+  <!-- R2C2 -->
+  <rect x="620" y="308" width="372" height="126" rx="10" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.4"/>
+  <text class="cell-title" x="638" y="334" fill="#4c1d95">跳过 context 预检（5 步精简流）</text>
+  <text class="body" x="638" y="359" fill="#334155">• 不跑 context --json，不单列预读 config.yaml</text>
+  <text class="body" x="638" y="383" fill="#334155">• 仅靠 PROJECT_ROOT_GUARD 的 list --json 查根</text>
+  <text class="body" x="638" y="407" fill="#334155">• 循环中消费 instructions 返回的 context + 读代码</text>
+
+  <!-- R2C3 -->
+  <rect x="1008" y="308" width="362" height="126" rx="10" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.4"/>
+  <text class="cell-title" x="1026" y="334" fill="#4c1d95">按需懒加载 + 磁盘重读依赖</text>
+  <text class="body" x="1026" y="359" fill="#334155">• new：按需跑 schemas --json → 展示首产物模板</text>
+  <text class="body" x="1026" y="383" fill="#334155">• continue：先跑 status --json 获取 DAG 状态</text>
+  <text class="body" x="1026" y="407" fill="#334155">• 每次写前从磁盘重读已完成依赖（防手改失步）</text>
+
+  <!-- ==================== ROW 3: AMBIGUITY STRATEGY ==================== -->
+  <rect x="30" y="448" width="186" height="114" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4"/>
+  <text class="dim-title" x="123" y="498" text-anchor="middle">3. 歧义策略</text>
+  <text class="dim-sub" x="123" y="522" text-anchor="middle">提问门槛与交互节奏</text>
+
+  <!-- R3C1 -->
+  <rect x="232" y="448" width="372" height="114" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text class="cell-title" x="250" y="474" fill="#92400e">遇关键歧义【先停下提问】</text>
+  <text class="body" x="250" y="499" fill="#92400e">• 凡影响范围、外部行为、兼容性或验收标准的</text>
+  <text class="body" x="250" y="523" fill="#92400e">  实质性歧义，必须在创建 change 前先问清</text>
+  <text class="body" x="250" y="547" fill="#b45309">• 非关键实现细节可做合理假设并明确记录在案</text>
+
+  <!-- R3C2 -->
+  <rect x="620" y="448" width="372" height="114" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text class="cell-title" x="638" y="474" fill="#1e3a8a">遇小歧义【做合理假设保持动量】</text>
+  <text class="body" x="638" y="499" fill="#1e40af">• 优先自行做合理工程决策（keep momentum）</text>
+  <text class="body" x="638" y="523" fill="#1e40af">• 仅当上下文严重不明（critically unclear，#1940）</text>
+  <text class="body" x="638" y="547" fill="#1e40af">  无法继续时，才暂停向用户提问</text>
+
+  <!-- R3C3 -->
+  <rect x="1008" y="448" width="362" height="114" rx="10" fill="#ffffff" stroke="#c4b5fd" stroke-width="1.4"/>
+  <text class="cell-title" x="1026" y="474" fill="#4c1d95">分步人工把关 + 不确定即问</text>
+  <text class="body" x="1026" y="499" fill="#334155">• new 停在模板预览；continue 遇不明先提问</text>
+  <text class="body" x="1026" y="523" fill="#334155">• 用户可在每两个产物间直接审阅、手改已写文件</text>
+  <text class="body" x="1026" y="547" fill="#475569">• 适合复杂架构探索或高风险变更的精细打磨</text>
+
+  <!-- ==================== ROW 4: GRANULARITY & STOP BOUNDARY ==================== -->
+  <rect x="30" y="576" width="186" height="216" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4"/>
+  <text class="dim-title" x="123" y="676" text-anchor="middle">4. 推进粒度</text>
+  <text class="dim-sub" x="123" y="700" text-anchor="middle">与停止边界</text>
+
+  <!-- R4C1 -->
+  <rect x="232" y="576" width="372" height="216" rx="10" fill="#ffffff" stroke="#2563eb" stroke-width="1.6"/>
+  <text class="cell-title" x="250" y="602" fill="#1e3a8a">一口气写完 applyRequires 传递闭包</text>
+  <text class="body" x="250" y="627" fill="#334155">• 沿 requires 边展开传递必需集（#1412）</text>
+  <text class="body" x="250" y="651" fill="#334155">• 循环 status → instructions → 写盘，直至全部</text>
+  <text class="body" x="250" y="675" fill="#334155">  done / skipped / 有意识条件跳过</text>
+  <rect x="248" y="692" width="340" height="84" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+  <text class="cell-title" x="264" y="716" fill="#991b1b">严守 Planning Boundary（规划边界）</text>
+  <text class="body" x="264" y="740" fill="#991b1b">写完产物立即停下展示 status，绝不在同轮顺手</text>
+  <text class="body" x="264" y="763" fill="#991b1b">改业务代码（须等用户下一轮要求 apply）</text>
+
+  <!-- R4C2 -->
+  <rect x="620" y="576" width="372" height="216" rx="10" fill="#ffffff" stroke="#7c3aed" stroke-width="1.6"/>
+  <text class="cell-title" x="638" y="602" fill="#4c1d95">一口气快进生成 applyRequires 传递闭包</text>
+  <text class="body" x="638" y="627" fill="#334155">• 与 propose 共享逐字相同的 DAG 循环与终止条件</text>
+  <text class="body" x="638" y="651" fill="#334155">• 支持对不满足触发条件的可选产物做条件跳过</text>
+  <text class="body" x="638" y="675" fill="#334155">• 全程不调 instructions apply，不触碰业务代码</text>
+  <rect x="636" y="692" width="340" height="84" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.3"/>
+  <text class="cell-title" x="652" y="716" fill="#1e3a8a">停止点：全部传递必需产物就绪即停</text>
+  <text class="body" x="652" y="740" fill="#1e40af">输出人类可读 openspec status，提示计划已就绪、</text>
+  <text class="body" x="652" y="763" fill="#1e40af">随时可要求进入 apply 实施阶段</text>
+
+  <!-- R4C3 -->
+  <rect x="1008" y="576" width="362" height="216" rx="10" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.6"/>
+  <text class="cell-title" x="1026" y="602" fill="#14532d">单步增量推进（每次调用只做 1 件事）</text>
+  <text class="body" x="1026" y="627" fill="#166534">• new：只建空壳并展示首个模板 → 立即 STOP</text>
+  <text class="body" x="1026" y="651" fill="#166534">• continue：优先补齐未写完的半写 specs/glob</text>
+  <text class="body" x="1026" y="675" fill="#166534">  产物（#2037）；否则仅生成【下一个】ready 产物</text>
+  <rect x="1022" y="692" width="334" height="84" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.3"/>
+  <text class="cell-title" x="1038" y="716" fill="#14532d">停止点：每写完 1 个即停；全完提示 apply</text>
+  <text class="body" x="1038" y="740" fill="#166534">isPlanningComplete 为真时仅提示进入 apply</text>
+  <text class="body" x="1038" y="763" fill="#166534">（#2274：绝不误提示未实施就 archive！）</text>
+
+  <!-- ==================== SHARED SAFETY FOOTER ==================== -->
+  <rect x="30" y="808" width="1340" height="62" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="1.6"/>
+  <text class="cell-title" x="52" y="833" fill="#9a3412">三条路径共同遵守的落盘铁律（#2104 输出路径前置校验 &amp; 上下文隔离）：</text>
+  <text class="body" x="52" y="857" fill="#c2410c">glob 输出路径必须先选成落在 changeRoot 内（含解析 symlink 后）的具体路径再写入；instructions 返回的 &lt;context&gt; 与 &lt;rules&gt; 仅作约束，严禁拷入产物文件！</text>
+</svg>

@@ -47,6 +47,8 @@
 
 ## 3. 真实 DAG 不是文件中的箭头文案
 
+![内置 spec-driven 产物依赖 DAG 与四态判定机](../schema/figures/02-spec-driven-dag.svg)
+
 `schema.yaml` 的 description 写作 `proposal → specs → design → tasks`（Unicode 箭头，`schema.yaml:3`），artifact 的声明顺序也是 `proposal`、`specs`、`design`、`tasks`。但真正控制 ready/blocked 的只有每个 artifact 的 `requires`：
 
 ```text

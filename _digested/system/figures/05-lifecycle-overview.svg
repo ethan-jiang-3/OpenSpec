@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="760" viewBox="0 0 1440 760" role="img" aria-labelledby="title desc">
+  <title id="title">单次 Change 从探索到归档沉淀的全生命周期闭环</title>
+  <desc id="desc">展示单次增量 Change 从 openspec-explore 探索、Planning 阶段生成四类产物、openspec-apply-change 实施、可选 verify/sync 对账同步，到 openspec-archive-change 归档合入主 specs 基线并反哺下一轮变更的完整闭环。</desc>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .stage-title { font: 700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .pill-text { font: 600 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    .body { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #1e293b; }
+    .body-muted { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; fill: #475569; }
+    .edge-label { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+  </style>
+  <defs>
+    <marker id="arr-slate" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#475569"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-amber" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#d97706"/>
+    </marker>
+    <marker id="arr-green" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <path d="M0,0 L9,3.5 L0,7 Z" fill="#ea580c"/>
+    </marker>
+  </defs>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1438" height="758" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="36" y="42">单次 Change 从探索到归档沉淀的全生命周期闭环</text>
+  <text class="sub" x="36" y="68">全部 12 个工作流技能围绕同一套文件状态运转（端到端新手指引另有 openspec-onboard 串联完整一遍）。</text>
+
+  <!-- ==================== TOP REVISION LOOP: UPDATE-CHANGE ==================== -->
+  <rect x="340" y="92" width="760" height="58" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="6,3"/>
+  <text class="pill-text" x="720" y="116" text-anchor="middle" fill="#1e40af">openspec-update-change（规划产物修订闭环 · 随时回改）</text>
+  <text class="body-muted" x="720" y="139" text-anchor="middle">探索沉淀新决策或实施发现设计偏差时，一致性回修已有 Markdown 产物（严守边界，不改业务代码）</text>
+
+  <!-- Feedback connectors to/from update-change -->
+  <path d="M770,196 L770,152" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5,3" fill="none" marker-end="url(#arr-blue)"/>
+  <path d="M1032,196 L1032,152" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5,3" fill="none" marker-end="url(#arr-blue)"/>
+  <path d="M454,150 L454,194" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5,3" fill="none" marker-end="url(#arr-blue)"/>
+
+  <!-- ==================== STAGE 1: EXPLORE ==================== -->
+  <rect x="32" y="196" width="216" height="300" rx="12" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+  <rect x="32" y="196" width="216" height="40" rx="12" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+  <text class="stage-title" x="140" y="222" text-anchor="middle" fill="#0f172a">① Explore（可选）</text>
+
+  <rect x="48" y="250" width="184" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+  <text class="pill-text" x="140" y="270" text-anchor="middle" fill="#1d4ed8">openspec-explore</text>
+
+  <text class="body" x="48" y="306">• 无负担调研代码与边界</text>
+  <text class="body" x="48" y="331">• 澄清模糊需求与备选方案</text>
+  <text class="body" x="48" y="356">• 默认零落盘、不建 change</text>
+  <text class="body" x="48" y="381">• 方向收敛且用户确认后，</text>
+  <text class="body" x="60" y="405">衔接到正式规划或更新</text>
+  <text class="body-muted" x="140" y="472" text-anchor="middle">适合需求未定型时的前站</text>
+
+  <line x1="248" y1="346" x2="280" y2="346" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arr-blue)"/>
+
+  <!-- ==================== STAGE 2: PLANNING ==================== -->
+  <rect x="282" y="196" width="344" height="300" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <rect x="282" y="196" width="344" height="40" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text class="stage-title" x="454" y="222" text-anchor="middle" fill="#1e40af">② Planning（DAG 规划）</text>
+
+  <rect x="298" y="248" width="312" height="56" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+  <text class="pill-text" x="454" y="270" text-anchor="middle" fill="#1d4ed8">快速：openspec-propose（一步到位）</text>
+  <text class="body-muted" x="454" y="293" text-anchor="middle">拆分：new + continue 步进 / ff 快进</text>
+
+  <!-- Artifact DAG Box -->
+  <rect x="298" y="316" width="312" height="132" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+  <text class="pill-text" x="454" y="338" text-anchor="middle" fill="#9a3412">spec-driven 默认产物 DAG</text>
+  <text class="body" x="314" y="363">1. proposal.md（为什么改 · 改什么）</text>
+  <text class="body" x="314" y="388">2. specs/**/*.md + design.md（并行）</text>
+  <text class="body" x="314" y="413">3. tasks.md（落盘即解锁 apply 门禁）</text>
+  <text class="body-muted" x="454" y="437" text-anchor="middle">附 .openspec.yaml 记录绑定 schema</text>
+
+  <text class="body-muted" x="454" y="476" text-anchor="middle">严守规划边界：此阶段绝不写业务代码</text>
+
+  <line x1="626" y1="346" x2="658" y2="346" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arr-blue)"/>
+
+  <!-- ==================== STAGE 3: APPLY ==================== -->
+  <rect x="660" y="196" width="220" height="300" rx="12" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <rect x="660" y="196" width="220" height="40" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text class="stage-title" x="770" y="222" text-anchor="middle" fill="#1e40af">③ Apply（按单实施）</text>
+
+  <rect x="676" y="250" width="188" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.2"/>
+  <text class="pill-text" x="770" y="270" text-anchor="middle" fill="#1d4ed8">openspec-apply-change</text>
+
+  <text class="body" x="676" y="306">• 调 instructions apply</text>
+  <text class="body" x="688" y="330">核验 applyRequires 门禁</text>
+  <text class="body" x="676" y="355">• 按 tracks（tasks.md）</text>
+  <text class="body" x="688" y="379">逐项编写业务代码与测试</text>
+  <text class="body" x="676" y="404">• 每完成一项实时勾选 [x]</text>
+  <text class="body-muted" x="770" y="472" text-anchor="middle">不自动合并 specs 或归档</text>
+
+  <line x1="880" y1="346" x2="912" y2="346" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-amber)"/>
+
+  <!-- ==================== STAGE 4: VERIFY / SYNC ==================== -->
+  <rect x="914" y="196" width="236" height="300" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <rect x="914" y="196" width="236" height="40" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text class="stage-title" x="1032" y="222" text-anchor="middle" fill="#92400e">④ Verify / Sync（可选）</text>
+
+  <!-- Verify subcard -->
+  <rect x="928" y="250" width="208" height="108" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="1.4"/>
+  <text class="pill-text" x="1032" y="273" text-anchor="middle" fill="#b45309">openspec-verify-change</text>
+  <text class="body-muted" x="942" y="297">• 完整性 / 正确性 / 一致性</text>
+  <text class="body-muted" x="942" y="320">• 代码对账规划产物</text>
+  <text class="body-muted" x="942" y="343">• 纯只读审计报告</text>
+
+  <!-- Sync subcard -->
+  <rect x="928" y="370" width="208" height="108" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="1.4"/>
+  <text class="pill-text" x="1032" y="393" text-anchor="middle" fill="#b45309">openspec-sync-specs</text>
+  <text class="body-muted" x="942" y="417">• 提前将 delta 意图合入</text>
+  <text class="body-muted" x="942" y="440">  openspec/specs/ 主规格</text>
+  <text class="body-muted" x="942" y="463">• 保持 change 继续活跃</text>
+
+  <line x1="1150" y1="346" x2="1182" y2="346" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+
+  <!-- ==================== STAGE 5: ARCHIVE ==================== -->
+  <rect x="1184" y="196" width="224" height="300" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+  <rect x="1184" y="196" width="224" height="40" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text class="stage-title" x="1296" y="222" text-anchor="middle" fill="#166534">⑤ Archive（归档）</text>
+
+  <rect x="1198" y="248" width="196" height="54" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="1.2"/>
+  <text class="pill-text" x="1296" y="270" text-anchor="middle" fill="#15803d">openspec-archive-change</text>
+  <text class="body-muted" x="1296" y="293" text-anchor="middle">CLI: openspec archive</text>
+
+  <text class="body" x="1202" y="330">• 严格校验 delta 结构</text>
+  <text class="body" x="1202" y="355">• 四步确定性合并至</text>
+  <text class="body" x="1214" y="379">openspec/specs/</text>
+  <text class="body" x="1202" y="404">• 目录原子移入</text>
+  <text class="body" x="1214" y="428">changes/archive/</text>
+  <text class="body-muted" x="1296" y="472" text-anchor="middle">多单可用 bulk-archive</text>
+
+  <!-- ==================== BOTTOM REPO TRUTH & FEEDBACK BAND ==================== -->
+  <rect x="32" y="550" width="1376" height="176" rx="14" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <rect x="32" y="550" width="1376" height="36" rx="14" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text class="stage-title" x="56" y="574" fill="#9a3412">openspec/ 仓库事实层沉淀与下一轮 Change 反哺闭环</text>
+
+  <!-- Box A: Main Specs Baseline -->
+  <rect x="52" y="602" width="456" height="106" rx="10" fill="#ffffff" stroke="#ea580c" stroke-width="1.6"/>
+  <text class="pill-text" x="280" y="628" text-anchor="middle" fill="#9a3412">openspec/specs/&lt;capability&gt;/spec.md（长期行为基线）</text>
+  <text class="body-muted" x="280" y="654" text-anchor="middle">承载归档沉淀后的最新系统真相，直接作为下一轮</text>
+  <text class="body-muted" x="280" y="678" text-anchor="middle">Explore 与 Planning 的 capability 发现与上下文输入</text>
+
+  <!-- Box B: Active Change Dir -->
+  <rect x="532" y="602" width="416" height="106" rx="10" fill="#ffffff" stroke="#fb923c" stroke-width="1.4"/>
+  <text class="pill-text" x="740" y="628" text-anchor="middle" fill="#c2410c">openspec/changes/&lt;id&gt;/（活跃工作区）</text>
+  <text class="body-muted" x="740" y="654" text-anchor="middle">承载本次增量 proposal / delta specs / design / tasks；</text>
+  <text class="body-muted" x="740" y="678" text-anchor="middle">归档完成后从活跃目录移除，保持工作区干净</text>
+
+  <!-- Box C: Archive Ledger -->
+  <rect x="972" y="602" width="416" height="106" rx="10" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+  <text class="pill-text" x="1180" y="628" text-anchor="middle" fill="#166534">openspec/changes/archive/YYYY-MM-DD-&lt;id&gt;/</text>
+  <text class="body-muted" x="1180" y="654" text-anchor="middle">不可变历史演进账本：完整封存当时的设计权衡、</text>
+  <text class="body-muted" x="1180" y="678" text-anchor="middle">增量 delta 与实施勾选记录，供日后追溯审计</text>
+
+  <!-- Archive -> Bottom Band & Baseline -> Explore/Planning Arrows -->
+  <line x1="1296" y1="496" x2="1296" y2="548" stroke="#16a34a" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text class="edge-label" x="1282" y="528" text-anchor="end" fill="#15803d">事务合入与封存</text>
+
+  <line x1="140" y1="550" x2="140" y2="498" stroke="#ea580c" stroke-width="2.2" marker-end="url(#arr-orange)"/>
+  <text class="edge-label" x="154" y="528" fill="#c2410c">反哺基线</text>
+
+  <line x1="380" y1="550" x2="380" y2="498" stroke="#ea580c" stroke-width="2.2" marker-end="url(#arr-orange)"/>
+  <text class="edge-label" x="394" y="528" fill="#c2410c">提供规格上下文</text>
+</svg>

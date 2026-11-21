@@ -139,6 +139,8 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 ### 这里的边界：agent 归档技能 vs CLI `openspec archive`
 
+![归档的双轨机制对照：宿主技能 openspec-archive-change vs 终端 CLI openspec archive](figures/06-archive-dual-paths.svg)
+
 务必把两条归档路径严格区分开：
 
 - **`openspec-archive-change`（agent 技能）**：靠 CLI 只读查询（`instructions archive` / `status` / `list` / `instructions specs`）+ agent 智能合并主 specs + shell `mkdir -p` / `mv` 完成，不调 `openspec archive`。

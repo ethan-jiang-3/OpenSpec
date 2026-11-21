@@ -11,6 +11,8 @@ agent 通过 `openspec context` 拿到一个 working set（root + referenced sto
 
 还支持机器级 `defaultStore`：它是用户全局配置中的**低优先级 fallback**，只在没有更具体项目 root/选择时参与解析；它不是把某个 store 变成所有项目的 planning home，也不会让 references 自动写入或同步。
 
+![跨仓协同三概念对照：Store vs openspec context vs openspec workset](figures/01-store-context-workset.svg)
+
 ## 五个新核心对象
 
 | 对象 | 位置 | 本质 |

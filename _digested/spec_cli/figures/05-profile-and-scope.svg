@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="880" viewBox="0 0 1360 880" role="img" aria-labelledby="title desc">
+  <title id="title">工作流选择（profile）与技能安装位置（skillsScope）双轴判定图</title>
+  <desc id="desc">上半部分展示全局 config.json 中 profile（core 默认 6 个 vs custom 最高 12 个及 sync 自动前置补齐）与 v2.0 delivery 退役说明；下半部分展示 InitCommand.resolveSkillScope 的 7 级作用域判定链与 openspec update 的作用域同步逻辑。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrowDown" markerWidth="8" markerHeight="8" refX="4" refY="7" orient="auto">
+      <path d="M0,0 L4,8 L8,0 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <style>
+    .bg { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .h1 { font: 700 22px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #0f172a; }
+    .sub { font: 400 13.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #475569; }
+    .sec-title { font: 700 15px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .card-title { font: 700 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .cmd { font: 600 12px "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; }
+    .body { font: 400 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+    .step-txt { font: 500 12.5px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; fill: #1e293b; }
+    .badge-txt { font: 700 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif; }
+  </style>
+
+  <!-- Outer Card -->
+  <rect class="bg" x="1" y="1" width="1358" height="878" rx="16"/>
+
+  <!-- Header -->
+  <text class="h1" x="680" y="42" text-anchor="middle">工作流选择（profile）与技能安装位置（skillsScope）双轴判定图</text>
+  <text class="sub" x="680" y="68" text-anchor="middle">v2.0 退役 delivery 后，工具投递收敛为两个正交问题：「选哪些标准技能」与「装在机器全局还是项目仓库内」</text>
+
+  <!-- ==================== TOP HALF: AXIS 1 (PROFILE) ==================== -->
+  <rect x="32" y="86" width="1296" height="320" rx="14" fill="#ffffff" stroke="#7c3aed" stroke-width="1.8"/>
+  <rect x="32" y="86" width="1296" height="46" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/>
+  <text class="sec-title" x="54" y="115" fill="#4c1d95">轴一 · 安装哪些技能（全局 ~/.config/openspec/config.json 的 profile → getProfileWorkflows()）</text>
+
+  <!-- Core Card -->
+  <rect x="52" y="148" width="444" height="240" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text class="card-title" x="72" y="174" fill="#1e3a8a">profile: "core"（默认开箱 · 精简 6 个技能）</text>
+
+  <rect x="72" y="190" width="122" height="32" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="cmd" x="133" y="210" text-anchor="middle" fill="#1e3a8a">propose</text>
+  <rect x="208" y="190" width="122" height="32" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="cmd" x="269" y="210" text-anchor="middle" fill="#1e3a8a">explore</text>
+  <rect x="344" y="190" width="122" height="32" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="cmd" x="405" y="210" text-anchor="middle" fill="#1e3a8a">apply</text>
+
+  <rect x="72" y="232" width="122" height="32" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="cmd" x="133" y="252" text-anchor="middle" fill="#1e3a8a">update</text>
+  <rect x="208" y="232" width="122" height="32" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="cmd" x="269" y="252" text-anchor="middle" fill="#1e3a8a">sync</text>
+  <rect x="344" y="232" width="122" height="32" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="cmd" x="405" y="252" text-anchor="middle" fill="#1e3a8a">archive</text>
+
+  <text class="body" x="72" y="294" fill="#1e40af">• 覆盖「探索 → 提案 → 修订 → 实施 → 同步 → 归档」主干</text>
+  <text class="body" x="72" y="318" fill="#1e40af">• 单一恒定文本保证（skill-generation.ts）：无论处于哪个</text>
+  <text class="body" x="72" y="342" fill="#1e40af">  profile，同一个技能生成的 SKILL.md 正文完全一致</text>
+  <text class="body" x="72" y="368" fill="#475569">• 切换命令：openspec config profile core</text>
+
+  <!-- Custom Card -->
+  <rect x="514" y="148" width="516" height="240" rx="10" fill="#faf5ff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text class="card-title" x="534" y="174" fill="#5b21b6">profile: "custom"（按需自选 · 最高全部 12 个技能）</text>
+  <text class="body" x="534" y="200" fill="#4c1d95">在 core 6 个基础上，可按需勾选其余 6 个扩展技能：</text>
+  <text class="cmd" x="534" y="224" fill="#6d28d9">new · continue · ff · verify · bulk-archive · onboard</text>
+
+  <!-- Dependency Auto-Insertion Box -->
+  <rect x="534" y="242" width="476" height="128" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+  <text class="card-title" x="550" y="266" fill="#14532d">getProfileWorkflows() 自动依赖补齐规则</text>
+  <text class="body" x="550" y="291" fill="#166534">• 若选中了 archive 或 bulk-archive，但未勾选 sync：</text>
+  <text class="body" x="550" y="315" fill="#166534">  自动在首个归档技能之前插入 sync（已有 sync 则不重复、不重排）</text>
+  <text class="body" x="550" y="339" fill="#166534">• 展开后 profile 仍保持 custom，不会因碰巧含核心集而降级为 core</text>
+
+  <!-- Retired Delivery Callout -->
+  <rect x="1048" y="148" width="260" height="240" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+  <text class="card-title" x="1066" y="174" fill="#991b1b">旁注：delivery 已退役</text>
+  <rect x="1066" y="188" width="166" height="26" rx="13" fill="#fecaca" stroke="#dc2626" stroke-width="1"/>
+  <text class="badge-txt" x="1149" y="205" text-anchor="middle" fill="#991b1b">v2.0.0 退役 (#2223)</text>
+  <text class="body" x="1066" y="238" fill="#7f1d1d">• 1.x 曾提供 skills / commands</text>
+  <text class="body" x="1066" y="262" fill="#7f1d1d">  / both 三态投递开关</text>
+  <text class="body" x="1066" y="290" fill="#7f1d1d">• v2.0 起只生成标准 SKILL.md，</text>
+  <text class="body" x="1066" y="314" fill="#7f1d1d">  不再生成 /opsx:* 命令文件</text>
+  <text class="body" x="1066" y="342" fill="#7f1d1d">• update 按内容指纹自动清扫</text>
+  <text class="body" x="1066" y="366" fill="#7f1d1d">  未改过的 1.x 旧命令文件</text>
+
+  <!-- ==================== BOTTOM HALF: AXIS 2 (SKILLSSCOPE) ==================== -->
+  <rect x="32" y="424" width="1296" height="432" rx="14" fill="#ffffff" stroke="#16a34a" stroke-width="1.8"/>
+  <rect x="32" y="424" width="1296" height="46" rx="14" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+  <text class="sec-title" x="54" y="453" fill="#14532d">轴二 · 装到哪里（InitCommand.resolveSkillScope 7 级优先级 vs openspec update 同步行为）</text>
+
+  <!-- Left Panel: Init 7-level Precedence -->
+  <rect x="52" y="486" width="772" height="352" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text class="card-title" x="72" y="512" fill="#0f172a">openspec init 作用域判定链（resolveSkillScope · 自上而下短路命中）</text>
+
+  <!-- Level 1 -->
+  <rect x="72" y="526" width="468" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="step-txt" x="86" y="548">1. 传入 --tools none（仅建 openspec/，不装宿主工具）</text>
+  <line x1="540" y1="543" x2="572" y2="543" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="576" y="526" width="228" height="34" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.2"/>
+  <text class="badge-txt" x="690" y="548" text-anchor="middle" fill="#9a3412">→ project（项目内）</text>
+
+  <!-- Level 2 -->
+  <rect x="72" y="570" width="468" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="step-txt" x="86" y="592">2. 显式传入 --scope &lt;global|project&gt;</text>
+  <line x1="540" y1="587" x2="572" y2="587" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="576" y="570" width="228" height="34" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="badge-txt" x="690" y="592" text-anchor="middle" fill="#1e3a8a">→ 按显式 --scope 取值</text>
+
+  <!-- Level 3 -->
+  <rect x="72" y="614" width="468" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="step-txt" x="86" y="636">3. 项目已有本地技能（projectHasOwnSkills 为真）</text>
+  <line x1="540" y1="631" x2="572" y2="631" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="576" y="614" width="228" height="34" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.2"/>
+  <text class="badge-txt" x="690" y="636" text-anchor="middle" fill="#9a3412">→ project（沿用本地）</text>
+
+  <!-- Level 4 -->
+  <rect x="72" y="658" width="468" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="step-txt" x="86" y="680">4. 环境变量 OPENSPEC_SKILLS_SCOPE 已设置</text>
+  <line x1="540" y1="675" x2="572" y2="675" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="576" y="658" width="228" height="34" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+  <text class="badge-txt" x="690" y="680" text-anchor="middle" fill="#1e3a8a">→ 按环境变量值（非法报错）</text>
+
+  <!-- Level 5 -->
+  <rect x="72" y="702" width="468" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="step-txt" x="86" y="724">5. 全局 config.json 存有 skillsScope 机器偏好</text>
+  <line x1="540" y1="719" x2="572" y2="719" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="576" y="702" width="228" height="34" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="badge-txt" x="690" y="724" text-anchor="middle" fill="#5b21b6">→ 按全局 config.json 值</text>
+
+  <!-- Level 6 -->
+  <rect x="72" y="746" width="468" height="34" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+  <text class="step-txt" x="86" y="768">6. 传了 --copilot-cloud，或选中 eve / promptscript</text>
+  <line x1="540" y1="763" x2="572" y2="763" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="576" y="746" width="228" height="34" rx="6" fill="#ffedd5" stroke="#ea580c" stroke-width="1.2"/>
+  <text class="badge-txt" x="690" y="768" text-anchor="middle" fill="#9a3412">→ project（不支持全局）</text>
+
+  <!-- Level 7 -->
+  <rect x="72" y="790" width="468" height="36" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text class="step-txt" x="86" y="813" font-weight="700">7. 全新项目无上述命中（含 CI / 非交互默认）</text>
+  <line x1="540" y1="808" x2="572" y2="808" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <rect x="576" y="790" width="228" height="36" rx="6" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/>
+  <text class="badge-txt" x="690" y="813" text-anchor="middle" fill="#4c1d95">→ global（~/.agents/skills/）</text>
+
+  <!-- Right Panel: Update Behavior -->
+  <rect x="844" y="486" width="464" height="352" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text class="card-title" x="864" y="512" fill="#92400e">openspec update 作用域识别与双端同步</text>
+
+  <!-- Update Box A -->
+  <rect x="864" y="528" width="424" height="94" rx="8" fill="#ffedd5" stroke="#ea580c" stroke-width="1.2"/>
+  <text class="card-title" x="880" y="551" fill="#9a3412">① 读取项目 openspec/config.yaml 团队标记</text>
+  <text class="body" x="880" y="575" fill="#c2410c">• 声明 skillsScope: project → 就地刷新仓库内技能</text>
+  <text class="body" x="880" y="599" fill="#c2410c">• 项目内单份真身：33 工具直读，54 工具建链/拷贝</text>
+
+  <!-- Update Box B -->
+  <rect x="864" y="634" width="424" height="94" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.2"/>
+  <text class="card-title" x="880" y="657" fill="#0f172a">② 旧项目有本地技能但未声明 skillsScope 时</text>
+  <text class="body" x="880" y="681" fill="#334155">• 交互终端：询问「留在项目」（写 config.yaml）或「迁全局」</text>
+  <text class="body" x="880" y="705" fill="#334155">• 非交互（CI / Agent）：永不弹窗阻断，原地刷新现有技能</text>
+
+  <!-- Update Box C -->
+  <rect x="864" y="740" width="424" height="86" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.2"/>
+  <text class="card-title" x="880" y="763" fill="#5b21b6">③ 顺带刷新本机全局 + 完全离线安装（#2283）</text>
+  <text class="body" x="880" y="787" fill="#4c1d95">• 若机器已装全局技能则顺带刷新（无 openspec/ 目录也能跑）</text>
+  <text class="body" x="880" y="810" fill="#4c1d95">• 经本地 tmpdir 写入内置模板，无需 git 或 GitHub 网络</text>
+</svg>

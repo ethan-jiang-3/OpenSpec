@@ -34,6 +34,8 @@
 - 一部分命令对这些状态做解释、验证、编译和暴露。
 - 一部分命令把这些能力包装成外部 AI 工具可消费的标准 skills（1.x 曾含 slash commands，v2.0.0 起不再生成）。
 
+![OpenSpec CLI 的三层职责切面与 JSON 命名契约](figures/00-three-cli-surfaces.svg)
+
 ## 文档索引
 
 - `00-map.md`: 总览图，说明 CLI 的三层结构、两类受众和推荐阅读路径。

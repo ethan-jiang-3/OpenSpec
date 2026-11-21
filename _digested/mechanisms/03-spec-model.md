@@ -11,6 +11,8 @@ OpenSpec 选择 Markdown 作为 specs/changes 的存储格式，是为了让人�
 
 Spec model 这一层的作用，就是把 Markdown 变成可验证、可查询、可 archive的结构化对象。
 
+![Spec 解析防线与三层校验 / 合并流水线](figures/03-spec-validation-layers.svg)
+
 ```text
 Markdown files
   → parsers

@@ -18,6 +18,8 @@
 
 ## 整条流水线
 
+![机理流水线：delta 经 buildUpdatedSpec 造出主 specs](figures/mechanism-pipeline.svg)
+
 ```text
 openspec/changes/<id>/specs/<capability-path>/spec.md   ← delta（提案要改什么）
         │   用 ## ADDED / MODIFIED / REMOVED / RENAMED Requirements 表达
