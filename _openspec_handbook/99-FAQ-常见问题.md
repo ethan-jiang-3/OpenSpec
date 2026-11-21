@@ -23,15 +23,15 @@
 **A**: 不是。OpenSpec 是整套机制；`opsx` 是 Claude 等 adapter 的一个 workflow command 命名空间，不是所有 agent 工具的通用语法。
 
 - `openspec`：终端 CLI，例如 `openspec init`、`openspec status --change <name> --json`、`openspec archive <name>`
-- `/openspec-*`：Claude 等宿主里的用户入口，例如 `/opsx:propose`、`/opsx:apply`
+- `/openspec-*`：Claude 等宿主里**调用技能**的写法，例如 `/openspec-propose`、`/openspec-apply-change`（1.x 是 `/opsx:propose` 这类命令文件，v2.0.0 起已移除）
 - `$openspec-*`：Codex v1.8.0 的 skills-only 入口（装在 `.agents/skills/`），例如 `$openspec-propose`、`$openspec-apply-change`
-- `.claude/commands/opsx/`：Claude Code 里保存这些入口文件的位置
+- `.claude/skills/openspec-*/`：Claude Code 里技能的落点（指向 `.agents/skills/` 真身的链接）。1.x 的 `.claude/commands/opsx/` 已在 2.0 移除
 
 所以不要把 `opsx` 理解成另一个产品。它只是让 agent 工具能触发 OpenSpec workflow 的入口层。
 
 ### Q5: 宿主 propose workflow 和 CLI 是什么关系？
 **A**: 
-- Claude 的 `/opsx:propose`（或 Codex 的 `$openspec-propose`）：宿主 workflow，agent 会按 workflow 自动跑多步 CLI
+- 技能 `openspec-propose`（Claude Code 里 `/openspec-propose`，Codex 里 `$openspec-propose`）：宿主 workflow，agent 会按 workflow 自动跑多步 CLI
 - CLI 里没有 `openspec propose` 这个等价命令
 - 对应的底层步骤通常是 `openspec new change <name>`，再用 `openspec status --change <name> --json` 和 `openspec instructions <artifact> --change <name> --json` 生成 artifacts
 - 机器协议层面（status/instructions 返回什么、agent 怎么跑多步），详见 [90 附录·给机器看的 agent 协议](90-附录-给机器看的-agent-协议.md)
@@ -80,7 +80,7 @@ v1.8.0（v1.7.0 起）也允许 `skip_specs: true` 声明“本 change 没有 sp
 - **影响**：会影响谁
 - **迁移**：用户怎么办
 
-### Q11a: `/opsx:verify` 怎么核对 REMOVED 的基线？
+### Q11a: `/openspec-verify-change` 怎么核对 REMOVED 的基线？
 **A**: 先按**精确规范化名称**在主 spec 里找基线：取 `Requirement:` 后的标题文本、trim，仅当结尾 `#` 串前有空格/tab 时去掉这段 `#`（所以 `C#` 保留 `#`），大小写敏感比较。相似措辞不算匹配；改名属于 RENAMED。主 spec 里没有这个精确名称时，去该文件历史里找（`git -C "<planningHome.root>" log -p -- openspec/specs/<capability-path>/spec.md`，或 `git show <commit>^:./openspec/specs/<capability-path>/spec.md`）。只有标题重述、没有正文/scenario 的基线不可用；主 spec 与历史都拿不到可用基线时，该条 Spec Coverage 标 **not verified** 并跳过搜索，绝不把没搜过的移除算通过。
 
 ---
@@ -259,7 +259,7 @@ specs/
 1. 在项目里运行 `openspec init`（v1.2.0+ 会自动检测已安装的工具并预选）
 2. 也可以手动指定：`openspec init --tools claude,cursor`
 3. 运行 `openspec update` 确保 skills/commands 是最新的（v1.15.0+ 可先 `openspec update --dry-run` 看会改哪些文件）
-4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude 可为 `/opsx:propose`，Codex 为 `$openspec-propose`，Zed 为 `/openspec-propose`
+4. 只有 CLI 明确提示且实际更新了 IDE 驻留入口时才重启；CLI-only 工具通常立即读取。使用该宿主入口：Claude Code 为 `/openspec-propose`，Codex 为 `$openspec-propose`，Zed 为 `/openspec-propose`
 
 ### Q27a: Zed 和 Codex 为什么都写 `.agents/skills/`？
 **A**: 它们共用一个 OpenSpec 管理的 skill 树：v1.10.0 是 Codex、Zed Agent 与 vendor-neutral `agents` 三方，v1.11.0 起 Antigravity 也迁入（它另写 `.agents/workflows/` commands），v1.14.0 起 Amp（`.amp`/`.agents/skills` 检测）与 GSD（`.gsd` 检测）同样写入这棵树。OpenSpec 只管理 `openspec-*` 目录和 `.openspec-target` ownership marker，不创建/修改根 `AGENTS.md`；共享树每次运行只写一份，写入者由 marker 决定。
@@ -297,9 +297,9 @@ npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction`
 ### Q27h: 提示说“Command files are deprecated and go away in OpenSpec 2.0”，我的 CLI 要没了？
 **A**: 不是。**弃用的是斜杠命令文件，不是 CLI。**
 
-`/opsx:propose` 这类东西是 AI 工具里的斜杠命令，由 `.claude/commands/opsx/propose.md` 这种 markdown 文件定义；`openspec validate` / `archive` / `update` / `instructions` 是真正的 CLI 子命令，一个都没少，2.0 也不动它们。
+`/openspec-propose` 这类东西是 AI 工具里**技能的调用写法**，背后是 `.agents/skills/openspec-propose/SKILL.md`（Claude Code 的 `.claude/skills/` 下是一条链接）。1.x 时代它由 `.claude/commands/opsx/propose.md` 这种命令文件定义，v2.0.0 起已不再生成；`openspec validate` / `archive` / `update` / `instructions` 是真正的 CLI 子命令，一个都没少，2.0 也不动它们。
 
-同一份 workflow 本来就有两种 packaging：command 文件（`/opsx:propose`）和 skill（`openspec-propose`），内容几乎相同，**内部都是在指挥 CLI**。2.0 已停止生成前者，保留后者，并把技能收成 `.agents/skills/` 一份真身 + 各工具目录的链接（建不了链接退化为拷贝）。
+（**1.x 的形态**）同一份 workflow 本来就有两种 packaging：command 文件（`/opsx:propose`）和 skill（`openspec-propose`），内容几乎相同，**内部都是在指挥 CLI**。2.0 已停止生成前者，保留后者，并把技能收成 `.agents/skills/` 一份真身 + 各工具目录的链接（建不了链接退化为拷贝）。
 
 **这条提示已经过时了**：它在 v1.17.0 是预告，v2.0.0 起 command 文件**真的不再生成**。升级时 `openspec update` 会按内容指纹清理早期版本留下的 command 文件——没人改过的删掉，你改过的保留并列出。`delivery` 配置项也随之退役，不要再写 `openspec config set delivery ...`。
 
@@ -331,7 +331,7 @@ npm `postinstall` 已移除。首次可读、且 action 到达 root `postAction`
 **A**: 
 - 检查 artifact 的依赖关系（比如 tasks 依赖 specs 和 design）
 - 先完成依赖的 artifact
-- 或者使用该宿主的 ff workflow（Claude 示例 `/opsx:ff`）生成剩余 ready artifact；它不能绕过 schema 的真实依赖
+- 或者使用该宿主的 ff workflow（Claude 示例 `/openspec-ff-change`）生成剩余 ready artifact；它不能绕过 schema 的真实依赖
 
 ### Q30: AI 生成的 artifacts 质量不好怎么办？
 **A**: 

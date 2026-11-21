@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/update-change.ts` → `getUpdateChangeSkillTemplate()` + `getOpsxUpdateCommandTemplate()`
 
-> **调用方式**：技能 `openspec-update-change` [change-name]——Claude Code 等工具里 `/openspec-update` [change-name]，Codex 用 `$openspec-update-change`。1.x 写作 `/opsx:update`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
+> **调用方式**：技能 `openspec-update-change` [change-name]——Claude Code 等工具里 `/openspec-update-change` [change-name]，Codex 用 `$openspec-update-change` [change-name]。1.x 写作 `/opsx:update`；v2.0.0 起命令文件已移除，`/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-update-change`（skill）/ `OPSX: Update`（command）
 > **独立 CLI 命令**：无——update 是纯 agent 模板，修订已有 planning artifacts，不改代码。
 > **profile**：custom（需显式启用，不在默认 core 里）
@@ -45,7 +45,7 @@ sequenceDiagram
     participant TS as CLI（TS 层）
     participant FS as 文件系统
 
-    User->>MD: /opsx:update [change-name]
+    User->>MD: /openspec-update-change [change-name]
     MD->>MD: 若无 name → 唯一 active change 自动选择；歧义时 list → 用户选择
 
     rect rgb(240, 248, 255)
@@ -95,11 +95,11 @@ sequenceDiagram
         Note over MD,FS: Step 6 · 建议下一步
         MD->>MD: 检查状态
         alt 还有 artifact 缺失
-            MD-->>User: "建议 /opsx:continue 补 artifact"
+            MD-->>User: "建议 /openspec-continue-change 补 artifact"
         else change 已实施（tasks 已勾）
-            MD-->>User: "代码可能不再匹配修订后的 plan。<br/>建议 /opsx:apply"
+            MD-->>User: "代码可能不再匹配修订后的 plan。<br/>建议 /openspec-apply-change"
         else 全部完成
-            MD-->>User: "建议 /opsx:archive"
+            MD-->>User: "建议 /openspec-archive-change"
         end
     end
 ```
@@ -110,7 +110,7 @@ update 最核心的约束是（模板原文口径）：
 
 ```text
 Do not advance the build frontier: if an artifact has empty existingOutputPaths
-and status ready or blocked, that is /opsx:continue's job. Leave skipped
+and status ready or blocked, that is /openspec-continue-change's job. Leave skipped
 artifacts untouched. The only new-file scope is a confirmed concrete path under
 a glob artifact whose existingOutputPaths is non-empty.
 ```
@@ -159,27 +159,24 @@ update workflow，就是这个循环中**"修 gap"**步骤的官方 workflow。�
 
 | Guardrail | 含义 |
 |---|---|
-| Planning artifacts only — NEVER edit code | 如果修订暗示代码变更，停止并指向 `/opsx:apply` |
+| Planning artifacts only — NEVER edit code | 如果修订暗示代码变更，停止并指向 `/openspec-apply-change` |
 | Use artifact ids from `openspec status`, never hardcode | schema-agnostic |
 | Edit `existingOutputPaths` + step 4 允许的已确认具体路径，绝不用 `resolvedOutputPath` | glob artifact 的 resolvedOutputPath 还是 pattern；两处规则口径一致，别只读其中一处 |
 | Do not advance build frontier | 不创建新 artifact；唯一例外是部分填充 glob 下经用户确认补一个具体路径文件 |
 | Confirm every edit with user before writing | 每次修改都要确认 |
-| If request changes intent → recommend `/opsx:new` | "Update vs. Start Fresh" 判断 |
+| If request changes intent → recommend `/openspec-new-change` | "Update vs. Start Fresh" 判断 |
 
 ## 源码锚点
 
-| 内容 | 行号范围（update-change.ts，v1.14.3） |
+| 内容 | 行号范围（update-change.ts，**v2.1.1**，全文 231 行） |
 |---|---|
-| continue/apply/archive/new 的 optionalWorkflow handoff 常量 | L18-L74 |
-| SkillTemplate 定义 | L76-L172 |
-| CommandTemplate 定义 | L174-L269 |
-| Step 2: 获取 artifacts（含 glob 新文件例外） | L108-L120 |
-| Step 3: 理解请求 | L122-L124 |
-| Step 4: 读 + 修订 + 一致性（含 glob 补文件协议） | L126-L137 |
-| Step 5: 确认 + 写入 | L139-L146 |
-| Step 6: 建议下一步 | L148-L159 |
+| continue / apply / archive / new 的 handoff 常量 | L11-L35 |
+| `getUpdateChangeSkillTemplate()`（技能正文） | L38-L134 |
+| `getOpsxUpdateCommandTemplate()`（1.x 命令模板，**2.0 起不再生成**） | L136-L231 |
+
+> **与 v1.14.3 相比**：`optionalWorkflow()` 已随 `optional-workflow.ts` 一起删除，handoff 常量改成**运行时判断**的纯文本（「如果那个技能装了就跑它，否则自己做」）。命令模板函数仍在文件里，但 2.0 起没有任何调用方会把它写进项目——保留只是为了让旧项目能被识别和清理。
 | Guardrails（例外在两处一致） | L161-L167（6 条；168-171 是返回对象收尾） |
 
 ## v1.13.1 行为更新
 
-**draft-then-write（`fede536c`）**：`/opsx:update` 现在把请求的修订先起草（step 4），经用户确认后才写入（step 5）。与 explore 的 capture 确认同属一轮「写前确认」护栏收紧。
+**draft-then-write（`fede536c`）**：`/openspec-update-change` 现在把请求的修订先起草（step 4），经用户确认后才写入（step 5）。与 explore 的 capture 确认同属一轮「写前确认」护栏收紧。

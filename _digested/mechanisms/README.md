@@ -5,7 +5,7 @@
 - 多仓库和团队上下文到底怎么协调？
 - OpenSpec 的 workflow 怎么进入不同 coding agent？
 - Markdown 文档为什么能被当成可靠状态？
-- 为什么有这么多 `/opsx:*` workflow 模板？
+- 为什么有这么多 workflow 模板？（1.x 曾同时投递成 `/opsx:*` 命令与 skill，2.0 起只剩技能）
 - completion、telemetry、feedback 这些周边设施和核心系统是什么关系？
 
 这些问题都很重要，但它们不是第一次理解 OpenSpec 的入口。更合适的读法是：先读 `../system/` 建立整体模型，再读 `../schema/`、`../spec_cli/`、`../internal-spec-driven/` 掌握主干机制；当你开始追问“这套系统如何扩展、如何落到不同工具、如何保证文件状态可解释”时，再回到这里。

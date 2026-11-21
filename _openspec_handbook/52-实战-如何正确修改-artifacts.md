@@ -36,8 +36,8 @@ openspec config profile
 /openspec-propose <name>   # 创建 change + 生成所有 artifacts
 /openspec-explore          # 探索/调研模式
 /openspec-apply-change [name]     # 实现 tasks
-/opsx:update           # 更新现有 artifact（v1.6.0 纳入 core）
-/opsx:sync             # 同步 delta specs（v1.4.0 从 custom 移入 core）
+/openspec-update-change           # 更新现有 artifact（v1.6.0 纳入 core）
+/openspec-sync-specs             # 同步 delta specs（v1.4.0 从 custom 移入 core）
 /openspec-archive-change [name]   # 归档 change
 ```
 

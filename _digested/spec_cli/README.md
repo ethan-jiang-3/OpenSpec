@@ -41,8 +41,8 @@
 - `02-machine-facing-cli.md`: 面向 OPSX/AI 的 CLI 接口，强调 JSON、结构化输出和被谁消费。
 - `03-workflow-runtime-api.md`: 最关键的一篇，深挖 `status`、`instructions`、`new change`、`templates`、`schemas`。
 - `04-command-deep-dive.md`: 全量命令族的消化版说明，不追求 API reference 的细枝末节，而强调边界和本质。
-- `05-config-profile-delivery.md`: 解释 `profile`、`delivery`、`init`、`update` 如何把工作流投放到具体 AI 工具。
-- `06-opsx-call-chains.md`: 从 `/opsx:*` 模板反向梳理 CLI 调用链。
+- `05-config-profile-delivery.md`: 解释 `profile`、投递机制（1.x 的 `delivery`，2.x 的 `skillsScope` + 一份真身）、`init`、`update` 如何把工作流投放到具体 AI 工具。
+- `06-opsx-call-chains.md`: 从工作流模板反向梳理 CLI 调用链（文件名沿用 1.x 的 opsx 叫法）。
 - `07-command-io-matrix.md`: 每个命令的输入、输出、影响和典型受众总表。
 - `08-glossary-and-models.md`: 统一术语，避免把 change、artifact、schema、workflow 混在一起。
 

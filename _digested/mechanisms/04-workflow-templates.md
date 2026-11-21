@@ -55,7 +55,7 @@ workflow template
 | `continue` | 不一定 | 一次一个 | 增量 |
 | `ff` | 可用于已有 change | 多个 | 批量推进 |
 
-这四个模板共同解释了 agent workflow “动作而非阶段”的体验：用户可以从不同粒度切入同一条 artifact DAG。Claude 的名称可为 `/opsx:*`；Codex 为 `$openspec-*` skills，不能把前者当通用入口。
+这四个模板共同解释了 agent workflow “动作而非阶段”的体验：用户可以从不同粒度切入同一条 artifact DAG。技能名统一为 `openspec-*`；Claude Code 等按 `/openspec-*` 调用，Codex 按 `$openspec-*`（1.x 的 `/opsx:*` 命令文件已在 v2.0.0 移除，不是通用入口）。
 
 ## update：修订而非推进
 
@@ -65,7 +65,7 @@ workflow template
 - 只编辑 `existingOutputPaths` 中的已有文件，不创建新 artifact、不在 glob 下新增文件
 - 每次修改前必须经用户确认
 - 修订后双向检查所有已有 artifact 的一致性（改 proposal → check specs/design/tasks，反过来也成立）
-- 如果修改改变了 change 的意图而非精炼细节，建议用 `/opsx:new` 重新开始
+- 如果修改改变了 change 的意图而非精炼细节，建议用 `/openspec-new-change` 重新开始
 
 `update` 填补了两个重要场景的官方 workflow 空白：① Explore 中做了决策 → 需要更新 artifacts；② Apply 中发现 design 问题 → 需要回修 artifacts。详见 `../workflows/12-update.md`。
 

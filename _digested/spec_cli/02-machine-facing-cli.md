@@ -153,7 +153,7 @@ OpenSpec 里的 OPSX 工作流并不是“纯 prompt 魔法”，而是反复调
 对机器的意义：
 
 - 让工作流从“抽象意图”进入“可落地 change 上下文”。
-- 许多宿主 workflow（Claude 的 `/opsx:*`、Codex 的 `$openspec-*`）先要确保 change 存在，后续状态与文档生成才有挂载点。
+- 许多宿主 workflow（技能名 `openspec-*`；Claude Code 按 `/openspec-*` 调用，Codex 按 `$openspec-*`）先要确保 change 存在，后续状态与文档生成才有挂载点。
 
 ### `openspec version [--check] --json`
 

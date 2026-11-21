@@ -1,6 +1,6 @@
-# 宿主工作流调用链（以 Claude OPSX 为例）
+# 宿主工作流调用链（以 Claude 为例）
 
-> **入口边界。** 本篇用 `/opsx:*` 描述 Claude Code 的实际 command 形态；它不是 OpenSpec 的通用语法。Codex 使用 `$openspec-*` skills，例如 `$openspec-propose`、`$openspec-apply-change`、`$openspec-archive-change`；Codex、Zed Agent 与 vendor-neutral `agents` 三方共享 `.agents/skills/`，Zed 使用 `/openspec-*` 或 `@openspec-*`。下文的“模板/agent”层可跨宿主复用，具体调用名以安装出来的 adapter 为准。
+> **入口边界（v2.1.1）。** 本篇用**技能名**描述入口，例如 `openspec-propose`。调用写法随工具而变：Claude Code 等按 `/openspec-propose`，Codex 按 `$openspec-propose`，Zed 用 `/openspec-*` 或 `@openspec-*`；也可以直接用自然语言让 agent 按技能描述自己选。**1.x 的 `/opsx:*` command 文件已在 v2.0.0 移除**，下文中出现的 `/opsx:` 只用于历史对照。下文的“模板/agent”层可跨宿主复用。
 
 这一篇专门从工作流模板的角度，反向看 `openspec` CLI 是怎样被真正使用的。
 
@@ -12,7 +12,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 最常见的链路大体是：
 
-1. 用户触发 `/opsx:*`。
+1. 用户触发一个技能（1.x 是 `/opsx:*`，现为 `openspec-*`）。
 2. 对应 skill/command 模板开始执行。
 3. 模板调用 `openspec` CLI 读取状态或说明。
 4. CLI 从项目目录和 schema 中恢复运行时语义。
@@ -21,7 +21,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 也就是说，OPSX 模板像 orchestration layer，CLI 像本地 workflow kernel。
 
-## 二、`/opsx:propose`
+## 二、`openspec-propose`
 
 ### 目标
 
@@ -44,7 +44,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 - `status` 负责判断 proposal 是否属于当前应该推进的步骤。
 - `instructions proposal` 负责把 proposal 所需上下文编译出来。
 
-## 三、`/opsx:new`
+## 三、`openspec-new-change`
 
 ### 目标
 
@@ -59,12 +59,12 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 5. 调用 `openspec instructions <first-artifact> --change <name>`。
 6. 到这里先停住，把第一个 artifact 的模板和说明展示给用户，等待继续。
 
-### 它和 `/opsx:propose` 的区别
+### 它和 `openspec-propose` 的区别
 
-- `/opsx:new` 更像创建空上下文。
-- `/opsx:propose` 更像从变更请求直接进入 proposal 驱动流程。
+- `openspec-new-change` 更像创建空上下文。
+- `openspec-propose` 更像从变更请求直接进入 proposal 驱动流程。
 
-## 四、`/opsx:continue`
+## 四、`openspec-continue-change`
 
 ### 目标
 
@@ -90,7 +90,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 这两者合在一起，才构成 continue 的运行闭环。
 
-## 五、`/opsx:apply`
+## 五、`openspec-apply-change`
 
 ### 目标
 
@@ -116,7 +116,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 - 它不是执行代码修改者。
 - 它是 apply 阶段的准入检查器和工作单编译器。
 
-## 六、`/opsx:archive`
+## 六、`openspec-archive-change`
 
 ### 目标
 
@@ -138,7 +138,7 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 - `continue` 常常是 CLI 出包，AI 执行。
 - `archive` 则是 CLI 直接执行核心收尾动作。
 
-## 七、`/opsx:verify`
+## 七、`openspec-verify-change`
 
 ### 目标
 
@@ -153,14 +153,14 @@ OPSX 不是在“直接理解整个项目”，而是在不断调用 `openspec` 
 
 补充边界：
 
-- `openspec validate` 当然仍然是相关 CLI 能力，但它不是当前内置 `/opsx:verify` 模板里的主调用链。
+- `openspec validate` 当然仍然是相关 CLI 能力，但它不是当前内置 `openspec-verify-change` 模板里的主调用链。
 
 ### CLI 在其中的意义
 
 - 提供结构合法性这一层的确定性校验。
 - 让 verify 不完全依赖 AI 自由判断。
 
-## 八、`/opsx:explore`
+## 八、`openspec-explore`
 
 ### 目标
 

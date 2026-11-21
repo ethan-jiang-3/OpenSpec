@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/explore.ts` → `getExploreSkillTemplate()` + `getOpsxExploreCommandTemplate()`
 
-> **调用方式**：技能 `openspec-explore` [想法|change名|空]——Claude Code 等工具里 `/openspec-explore` [想法|change名|空]，Codex 用 `$openspec-explore`。1.x 写作 `/opsx:explore`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
+> **调用方式**：技能 `openspec-explore` [想法|change名|空]——Claude Code 等工具里 `/openspec-explore` [想法|change名|空]，Codex 用 `$openspec-explore` [想法|change名|空]。1.x 写作 `/opsx:explore`；v2.0.0 起命令文件已移除，`/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-explore`（skill）/ `OPSX: Explore`（command）
 > **独立 CLI 命令**：无——explore 没有对应的 `openspec explore` CLI 命令，它是纯 agent 模板。
 > **profile**：core（大多数用户默认可见）
@@ -98,7 +98,7 @@ template 里硬编码了四种典型入口的示例对话（`## Handling Differe
 |---|---|---|
 | 模糊想法 | "I'm thinking about adding real-time collaboration" | 画 spectrum 图，帮用户定位 |
 | 具体问题 | "The auth system is a mess" | 读代码 → 画架构图 → 找痛点 |
-| 实施卡住 | "/opsx:explore add-auth-system" | 读 artifacts → 追踪复杂度 → 建议方向 |
+| 实施卡住 | "/openspec-explore add-auth-system" | 读 artifacts → 追踪复杂度 → 建议方向 |
 | 方案比较 | "Should we use Postgres or SQLite?" | 追问上下文 → 建对比表 → 给推荐 |
 
 > **v1.8.0**：捕捉成**新 change** 时必须先 `openspec new change "<name>"` scaffold（保住 `.openspec.yaml` metadata），再按 `status`/`instructions` 建 artifact；capture 后不需用户再跑额外命令。详见 `../internal-spec-driven/01-explore-探索模式.md` 第五节。

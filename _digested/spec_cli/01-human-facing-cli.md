@@ -21,7 +21,7 @@
 - 可选 `--tools`，用于非交互指定配置哪些 AI 工具（v1.9.0 起含 `command-code`）。
 - 可选 `--profile`，覆盖全局配置中的 profile。
 - 可选 `--language <language>`：只在 greenfield 初始化时为新 `openspec/config.yaml` 种下 `context`，要求 artifact prose 使用该语言，同时保留英文结构 headings 与 `SHALL/MUST`。它不是持续的语言开关。
-- 全局配置中的 `profile`、`delivery`、`workflows`。
+- 全局配置中的 `profile`、`workflows`（1.x 还有 `delivery`，v2.0.0 起退役）。
 - （v1.2.0+）自动检测项目目录中已存在的 AI 工具目录（如 `.claude/`、`.cursor/`），预选检测到的工具。
 
 输出：
@@ -33,7 +33,7 @@
 影响：
 
 - 它决定这个项目是否真正接入 OpenSpec 工作流。
-- 它决定外部工具能不能看到实际安装的工作流入口。入口语法由宿主 adapter 决定：Claude 可以是 `/opsx:*`，Codex v1.8.0 是 `$openspec-*` skills，不能混为一谈。
+- 它决定外部工具能不能看到实际安装的工作流入口。入口语法由宿主决定：Claude Code 等是 `/openspec-*` 技能调用（1.x 是 `/opsx:*` 命令文件），Codex v1.8.0 是 `$openspec-*` skills，不能混为一谈。
 - 它不会直接创建业务 change，但会决定后续 change workflow 以什么外壳呈现。
 
 容易误解：
@@ -68,6 +68,10 @@
 - 控制台上的更新计划与结果；清扫过时会单独一行说明删了几个旧文件。
 - 仍会得到命令文件的工具会看到一条弃用提示（见下）。
 - `--dry-run` 时只报告计划：`add` / `update` / `delete`、每个文件归属的 tool、交互式运行会问的步骤（`notes`）、以及会失败的工具（`failures`，不中断其余计划）；不写任何文件。
+- **`notes[].code` 是稳定代号，v2.x 从 2 个增到 6 个**（`src/core/update-plan.ts` 的 `UpdatePlanNoteCode`）：
+  - 1.x 就有：`legacy-tool-directories`（要迁移的旧工具目录）、`legacy-artifacts`（要清理的旧产物）
+  - v2.x 新增：`edited-skills`（技能被改过、会被替换）、`global-skills`（本次还会动到项目之外的全局技能）、`removed-skills`（会被移除的技能）、`left-alone-skills`（保留不动的技能）
+  - `global-skills` 这条尤其要注意：dry-run 的 `changes[]` 只列**项目内**文件，而这条 note 说明还有**项目外**的动作，光看 `changes[]` 会以为什么都不动。
 
 影响：
 

@@ -11,7 +11,7 @@
 | 多仓库场景下，OpenSpec 如何让 agent 看到上下文，但不乱改归属？ | store coordination |
 | OpenSpec 怎么把同一套工作流放进 Claude、Codex、Cursor、OpenCode 等工具？ | tool delivery |
 | Markdown spec/change 凭什么能被机器稳定理解？ | spec model |
-| `/opsx:new`、`/opsx:continue`、`/opsx:sync` 这些不是核心四命令的入口有什么意义？ | workflow templates |
+| `/openspec-new-change`、`/openspec-continue-change`、`/openspec-sync-specs` 这些不是核心四命令的入口有什么意义？ | workflow templates |
 | completion、feedback、telemetry、prompts 这些周边设施为什么也影响系统质量？ | CLI infra |
 
 所以这里按问题组织，而不是按源码目录组织。源码路径仍然会出现，但它们是证据，不是阅读入口。

@@ -343,7 +343,7 @@ OpenSpec 的心态则是：
 - 回去改 `design.md`
 - 必要时改 `tasks.md`
 - 如果行为承诺变了，再补 `specs`
-- 然后继续 `/opsx:apply`
+- 然后继续 `openspec-apply-change` 技能（Claude Code 里 `/openspec-apply-change`）
 
 这正是"action，不是 phase"的现实含义。
 
@@ -387,7 +387,7 @@ OpenSpec 并不是把 AI 当作"自动写代码机器"。
 
 > **方式 A：纯聊天**——"帮我给 BuildFlow 加个批量导出施工日志的功能。"AI 很快开始写代码，但 scope 模糊（导出哪些字段？什么格式？谁有权限？），做完没人说得清到底承诺了什么。
 >
-> **方式 B：OpenSpec 式**—— `/opsx:propose add-bulk-diary-export`。先 explore 探现状（现有 diary 模块的 spec、导出权限在哪个 capability），再形成 change：为什么做（甲方要施工日志交审）、改哪些行为（支持按项目/日期范围过滤导出 CSV）、技术方案怎么选（异步导出还是同步）、任务怎么拆。然后 apply → archive。
+> **方式 B：OpenSpec 式**—— `openspec-propose add-bulk-diary-export` 技能（Claude Code 里 `/openspec-propose`）。先 explore 探现状（现有 diary 模块的 spec、导出权限在哪个 capability），再形成 change：为什么做（甲方要施工日志交审）、改哪些行为（支持按项目/日期范围过滤导出 CSV）、技术方案怎么选（异步导出还是同步）、任务怎么拆。然后 apply → archive。
 >
 > 方式 B 不是为了官僚化，而是让 AI 在有限受控上下文里干活——不容易跑飞。
 

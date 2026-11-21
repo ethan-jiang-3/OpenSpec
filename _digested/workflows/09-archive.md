@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/archive-change.ts` → `getArchiveChangeSkillTemplate()` + `getOpsxArchiveCommandTemplate()`
 
-> **调用方式**：技能 `openspec-archive-change` [change-name]——Claude Code 等工具里 `/openspec-archive` [change-name]，Codex 用 `$openspec-archive-change`。1.x 写作 `/opsx:archive`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释；另有确定性 CLI `openspec archive <name>`。
+> **调用方式**：技能 `openspec-archive-change` [change-name]——Claude Code 等工具里 `/openspec-archive-change` [change-name]，Codex 用 `$openspec-archive-change` [change-name]。1.x 写作 `/opsx:archive`；v2.0.0 起命令文件已移除，`/opsx:` 只用于历史解释；另有确定性 CLI `openspec archive <name>`。
 > **agent 看到的名字**：`openspec-archive-change`（skill）/ `OPSX: Archive`（command）
 > **独立 CLI 命令**：**有**——`openspec archive <name>` 做 programmatic validate → merge → move。host archive workflow 做 pre-flight checks + agent-driven sync + 手动 mv。**两条路径不同**：CLI 做完整替换式合并，agent workflow 做智能合并。
 > **profile**：core（大多数用户默认可见）
@@ -57,7 +57,7 @@ sequenceDiagram
     participant TS as CLI（TS 层）
     participant FS as 文件系统
 
-    User->>MD: /opsx:archive [change-name]
+    User->>MD: /openspec-archive-change [change-name]
     MD->>MD: 若无 name → openspec list → 用户选择
 
     rect rgb(240, 248, 255)

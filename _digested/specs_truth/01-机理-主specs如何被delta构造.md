@@ -37,7 +37,7 @@ openspec/changes/<id>/specs/<capability-path>/spec.md   ← delta（提案要改
 | 入口 | 性质 | 是否移动 change 到 archive |
 |------|------|----------------------------|
 | `openspec archive <change>` | **唯一的确定写入 CLI 动词**；写前全量 fail-fast，mutation 后失败用 snapshot 尽力回滚 | 是 |
-| host 的 sync workflow（Codex: `$openspec-sync-specs`；Claude command adapter 常显示 `/opsx:sync`） | LLM 读 delta + 主 spec 再对齐，非确定、幂等 | 否（它只改 spec） |
+| host 的 sync workflow（Codex: `$openspec-sync-specs`；Claude Code: `/openspec-sync-specs`，1.x 写作 `/opsx:sync`） | LLM 读 delta + 主 spec 再对齐，非确定、幂等 | 否（它只改 spec） |
 
 > 注意：**没有 `openspec apply` 命令**。delta→主 spec 的合并（`findSpecUpdates` → `buildUpdatedSpec` → `writeUpdatedSpec`，都在 `src/core/specs-apply.ts`）是 `archive` 内部调用的能力，不是一个对外 CLI 动词（`src/cli/index.ts` 里 `.command('archive')` 有、`.command('apply')` 没有）。对外能以确定规则写主 spec 的路径就 `archive` 一条；想在归档前做更灵活的整段重写，走 host 的 sync workflow（它本质是让 agent 手动改 spec）。
 
@@ -152,7 +152,7 @@ Aborted. No files were changed.
 | 内部引擎（被 archive 调用） | `src/core/specs-apply.ts` — `findSpecUpdates` / `buildUpdatedSpec` / `writeUpdatedSpec`（archive 组合调用，无单一 `applySpecs` 入口） |
 | archive 流程（全量写前校验、snapshot 回滚、移动 change） | `src/core/archive.ts` |
 | CLI 命令注册（证实无 `apply`） | `src/cli/index.ts` |
-| /opsx:sync LLM 模板 | `src/core/templates/workflows/sync-specs.ts` |
+| /openspec-sync-specs LLM 模板 | `src/core/templates/workflows/sync-specs.ts` |
 
 ## 继续阅读
 

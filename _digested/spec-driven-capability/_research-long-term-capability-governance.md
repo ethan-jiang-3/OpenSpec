@@ -36,7 +36,7 @@
 
 ### 3. 已有两条 workflow 路径，不能混称为一个 CLI 功能
 
-OpenSpec 明确区分终端 `openspec ...` 与聊天中的 `/opsx:*` / skills。[一手说明](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/docs/how-commands-work.md#L1-L75)
+OpenSpec 明确区分终端 `openspec ...` 与聊天中的技能（1.x 为 `/opsx:*`，2.x 为 `openspec-*` 技能）。[一手说明](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/docs/how-commands-work.md#L1-L75)
 
 - 终端 `openspec archive` 使用上述程序化 delta 合并。
 - `openspec-sync-specs` skill 是 **agent-driven**：它读取 delta/main spec 后直接编辑 main spec，明确允许部分 scenario 合并。[已发布 skill](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/skills/openspec-sync-specs/SKILL.md#L12-L123) `openspec-archive-change` skill 会内联执行这个 sync 并复核每个 capability，避免 sync 仍在读 delta 时移动 change；这是 [#1394](https://github.com/Fission-AI/OpenSpec/pull/1394) 修复的 race。[已发布 skill](https://github.com/Fission-AI/OpenSpec/blob/v1.7.0/skills/openspec-archive-change/SKILL.md#L86-L125)
@@ -89,6 +89,6 @@ delta grammar 的 `RENAMED` 对象只有 requirement header 的 `from/to`，并�
 - 将 `03-agent上下文与catalog协议.md` 的“上游 fetch/budget 尚未发布”改为“本地没有，但 external stores 的 `references:` 已发布且受限”；补上 one-hop、50KB、read-only、staleness 边界。
 - 在并发部分加入 “scenario overwrite 已被 v1.7 guard 改善，但没有 lock/base freshness/cross-change check” 的精确说法。
 - 在 taxonomy migration 部分加入 “`RENAMED` 仅对 requirement” 和 “catalog/README 不会被 native validate 校验”。
-- 将 `openspec archive`、`/opsx:sync` 与 `/opsx:archive` 分开叙述，避免把 agent skill 的智能合并与 terminal CLI 的强制行为混为一条能力。
+- 将 `openspec archive`、`/openspec-sync-specs` 与 `/openspec-archive-change` 分开叙述，避免把 agent skill 的智能合并与 terminal CLI 的强制行为混为一条能力。
 
 这些补充不会削弱专题的核心判断，反而使它成为一份更准确的长期操作手册：OpenSpec 已把**地址、delta 和基础 lifecycle**做得足够可靠；系统规模增长后，最关键的投入是把未建模的 capability 治理显式化、可审阅化并纳入团队交付流程。

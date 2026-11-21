@@ -9,12 +9,15 @@ Tool delivery 这一层的核心判断是：**稳定资产是 workflow 语义；
 ```text
 profile/workflows
   → workflow templates
-  → skill / command content
-  → per-tool skillsDir / command adapter path
-  → agent 可发现的入口文件
+  → skill content
+  → .agents/skills/<name>/SKILL.md        # 唯一真身
+  → 各工具目录的链接（建不了则拷贝）
+  → agent 可发现的入口
 ```
 
-这解释了为什么 OpenSpec 不把“Claude command 文件”或“Codex skill 文件”当成项目事实。它们是生成物，可以随 profile、delivery、版本和工具支持变化而同步。
+（1.x 时这里还多一条 command 分支：`→ per-tool command adapter path → <tool>/commands/opsx/<id>.md`，v2.0.0 已移除。）
+
+这解释了为什么 OpenSpec 不把“Claude 的 skill 目录”或“Codex 的 skill 文件”当成项目事实。它们是生成物，可以随 profile、版本和工具支持变化而同步——真正稳定的只有 workflow 语义。
 
 ## 三层对象
 
@@ -61,6 +64,17 @@ SkillTemplate
 ```
 
 `shared-skill-install.ts` 负责共享目录的安装与比对，`skill-links.ts` 负责链接与退化；安装动作本身交给运行时依赖 `skills` 包（v2.1.0 起，`skill-installer.ts`）。
+
+**技能内容有两个分发口子**（v2.x，二者内容必须一致）：
+
+| 口子 | 载体 | 谁消费 | 一致性保障 |
+|---|---|---|---|
+| 运行时模板 | `src/core/templates/workflows/*.ts` → `generateSkillContent()` | `openspec init` / `openspec update` 写进项目或全局 | 单元测试覆盖 |
+| 静态分发 | 仓库里提交的 `skills/<name>/SKILL.md` | `npx skills add Fission-AI/OpenSpec`、skills.sh 这类从 GitHub 直读 `SKILL.md` 的安装器 | `test/core/templates/skillssh-parity.test.ts` 重新生成并与磁盘比对 |
+
+静态分发由 `scripts/generate-skillssh.mjs` 生成（`pnpm build && pnpm generate:skills`），**不要在 `skills/` 下手工改**——parity 测试会挡住。两者内容不同源但必须同步：改了模板要重跑生成脚本。
+
+**链接还是直读**：判定在 `src/core/shared/skill-paths.ts`。`installerAgent(toolId).universal === true` 的工具直接读 `.agents/skills/`，**不放链接**；其余工具在自己的 `projectSkillsDir` 下每条技能放一个链接（建不了链接退化拷贝）。`SKILL_LINKED_TOOL_IDS` 就是这个「非 universal」集合。
 
 command 生成链（**v2.0.0 起已移除，保留仅为读旧项目**）：
 
@@ -113,29 +127,43 @@ v1.14.0 一次性新增 10 个 `--tools` 目标，全部注册在 `src/core/conf
 
 配套事实（源码核实）：
 
-- 共享 `.agents` 根的成员扩大为 **Codex、Zed、Antigravity、Amp、GSD**（+ vendor-neutral `agents` 目标）。`resolveSharedSkillWriters` 的仲裁代码不需要改：任一工具共享 `skillsDir` 都自动参与写入权判定。
+- 共享 `.agents` 根的成员扩大为 **Codex、Zed、Antigravity、Amp、GSD**（+ vendor-neutral `agents` 目标）。1.x 时代靠 `resolveSharedSkillWriters` 仲裁写入权；**2.0 起这套仲裁整个删掉了**——`.agents/skills/` 是唯一真身，不再有「谁写」的问题。
 - Warp 是继 Codex 之后第二个 **skills-invocable** 工具（`src/core/command-surface.ts`）：没有 command adapter，但用户可以自然语言或 `/openspec-*` 调用 skill，所以 `delivery: commands` 下它仍保留 skills 生成，不会被当作 commands-only 清掉。
 - EasyCode 的 TOML 字符串转义抽成共享模块 `src/core/command-generation/toml.ts`（`escapeTomlBasicString` / `escapeTomlMultilineBasicString`）：描述与 prompt 正文里的反斜杠、双引号、换行、控制字符都安全转义。gemini adapter 顺带重构。
 - **IBM Bob 改名**：显示名 "Bob Shell" → "IBM Bob"，tool id `bob` 与 `.bob` 路径不变，纯改名不迁移。
 - **Kilo Code 命令目录修正**（v1.13.2）：命令写到 `.kilo/command/opsx-<id>.md`（原误写 `.kilocode/workflows/`）；legacy cleanup 按已知文件名清走旧文件。
 
-### v1.10.0→v1.11.0：共享 `.agents` 根与通用写入权仲裁
+### v1.10.0→v1.11.0：共享 `.agents` 根与通用写入权仲裁（1.x 机制，2.0 已删除）
 
 `agents`、`codex`、`zed` 三方共享 `.agents/skills/` 的格局起于 **v1.10.0**（v1.8.0/v1.9.0 没有 `zed` 工具条目，v1.10.0 起才是 `skillsDir: '.agents'`）。v1.11.0 将共享根仲裁从硬编码三元组升级为通用 `resolveSharedSkillWriters()` 机制：
 
 1. **Antigravity 迁入 `.agents/` 共享根**（v1.11.0）：`antigravity` 的 `skillsDir` 从 `.agent` 改为 `.agents`（`.agent` 变成 `legacySkillsDirs`），旧 `.agent/workflows/openspec-*.md` 在 update 时被迁移或保留用户定制。检测键现在是 `.agent` 或 `.agents/workflows`（而非裸 `.agents/` 根）。
 
-2. **通用写入权仲裁**（v1.11.0 新增 `src/core/shared-skill-target.ts` 的 `resolveSharedSkillWriters`）：不再硬编码 Codex/Zed/agents 三方的排序规则。该函数遍历所有选中工具的 `skillsDir`，对每个共享物理根（如 `.agents/skills/`）选出一个 active writer：
+2. **通用写入权仲裁**（v1.11.0 新增 `src/core/shared-skill-target.ts` 的 `resolveSharedSkillWriters`；**该函数在 v2.0.0 被删除**）：不再硬编码 Codex/Zed/agents 三方的排序规则。该函数遍历所有选中工具的 `skillsDir`，对每个共享物理根（如 `.agents/skills/`）选出一个 active writer：
    - **已有 compatible owner**（通过 `.openspec-target` marker 或推断）胜出。
    - **skills-native 渲染器优先于 adapter-backed**，因为其引用可被共享树的所有消费者使用。
    - **新根默认指向 `agents` 还是 Codex 取决于现状**：优先级是"已有 marker 的 > 推断出的 > （当前已有 `.agents/skills` 树则 `agents`）> `codex` > 池中第一个"（`src/core/shared-skill-target.ts:133-140`）。所以**全新根**才回退到 Codex；已有 `.agents/skills` 树时是 `agents` 先胜。
    - 只有 active writer 生成 skill 文件；其他共享同一根的选中工具仍能独立写入 command surface（如 Antigravity 在 Codex 拥有 `.agents/skills/` 写入权时仍可安装 `.agents/workflows/` command 文件）。
 
-3. **`openspec init` 和 `openspec update` 均使用同一仲裁**：`init.ts` 和 `update.ts` 都调用 `resolveSharedSkillWriters`，确保初始化和增量更新使用相同的写入权判定。
+3. **`openspec init` 和 `openspec update` 均使用同一仲裁**（1.x）：`init.ts` 和 `update.ts` 都调用 `resolveSharedSkillWriters`。2.0 起两者改用同一份**工具清单**（见下）。
 
 4. **遗留检测改进**（`src/core/shared/tool-detection.ts`）：`getConfiguredTools` 现在也检测有 legacy skills 的 adapter-backed 工具，避免 `openspec update` 因未检测到旧 `.agent/` 树而重置 Antigravity。
 
 因此 `.agents/skills/` 的写入权规则不再是三方协议，而是一个可扩展的通用仲裁策略：任一新工具只要共享 `skillsDir` 都能自动参与，无需修改仲裁代码。
+
+### v2.0.0：仲裁删除，`.openspec-target` 改成工具清单
+
+**同一份内容不再有第二个写者**，所以「选一个 active writer」这件事本身消失了。`resolveSharedSkillWriters` 已从代码中删除，`shared-skill-target.ts` 现在只做三件事：
+
+| 函数 | 作用 |
+|---|---|
+| `readSkillToolList` | 读 `.agents/skills/.openspec-target`，返回**工具 id 列表** |
+| `formatSkillToolList` / `hasSkillToolList` | 写与判存 |
+| `readListedToolsWithOwnFiles` | 哪些列出的工具在自己目录里已有文件 |
+
+**文件语义变了**：1.x 的 `.openspec-target` 只写**一个** id（渲染共享目录的那个工具）；2.0 起写**每行一个工具 id**，表示「这个项目里配置了哪些工具」。单行文件按同样方式读，所以旧项目不需要迁移就能被识别。
+
+`update` 靠这份清单知道要照顾哪些工具——这也是它敢在不问你的情况下清理旧文件的前提。
 
 profile 决定安装哪些 workflow，delivery 决定以什么形态投递。两者组合起来回答两个不同问题：
 
@@ -241,7 +269,7 @@ v1.9.0/.11.0 起，遗留迁移路径遵守同一条 one-writer 规则：若 `.a
 | `skills-invocable` | 没有 command adapter，但能用 skills 调用 | `codex`、`warp` |
 | `none` | 两者都没有 | — |
 
-四条判定由 `delivery` × 能力矩阵驱动：`shouldGenerateSkillsForTool` / `shouldRemoveSkillsForTool` / `shouldGenerateCommandsForTool` / `shouldReconcileCommandFilesForTool`。（**这是 v1.17.0 的形态**；2.0 起 `delivery` 退役，`shouldGenerateCommandsForTool` 已从代码中移除。）
+四条判定由 `delivery` × 能力矩阵驱动：`shouldGenerateSkillsForTool` / `shouldRemoveSkillsForTool` / `shouldGenerateCommandsForTool` / `shouldReconcileCommandFilesForTool`。（**这是 v1.17.0 的形态**。v2.0.0 起 `delivery` 退役，**前三条全部删除**——连同 `formatCommandDeprecationNotice`；只剩 `shouldReconcileCommandFilesForTool` 用于清理旧 command 文件。整个文件从六条导出缩到三条。）
 
 **提示文案的触发条件**（`formatCommandDeprecationNotice`，v1.17.0 的历史形态；2.0 起该函数已不存在）：只在“某个已配置工具**现在会得到** command 文件、且切到 `skills` 后**不再得到**”时打印。skills-only 项目不提示；Codex 这类只有 skills 的工具不提示（劝它切等于劝它离开唯一能用的接口）。时机选在 `update`：它是在升级时跑的，所以这条能在 2.0 删除发生前触达用户，又不会天天唠叨。
 

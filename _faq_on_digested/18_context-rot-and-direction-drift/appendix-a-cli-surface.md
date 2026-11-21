@@ -36,7 +36,7 @@ feedback ／ completion
 
 > `workset` 的自我定位是 *"Compose, keep, and open personal working views (purely local)"*【实测】——**面向人的编辑器窗口组合，不是 agent 上下文注入通道**。本篇没有把它算作线 A 的机制。
 
-> **v1.17.0 复核：这张表一个子命令都没变。** `src/cli/index.ts` 在 `v1.15.0..v1.17.0` 之间零改动。所以「command 文件在 2.0 移除」说的是 AI 工具里的 `/openspec-*` 斜杠命令文件，不是这张表——`openspec validate` / `archive` / `update` 全都还在。唯一相关的语义变化：`update` 清理旧文件不再需要 `--force`（只剩 `~` 里的共享 prompt 还需要）。
+> **v2.1.1 复核：这张表一个子命令都没变。**（v1.17.0 时已是如此，2.0 也没动它。） `src/cli/index.ts` 在 `v1.15.0..v1.17.0` 之间零改动。所以「command 文件已移除」说的是 AI 工具里由 OpenSpec 生成的命令文件（1.x 的 `/opsx:*`），不是这张表——`openspec validate` / `archive` / `update` 全都还在。唯一相关的语义变化：`update` 清理旧文件不再需要 `--force`（只剩 `~` 里的共享 prompt 还需要）。
 
 ---
 

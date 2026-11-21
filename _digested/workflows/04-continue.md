@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/continue-change.ts` → `getContinueChangeSkillTemplate()` + `getOpsxContinueCommandTemplate()`
 
-> **调用方式**：技能 `openspec-continue-change` [change-name]——Claude Code 等工具里 `/openspec-continue` [change-name]，Codex 用 `$openspec-continue-change`。1.x 写作 `/opsx:continue`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
+> **调用方式**：技能 `openspec-continue-change` [change-name]——Claude Code 等工具里 `/openspec-continue-change` [change-name]，Codex 用 `$openspec-continue-change` [change-name]。1.x 写作 `/opsx:continue`；v2.0.0 起命令文件已移除，`/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-continue-change`（skill）/ `OPSX: Continue`（command）
 > **独立 CLI 命令**：无——continue 没有对应的 `openspec continue` CLI 命令。
 > **profile**：custom（需显式启用，不在默认 core 里）
@@ -64,7 +64,7 @@ sequenceDiagram
     participant TS as CLI（TS 层）
     participant FS as 文件系统
 
-    User->>MD: /opsx:continue [change-name]
+    User->>MD: /openspec-continue-change [change-name]
 
     rect rgb(240, 248, 255)
         Note over MD,FS: Step 1 · 选择 change
@@ -99,7 +99,7 @@ sequenceDiagram
             Note over MD,FS: Step 4 · 展示进度
             MD->>TS: openspec status --change X
             TS-->>MD: 更新后状态
-            MD-->>User: "Created proposal.md<br/>Progress: 1/4 complete<br/>Unlocked: specs, design<br/>Want to continue? /opsx:continue"
+            MD-->>User: "Created proposal.md<br/>Progress: 1/4 complete<br/>Unlocked: specs, design<br/>Want to continue? /openspec-continue-change"
         end
     end
 ```

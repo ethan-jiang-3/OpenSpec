@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/apply-change.ts` → `getApplyChangeSkillTemplate()` + `getOpsxApplyCommandTemplate()`
 
-> **调用方式**：技能 `openspec-apply-change` [change-name]——Claude Code 等工具里 `/openspec-apply` [change-name]，Codex 用 `$openspec-apply-change`。1.x 写作 `/opsx:apply`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
+> **调用方式**：技能 `openspec-apply-change` [change-name]——Claude Code 等工具里 `/openspec-apply-change` [change-name]，Codex 用 `$openspec-apply-change` [change-name]。1.x 写作 `/opsx:apply`；v2.0.0 起命令文件已移除，`/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-apply-change`（skill）/ `OPSX: Apply`（command）
 > **独立 CLI 命令**：无——apply 没有对应的 `openspec apply` CLI 命令，它是纯 agent 模板，消费 `openspec instructions apply --json` 的运行时输出。
 > **profile**：core（大多数用户默认可见）
@@ -32,7 +32,7 @@ sequenceDiagram
     participant TS as CLI（TS 层）
     participant FS as 文件系统
 
-    User->>MD: /opsx:apply [change-name]
+    User->>MD: /openspec-apply-change [change-name]
     MD->>MD: 选择 change：<br/>显式传入 > 上下文推断 ><br/>唯一 active > 列表选择
 
     rect rgb(240, 248, 255)
@@ -44,9 +44,9 @@ sequenceDiagram
     end
 
     alt state = "blocked"
-        MD-->>User: "Apply blocked. 缺 artifact。<br/>建议 /opsx:continue。"
+        MD-->>User: "Apply blocked. 缺 artifact。<br/>建议 /openspec-continue-change。"
     else state = "all_done"
-        MD-->>User: "所有 tasks 已完成。<br/>建议 /opsx:archive。"
+        MD-->>User: "所有 tasks 已完成。<br/>建议 /openspec-archive-change。"
     else state = "ready"
         rect rgb(255, 250, 240)
             Note over MD,FS: Step 4 · 读上下文
@@ -81,7 +81,7 @@ sequenceDiagram
             Note over MD,FS: Step 7 · 完成
             MD->>TS: openspec instructions apply --change X --json
             TS-->>MD: state: "all_done"
-            MD-->>User: "跟踪任务已完成<br/>复核/验证后再 /opsx:archive"
+            MD-->>User: "跟踪任务已完成<br/>复核/验证后再 /openspec-archive-change"
         end
     end
 ```
@@ -92,7 +92,7 @@ template 规定 agent 必须先检查 state，不是所有情况都能直接开�
 
 | state | 含义 | agent 行为 |
 |---|---|---|
-| `blocked` | 缺 required artifact、缺 tracking file、或无 checkbox | 停止，建议 `/opsx:continue` |
+| `blocked` | 缺 required artifact、缺 tracking file、或无 checkbox | 停止，建议 `/openspec-continue-change` |
 | `ready` | 一切就绪，有 pending tasks | 读 contextFiles → 开始 task loop |
 | `all_done` | 全部 checkbox 已勾 | 报「跟踪任务已完成」，建议归档前先复核或 verify |
 

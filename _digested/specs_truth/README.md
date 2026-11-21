@@ -18,9 +18,9 @@
 
 | 动词 | `openspec` CLI | `/opsx:` slash |
 |------|:---:|:---:|
-| **validate** | ✓ | ✗（无 `/opsx:validate`） |
+| **validate** | ✓ | ✗（无 `/openspec-validate`） |
 | **archive** | ✓ | ✓ |
-| **new** | ✓（`new change`） | ✓（`/opsx:new`） |
+| **new** | ✓（`new change`） | ✓（`/openspec-new-change`） |
 | **explore / propose / apply** | ✗ | ✓ |
 | continue / ff / sync / verify / onboard / bulk-archive | ✗ | ✓ |
 | list / view / show / status / instructions / config / schema / store / context / workset / … | ✓ | ✗ |

@@ -93,7 +93,7 @@ OpenSpec = 整套机制
 - Codex 在 v1.8.0 起使用 skills-only 投递，入口是 `$openspec-*` skill；v1.10.0 中 Codex、Zed Agent 与 vendor-neutral `agents` 目标共享 `.agents/skills/`，v1.14.0 起 Amp 与 GSD 也写入同一棵共享树（六方成员，见下方工具速查）。Zed 是 skills-only，用 `/openspec-*`（以 init 生成文件中的拼法为准）；v1.9.0 新增的 Command Code 仍使用 `.commandcode/skills/` 与 `/opsx-*`。
 - DeepSeek Harness（`dsh`）自 v1.14.0 起是一等目标：skills-only，写入项目级 `.dsh/skills/openspec-*/SKILL.md`；dsh 把项目 `.dsh/skills/` 当最高优先级 skill root，装好后可直接以 `/openspec-*` 呼出。
 - `opsx` 这个名字只是部分工具的 command 命名空间或文件前缀，不是另一套独立系统。
-- 不要把 `/opsx:propose` 硬翻译成 `openspec propose`。CLI 里没有与之完全对应的单一命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
+- 不要把 `/openspec-propose` 硬翻译成 `openspec propose`。CLI 里没有与之完全对应的单一命令；它背后通常是多步 `openspec ...` 调用，再由 agent 写 artifacts。
 
 所以更准确的说法是：**workflow 的入口语法由宿主决定（`/openspec-*`、`$openspec-*` 或该工具自己的 command 名），`openspec` CLI 才是这些 workflow 读取状态和获取指令的运行时。**
 
@@ -226,7 +226,7 @@ graph LR
 | **delta spec** | 描述"这次改了哪里"的增量 spec | `## ADDED Requirements` / `## MODIFIED Requirements` |
 | **specs/** | 项目当前正式 spec 基线 | `openspec/specs/auth/spec.md` |
 | **capability / 能力** | 可独立解释、独立改变、独立验证的行为合同切片；身份 = `specs/` 下的相对路径 | `auth`、`identity/session`；domain 只用于导航，不是父合同（详见 [26](26-高级-治理边界与漂移维护.md)） |
-| **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/opsx:archive add-dark-mode` |
+| **archive** | 把 change 的 delta spec 合并回 specs/，并归档 change | `/openspec-archive-change add-dark-mode` |
 | **schema** | 定义 change 结构骨架的工作流定义 | artifact 种类、依赖关系 |
 | **profile** | 选择安装哪些工作流命令 | core（v1.2.0 引入 4 个，v1.4.0 起 5 个，v1.6.0 起 6 个）vs custom（自选命令） |
 | **store** | 全局注册的仓库 checkout；通过 `references:` 声明跨仓库依赖 | `openspec store register` → `config.yaml` 加 `references:` → `openspec context` 查看 |
@@ -270,7 +270,7 @@ graph LR
 | 技能 | 作用 |
 |------|------|
 | `openspec init [path] [--tools <ids>] [--language <language>]` | 初始化项目；`--language` 只在创建新 config 时写入 artifact 语言 context，不覆盖已有 config |
-| `openspec new change <name>` | 新建一个 change 目录（脚手架；`/opsx:new` 的 CLI 形态） |
+| `openspec new change <name>` | 新建一个 change 目录（脚手架；`/openspec-new-change` 的 CLI 形态） |
 | `openspec list` | 列出所有 changes；`--archived` 只看归档、`--all` 两者都看（读 `changes/archive/` 子目录），`--specs` 模式下这两个 flag 直接报错 |
 | `openspec list --specs --json` | 列出 main-spec capability path，作为 discovery 的起点，不会自动读取全文 |
 | `openspec show <name>` | 查看某个 change 详情 |

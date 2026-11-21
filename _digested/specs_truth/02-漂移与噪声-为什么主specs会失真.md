@@ -20,7 +20,7 @@
 
 先把 `validate` 的身份钉死（很多人这里就误会了）：
 
-- **它是 `openspec` CLI 命令**（和 `archive` 同列），**不是 `/opsx:` slash 技能**（没有 `/opsx:validate`）。
+- **它是 `openspec` CLI 命令**（和 `archive` 同列），**不是 `/opsx:` slash 技能**（没有 `/openspec-validate`）。
 - 它是**结构 linter**：`Validator.validateChangeDeltaSpecs()` 只读 `changeDir/specs/` 下的 delta 文件，检查它们**自身**的结构（段头齐不齐、有没有 SHALL/MUST、有没有 scenario、段内重不重名）。默认（normal）模式下，缺失 SHALL/MUST 只是 guidance（WARNING），`--strict` 才强制。`Validator.validateChangeDeltaSpecs()` **本身**不碰主 spec——但 `openspec validate <change>` 会额外传 `mainSpecsDir`，于是它复用 archive 的合并器（`findArchiveBlockers` → `findSpecUpdates` + `buildUpdatedSpec`）预演一次合并冲突，命中时以 **INFO** 报告（`Archive would refuse this delta: …`）。`archive` 自己走的内部校验不传这个参数，那条预演不会跑。
 
 后果分三种，不能一概而论：
@@ -39,7 +39,7 @@ delta 和主 spec 的匹配发生在 `buildUpdatedSpec` 里，**只在 `archive`
 
 ### 缺口三：没有回溯 / 修复 / 审计命令
 
-`openspec` 不提供 `log`/`blame`/`history`/`trace`（回溯）、`reconcile`/`repair`/`regenerate`（修复）、`prune`/`clean`（裁剪）、或全局一致性审计。`apply`/`drift` 类命令也不存在（`/opsx:sync`、`/opsx:verify` 是 LLM skill，不是确定命令）。所以"specs 是否还对得上代码"是**人的巡检责任**，不是工具责任（巡检怎么做见 `03` 的巡检元实践）。
+`openspec` 不提供 `log`/`blame`/`history`/`trace`（回溯）、`reconcile`/`repair`/`regenerate`（修复）、`prune`/`clean`（裁剪）、或全局一致性审计。`apply`/`drift` 类命令也不存在（`/openspec-sync-specs`、`/openspec-verify-change` 是 LLM skill，不是确定命令）。所以"specs 是否还对得上代码"是**人的巡检责任**，不是工具责任（巡检怎么做见 `03` 的巡检元实践）。
 
 > 三道缺口合起来一句：**OpenSpec 用 archive 把"写 specs"这一刻管住了，但写下去之后，再没有任何东西盯着它对不对。**
 

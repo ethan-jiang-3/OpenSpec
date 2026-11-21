@@ -134,7 +134,7 @@ OpenSpec 的思路不是这样。
 
 所以第一步不是改代码，而是发起 change。
 
-在发起 change 之前，你可以先 `/opsx:explore` 探一下现状——施工任务页现有 spec 写了什么、过滤逻辑在哪、谁有导出权限。这是选做，但能让 proposal 的 Scope 写得更准。
+在发起 change 之前，你可以先 `/openspec-explore` 探一下现状——施工任务页现有 spec 写了什么、过滤逻辑在哪、谁有导出权限。这是选做，但能让 proposal 的 Scope 写得更准。
 
 ## 第 0.5 步：先证明该改 `orders`，而不是临时造一个 `export` capability
 
@@ -159,12 +159,12 @@ openspec show orders --type spec --json --requirements
 
 ---
 
-## 第 1 步：`/opsx:propose`，让 change 成形
+## 第 1 步：`/openspec-propose`，让 change 成形
 
 你在宿主工具里输入：
 
 ```text
-/opsx:propose add-task-csv-export
+/openspec-propose add-task-csv-export
 ```
 
 这一步的本质，不是"让 AI 瞎写四份文档"。
@@ -197,7 +197,7 @@ openspec/
 
 AI 首次生成的初稿，几乎一定有内部自洽性问题。最常见的：proposal 的 Out of Scope 明明写了"不做 XLSX"，可 tasks.md 里却冒出一个"支持 XLSX 导出"的任务——前后打架。这种裂缝很常见，因为 LLM 生成有概率出幻觉，几份 artifact 一起生成时，接缝处最容易错。
 
-这时不要急着 `/opsx:apply`，而是对这个 change **反复 explore**：在 change 约定的上下文里（proposal + delta spec + design + tasks 这一圈）核对一致性、查矛盾、补漏的 scenario。change 把探索框在了一个有限空间里，所以探得比漫无边际地翻 codebase 准得多。（后面第 2 到第 5 步展示的是已经对齐的初稿；真实场景里这一步往往要反复几轮，第 8 步会集中演示一次。）
+这时不要急着 `/openspec-apply-change`，而是对这个 change **反复 explore**：在 change 约定的上下文里（proposal + delta spec + design + tasks 这一圈）核对一致性、查矛盾、补漏的 scenario。change 把探索框在了一个有限空间里，所以探得比漫无边际地翻 codebase 准得多。（后面第 2 到第 5 步展示的是已经对齐的初稿；真实场景里这一步往往要反复几轮，第 8 步会集中演示一次。）
 
 ---
 
@@ -408,7 +408,7 @@ size is small for the current staff workflow.
 这一步的作用非常实际：
 
 - 让 change 从"说得清楚"变成"做得下去"
-- 让 `/opsx:apply` 有东西可以跟着推进
+- 让 `/openspec-apply-change` 有东西可以跟着推进
 
 如果说：
 
@@ -445,12 +445,12 @@ size is small for the current staff workflow.
 这时才进入：
 
 ```text
-/opsx:apply add-task-csv-export
+/openspec-apply-change add-task-csv-export
 ```
 
 ---
 
-## 第 7 步：`/opsx:apply`，不是机械执行，而是带反馈的实施
+## 第 7 步：`/openspec-apply-change`，不是机械执行，而是带反馈的实施
 
 `apply` 最容易被误解成：
 
@@ -500,7 +500,7 @@ size is small for the current staff workflow.
 
 OpenSpec 更鼓励你当场修正 change。
 
-不过修正前，先对这个 change 再 `/opsx:explore` 一轮：确认"分页 vs 全量"这个矛盾在 delta spec 和 design 里到底是怎么承诺的、还有没有别处也藏着旧的"导出当前页"说法——避免只改了一处、另一处还留着对不上的承诺。
+不过修正前，先对这个 change 再 `/openspec-explore` 一轮：确认"分页 vs 全量"这个矛盾在 delta spec 和 design 里到底是怎么承诺的、还有没有别处也藏着旧的"导出当前页"说法——避免只改了一处、另一处还留着对不上的承诺。
 
 ### 这时需要改哪些 artifact
 
@@ -584,12 +584,12 @@ openspec/changes/add-task-csv-export/
 
 ---
 
-## 第 50 步：`/opsx:archive`，不是"收起来"，而是"正式沉淀"
+## 第 50 步：`/openspec-archive-change`，不是"收起来"，而是"正式沉淀"
 
 现在执行：
 
 ```text
-/opsx:archive add-task-csv-export
+/openspec-archive-change add-task-csv-export
 ```
 
 宿主 archive workflow 在真正移动目录前，应先读取当前项目输入并核对磁盘状态：
@@ -665,7 +665,7 @@ openspec/
 你已经看到了最小主线：
 
 ```text
-/opsx:propose → /opsx:apply → /opsx:archive
+/openspec-propose → /openspec-apply-change → /openspec-archive-change
 ```
 
 ### 对应 `10` 中级篇
@@ -699,7 +699,7 @@ openspec/
 
 如果你是在 Claude Code 中敲命令，那么：
 
-- `.claude/skills/` 和 `.claude/commands/opsx/` 是入口层
+- `.claude/skills/` 是入口层（`.claude/commands/opsx/` 是 1.x 的命令文件，2.0 起已移除）
 - 真正的项目事实仍然沉淀在 `openspec/`
 
 ---

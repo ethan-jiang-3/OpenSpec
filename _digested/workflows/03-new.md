@@ -4,9 +4,9 @@
 
 `src/core/templates/workflows/new-change.ts` → `getNewChangeSkillTemplate()` + `getOpsxNewCommandTemplate()`
 
-> **调用方式**：技能 `openspec-new-change` <change-name 或描述>——Claude Code 等工具里 `/openspec-new` <change-name 或描述>，Codex 用 `$openspec-new-change`。1.x 写作 `/opsx:new`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
+> **调用方式**：技能 `openspec-new-change` <change-name 或描述>——Claude Code 等工具里 `/openspec-new-change` <change-name 或描述>，Codex 用 `$openspec-new-change` <change-name 或描述>。1.x 写作 `/opsx:new`；v2.0.0 起命令文件已移除，`/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-new-change`（skill）/ `OPSX: New`（command）
-> **独立 CLI 命令**：有——`openspec new change "<name>"` 是 CLI 命令，`/opsx:new` 是围绕它的 agent 模板。两者不同：CLI 只创建目录；template 创建后还展示 instructions。
+> **独立 CLI 命令**：有——`openspec new change "<name>"` 是 CLI 命令，`/openspec-new-change` 是围绕它的 agent 模板。两者不同：CLI 只创建目录；template 创建后还展示 instructions。
 > **profile**：custom（需在 `customWorkflows` 中显式启用，不在默认 core 里）
 
 ## 一句话
@@ -43,7 +43,7 @@ sequenceDiagram
     participant TS as CLI（TS 层）
     participant FS as 文件系统
 
-    User->>MD: /opsx:new <name or description>
+    User->>MD: /openspec-new-change <name or description>
     MD->>MD: 若无输入 → AskUserQuestion<br/>从描述导出 kebab-case name
 
     rect rgb(255, 250, 240)
@@ -69,7 +69,7 @@ sequenceDiagram
         MD->>MD: 找到第一个 ready artifact
         MD->>TS: openspec instructions proposal --change X
         TS-->>MD: template + instruction
-        MD-->>User: "Change created. Schema: 实际解析出的 schema.<br/>First artifact: proposal.md<br/>Template: …<br/>Ready to create? Run /opsx:continue."
+        MD-->>User: "Change created. Schema: 实际解析出的 schema.<br/>First artifact: proposal.md<br/>Template: …<br/>Ready to create? Run /openspec-continue-change."
     end
 
     Note over MD,FS: ⚠ STOP —— 不生成任何 artifact
@@ -109,15 +109,15 @@ Do NOT advance beyond showing the first artifact template
 new 创建 scaffold 后，典型的后续路径：
 
 ```text
-/opsx:new add-oauth
+/openspec-new-change add-oauth
   → "Change created. First: proposal.md"
-/opsx:continue
+/openspec-continue-change
   → 创建 proposal.md → STOP
-/opsx:continue
+/openspec-continue-change
   → 创建 specs/ → STOP
-/opsx:continue
+/openspec-continue-change
   → 创建 design.md → STOP
-/opsx:ff
+/openspec-ff-change
   → 批量生成剩余 artifact → apply-ready
 ```
 

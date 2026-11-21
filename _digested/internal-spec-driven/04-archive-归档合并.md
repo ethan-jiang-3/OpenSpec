@@ -5,7 +5,7 @@ archive 是整个 change 生命周期的终点。它做三件事：验证 change
 这里需要先区分两条相关但不同的路径：
 
 - **`openspec archive` CLI**：由 `ArchiveCommand.execute()` 执行，程序化完成验证、delta spec 合并和目录移动。
-- **host 的 archive workflow skill/command 模板**：由 host agent 按 `archive-change.ts` 的指令执行，会先做 delta spec sync 状态评估，再按模板移动目录。Claude 等 command adapter 可显示为 `/opsx:archive`；Codex 使用 `$openspec-archive-change` skill。它不是 `ArchiveCommand.execute()` 的逐字封装。
+- **host 的 archive workflow skill/command 模板**：由 host agent 按 `archive-change.ts` 的指令执行，会先做 delta spec sync 状态评估，再按模板移动目录。Claude Code 等显示为 `/openspec-archive-change`；Codex 使用 `$openspec-archive-change` skill。它不是 `ArchiveCommand.execute()` 的逐字封装。
 
 本篇主体讲 `openspec archive` CLI 的内部机制；第 5 节单独说明 host archive workflow 的 sync 检查与 operation inputs。
 

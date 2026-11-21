@@ -80,7 +80,7 @@ explore 是四条命令中最轻量的——CLI 只做信息输出，agent 只�
 
 ```
 User（人类）
-  │  "我想做实时协作"  /  "/opsx:explore add-auth-system"
+  │  "我想做实时协作"  /  "/openspec-explore add-auth-system"
   ▼
 Host Agent（Claude Code / Cursor / Cline）
   │  openspec list --json                       → 感知项目中有哪些活跃 change
@@ -121,7 +121,7 @@ explore 的提问方式在 v1.12.0 系统化：
 
 `openspec list --json` 返回 `{"changes": []}`（项目中没有活跃 change，`src/core/list.ts:153`）时，explore 不需要任何 OpenSpec 上下文就能工作。agent 直接从用户的问题出发，读代码、画图、讨论方案——这和 classic 模式下的通用代码讨论没有本质区别，但 explore 的 guardrails（第 8 节）仍然适用。
 
-只有在用户明确表示"值得做一个 change"时，agent 才会建议 `/opsx:propose`，从而进入有状态的工作流轨道。
+只有在用户明确表示"值得做一个 change"时，agent 才会建议 `/openspec-propose`，从而进入有状态的工作流轨道。
 
 ## 4. 四种入口场景（有活跃 change 时）
 
@@ -148,7 +148,7 @@ Agent: [读代码] 画出当前 auth 流程的数据/控制流图，
 ### 场景 C：实施卡住
 
 ```
-User: /opsx:explore add-auth-system
+User: /openspec-explore add-auth-system
       The OAuth integration is more complex than expected
 
 Agent: [读 change 的 artifact] 你在 task 4 "Implement OAuth flow"。

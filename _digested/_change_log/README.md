@@ -12,8 +12,8 @@
 | **本区间审计记录** | [`0015`](./0015-v1.17.0-to-v2.1.1.md)（v1.17.0 → v2.1.1，23 提交） |
 | **当前进行中的计划** | [`_plan-14`](./_plan-14-v2.1.1-doc-complete-sync.md) — 三套资料对齐 2.1.1 |
 | **计划的上游** | [`_plan-13`](./_plan-13-v2.1.1-full-sync.md)（源码同步，Phase B–D 已移交 plan-14） |
-| **资料回填进度** | 主要落点已完成（`9e4b0dc5`，66 文件）；plan-14 的 Phase B–G 未完成 |
-| **下一步** | plan-14 Phase B：`_coverage/src-coverage.md`、`system/04-agent-contract-与工具投递.md`、`_coverage/tests-coverage.md`、`internal-spec-driven/00-四条命令的共有机制.md`、`spec_cli/05-config-profile-delivery.md`、`spec_cli/06-opsx-call-chains.md`、`workflows/12-update.md` |
+| **资料回填进度** | plan-14 的 Phase A–F 全部完成，**改动留在工作区未提交**（等人工复核）；Phase G 只剩提交一步 |
+| **下一步** | 人工复核 `git diff --stat`；确认后提交（Phase G5） |
 
 **恢复动作**（按顺序，别跳）：
 

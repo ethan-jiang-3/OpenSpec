@@ -11,7 +11,7 @@
 很多人第一次看，会误以为：
 
 - `.claude/skills/` 里的 skill 文件就是 OpenSpec 本体
-- `.claude/commands/` 里的 slash command 才是核心
+- `.claude/commands/` 里的 slash command 才是核心（那是 1.x 的形态；2.0 起技能在 `.claude/skills/`）
 - `config.yaml` 是能控制一切的总控中心
 
 其实都不对。
@@ -116,7 +116,7 @@ openspec/
 openspec init --tools claude
 ```
 
-之后如果 OpenSpec 的 workflow 模板、profile 或 delivery 选项发生变化，用：
+之后如果 OpenSpec 的 workflow 模板或 profile 发生变化（1.x 还包括 `delivery`，2.x 已退役），用：
 
 ```bash
 openspec update
@@ -134,7 +134,7 @@ openspec update
 - **列出 profile 遗漏的工作流**：init/update 的输出会点名 `new`、`continue`、`ff`、`bulk-archive`、`verify`、`onboard` 可以用 `openspec config profile` 加上——没装的命令不再读起来像"setup 坏了"。
 - **检测损坏的 command 文件**：`openspec update` 以前只比对 skill 文件的 `generatedBy` 版本戳，skill 是新的就报"All up to date"，旁边手改/截断的 command 文件完全没被检查。现在也比对 command 文件内容并自动修复；只影响 skills+commands 都配置的工具。
 - **共享 restart 提示**：init 与 update 共用 `src/core/shared/ide-restart.ts` 的提示，单一来源；message 覆盖"移除 workflow"场景，不再声称生成了新文件。
-- **共享 skill 根**：Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 写同一 `.agents/skills/` 树，由 `resolveSharedSkillWriters()` 仲裁单一写入者；Antigravity 旧 `.agent/` 树在 update 时迁移（Amp 以 `.amp`/`.agents/skills` 检测、GSD 以 `.gsd` 检测，都落在这棵树）。SourceCraft Code Assistant 走 adapter 路线，写 `.codeassistant/commands/opsx-<id>.md`。
+- **共享 skill 根（1.x）**：Codex、Zed、Antigravity、Amp、GSD 与 vendor-neutral `agents` 曾写同一 `.agents/skills/` 树，由 `.openspec-target` marker 仲裁写入权。**v2.0 起不需要仲裁了**：`.agents/skills/` 就是唯一真身，其他工具目录只放指向它的链接（建不了链接退化为拷贝）。
 
 ---
 
@@ -194,7 +194,7 @@ graph TB
 
 ## Claude Code 里一次命令背后发生什么
 
-以 `/opsx:propose` 为例，可以粗略理解成 4 步：
+以 `/openspec-propose` 为例，可以粗略理解成 4 步：
 
 ```mermaid
 sequenceDiagram
@@ -203,7 +203,7 @@ sequenceDiagram
     participant CLI as openspec CLI
     participant Files as openspec/
 
-    User->>Claude: /opsx:propose add-feature
+    User->>Claude: /openspec-propose add-feature
     Claude->>CLI: openspec new change add-feature
     CLI->>Files: 创建 change 目录和 .openspec.yaml
     CLI-->>Claude: change 已创建
@@ -243,7 +243,7 @@ Claude Code 下通常会同时投递 skills 和 commands。
 
 一个容易混淆的地方是：skill/command 里确实有很多说明文字，但它们不是事实源。真正的状态来自 `openspec/`，真正的运行时解释来自 CLI。
 
-因此看到 `.claude/commands/opsx/` 时，应该读成：
+因此看到 `.claude/skills/openspec-*/` 时（1.x 是 `.claude/commands/opsx/`），应该读成：
 
 ```text
 Claude Code 里的 OpenSpec 命令入口

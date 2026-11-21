@@ -1,6 +1,6 @@
 # 02 — propose：Proposal 生成
 
-propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用名由宿主决定：Claude 可显示 `/opsx:propose`，Codex 使用 `$openspec-propose`。
+propose 是四条命令中最核心的一条。它执行完整的“从零到可实施”流程：创建 change、按 DAG 的可用性推进 artifact，直到满足 apply 条件。调用写法由宿主决定：Claude Code 等是 `/openspec-propose`，Codex 是 `$openspec-propose`（1.x 的 `/opsx:propose` 已随命令文件在 v2.0.0 移除）。
 
 ---
 
@@ -358,7 +358,7 @@ openspec/changes/<name>/
 }
 ```
 
-若这次变更确实没有 spec-level 行为变化，可在 change metadata 中显式写 `skip_specs: true`：specs artifact 会是 `skipped`，tasks/apply 可继续；它不能与任何非隐藏 delta spec 文件共存。否则此时 agent 提示用户开始 apply（Claude 例子为 `/opsx:apply`，Codex 为 `$openspec-apply-change`）。
+若这次变更确实没有 spec-level 行为变化，可在 change metadata 中显式写 `skip_specs: true`：specs artifact 会是 `skipped`，tasks/apply 可继续；它不能与任何非隐藏 delta spec 文件共存。否则此时 agent 提示用户开始 apply（Claude Code 例子为 `/openspec-apply-change`，Codex 为 `$openspec-apply-change`）。
 
 ## v1.13.x 流程前提变化
 

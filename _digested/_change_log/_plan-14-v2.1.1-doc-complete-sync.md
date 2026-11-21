@@ -100,11 +100,11 @@
 
 ### Phase A：基线校准（10 分钟，先做）
 
-- [ ] A1 `_digested/README.md:5` 基线 → `v2.1.1` / `0c737dc1`　✅已完成
-- [ ] A2 `_faq_on_digested/README.md` 引用 `_digested` 的 SSOT，**不需要改**；确认无本地版本声明
-- [ ] A3 `_openspec_handbook/README.md:3` 表头「手册版本 v1.14 · 对齐 OpenSpec 1.15.0」**仍是旧值** → `v1.16 · 2.1.1 · 2026-11`
-- [ ] A4 `_openspec_handbook/00-index.md` 版本表 + v1.16 行 ✅已完成；`对齐 OpenSpec` 两处 → 2.1.1 ✅已完成
-- [ ] A5 `_faq_on_digested/12_.../answer.md` 版本表 + 3 行 ✅已完成
+- [x] A1 `_digested/README.md:5` 基线 → `v2.1.1` / `0c737dc1`　✅已完成
+- [x] A2 `_faq_on_digested/README.md` 引用 `_digested` 的 SSOT，**不需要改**；确认无本地版本声明
+- [x] A3 `_openspec_handbook/README.md:3` 表头「手册版本 v1.14 · 对齐 OpenSpec 1.15.0」**仍是旧值** → `v1.16 · 2.1.1 · 2026-11`
+- [x] A4 `_openspec_handbook/00-index.md` 版本表 + v1.16 行 ✅已完成；`对齐 OpenSpec` 两处 → 2.1.1 ✅已完成
+- [x] A5 `_faq_on_digested/12_.../answer.md` 版本表 + 3 行 ✅已完成
 
 **验收**：`grep -rn "1\.17\.0" _digested/README.md _openspec_handbook/00-index.md _openspec_handbook/README.md` 只应出现在历史表行里。
 
@@ -118,13 +118,13 @@
 
 重点场次（未改的 5 个先做）：
 
-- [ ] B1 `_coverage/src-coverage.md`：模块计数、`delivery` 描述、8 个新文件
-- [ ] B2 `system/04-agent-contract-与工具投递.md`：投递面
-- [ ] B3 `_coverage/tests-coverage.md`：**249 文件 / 6510 测试**
-- [ ] B4 `internal-spec-driven/00-四条命令的共有机制.md`：入口形态
-- [ ] B5 `spec_cli/05-config-profile-delivery.md`：标题与全文（delivery 退役）
-- [ ] B6 `spec_cli/06-opsx-call-chains.md`：整篇讲调用链，需按技能名重写
-- [ ] B7 `workflows/12-update.md`：`/openspec-update-change` 语义
+- [x] B1 `_coverage/src-coverage.md`：模块计数、`delivery` 描述、8 个新文件
+- [x] B2 `system/04-agent-contract-与工具投递.md`：投递面
+- [x] B3 `_coverage/tests-coverage.md`：**249 文件 / 6510 测试**
+- [x] B4 `internal-spec-driven/00-四条命令的共有机制.md`：入口形态
+- [x] B5 `spec_cli/05-config-profile-delivery.md`：标题与全文（delivery 退役）
+- [x] B6 `spec_cli/06-opsx-call-chains.md`：整篇讲调用链，需按技能名重写
+- [x] B7 `workflows/12-update.md`：`/openspec-update-change` 语义
 
 **验收**：
 ```bash
@@ -134,17 +134,17 @@ grep -rn "delivery" _digested --include="*.md" | grep -v _change_log | grep -vE 
 
 ### Phase C：`_digested` 需复核 + 低影响扫描
 
-- [ ] C1 25 个需复核文件逐个判定
-- [ ] C2 125 个低影响文件跑一次批量扫描（§六 E1）
-- [ ] C3 记录「确认无需改」的文件数与依据
+- [x] C1 25 个需复核文件逐个判定
+- [x] C2 125 个低影响文件跑一次批量扫描（§六 E1）
+- [x] C3 记录「确认无需改」的文件数与依据
 
 ### Phase D：`_faq_on_digested`
 
-- [ ] D1 `01_openspec-executable/answer.md`（21):Node 现值、安装路径 ✅部分已改
-- [ ] D2 `04_.../answer-agent-md-apply-01/02/03`：apply 入口形态
-- [ ] D3 `11_keep-specs-aligned`：入口表述
-- [ ] D4 `18_.../06-remedies`、`appendix-a-cli-surface`：CLI 面
-- [ ] D5 `_faq_on_digested/README.md` 的「已有问题」索引：16/17 两条描述补 2.x
+- [x] D1 `01_openspec-executable/answer.md`（21):Node 现值、安装路径 ✅部分已改
+- [x] D2 `04_.../answer-agent-md-apply-01/02/03`：apply 入口形态
+- [x] D3 `11_keep-specs-aligned`：入口表述
+- [x] D4 `18_.../06-remedies`、`appendix-a-cli-surface`：CLI 面
+- [x] D5 `_faq_on_digested/README.md` 的「已有问题」索引：16/17 两条描述补 2.x
 
 **验收**：
 ```bash
@@ -154,19 +154,19 @@ grep -rn "/opsx:" _faq_on_digested --include="*.md" | grep -vE "1\.x|v1\.1[0-9]|
 
 ### Phase E：`_openspec_handbook`（受宪章约束）
 
-- [ ] E1 `00-index.md:82/88/92-98/229/305-312`：入口定义、工具表、术语表示例
-- [ ] E2 `01-初级`：5/81-85/96/123/138/156/297/328（含 mermaid 状态图与三个小节标题）
-- [ ] E3 `10-中级`：155/157/222 示例
-- [ ] E4 `11-中级`：76-81 状态图标签、195
-- [ ] E5 `20-高级`：346/390
-- [ ] E6 `24-高级`：store 相关（低影响，复核即可）
-- [ ] E7 `50-实战`：90/152/166/238/244 目录树与表格
-- [ ] E8 `51-实战`：162/167/453/587/668
-- [ ] E9 `52-实战`：已批量换名，需复核 36-52 的表格与 279/285/326 的节标题
-- [ ] E10 `53-实战`：392/827/832/876/923
-- [ ] E11 `55-实战`：58/173-227/298-357/667-705
-- [ ] E12 `90-附录`：79/225/227/229 时序图与工具族
-- [ ] E13 `99-FAQ`：26/28/34/262/300
+- [x] E1 `00-index.md:82/88/92-98/229/305-312`：入口定义、工具表、术语表示例
+- [x] E2 `01-初级`：5/81-85/96/123/138/156/297/328（含 mermaid 状态图与三个小节标题）
+- [x] E3 `10-中级`：155/157/222 示例
+- [x] E4 `11-中级`：76-81 状态图标签、195
+- [x] E5 `20-高级`：346/390
+- [x] E6 `24-高级`：store 相关（低影响，复核即可）
+- [x] E7 `50-实战`：90/152/166/238/244 目录树与表格
+- [x] E8 `51-实战`：162/167/453/587/668
+- [x] E9 `52-实战`：已批量换名，需复核 36-52 的表格与 279/285/326 的节标题
+- [x] E10 `53-实战`：392/827/832/876/923
+- [x] E11 `55-实战`：58/173-227/298-357/667-705
+- [x] E12 `90-附录`：79/225/227/229 时序图与工具族
+- [x] E13 `99-FAQ`：26/28/34/262/300
 
 **验收（含宪章）**：
 ```bash
@@ -180,20 +180,20 @@ for f in _openspec_handbook/*.md; do n=$(grep -o "✅\|❌" "$f" | wc -l); [ "$n
 
 ### Phase F：全局一致性校验
 
-- [ ] F1 **命令已移除**：`grep -rn "/opsx:" 三个目录 | 排除历史行` → 空
-- [ ] F2 **delivery 退役**：同上规则
-- [ ] F3 **Node 版本**：`grep -rn "22\.12"` → 每条必须与「现值 22.20」同现或标为历史
-- [ ] F4 **技能名一致**：12 个名字拼写正确（对照 §二 #1）
-- [ ] F5 **skillsScope 拼写**：`grep -rn "skillsScope"` 必须是 `project`/`global`
-- [ ] F6 **相对链接零断链**：全量脚本
-- [ ] F7 **源码地图行号**：所有 `src/...:N` 锚点不超文件行数（§七 的脚本）
-- [ ] F8 **计数一致**：249 文件 / 6510 测试出现在 `_coverage/*`
+- [x] F1 **命令已移除**：`grep -rn "/opsx:" 三个目录 | 排除历史行` → 空
+- [x] F2 **delivery 退役**：同上规则
+- [x] F3 **Node 版本**：`grep -rn "22\.12"` → 每条必须与「现值 22.20」同现或标为历史
+- [x] F4 **技能名一致**：12 个名字拼写正确（对照 §二 #1）
+- [x] F5 **skillsScope 拼写**：`grep -rn "skillsScope"` 必须是 `project`/`global`
+- [x] F6 **相对链接零断链**：全量脚本
+- [x] F7 **源码地图行号**：所有 `src/...:N` 锚点不超文件行数（§七 的脚本）
+- [x] F8 **计数一致**：249 文件 / 6510 测试出现在 `_coverage/*`
 
 ### Phase G：索引与收尾
 
-- [ ] G1 `_digested/_change_log/README.md` 索引含 0015 与 plan-13/14
-- [ ] G2 `_digested/_coverage/doc-assertions.md` 记本轮增量与口径反转
-- [ ] G3 plan-13 的 Phase B–D 标注「由 plan-14 接续」
+- [x] G1 `_digested/_change_log/README.md` 索引含 0015 与 plan-13/14
+- [x] G2 `_digested/_coverage/doc-assertions.md` 记本轮增量与口径反转
+- [x] G3 plan-13 的 Phase B–D 标注「由 plan-14 接续」
 - [ ] G4 本计划勾选完毕、进度日志收尾
 - [ ] G5 提交（资料回填单独一个 commit）
 
@@ -248,6 +248,15 @@ grep -rhoE '`(src|test|scripts)/[^`]+:[0-9]+`' _digested _faq_on_digested _opens
 - **2026-11-21 计划创建**：全量盘点 234 文件 / 43,456 行；分级 55 重灾 / 25 需复核 / 125 低影响；从源码钉死 14 条口径基准。
 - **此前已完成**（plan-13 阶段）：源码同步 `1fb874fb`、0015 与 plan-13 `4fd3ff0d`、资料主要落点 `9e4b0dc5`（66 文件）。
 - **待办**：Phase A3（handbook README 表头）→ B（6 个未改重灾）→ C/D/E/F/G。
+
+- **Phase B–F 执行（2026-11-21）**：
+  - B1–B7 完成：`src-coverage` 补 v2.x 8 个模块（并修正我一度编错的测试文件名，已核对实际文件）、`system/04` 投递面重写、`tests-coverage` 基线 249/6510、`internal-spec-driven/00` 双重交付改单轨、`spec_cli/05` 新增 §3bis（`skillsScope` + 一份真身）、`spec_cli/06` 全篇改技能名、`workflows/12` 调用头。
+  - 修正一处自造错误：12 个工作流调用头里，斜杠写法必须等于**完整技能名**（`/openspec-apply-change`），我最初误用了命令名（`/openspec-apply`），已全部改回。
+  - Phase C：25 个需复核逐个判定；125 个低影响走全局扫描。
+  - 93 行 `现行` 的 `/opsx:` 示例批量转成技能名，剩余全部为「新旧对照」且带历史标记。
+  - Phase E：handbook 命令引用清零，宪章检查通过（无风险灯、`✅/❌` 均 ≤10）。
+  - Phase F：F1/F2/F3 均为 0；F6 断链 0；F7 56 个源码锚点 0 越界；F8 实测 249 个测试文件、与文档一致。
+- **结论**：DoD 的六条已有五条满足，剩「提交」一步按用户要求暂缓。
 
 ## 十、完成定义（DoD）
 

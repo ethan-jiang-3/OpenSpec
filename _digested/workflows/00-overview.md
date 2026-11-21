@@ -37,22 +37,22 @@ CLI 负责保存和解释状态（确定性的），template 负责告诉 agent 
 
 ## 用户可见的调用方式
 
-每个 workflow 有两种投递形态——skill（agent 自动调）和 slash command（用户手动输入）。部分还有独立的 CLI 命令：
+每个 workflow 现在只有一种投递形态：**skill**（agent 可自动选，也可按名调用）。1.x 时代还并列投递 slash command（`/opsx:*`），**v2.0.0 起命令文件已移除**，下表第二列仅作历史对照。部分 workflow 还有独立的 CLI 命令：
 
-| workflow | command adapter 示例 | skill 名 | 独立 CLI？ | profile |
+| workflow | （1.x）command adapter 示例 | skill 名 | 独立 CLI？ | profile |
 |---|---|---|---|---|
-| explore | `/opsx:explore [想法]` | `openspec-explore` | 无 | **core** |
-| propose | `/opsx:propose <name>` | `openspec-propose` | 无 | **core** |
-| new | `/opsx:new <name>` | `openspec-new-change` | `openspec new change` 存在，但模板围绕其做了更多 | custom |
-| continue | `/opsx:continue [name]` | `openspec-continue-change` | 无 | custom |
-| ff | `/opsx:ff <name>` | `openspec-ff-change` | 无 | custom |
-| apply | `/opsx:apply [name]` | `openspec-apply-change` | 无 | **core** |
-| sync | `/opsx:sync [name]` | `openspec-sync-specs` | 无（也被 archive 内部调用） | **core** |
-| verify | `/opsx:verify [name]` | `openspec-verify-change` | `openspec validate` 类似但不同 | custom |
-| archive | `/opsx:archive [name]` | `openspec-archive-change` | **有**：`openspec archive`（路径不同） | **core** |
-| bulk-archive | `/opsx:bulk-archive` | `openspec-bulk-archive-change` | 无 | custom |
-| onboard | `/opsx:onboard` | `openspec-onboard` | 无 | custom |
-| **update** | `/opsx:update [name]` | `openspec-update-change` | 无 | **core**（新增；现已进入默认集） |
+| explore | （1.x）`/opsx:explore [想法]` | `openspec-explore` | 无 | **core** |
+| propose | （1.x）`/opsx:propose <name>` | `openspec-propose` | 无 | **core** |
+| new | （1.x）`/opsx:new <name>` | `openspec-new-change` | `openspec new change` 存在，但模板围绕其做了更多 | custom |
+| continue | （1.x）`/opsx:continue [name]` | `openspec-continue-change` | 无 | custom |
+| ff | （1.x）`/opsx:ff <name>` | `openspec-ff-change` | 无 | custom |
+| apply | （1.x）`/opsx:apply [name]` | `openspec-apply-change` | 无 | **core** |
+| sync | （1.x）`/opsx:sync [name]` | `openspec-sync-specs` | 无（也被 archive 内部调用） | **core** |
+| verify | （1.x）`/opsx:verify [name]` | `openspec-verify-change` | `openspec validate` 类似但不同 | custom |
+| archive | （1.x）`/opsx:archive [name]` | `openspec-archive-change` | **有**：`openspec archive`（路径不同） | **core** |
+| bulk-archive | （1.x）`/opsx:bulk-archive` | `openspec-bulk-archive-change` | 无 | custom |
+| onboard | （1.x）`/opsx:onboard` | `openspec-onboard` | 无 | custom |
+| **update** | （1.x）`/opsx:update [name]` | `openspec-update-change` | 无 | **core**（新增；现已进入默认集） |
 
 > 表中 `/opsx:*` 一列是 **1.x 的历史形态**（command adapter 时代，例如 Claude Code 的 `/opsx:propose`），v2.0.0 起 command 文件不再生成，该列只用于读旧项目。**当前唯一形态是 skill**：Claude Code 等工具里按 `/openspec-<name>` 调用，Codex 用 `$openspec-<name>`，Zed Agent 用 `/openspec-*` 或 `@openspec-*`；也可以直接用自然语言要求（「帮我 propose 一个 change」），由 agent 自行选择技能。所有工具的 skills 只有一份真身在 `.agents/skills/`，其余目录放指向它的链接（建不了链接退化为拷贝），见 `../mechanisms/02-tool-delivery.md`。
 

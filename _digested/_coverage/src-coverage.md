@@ -25,7 +25,7 @@
 | `src/commands/workset.ts`、`src/commands/workset-input.ts`、`src/commands/workset-prompts.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/commands/doctor.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
 | `src/commands/shared-gather.ts`、`src/commands/shared-output.ts` | `../mechanisms/01-store-模型与仓库协同.md` |
-| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter；v1.12.0 含 Code Assistant adapter `adapters/codeassistant.ts`；v1.14.0 新增 atomcode/codestudio/easycode/gigacode adapter 与 `command-generation/toml.ts`） |
+| `src/core/command-generation/` | `../mechanisms/02-tool-delivery.md`（v1.9.0 含 Command Code adapter；v1.12.0 含 Code Assistant adapter `adapters/codeassistant.ts`；v1.14.0 新增 atomcode/codestudio/easycode/gigacode adapter 与 `command-generation/toml.ts`。**v2.0.0 起不再生成任何 command 文件**，34 个 adapter 保留但只用于识别旧路径，调用方只剩 `migration` / `command-reconcile` / `tool-detection` / `profile-sync-drift` / `released-output-sweep`） |
 | `src/core/shared/skill-generation.ts` | `../mechanisms/02-tool-delivery.md` |
 | `src/core/shared/tool-detection.ts`、`src/core/available-tools.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 起 tool-detection 有 command-drift 检测） |
 | `src/core/init.ts`、`src/core/update.ts` | `../mechanisms/02-tool-delivery.md`（v1.12.0 `.gitkeep` + 共享 restart；v1.13.0 损坏 command 检测） |
@@ -37,7 +37,7 @@
 | `src/core/parsers/`、`src/core/validation/`、`src/core/schemas/` | `../mechanisms/03-spec-model.md`（v1.13.0 delta sections 改 list、`[-*+]` 标记、advisory merge preflight） |
 | `src/core/validation/purpose-placeholder.ts`、`src/core/validation/constants.ts` | `../mechanisms/03-spec-model.md`（v1.11.0 Purpose 占位符检测；与 archive writer 共享 `PURPOSE_PLACEHOLDER_PREFIX/SUFFIX`） |
 | `src/utils/requirement-diff.ts` | `../spec_cli/04-command-deep-dive.md`、`../spec_cli/01-human-facing-cli.md`（v1.11.0 `show --diff` 的统一 diff） |
-| `src/core/shared-skill-target.ts` | `../mechanisms/02-tool-delivery.md`（v1.11.0 `resolveSharedSkillWriters()` 通用共享根仲裁） |
+| `src/core/shared-skill-target.ts` | `../mechanisms/02-tool-delivery.md`（v1.11.0 的 `resolveSharedSkillWriters()` 仲裁**在 v2.0.0 已删除**；现在只读写 `.agents/skills/.openspec-target` 这份「工具清单」，每行一个工具 id） |
 | `src/commands/workflow/status.ts` | `../spec_cli/03-workflow-runtime-api.md`、`../spec_cli/02-machine-facing-cli.md`（v1.11.0 `status --all` envelope 与故障隔离） |
 | `src/core/list.ts`、`src/core/view.ts`、`src/core/converters/json-converter.ts` | `../mechanisms/03-spec-model.md` |
 | `src/core/templates/workflows/` | `../mechanisms/04-workflow-templates.md`（v1.12.0 propose/ff 先读代码、explore 依赖感知；v1.13.0 spec-inventory guidance） |
@@ -107,3 +107,38 @@
 | `src/utils/executable-path.ts` | `findCopiesOnPath` / `samePath`：PATH 上实际生效的副本判定 | `test/core/version-check.test.ts`、`test/commands/install-standalone.test.ts` |
 | `scripts/binary/` + `.github/workflows/binaries.yml` | standalone 单文件的构建、安装、校验、8 目标验证与 release 资产 | `test/commands/install-standalone.test.ts`、`test/core/standalone-tip.test.ts`（CLI 侧） |
 | `src/core/version-check.ts`（standalone 扩展） | `markStandaloneBinary` / `getStandaloneBinaryPath`；`scope: 'standalone'`；升级命令 `openspec install` | `test/core/version-check.test.ts` |
+
+## v2.0.0–v2.1.1 新增模块
+
+v2.0 换的是**接口形态**：命令文件层整体移除，安装层外包给第三方包，并新增全局作用域。
+
+| 新源码 | 职责 | 主要测试 |
+|--------|------|----------|
+| `src/core/skill-installer.ts` | 技能安装层。**运行时依赖包 `skills`**（`installSkills` / `removeSkills` / `getSupportedAgents`），不再自建各工具目录规则；`expectedSkillContents` 生成期望内容；v2.1.1 起从 **npm 包**安装（不 clone） | `test/core/skills-2-0-hardening.test.ts`、`test/core/project-skills-vercel.test.ts`、`test/cli-e2e/upgrade-from-releases.test.ts` |
+| `src/core/global-skills.ts` | 技能作用域 `SkillScope = 'global' \| 'project'`；`supportsGlobalSkills` 经 `installerAgent(toolId).globalSkillsDir` 判定；`isHomeFolder` 防把家目录当项目 | `test/core/global-skills.test.ts` |
+| `src/core/known-projects.ts` | 本机用过 OpenSpec 的项目清单（全局数据目录下的纯文件）。**永不使命令失败**：读不了/写不了都当空处理 | `test/core/known-projects.test.ts` |
+| `src/core/shared/shared-skill-install.ts` | 共享目录 `.agents/skills/` 的安装与比对 | `test/core/skills-2-0-hardening.test.ts` |
+| `src/core/shared/skill-links.ts` | 每技能一条**相对链接**指向共享真身，建不了链接退化为拷贝。`SkillLinkSpot` 五态 `missing` / `link` / `copy` / `released` / `user`；`released` 与 `user` 的区分复用指纹 `isReleasedGeneratedContent` | `test/core/shared/skill-links.test.ts` |
+| `src/core/retired-tools.ts` | 退役工具清理。`RETIRED_TOOLS` 表（`id` / `name` / `folder` / `reason` / `successor`），`init --tools <retired>` 报错并指路（Amazon Q → Kiro） | `test/core/retired-tools.test.ts` |
+| `src/core/project-skills-scope.ts`、`src/core/project-dir.ts` | 项目级作用域与目录判定 | `test/core/global-skills.test.ts`、`test/core/project-skills-scope.test.ts` |
+
+**删除**：`src/core/templates/optional-workflow.ts`（v2.0.0）。
+
+**能力删除但模块保留**：`src/core/command-generation/adapters/` 的 34 个适配器仍在，`shouldGenerateCommandsForTool` 与 `formatCommandDeprecationNotice` 已从 `command-surface.ts` 移除。
+
+## 导出 API 面变化（1.17.0 → 2.1.1）
+
+用 `export function|const|class|interface|type` 逐个比对：**945 → 991**，删 18、增 64。删除的 18 条几乎全指向同一件事——**命令层与共享写入权仲裁**：
+
+| 被删除的导出 | 所属 | 含义 |
+|---|---|---|
+| `shouldGenerateCommandsForTool` | `command-surface.ts` | 不再生成命令文件 |
+| `shouldGenerateSkillsForTool`、`shouldRemoveSkillsForTool` | `command-surface.ts` | 不再由 delivery 决定要不要 skills |
+| `formatCommandDeprecationNotice`、`COMMAND_DEPRECATION_URL` | `command-surface.ts` | 弃用提示已完成使命 |
+| `areCommandFilesUpToDate` | `tool-detection.ts` | 命令文件不再需要「是否最新」判断 |
+| `resolveSharedSkillWriters`、`readSharedSkillTarget`、`writeSharedSkillTarget`、`sharedSkillRootOwnedByOther`、`sharedSkillRootOwner`、`sharedSkillTargetMarkerPath`、`isSharedSkillTargetActive`、`reconcileSharedSkillTargets` | `shared-skill-target.ts` | **共享写入权仲裁整套删除**：只剩一份真身，没有「谁写」的问题 |
+| `optionalWorkflow`、`resolveOptionalWorkflows`、`onlyWithWorkflow`、`assertWorkflowConditionalsResolved` | `templates/optional-workflow.ts` | 整个文件删除；技能正文改为运行时判断「那个技能装了没有」 |
+
+新增的 64 条集中在三个簇：**skills 安装/链接**（`installSharedSkills`、`createSkillLink`、`classifySkillLinkSpot`、`expectedSkillContents`…）、**作用域与全局**（`SkillScope`、`SKILL_SCOPES`、`installGlobalSkills`、`readGlobalSkills`、`supportsGlobalSkills`、`isHomeFolder`…）、**工具清单与退役**（`RETIRED_TOOLS`、`cleanUpRetiredTools`、`readSkillToolList`、`formatSkillToolList`、`SKILL_LINKED_TOOL_IDS`、`KNOWN_PROJECTS_FILE_NAME`…）。
+
+一句话：**「生成什么」的判定被删掉，「装到哪、怎么链、怎么清」成为新的 API 主干。**

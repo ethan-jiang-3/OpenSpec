@@ -24,9 +24,11 @@ custom → 用户配置的 workflows
 
 `getProfileWorkflows()` 只回答“启用哪些 workflow”。它不决定这些 workflow 以什么文件格式交给 agent。
 
-## delivery 决定怎么投递
+## 投递：v2.x 只剩 skills
 
-delivery 来自 global config，类型在 `src/core/global-config.ts`：
+**v2.0.0 起 `delivery` 退役**（#2223），配置里不再有这一项，一律投递 skills。下面是 1.x 的形态，保留用于读旧项目：
+
+delivery 从 global config 读，类型在 `src/core/global-config.ts`：
 
 ```text
 both
@@ -34,27 +36,31 @@ skills
 commands
 ```
 
-repo-local `init/update` 会根据 delivery：
+repo-local `init/update` 曾根据 delivery 分流：
 
 - `skills`：生成 skill 目录。
 - `commands`：生成 command 文件。
 - `both`：两者都生成。
 
+**现在只有一个问题要回答**：这个工具怎么读 skills。读 `.agents/skills/` 的直接用；只读自己目录的，放一条指向真身的链接（`.agents/skills/` 一份真身 + 各工具目录链接，建不了链接退化为拷贝）。
+
 但 delivery 是意图，工具能力才是上限。Codex 没有 command surface：它始终接收 `.agents/skills/openspec-*/SKILL.md`（此前是 `.codex/skills/`），并以 `$openspec-*` skill 调用；旧的托管 Codex prompts 会在有 replacement skill 时由 `update` 清理，`.codex` 旧 skill 树会原地迁移到 `.agents` 并保留用户定制。不要把 `/opsx:*` 当成 Codex 的调用语法。
 
-`.agents/skills/` 由 `agents`（vendor-neutral）、`codex`、`zed`、`antigravity`、`amp`、`gsd` 六方共享（Antigravity 从 `.agent` 迁入；Amp/GSD 自 v1.14.0 加入，靠 `detectionPaths`（`.amp`/`.gsd`）区分，不认裸 `.agents` 根）。共享根的写入权由 `resolveSharedSkillWriters()` 通用仲裁：skills-native 渲染器优先；已有 `.openspec-target` marker 的 owner 优先；新根默认 Codex。选中但未获写入权的工具仍可独立写入自己的 command surface（如 Antigravity 在 Codex 拥有 `.agents/skills/` 写入权时仍可安装 `.agents/workflows/` command 文件）。详见 `mechanisms/02-tool-delivery.md`。另增 Command Code（`--tools command-code`）：skills 在 `.commandcode/skills/`，commands 在 `.commandcode/commands/opsx-<id>.md`。
+**v1.x 的共享根**（历史）：`.agents/skills/` 曾由 `agents`（vendor-neutral）、`codex`、`zed`、`antigravity`、`amp`、`gsd` 六方共享，写入权由 `resolveSharedSkillWriters()` 仲裁（skills-native 渲染器优先；已有 `.openspec-target` marker 的 owner 优先；新根默认 Codex）。Command Code 的 skills 在 `.commandcode/skills/`、commands 在 `.commandcode/commands/opsx-<id>.md`。
+
+**v2.0 起不再有「多方共享、互相仲裁」的问题**：`.agents/skills/` 就是唯一真身，任何工具都不再往那里写第二份内容；写入/比对由 `shared-skill-install.ts` 和 `skill-links.ts` 负责，安装动作交给运行时依赖 `skills` 包。详见 `mechanisms/02-tool-delivery.md`。
 
 custom profile 还有 dependency expansion：只要选择 `archive` 或 `bulk-archive` 而列表中没有 `sync`，resolver 会把 `sync` 插在第一个依赖者前；已有 `sync` 不重复、不重排，返回的 profile 仍是 custom，不降级为 core。
 
 
-## skills 与 commands 的区别
+## skills 与 commands 的区别（command 已退场）
 
-| 类型 | 本质 | 生成入口 | 典型落点 |
-|------|------|----------|----------|
-| skill | agent 自动发现的能力说明书 | `getSkillTemplates()`、`generateSkillContent()` | `.<tool>/skills/openspec-*/SKILL.md` |
-| command | 用户可触发的 slash/prompt 入口 | `getCommandContents()`、`generateCommands()` | 各工具 adapter 定义的位置 |
+| 类型 | 本质 | 生成入口 | 状态 |
+|------|------|----------|------|
+| skill | agent 自动发现的能力说明书 | `getSkillTemplates()`、`generateSkillContent()` | **唯一形态**。真身在 `.agents/skills/openspec-*/SKILL.md` |
+| command | 用户可触发的 slash/prompt 入口 | `getCommandContents()`、`generateCommands()` | **v2.0.0 起不再生成**；`generateCommands` 仍存在，但只服务于清理与漂移检测 |
 
-skill 和 command 内容都来自 workflow template。区别在于外壳和触发方式，不在于底层 workflow 语义。
+skill 和 command 内容都来自 workflow template。区别在于外壳和触发方式，不在于底层 workflow 语义——所以移除 command 不改变任何 workflow 行为，只是少了一层包装。
 
 ## adapter 解决什么
 

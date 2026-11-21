@@ -4,7 +4,7 @@
 
 `src/core/templates/workflows/onboard.ts` → `getOnboardSkillTemplate()` + `getOpsxOnboardCommandTemplate()`
 
-> **调用方式**：技能 `openspec-onboard`——Claude Code 等工具里 `/openspec-onboard`，Codex 用 `$openspec-onboard`。1.x 写作 `/opsx:onboard`；v2.0.0 起命令文件已移除，下文的 `/opsx:` 只用于历史解释。
+> **调用方式**：技能 `openspec-onboard`——Claude Code 等工具里 `/openspec-onboard`，Codex 用 `$openspec-onboard`。1.x 写作 `/opsx:onboard`；v2.0.0 起命令文件已移除，`/opsx:` 只用于历史解释。
 > **agent 看到的名字**：`openspec-onboard`（skill）/ `OPSX: Onboard`（command）
 > **独立 CLI 命令**：无——onboard 是纯教学体验，编排 explore + propose + apply + archive 的完整流程，每个步骤附教学叙述。
 > **profile**：custom（需显式启用，不在默认 core 里）

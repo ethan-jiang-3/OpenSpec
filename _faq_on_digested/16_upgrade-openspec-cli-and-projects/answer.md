@@ -1,3 +1,5 @@
+# 升级与迁移：CLI 与项目（答案）
+
 # 答案：两段式升级——先升全局 CLI，再对每个项目跑 `openspec update`
 
 > **源码基线**：以 [`../../_digested/README.md`](../../_digested/README.md) 声明的「当前源码基线」为准。核心逻辑在 `src/core/version-check.ts`（升级命令选择 + 自升级判定）、`src/cli/index.ts` 的 `update` 命令（版本检查触发点）、`src/core/update.ts`（`UpdateCommand` 的项目内重投递）。
@@ -92,95 +94,63 @@ openspec update                          # 每个项目跑一次（或带 --forc
 
 `openspec update` 是从「当前这个 CLI」的模板生成文件的。**先跑 update、后升 CLI** = 用旧 CLI 生成旧文件，等于白做，升完还得再跑一遍。所以正确姿势是：先升全局 CLI（或让 `openspec update` 的交互提示替你升），**升完再对每个项目跑一次 `openspec update`**。
 
-## v1.9.0 的具体提醒（来自变更日志 0006）
+## 升级的爆炸半径：会波及别的项目吗
 
-`git merge` 拉进 v1.9.0 源码只会改 `git describe` 和 `package.json` 版本，**不会**改变 PATH 上的 CLI。要让 `--tools command-code`、`validate --archived` 真正可用，每台机器的全局 CLI 都要独立升级到 v1.9.0，然后各项目 `openspec update`（见 [`0006-v1.8.0-to-v1.9.0.md`](../../_digested/_change_log/0006-v1.8.0-to-v1.9.0.md) 的「验收基线」）。v1.8.0 引入的 `--tools agents` / Copilot / `retire_capabilities` 仍然需要 ≥1.8.0 的 CLI。
+**结论先说**：`openspec update` **只动你运行它的那个项目**，加上全局配置；如果一个项目从没用过 OpenSpec，它不会被创建、也不会被修改。但**一旦你装了全局技能，就会有跨项目共享面**——这是 2.1 唯一真正的「副作用」。
 
-v1.9.0 的 `openspec update` 还修了遗留 Codex 升级抢 `.agents` 的问题：若该目录已被 `agents` 目标占用，不会改写成 Codex 语法，也不会清掉被跳过工具的 repo-local legacy 文件。
+### 不会被波及的
 
-## v1.13.2–v1.14.0 的具体提醒（来自同步记录 0011）
+| 情形 | 为什么 |
+|---|---|
+| 别的、你没运行过 `update` 的项目 | `update` 不接受「批量升级所有项目」的入口；它只处理当前路径 |
+| 从没用过 OpenSpec 的项目 | 不会被创建 `openspec/`；那是 `init` 的动作，`update` 不做 |
+| 你机器上的项目清单 `projects.json` | 它**只写不读**。`init`/`update` 会记下自己跑过哪里，但生产代码里没有任何地方读这个清单去遍历别的目录（`readKnownProjects` 只在测试里被调用）。所以它不会变成「自动升级所有项目」的开关 |
 
-- **升级目标**：全局 CLI 升到 v1.14.0 后逐项目 `openspec update`，新的工具目标与 workflow 模板（apply 任务源定位、archive sync 阻塞语义、verify 重写）才会投递到项目里。
-- **新增工具目标速览**（`--tools` id / 目录 / 形态）：`dsh` → `.dsh/skills/`（DeepSeek Harness，skills-only：无 adapter、无命令文件，`.dsh/skills/` 是其最高优先级 skill root，`SKILL.md` 进 catalog 后可 `/openspec-*` 直呼）；`codestudio` → `.codestudio`（skills + `.prompt.md` 命令）；`gigacode` → `.gigacode`（`opsx-<id>.md`）；`atomcode` → `.atomcode`（`/opsx-<id>`，按 workflow 是否读输入声明 `args`）；`easycode` → `.easycode`（TOML 命令 `/opsx:<id>`，新共享模块 `command-generation/toml.ts`）；`gsd` 与 `amp` 与 Codex/Zed/Antigravity/`agents` 共享 `.agents` root（detection 分别靠 `.gsd`/`.amp`）；`grok` → `.grok`、`veai` → `.veai`（skills-only）；`warp` → `.warp`（skills，`/openspec-*`，进入 skills-invocable 调用面）。另外 IBM Bob 显示名改为 "IBM Bob"（tool id `bob` 与 `.bob` 路径不变）；Kilo Code 命令目录修正为 `.kilo/command/`，update 的 legacy cleanup 会按已知文件名清走旧位置的文件。
-- **v1.13.2 对升级用户的实际意义**：CRLF 保持——写回文件时 `matchLineEnding(rebuilt, previous)` 保持原行尾，只有新文件才写 LF，Windows/编辑器 CRLF 仓库升级后 update/archive 不再产生全文件行尾 diff；Windows archive 的 EPERM/EXDEV 复制回退（watcher 占住目录时也能归档）；artifact 输出 glob 认 brace expansion 与 extglob（自定义 outputs 配置的生效面变宽）。
-- **升级后可用的新命令面**：`openspec version [--json] [--check]` 自查版本/安装方式/是否有更新；`openspec list --archived` / `--all` 浏览归档 change；`view` 显示 active change 的 workflow status（v1.14.3 起不再有末尾的归档分区）。
-- **`.openspec.yaml` 卫生（v1.14.0 口径，已被 0012 扩展）**：v1.14.0 起未知顶层键在 status/validate/archive 都会告警，`validate --strict` 直接失败——升级前把旧项目 metadata 里的实验性键清掉或改名（已知键：`schema`/`created`/`goal`/`affected_areas`/`initiative`/`skip_specs`/`retire_capabilities`）。
+### 会波及的：全局技能
 
-## v2.0.0–v2.1.1 的具体提醒（来自同步记录 0015）
+如果你选过全局作用域，技能落在**用户级目录**（例如 Claude Code 的 `~/.claude/skills/`，由 `skills` 包定义），不在任何项目里。于是：
 
-- **命令文件没了，skills 顶上**：`/openspec-propose` 这类 command 文件在 2.0 不再生成。每个命令都有同名技能，内容等价：`/openspec-propose` → `openspec-propose`，`/openspec-apply-change` → `openspec-apply-change`，`/openspec-update-change` → `openspec-update-change`，`/openspec-sync-specs` → `openspec-sync-specs`，`/openspec-archive-change` → `openspec-archive-change`。调用方式：Claude Code 等用 `/openspec-propose`，Codex 用 `$openspec-propose`。
-- **也可以不点名**：直接说「帮我 propose 一个 change」，agent 会按技能描述自己选。技能被 agent 自行选中、而项目没初始化时，它会安静放弃 OpenSpec 按普通请求回答；你点名 OpenSpec 时它才会停下来问你怎么做。
-- **skills 只有一份**：真身在 `.agents/skills/`，其他工具用自己的 `skills/` 目录指向它；建不了链接就退化为拷贝（功能一样，只是不去重）。Windows 上 checkout 这些链接需要 `git config --global core.symlinks true` 并开启开发者模式，否则链接会变成普通小文件。
-- **`delivery` 退役**：不要再写 `openspec config set delivery ...`，配置里没有这一项了。
-- **Amazon Q Developer 退役**：它读不了 skills。`--tools amazon-q` 会报错并指路 Kiro。
-- **全局技能**（v2.1.0）：`openspec update` 在终端里会问技能装在哪——「留在这个项目」或「切到全局」。选择记在 `openspec/config.yaml`，团队不会被重复询问；CI 或 agent 里不弹问题，就地刷新。
-- **从 npm 包装技能**（v2.1.1 #2283）：`init` / `update` 不再 clone，离线可用、不依赖 Git、版本与 CLI 一致。
-- **Node 门槛**：npm 包需要 **22.20.0+**。standalone 仍不需要 Node。
+- 这些技能会出现在你**每一个** Claude Code 会话的技能列表中，**包括完全没用过 OpenSpec 的仓库**
+- 之后在**任意项目**里跑 `openspec update`，都会顺带刷新这套全局技能（`update` 检测到机器上有全局技能就刷新，这是设计行为）
 
-## v1.16.0–v1.17.0 的具体提醒（来自同步记录 0014）
+### 为什么实际风险比你担心的小
 
-- **从任意版本一次升级**：`openspec update` 现在能从 **0.12 以来任意版本**跑完，不必逐版本爬。中途版本变过四次默认 workflow 集（`ten` → `four` → `five` → `six`）、也换过工具目录布局（Cline/Qwen 的 commands 在上一级、Codex 的 `.codex`、Antigravity 的 `.agent`），这些都能一次性认出来。
-- **不再需要 `--force`**：删除只针对「没人编辑过的旧 OpenSpec 文件」——判据是内容指纹，不是版本戳（命令文件根本没有版本戳）。编辑过的旧文件**保留并列出**；读不了/删不了的单独报 `unchecked`。`~` 里的共享 prompt 仍需 `--force` 或终端确认。
-- **失败模式倒向“留着”**：工具更新失败、或你拒绝过清扫，整个清扫会跳过；忘记录入新版本指纹（上游发版后没重跑 `capture-released-fingerprints.mjs`）也是安全的——新版本的文件会被当成“改过”保留。
-- **命令文件在 1.17.0 已标记弃用，但那一版仍生成**（**这是历史**；v2.0.0 起已不再生成）：`update` 当版会打印「2.0 移除，现在可以切 skills」的提示和切换命令，`/opsx:*` 在 1.17.0 完全可用。**没有弃用的是 CLI 本身**——`openspec validate` / `archive` / `update` 等子命令一个都没少。
-- **Node 门槛**：npm 包需要 **22.12.0+**（Node 20 已 EOL）。standalone 二进制完全不需要 Node。Homebrew 会自己管 Node 依赖。（**现值**：v2.1.1 起是 **22.20.0+**。）
-- **安装产物改归档**：v1.16.0 起 release 资产是 `.tar.gz`（Windows `.zip`），不是裸二进制；安装入口收敛到 `openspec.dev/cli/install.sh`。
-- **`version --check` 两条修正**：显式 `--check` 不再被遥测开关和 CI 检测挡住（只有 `OPENSPEC_NO_UPDATE_CHECK` 能挡）；standalone 只提示**真能装上**的版本（有 `SHA256SUMS` 的那个），不再出现“npm 说有新版、但资产没挂上”的情况。
-- **校验变严会挡住旧 change**：升级后跑 `validate` 可能冒出以前没有的报错——`#### Scenario:` 缺 WHEN/GIVEN 或 THEN 是 WARNING（`--strict` 才失败），但 delta 里 requirement 落在 `## DEPRECATED Requirements` 这类未识别段下是 **ERROR，`archive` 会拒绝**。这是修 bug，不是回归。
+技能自带一道**项目检查守卫**（`src/core/templates/workflows/project-root.ts` 的 `PROJECT_ROOT_GUARD`）：任何会写文件的动作之前，先跑 `openspec list --json` 读 `root`。
 
-## v1.15.0 的具体提醒（来自同步记录 0013）
+- `root` 是对象 → 项目正常，继续
+- `root: null` → **这里没有 `openspec/`**，技能**停下，不创建、不修改任何文件**
 
-- **安装形态多了一条**：standalone 单文件（macOS/Linux glibc/musl/Windows，x64/arm64）不需要 Node.js；`openspec install [version]` 可切换，旧包管理器副本不会自动删，只给移除命令。`openspec version` 会标 `(standalone)`。
-- **一次性提示**：全局包管理器安装的用户在 `openspec update` 后可能在 stderr 看到一次 standalone 提示（非 TTY/CI 延迟显示；只提示，不自动切换）。
-- **项目内更新先预演**：`openspec update --dry-run` 只报告计划、不落盘；`--json` 只能与 `--dry-run` 同用。计划含 `add/update/delete`、`notes`、`failures`。
-- **verify 的 REMOVED**：基线按精确规范化名称匹配（`Requirement:` 后文本、trim、有空格/tab 时才去掉结尾 `#`、大小写敏感）；同名近似项不再被当成被删除的那条。基线找不回时该条报 not verified 并跳过搜索，不是"删除通过"。
-- **`new change`**：进度行显示实际解析出的 schema（`--schema` → config → root 默认），不再固定 `spec-driven`。
-- **`feedback`**：issue body 对齐 bug 表单，手动提交链接预填 message/version/environment。
-- **`--json` 更快**：`status`/`instructions`/`new change`/`templates`/`validate`/`schema` 在 `--json` 下不加载 `ora`。
+而且区分两种进入方式：
 
-## v1.14.1–v1.14.3 的具体提醒（来自同步记录 0012）
+- **agent 自己选中的技能**（你没提 OpenSpec）→ 它放弃 OpenSpec，按普通请求回答，不打扰你
+- **你点名调用的技能** → 它会停下来问你：在这里 `openspec init`、用 `--store` 指定 store、还是不用 OpenSpec
 
-- **升级目标**：全局 CLI 升到 v1.14.3 后逐项目 `openspec update`。这一轮的 workflow 模板改动（glob 工件的补完协议、输出路径先定后写、`all_done` 改为"归档前先复核"、verify 的工件发现与 REMOVED 基线读取）都只在 update 之后才投递到项目里。
-- **升级后 view 会"变少"**：v1.14.1 移除了 v1.14.0 加的 "Archived Changes" 分区（#2031 撤回），dashboard 只显示 active changes 与 specs。要看归档用 `openspec list --archived` / `--all`——这不是数据丢了。
-- **`--strict` 的失败面变宽**（v1.14.1/v1.14.2）：requirement 正文 >500 字从 INFO 升 WARNING；change 里的 **ADDED** requirement 也受同一限制；delta 里"归档不会带走"的文本（首个 `##` 前正文、首个 requirement 前散文、`## Notes` 之类的额外段）也报 WARNING。已有 CI 跑 `validate --all --strict` 的项目，升级后可能新红——先跑一遍看清单，把该拆的拆、该挪的挪，别急着加 `--no-…` 绕过。
-- **`.openspec.yaml` 卫生（更新）**：未知顶层键仍会告警并让 `--strict` 失败，但**小写 `x-` 开头的键现在合法**（`x-jiraKey`、`x-trackerID`）。升级前不必再为了塞自定义元数据而去改已知键。注意 `X-Tracker`、裸 `x-`、`x- tracker` 仍报未知；`initiative:` 内部仍严格。
-- **symlink 布局现在被支持**：`openspec/`、`changes/`、`specs/` 本身，以及单条 `spec.md`，都可以是指向项目内其他位置的相对 symlink（典型：`openspec/` 指向共享文档仓库）。`archive/` 仍不允许是链接。之前为绕开限制而做的复制/软链 workaround 可以撤掉了。
-- **归档确认的默认值是 Yes**：`Proceed with spec updates? (Y/n)`，回车即继续，拒绝要显式输入 `n`。脚本里依赖"回车等于跳过"的习惯要改——非交互场景请显式 `--yes` 或 `--skip-specs`。
-- **启动更快**：`--version`/`--help` 加载 24 个模块（原 485），Tab 补全加载 48 个（原 344）且不再触发遥测请求。pre-commit 里跑 `validate --all` 的，零宽 TTY（lefthook 之类的 pty）不再让命令挂死。
-- **`.npmrc`/依赖审计**：`fast-glob` 被移除（连带 `braces` 传递依赖），想审计下游包的项目会看到差异。
+所以**不会有一个陌生仓库被偷偷塞进 `openspec/` 目录**。唯一的「痕迹」是技能出现在列表里。
 
-## v1.12.0–v1.13.1 的具体提醒（来自同步记录 0009）
+### 想彻底隔离就选项目作用域
 
-- `openspec validate --report findings`：bulk 场景的精简 findings 报告。其中的 **INFO** 级条目主要来自「归档预演」——`validate <change>` 会带上主 specs 目录复用 archive 的合并器试算一次，失败就报 `Archive would refuse this delta: <原因>`（如 retire 未授权、重建后的主 spec 没有 requirement）。**它不改退出码**。注意这跟"delta 里的 merge-conflict 标记"无关，CLI 没有那种检查。
-- `openspec status` 结尾有 `Next:` 行，直接给出下一步命令。
-- **v1.13.0 是 archive/delta parser 正确性大修**：`*`/`+` 列表标记的 REMOVED/RENAMED 之前被静默忽略、重复 delta section 只应用一份、fence 内空行被重写——如果你有「validate 过了但 archive 后没生效」的历史疑惑，大概率是这些 bug，升级后行为修复。
-- propose/ff 变成 code-grounded 且 context-first；无 OpenSpec root 时 propose 停止并提示 init。
-- explore 会列出 spec inventory；用户明确要求 capture 即视为写入确认。
-- `/openspec-update-change` 先起草、确认后才写入。
-- 新工具 SourceCraft（`--tools codeassistant`）。
-- 安全加固：恶意仓库不能再注入 agent 指令或挂起 CLI。
-- 工具链：`packageManager` 升至 pnpm@10.34.5（corepack 用户首次运行会自动下载）。
+```bash
+openspec init --scope project          # 装进当前项目
+# 或写进 openspec/config.yaml：skillsScope: project
+```
 
-## v1.11.0 的具体提醒（来自同步记录 0008）
+项目作用域的技能只在这个仓库生效，别处看不见，也不会因为别处跑 `update` 而被改。
 
-- `openspec show <change> --diff`：对 MODIFIED requirement 输出彩色 unified diff，`--json --diff` 增补 `diff` 和 `warning` 字段；`--store <id>` 可对 store 做 diff。
-- `openspec status --all`：一个进程扫全部 active change；JSON 含 `{ "changes": [...], "root" }` 稳定排序 envelope；单 change 加载失败贡献 diagnostic 而非中止全扫，部分失败 exit 1。
-- **Antigravity 迁移**：从 `.agent` 迁入共享 `.agents/` 根，通过 `resolveSharedSkillWriters()` 通用仲裁与 Codex/Zed/`agents` 共用共享 root。旧 `.agent/` 树在 update 时迁移。
-- Explore 写入前确认：`openspec explore` 在写入前必须明确命名拟创建的 artifacts 或文件、ask a direct yes/no question、在单独的 user message 中等待确认。回答设计问题不再被误认为写入授权。
-- `schema init --default` 修复：写入 loader 实际读取的 `schema` 键，失败时回滚两个文件。
-- `openspec validate` 新增 `## Purpose` 占位符 warning：archive 遗留的 `TBD - created by archiving change ...` 会被检测到（默认 warning，`--strict` 才 fail）。
-- archive rename 保序：RENAMED requirement 保持在原位置，不再移到 spec 尾部。
-- 本仓库移除了自己的项目级 schema `openspec/schemas/agent-dev-driven/` 与 `requirement-driven/`（**非上游改动**——内置 `schemas/` 从 v1.6.0 到 v1.15.0 始终只有 `spec-driven`；本地提交 `52acd036` 删除）。
-- Fish completion 不再回退到文件路径建议。
-- Explore 图例改纯 ASCII。
+> **注意默认值**：非交互（CI、agent 调用）下不传 `--scope` 时**默认是 global**。想让技能跟仓库走，必须显式指定。
 
-## v1.10.0 的具体提醒（来自完整同步记录 0007）
+## 版本细节（按版本拆到独立文件）
 
-- registry 包已删除 `postinstall`，全局安装不再打印 completion 文案，也不再触发 allow-scripts 警告；git/directory install 仍可能通过 `prepare` 构建。
-- completion 提示改到首次符合条件、且 action 真正到达 root `postAction` 的 CLI 运行收尾阶段，只写 **stderr** 且只显示一次；设置 `process.exitCode` 的失败仍到达 hook，直接 `process.exit(1)` 的失败则跳过且不消费提示。JSON、CI、非 TTY、completion 子命令、已安装/不支持 shell 会 defer/suppress，`OPENSPEC_NO_COMPLETIONS=1` 可显式抑制。
-- `openspec update` 只在本轮实际更新了需要 reload 的 IDE-resident commands/skills 时打印 `Restart your IDE for changes to take effect.`。只更新 CLI-only 工具时不提示，不能再把“每次 update 后都重启”当通则。
-- 新工具 `zed` 写 `.agents/skills/openspec-*/SKILL.md`，与 Codex、vendor-neutral `agents` 共用受控根；Zed Agent 至少需 v1.4.2，且 untrusted worktree 不开放 project-local skills。
-- 其他升级后可见能力还包括 `init --language`、OpenCode `$ARGUMENTS`、no-spec schema 自动 marker、custom archive profile 自动加入 sync，以及更安全的 capability retirement 诊断。它们进一步说明 CLI 升级与逐项目 update 是两个步骤：前者升级命令/核心行为，后者刷新项目里的投递面。
+主线只讲**现在该怎么做**；每个版本的具体提醒单独成篇，因为不同版本的做法不一样，混在一处读不出重点。
+
+| 版本 | 文件 | 关键内容 |
+|---|---|---|
+| v2.0.0 – v2.1.1 | [`releases/v2.0-v2.1.md`](releases/v2.0-v2.1.md) | 命令文件移除、skills 单份共享、delivery 退役、Amazon Q 退役、全局技能 |
+| v1.16.0 – v1.17.0 | [`releases/v1.16-v1.17.md`](releases/v1.16-v1.17.md) | 指纹库与旧文件清扫、`--force` 不再必需、validate 三条收紧 |
+| v1.15.0 | [`releases/v1.15.md`](releases/v1.15.md) | standalone 安装、`update --dry-run` |
+| v1.13.2 – v1.14.3 | [`releases/v1.13-v1.14.md`](releases/v1.13-v1.14.md) | glob 工件路径、symlink 边界、`x-` 扩展键 |
+| v1.12.0 – v1.13.1 | [`releases/v1.12-v1.13.md`](releases/v1.12-v1.13.md) | delta parser 大修、`validate --report`、安全加固 |
+| v1.10.0 – v1.11.0 | [`releases/v1.10-v1.11.md`](releases/v1.10-v1.11.md) | 多语言、`.agents` 共享根、`show --diff` |
+| v1.9.0 | [`releases/v1.9.md`](releases/v1.9.md) | Command Code、`validate --archived` |
 
 ## 相关材料
 

@@ -370,25 +370,25 @@ openspec instructions research --change intro-to-rust-async --json | jq '.'
 
 现在可以用这个 schema 工作了：
 
-> **前提**：`/opsx:continue` 与 `/opsx:ff` 不在默认的 `core` profile 里（`CORE_WORKFLOWS` 只有 `propose` / `explore` / `apply` / `update` / `sync` / `archive`，`src/core/profiles.ts:14`）。要一次只推进一个 artifact，先 `openspec config profile` 选上 expanded 流程并 `openspec update` 重新生成命令，否则敲 `/opsx:continue` 不会有这个命令。
+> **前提**：`/openspec-continue-change` 与 `/openspec-ff-change` 不在默认的 `core` profile 里（`CORE_WORKFLOWS` 只有 `propose` / `explore` / `apply` / `update` / `sync` / `archive`，`src/core/profiles.ts:14`）。要一次只推进一个 artifact，先 `openspec config profile` 选上 expanded 流程并 `openspec update` 重新生成命令，否则敲 `/openspec-continue-change` 不会有这个命令。
 
 ```bash
 # AI 通过 skill 命令触发
-/opsx:propose intro-to-rust-async
+/openspec-propose intro-to-rust-async
 # → 生成 research.md
 
 # 编辑 research.md，补充更多材料...
 
-/opsx:continue
+/openspec-continue-change
 # → 生成 outline.md
 
 # 调整 outline.md...
 
-/opsx:continue
+/openspec-continue-change
 # → 生成 draft.md
 
 # 或者一次性生成所有 artifact
-/opsx:ff
+/openspec-ff-change
 ```
 
 ---

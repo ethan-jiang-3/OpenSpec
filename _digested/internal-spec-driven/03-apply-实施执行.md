@@ -131,7 +131,7 @@ const TASK_LINE_PATTERN = /^\s*(?:[-*+]|\d{1,9}[.)])\s*\[(?:\s*([^\]\s]?)\s*\](?
 ### Step 1：选定 change
 
 优先级：
-1. 用户提供的 change name（如 `/opsx:apply add-dark-mode`）
+1. 用户提供的 change name（如 `/openspec-apply-change add-dark-mode`）
 2. 从对话上下文推断
 3. 如果只有一个活跃 change，自动选中
 4. 如果有多个，运行 `openspec list --json` 并用 AskUserQuestion 让用户选
@@ -154,7 +154,7 @@ openspec instructions apply --change "<name>" --json
 
 | state | agent 行为 |
 |-------|----------|
-| `"blocked"` | 显示阻塞原因；缺 artifact、缺 tracks 文件或 tasks.md 没有 checkbox 时，建议用 `openspec-continue-change` / `/opsx:continue` 补全或修复 planning artifact |
+| `"blocked"` | 显示阻塞原因；缺 artifact、缺 tracks 文件或 tasks.md 没有 checkbox 时，建议用 `openspec-continue-change` 技能（Claude Code 里 `/openspec-continue-change`）补全或修复 planning artifact |
 | `"all_done"` | 报「跟踪任务已完成」，建议归档前先复核或 verify；不直接建议 archive |
 | `"ready"` | 继续到 Step 4 |
 
@@ -193,7 +193,7 @@ v1.14.0 起（`e7a9512d`）这个循环是围绕 `sourcePath`/`line` 设计的�
 
 ### Step 7：完成或暂停
 
-- **全部完成**：展示汇总，建议 `/opsx:archive`
+- **全部完成**：展示汇总，建议 `/openspec-archive-change`
 - **暂停了**：解释为什么停，等待指导
 
 ---

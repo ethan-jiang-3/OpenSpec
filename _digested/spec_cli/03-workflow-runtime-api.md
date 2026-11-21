@@ -117,7 +117,7 @@ JSON 还携带 **`actionContext`**。v1.14.0 起，当 root 是 store 时，`act
 ### 它影响谁
 
 - 人类用户会据此决定下一步该写 proposal、spec、design 还是 tasks。
-- 宿主 workflow 会据此决定下一步该推进哪个 artifact（例如 Claude 的 `/opsx:continue` 或 Codex 的 `$openspec-continue-change`）。
+- 宿主 workflow 会据此决定下一步该推进哪个 artifact（例如技能 `openspec-continue-change`；Claude Code 按 `/openspec-continue-change`，Codex 按 `$openspec-continue-change`）。
 - apply 阶段的入口判断也依赖这个状态背景。
 
 ### 它帮助什么
@@ -300,7 +300,7 @@ JSON 是 `{ ...instructions, root }`（`instructions.ts:765`），`instructions`
 
 ### 它影响谁
 
-- `/opsx:apply` 直接依赖这个命令来决定要不要开始编码。
+- `openspec-apply-change` 技能（1.x 写作 `/opsx:apply`）直接依赖这个命令来决定要不要开始编码。
 - AI 会根据 `contextFiles` 决定要先读哪些文档。
 - 人也能据此理解“为什么 apply 被拦住了”。
 

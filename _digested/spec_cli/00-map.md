@@ -123,7 +123,7 @@ Store 的核心设计规则：**上下文引用用 store，实现在 owning repo
 这一层对应 `init` / `update`：
 
 - 根据全局配置里的 `profile` 决定启用哪些 workflow。
-- 根据 `delivery` 决定是生成 skills、commands，还是两者都生成。
+- 1.x 按 `delivery` 决定生成 skills、commands 还是两者；**v2.0.0 起 delivery 退役**，只生成 skills。
 - 根据不同 AI 工具的 adapter，把同一份工作流内容格式化成不同外壳文件。
 
 也就是说，OpenSpec CLI 不只管理项目内容，还负责把”如何使用这些内容”的工作流安装到外部工具。
