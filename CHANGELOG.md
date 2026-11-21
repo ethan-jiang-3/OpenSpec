@@ -1,5 +1,104 @@
 # @fission-ai/openspec
 
+## 2.1.1
+
+### Patch Changes
+
+- [#2267](https://github.com/Fission-AI/OpenSpec/pull/2267) [`168a5ea`](https://github.com/Fission-AI/OpenSpec/commit/168a5eacc639f9625f6c151613bcb5c46cb2c236) Thanks [@clay-good](https://github.com/clay-good)! - `openspec archive` now writes a blank line after `## Purpose` when it creates a new main spec, so the spec passes Prettier and markdownlint (MD022) without a reformat.
+
+- [#2277](https://github.com/Fission-AI/OpenSpec/pull/2277) [`e6539de`](https://github.com/Fission-AI/OpenSpec/commit/e6539de023915e36848b351ea737ca8e192e8538) Thanks [@clay-good](https://github.com/clay-good)! - Fix `openspec-archive-change` so it finds an existing archive folder before it writes any main spec.
+
+- [#2264](https://github.com/Fission-AI/OpenSpec/pull/2264) [`efdf531`](https://github.com/Fission-AI/OpenSpec/commit/efdf5319b58bcba3ea113528168793d2610ce5a4) Thanks [@clay-good](https://github.com/clay-good)! - `openspec version --check` and `openspec update` no longer tell a Homebrew or Nix install to update with `npm install -g`, and no longer offer to run it. A Homebrew copy is reported as `homebrew` and told to run `brew upgrade openspec`; a Nix copy is reported as `nix` and gets no npm command.
+
+- [#2274](https://github.com/Fission-AI/OpenSpec/pull/2274) [`ad0579d`](https://github.com/Fission-AI/OpenSpec/commit/ad0579d3ff89459154220b68a834aed125d9c1f2) Thanks [@clay-good](https://github.com/clay-good)! - The continue skill again tells you to apply the change once planning is complete.
+
+- [#2273](https://github.com/Fission-AI/OpenSpec/pull/2273) [`e0fdff3`](https://github.com/Fission-AI/OpenSpec/commit/e0fdff34466f1adf93d90cdb0e4382bcf0b6fd3d) Thanks [@clay-good](https://github.com/clay-good)! - `openspec validate --strict` no longer fails on a delta spec that starts with a frontmatter block. Archive still leaves that block in the archived change, and now says so by name.
+
+- [#2283](https://github.com/Fission-AI/OpenSpec/pull/2283) [`4ff226b`](https://github.com/Fission-AI/OpenSpec/commit/4ff226bbd11645b7c6ae48332f8c87ff94212aa1) Thanks [@clay-good](https://github.com/clay-good)! - `openspec init` and `openspec update` install skills from the npm package, so they work offline, need no Git, and always match the installed version.
+
+- [#2266](https://github.com/Fission-AI/OpenSpec/pull/2266) [`a1213fc`](https://github.com/Fission-AI/OpenSpec/commit/a1213fcdc768948034a48d8837c9e0543d124e16) Thanks [@clay-good](https://github.com/clay-good)! - Retiring a capability no longer refuses when a wrapped requirement or scenario line starts with `<` and continues as text (such as `<args> are passed on`). Raw HTML, and a tag alone on its line, are still reported as content outside the requirement.
+
+- [#2269](https://github.com/Fission-AI/OpenSpec/pull/2269) [`a0993e9`](https://github.com/Fission-AI/OpenSpec/commit/a0993e9d56d503148f13b10ea0e8f4eec2f8ce68) Thanks [@clay-good](https://github.com/clay-good)! - `openspec update` now finds and refreshes the skills `npx skills add` put in a project.
+
+- [#2265](https://github.com/Fission-AI/OpenSpec/pull/2265) [`499602e`](https://github.com/Fission-AI/OpenSpec/commit/499602e82cd2e389586a8b781f27deb8737d8537) Thanks [@clay-good](https://github.com/clay-good)! - Warn when a MODIFIED requirement grows past the 500-character length limit relative to its main-spec baseline so `validate <change> --strict` catches overlong edits before archive.
+
+## 2.1.0
+
+### Minor Changes
+
+- [#2241](https://github.com/Fission-AI/OpenSpec/pull/2241) [`ee9038a`](https://github.com/Fission-AI/OpenSpec/commit/ee9038a09e0e8275d6889479f75b692c9305a980) Thanks [@clay-good](https://github.com/clay-good)! - # OpenSpec now supports global skills for coding agents
+  
+  As more teams adopt Vercel’s `skills` installer, it’s becoming a common way to install skills across coding tools. OpenSpec is adopting it too, so we can spend less time maintaining installer code and more time improving the skills themselves.
+  
+  Moving to Vercel’s installer gives OpenSpec native support for **global skill installation**. Your coding agent can use the same OpenSpec skills across projects. Vercel’s installer handles the location for each supported agent, whether it reads `~/.agents/skills/` or uses its own folder.
+  
+  ## What you’ll see when you upgrade
+  
+  With the new CLI, the next time you run `openspec update` from a repo that has its own OpenSpec skills, you’ll see this choice:
+  
+  ```text
+  Where should OpenSpec keep this project’s skills?
+  
+  ❯ Keep in this project   Keep the skills in this repo.
+    Switch to global       Install the skills globally, for every project on this machine.
+  ```
+  
+  Nothing changes until you choose. In CI or from an agent there is no question: update refreshes the skills where they are.
+  
+  ### Keep in this project
+  
+  Press Enter. The skills stay in your repo.
+  
+  1. Commit `openspec/config.yaml`. It records your choice, so your teammates aren’t asked.
+  
+  Choose this if GitHub’s hosted Copilot agent reads the skills from the repo. You can switch later with `openspec init --scope global`.
+  
+  ### Switch to global
+  
+  We recommend this for most teams. The skills are installed globally on your machine, and the copies in the repo are removed.
+  
+  1. Commit the removed files.
+  2. Each teammate pulls, runs `openspec update`, and answers **Yes** when it offers to set up skills on their machine.
+  
+  In a script, run `openspec init --tools <ids>` in place of step 2. Upgrade everyone’s CLI before you switch a repo: earlier versions only know project skills.
+  
+  ## If a script sets up your repos
+  
+  In 2.0, `openspec init --tools claude` in a new repo wrote the skills into that repo. It now installs them globally. To keep them in your project repo, add `--scope project`:
+  
+  ```sh
+  openspec init --scope project --tools claude
+  ```
+  
+  Existing repos don’t change until someone answers the question above.
+  
+  ## Before you update
+  
+  - **Edited a built-in skill?** Update replaces the built-in skill folders. Save your edits first, along with any file you added inside one. `openspec update --dry-run` shows what will change.
+  - **Git.** Installing or refreshing skills needs Git and access to GitHub.
+  - **Node.** An npm install needs Node 22.20.0 or newer. The standalone executable needs nothing.
+  - **Already ran `npx skills add`?** Keep that install and run `openspec update`.
+  
+  The [upgrade guide](https://openspec.dev/docs/upgrade-2-1) has the same steps on one page.
+
+## 2.0.0
+
+### Major Changes
+
+- [#2223](https://github.com/Fission-AI/OpenSpec/pull/2223) [`d97d7e2`](https://github.com/Fission-AI/OpenSpec/commit/d97d7e2dfdf5919b0017da220158ede1be464660) Thanks [@clay-good](https://github.com/clay-good)! - OpenSpec 2.0 installs skills only, in one shared folder. Run `openspec update` in each project to move it over. Old command files and old skill copies you edited are kept. An edit inside a skill OpenSpec installs in `.agents/skills/` is replaced, as in 1.x, so save those first. See [Upgrade to 2.0](https://openspec.dev/docs/upgrade-to-2).
+  
+  - **Skills only.** OpenSpec no longer writes `/opsx:*` command files. Each command has a skill with the same instructions. For example, `/opsx:propose` becomes `openspec-propose`, which you invoke as `/openspec-propose` (`$openspec-propose` in Codex). `openspec update` removes the command files earlier versions generated, and keeps and lists any you edited.
+  - **One shared copy.** Skills are written once, to `.agents/skills/`, instead of a copy per tool. Claude Code, Continue, ForgeCode, Kiro, CodeBuddy, EasyCode, iFlow, CodeArts, Lingma, GigaCode, Veai, Rovo Dev, Code Studio and Hermes Agent get a link to each skill in their own `skills/` folder (a plain copy where a link can't be made). MiniMax Code is the exception: its skills go to `~/.minimax/skills/`. Old per-tool copies are removed, or kept and reported if you edited them.
+  - **`delivery` is retired.** It is still accepted, so older configs and scripts keep working, but it no longer changes anything.
+  - **Amazon Q Developer is retired.** It can't load skills. `openspec update` removes the files OpenSpec wrote in `.amazonq/` (keeping any you edited), and `--tools amazon-q` now points you to Kiro.
+  - **Windows.** To check out committed links, run `git config --global core.symlinks true` (or clone with `git clone -c core.symlinks=true <url>`) and enable Developer Mode so links can be created. Otherwise each link checks out as a small text file, which `openspec update` replaces with a plain copy of the skill.
+
+### Patch Changes
+
+- [#2229](https://github.com/Fission-AI/OpenSpec/pull/2229) [`5cd4f7f`](https://github.com/Fission-AI/OpenSpec/commit/5cd4f7f27050a9cf2ad0edeab87cc250caaa1852) Thanks [@clay-good](https://github.com/clay-good)! - On Windows, `openspec completion install` run from cmd.exe no longer edits your PowerShell profiles. OpenSpec now tells cmd.exe and PowerShell apart, says cmd.exe isn't supported, and stops suggesting the completion tip there.
+
+- [#2228](https://github.com/Fission-AI/OpenSpec/pull/2228) [`a959be7`](https://github.com/Fission-AI/OpenSpec/commit/a959be77cf045ea3156dc5089c9e2f1d6ce9ce70) Thanks [@clay-good](https://github.com/clay-good)! - Read a task that wraps onto several lines in tasks.md as one task. `openspec instructions apply` used to cut a wrapped task off at its first line break; it now returns the full text, including lines continued with a trailing `\`.
+
 ## 1.17.0
 
 ### Minor Changes

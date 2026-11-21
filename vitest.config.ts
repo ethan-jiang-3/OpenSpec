@@ -1,5 +1,13 @@
 import { defineConfig } from 'vitest/config';
 import os from 'node:os';
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Every test runs with a throwaway home, so a test that forgets to isolate it
+// can never write to the developer's real one (~/.minimax/skills,
+// ~/.codex/prompts, the global config). Tests that need their own still set it.
+const testHome = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-test-home-'));
+process.env.OPENSPEC_TEST_HOME = testHome;
 
 function resolveMaxWorkers(): number | undefined {
   // Allow callers (CI/agents) to override without editing config.
@@ -34,6 +42,19 @@ export default defineConfig({
     env: {
       OPENSPEC_TELEMETRY: '0',
       DO_NOT_TRACK: '1',
+      HOME: testHome,
+      USERPROFILE: testHome,
+      XDG_CONFIG_HOME: path.join(testHome, '.config'),
+      XDG_DATA_HOME: path.join(testHome, '.local', 'share'),
+      XDG_STATE_HOME: path.join(testHome, '.local', 'state'),
+      CODEX_HOME: path.join(testHome, '.codex'),
+
+      // A scripted `openspec init` installs for the machine unless told
+      // otherwise. The suite's project tests say so here, once; the tests of
+      // that default clear it.
+      OPENSPEC_SKILLS_SCOPE: 'project',
+      GH_HOST: 'skills.example.invalid',
+      GIT_CONFIG_GLOBAL: path.join(testHome, 'release', 'gitconfig'),
     },
     // Tests rely on per-file process isolation (e.g., `process.cwd()` assumptions).
     pool: 'forks',

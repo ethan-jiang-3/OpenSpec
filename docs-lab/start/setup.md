@@ -16,21 +16,35 @@ cd <your-project>
 openspec init
 ```
 
-Init asks which AI tools you use, writes the workflow files for the ones you pick, and reports what you got:
+Select the tools you use. In a new project the skills are installed globally. Run `openspec init --scope project` to keep them in your project repo instead.
+
+**Breaking change for setup scripts.** In 2.0, `openspec init --tools claude` wrote skill files into a new repo. It now installs them on the machine by default. If your script commits skills for teammates or CI, use `openspec init --scope project --tools claude`.
+
+With the skills on this machine, which is the default:
 
 ```
 OpenSpec Setup Complete
 
 Created: Claude Code
-6 skills and 6 commands in .claude/
+6 skills in ~/.agents/skills/ for every project on this machine
 Config: openspec/config.yaml (schema: spec-driven)
 ```
 
-Restart your IDE for the new commands to take effect.
+With the skills in this project:
+
+```
+OpenSpec Setup Complete
+
+Created: Claude Code
+6 skills in .agents/skills/ (also in .claude/skills/)
+Config: openspec/config.yaml (schema: spec-driven)
+```
+
+If your tool runs in an IDE, restart it so it picks up the new skills.
 
 Re-running init is safe:
 
-- Tools you already set up print `Refreshed` instead of `Created`.
+- With skills in the project, tools you already set up print `Refreshed` instead of `Created`.
 - Running init again with a new tool selected adds that tool.
 - The `--tools` flag skips the picker ([CLI reference](../reference/cli.md)).
 
@@ -52,12 +66,17 @@ Review `config.yaml`, then delete `project.md` when ready.
 
 ## What init installs
 
-Running init creates two things in your project:
+Every project gets an `openspec/` folder at the repo root. Where the skills go depends on the choice you made:
 
-- An `openspec/` folder at the repo root
-- Workflow files (skills and commands) added to your AI tool's folder (`.agents/`, `.claude/`, etc.)
+| | On this machine | In this project |
+|---|---|---|
+| Skills | `~/.agents/skills/` in your home folder | `.agents/skills/` in the project |
+| Links for tools that read their own folder | `~/.claude/skills/`, for example | `.claude/skills/`, for example |
+| What you commit | `openspec/` | `openspec/`, the skills and tool entries |
 
-Commit all of it like the rest of your source. Init changes nothing else in your repo (if it finds leftovers from an older OpenSpec version, it asks before cleaning them up).
+The rest of this section describes a project install. [Install the skills once for every project](#install-the-skills-once-for-every-project) covers the machine-wide one.
+
+Init also removes the command files earlier versions generated, and keeps any you edited. A project set up before 1.0 also has older leftovers: folders like `.claude/commands/openspec/`, and OpenSpec marker blocks in files like `CLAUDE.md` and `AGENTS.md`. An interactive init asks before removing them. With `--force`, with `--tools`, or in a non-interactive run, init removes them without asking, including any edits inside those blocks, so back them up first.
 
 ### The `openspec/` folder
 
@@ -73,9 +92,9 @@ openspec/
 
 [Project config](../customize/project-config.md) covers `config.yaml`.
 
-### The workflow files (skills and commands)
+### The workflow files (skills)
 
-These are the OpenSpec workflows, the actions you'll use as you work. Here they are as installed skills, in the shared `.agents/` folder most tools use:
+These are the OpenSpec workflows, the actions you'll use as you work. Here they are as installed skills, in the shared `.agents/skills/` folder:
 
 ```
 .agents/skills/
@@ -91,63 +110,48 @@ These are the OpenSpec workflows, the actions you'll use as you work. Here they 
 
 This is the default set plus two optional workflows. [Profiles](../customize/profiles.md) lists all twelve.
 
-By default each workflow installs in two forms:
+Each skill is written once, here, no matter how many tools you set up. A tool that doesn't read `.agents/skills/` (Claude Code, Kiro, and others) gets a link to each skill in its own folder, such as `.claude/skills/openspec-propose`. Windows project installs use copies that Git can carry to another checkout. [Supported tools](../reference/supported-tools.md#where-skills-go) shows the layout and which tools get links.
 
-- **Skill** (`openspec-apply-change`): instructions your agent picks up on its own when you ask for the work.
-- **Command** (`/opsx:apply` in Claude Code): a typed entry point for the same workflow, under a shorter name.
+Each workflow is a **skill**: instructions your agent picks up when you ask for the work, or that you invoke by name (`/openspec-apply-change` in Claude Code, `$openspec-apply-change` in Codex). [Supported tools](../reference/supported-tools.md#support-matrix) shows the spelling for each tool.
 
-The two are functionally identical. A workflow's skill and its command carry the same instructions.
-
-Why two: commands came first, and every tool spells them its own way. Skills are the newer standard shared across tools, but not every tool can invoke a skill directly, so commands stay as those tools' entry point.
-
-Some tools install in skill form only. Where the tool runs skills directly, init skips commands and says so (`Commands skipped for: codex (uses skills)`).
-
-Commands are deprecated and go away in OpenSpec 2.0; skills stay. [Profiles](../customize/profiles.md#delivery-skills-commands-or-both) shows how to switch now.
+OpenSpec 1.x also wrote a command file per workflow (`/opsx:apply`). OpenSpec 2.0 installs skills only. [Upgrade to 2.0](../help/upgrade-to-2.md) covers what changes.
 
 #### Change what gets installed
 
-The interactive picker changes the delivery form and the workflow set ([Profiles](../customize/profiles.md)). In your terminal:
+The interactive picker changes the workflow set ([Profiles](../customize/profiles.md)). In your terminal:
 
 ```bash
 openspec config profile
 ```
 
-Here's switching to skills only:
-
-```
-Current profile settings
-  Delivery: both
-
-? What do you want to configure? Delivery only
-? Delivery mode (how workflows are installed): Skills only
-
-Config changes:
-  delivery: both -> skills
-? Apply changes to this project now? (Y/n) y
-```
-
-Answering yes applies it to the current project on the spot. Other projects pick it up on their next `openspec update`. The setting is global, per machine.
+Answering yes to "Apply changes to this project now?" applies it on the spot. Other projects pick it up on their next `openspec update`. The setting is global, per machine.
 
 #### Claude Code doesn't show the workflows
 
-Claude Code loads OpenSpec workflows from one or both of these project paths, based on your delivery setting:
-
-- **Skills**: `.claude/skills/openspec-*/SKILL.md`
-- **Commands**: `.claude/commands/opsx/<id>.md`
-
-If the files are missing, refresh the project. In your terminal:
+Claude Code loads OpenSpec skills from `.claude/skills/openspec-*`, which link to `.agents/skills/openspec-*`. If they are missing, refresh the project. In your terminal:
 
 ```bash
-openspec update
-```
-
-If the command files exist but `/opsx:` shows no OpenSpec commands, update Claude Code and restart it. If commands still don't load, enable skills too. In your terminal:
-
-```bash
-openspec config set delivery both
 openspec update
 ```
 
 Restart Claude Code, then run `/openspec-propose` in its chat. If only some workflows are missing, [change your profile](../customize/profiles.md#expanding-the-set-optional-workflows).
+
+### Install the skills once for every project
+
+New projects use the skills on your machine. To add a tool later, run:
+
+```bash
+openspec init --scope global --tools claude
+```
+
+Run `openspec update` to refresh the skills for your [workflow profile](../customize/profiles.md). If you downgrade the CLI, update installs that version’s instructions.
+
+#### Move an existing project to the global skills
+
+1. Save any edits to built-in skills, and move out any file you added inside a built-in skill folder: update replaces those folders whole. Put team guidance under `rules` or `context` in `openspec/config.yaml`, or give a custom skill its own name.
+2. Run `openspec update` in a terminal. Choose **Switch to global** to install skills on your machine and remove the repo copies. To keep the skills in your project repo, press Enter on **Keep in this project** and commit the updated `openspec/config.yaml`, where OpenSpec saves the choice as `skillsScope: project`. Other checkouts then remember the choice. You can switch later with `openspec init --scope global`.
+3. If you switched to global, commit the removals. After pulling that commit, each teammate runs `openspec update` in a terminal, answers **Yes** to setting up skills on their machine, and selects their tools. In a script or from an agent, they run `openspec init --tools <ids>` instead.
+
+Keep project skills for GitHub’s hosted Copilot agent. It can read committed files, but it can’t read your home folder. CI jobs that only run `openspec validate` don’t need skills. For jobs that install them, see [OPENSPEC_SKILLS_SCOPE](../reference/configuration/environment-variables.md#openspec_skills_scope).
 
 Setup is done. The [Quickstart](quickstart.md) takes your first change from here.

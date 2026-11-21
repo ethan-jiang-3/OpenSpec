@@ -40,16 +40,16 @@ describe('openspec update --dry-run --json over a pipe', () => {
     const env = { HOME: tempRoot, USERPROFILE: tempRoot, XDG_CONFIG_HOME: path.join(tempRoot, 'xdg') };
     const init = await runCLI(['init', '--tools', 'claude'], { cwd: project, env });
     expect(init.exitCode).toBe(0);
-    const skill = path.join(project, '.claude', 'skills', 'openspec-propose', 'SKILL.md');
+    const skill = path.join(project, '.agents', 'skills', 'openspec-propose', 'SKILL.md');
     await fs.writeFile(skill, 'hand-edited\n');
 
     const result = await runCLI(['update', '--dry-run', '--json'], { cwd: project, env });
 
     expect(result.exitCode).toBe(0);
     expect(JSON.parse(result.stdout).changes).toContainEqual({
-      path: '.claude/skills/openspec-propose/SKILL.md',
+      path: '.agents/skills/openspec-propose/SKILL.md',
       action: 'update',
-      tool: 'claude',
+      tool: 'openspec',
     });
     expect(await fs.readFile(skill, 'utf-8')).toBe('hand-edited\n');
   });

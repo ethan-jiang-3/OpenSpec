@@ -27,9 +27,10 @@ describe('Warp integration', () => {
   let tempDir: string;
   let projectPath: string;
 
-  const skillPath = (name: string) => path.join(projectPath, '.warp', 'skills', name, 'SKILL.md');
+  // Warp reads the one shared copy in .agents/skills.
+  const skillPath = (name: string) => path.join(projectPath, '.agents', 'skills', name, 'SKILL.md');
   const installedSkills = async () =>
-    (await fs.readdir(path.join(projectPath, '.warp', 'skills'))).sort();
+    (await fs.readdir(path.join(projectPath, '.agents', 'skills'))).filter((name) => !name.startsWith('.')).sort();
 
   async function writeProjectFile(relativePath: string, content: string) {
     const filePath = path.join(projectPath, relativePath);
@@ -81,9 +82,9 @@ describe('Warp integration', () => {
         expect(parse(frontmatter![1])).toMatchObject({ name: dirName, description: expect.any(String) });
         expect(content).not.toMatch(/\/opsx[:\-]|\$openspec-/);
       }
-      expect(await fs.readFile(skillPath('openspec-propose'), 'utf8')).toContain('/openspec-apply-change');
-      expect(await fs.readdir(path.join(projectPath, '.warp'))).toEqual(['skills']);
-      expect((await fs.readdir(projectPath)).sort()).toEqual(['.warp', 'openspec']);
+      // The shared copy names other skills plainly, for every tool reading it.
+      expect(await fs.readFile(skillPath('openspec-propose'), 'utf8')).toContain('ask me to apply it');
+      expect((await fs.readdir(projectPath)).sort()).toEqual(['.agents', 'openspec']);
       expect(getConfiguredTools(projectPath)).toEqual(['warp']);
       expect(getToolSkillStatus(projectPath, 'warp').configured).toBe(true);
       const output = vi.mocked(console.log).mock.calls.flat().join('\n');
@@ -98,9 +99,8 @@ describe('Warp integration', () => {
 
     expect(await installedSkills()).toEqual(getSkillTemplates().map(({ dirName }) => dirName).sort());
     const onboarding = await fs.readFile(skillPath('openspec-onboard'), 'utf8');
-    expect(onboarding).toContain('/openspec-new-change');
-    expect(onboarding).toContain('/openspec-apply-change');
-    expect(onboarding).not.toMatch(/\/opsx[:\-]|\$openspec-/);
+    expect(onboarding).toContain('Omit workflows you cannot invoke');
+    expect(onboarding).not.toMatch(/\/opsx[:\-]|\$openspec-|\/openspec-/);
   });
 
   it('refreshes and prunes skills for a custom commands-only profile without touching other files', async () => {
@@ -132,14 +132,19 @@ describe('Warp integration', () => {
       expect(await fs.readFile(path.join(projectPath, filePath), 'utf8')).toBe(content);
     }
     expect(await fs.readdir(path.join(projectPath, '.claude'))).toEqual(['settings.json']);
-    expect(await fs.readdir(path.join(projectPath, '.agents', 'skills'))).toEqual(['my-skill']);
+    expect((await fs.readdir(path.join(projectPath, '.agents', 'skills'))).sort()).toEqual([
+      '.openspec-target',
+      'my-skill',
+      'openspec-apply-change',
+    ]);
     expect(getConfiguredTools(projectPath)).toContain('warp');
   });
 
   it('refreshes outdated skills without force and stays current after commands-only reinitialization', async () => {
     await new InitCommand({ tools: 'warp', force: true }).execute(projectPath);
     const original = await fs.readFile(skillPath('openspec-explore'), 'utf8');
-    const outdated = original.replace(/generatedBy: "[^"]+"/, 'generatedBy: "0.0.1"');
+    // The installed text has no version stamp; one from an older release is outdated.
+    const outdated = original.replace(/(\n {2}version: "[^"]+"\n)/, '$1  generatedBy: "0.0.1"\n');
     expect(outdated).not.toBe(original);
     await fs.writeFile(skillPath('openspec-explore'), outdated);
 

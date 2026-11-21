@@ -7,8 +7,6 @@ import {
 } from '../../src/utils/command-references.js';
 import type { CommandInvocation } from '../../src/core/command-generation/invocation.js';
 import { getApplyChangeSkillTemplate } from '../../src/core/templates/workflows/apply-change.js';
-import { resolveOptionalWorkflows } from '../../src/core/templates/optional-workflow.js';
-import { ALL_WORKFLOWS } from '../../src/core/profiles.js';
 
 const FLAT_SLASH: CommandInvocation = { style: 'flat', prefix: '/' };
 const FLAT_AT: CommandInvocation = { style: 'flat', prefix: '@' };
@@ -273,53 +271,23 @@ describe('getTransformerForTool', () => {
     }
   });
 
-  it('selects hyphen commands for every flat-invocation tool when commands are generated', () => {
-    // These tools invoke commands by filename (/opsx-<id>), so skills must
-    // reference the hyphen form their command files actually answer to.
-    for (const toolId of ['bob', 'cursor', 'github-copilot', 'oh-my-pi', 'opencode', 'pi', 'qwen'] as const) {
-      for (const delivery of ['both', 'commands'] as const) {
-        const transformer = getTransformerForTool(toolId, delivery, 'adapter-backed', FLAT_SLASH);
-        expect(transformer?.('/opsx:apply'), `${toolId} ${delivery}`).toBe('/opsx-apply');
+  it('points every tool at skills under every delivery setting (2.0 has no command files)', () => {
+    // Tools that had commands in 1.x, across every invocation style they used.
+    const tools = [
+      ['claude', NAMESPACED_SLASH],
+      ['cursor', FLAT_SLASH],
+      ['devin', FLAT_SLASH],
+      ['qwen', FLAT_SLASH],
+      ['amazon-q', FLAT_AT],
+    ] as const;
+    for (const [toolId, invocation] of tools) {
+      for (const delivery of ['both', 'skills', 'commands'] as const) {
+        const transformer = getTransformerForTool(toolId, delivery, 'adapter-backed', invocation);
+        const text = transformer ? transformer('Run /opsx:apply next') : 'Run /opsx:apply next';
+        expect(text, `${toolId} ${delivery}`).not.toMatch(/[/@]opsx[:-]/);
+        expect(text, `${toolId} ${delivery}`).toContain('openspec-apply-change');
       }
-      // ...but must not fall back to hyphen commands when no commands are generated
-      expect(getTransformerForTool(toolId, 'skills', 'adapter-backed', FLAT_SLASH)).toBe(transformToSkillReferences);
     }
-  });
-
-  it('selects skill references for devin whenever skills are generated', () => {
-    // The Devin Local agent has no workflows, so Devin skill bodies and the
-    // getting-started hint must name `/openspec-*` skills, which both Devin
-    // agents accept. Workflow bodies get the hyphen form from the generator,
-    // like every other flat-invocation tool.
-    expect(getTransformerForTool('devin', 'both', 'adapter-backed', FLAT_SLASH)).toBe(
-      transformToSkillReferences
-    );
-    expect(getTransformerForTool('devin', 'skills', 'adapter-backed', FLAT_SLASH)).toBe(
-      transformToSkillReferences
-    );
-    // Under commands-only delivery no Devin skills exist to point at, so the
-    // hint falls back to the workflow name Devin registers.
-    const commandsOnly = getTransformerForTool('devin', 'commands', 'adapter-backed', FLAT_SLASH);
-    expect(commandsOnly?.('/opsx:propose')).toBe('/opsx-propose');
-  });
-
-  it("selects Amazon Q's @-prefixed prompt form when commands are generated", () => {
-    // Amazon Q loads .amazonq/prompts/opsx-<id>.md into its prompt library,
-    // which is invoked with @ — it registers no slash command at all.
-    for (const delivery of ['both', 'commands'] as const) {
-      const transformer = getTransformerForTool('amazon-q', delivery, 'adapter-backed', FLAT_AT);
-      expect(transformer?.('/opsx:apply'), delivery).toBe('@opsx-apply');
-      expect(transformer?.('Run /opsx:archive next'), delivery).toBe('Run @opsx-archive next');
-    }
-    // Skills-only delivery generates no prompt files, so point at the skill.
-    expect(getTransformerForTool('amazon-q', 'skills', 'adapter-backed', FLAT_AT)).toBe(
-      transformToSkillReferences
-    );
-  });
-
-  it('selects no transformer for namespaced tools when commands are generated', () => {
-    expect(getTransformerForTool('claude', 'both', 'adapter-backed', NAMESPACED_SLASH)).toBeUndefined();
-    expect(getTransformerForTool('claude', 'commands', 'adapter-backed', NAMESPACED_SLASH)).toBeUndefined();
   });
 
   it('selects shared-tree-safe Codex skill references in every delivery mode', () => {
@@ -345,41 +313,10 @@ describe('getTransformerForTool', () => {
 describe('apply skill template generates valid per-target invocations', () => {
   const skill = getApplyChangeSkillTemplate().instructions;
 
-  it('authors invocation references as transformable /opsx:* tokens', () => {
-    expect(skill).toContain('/opsx:apply add-auth');
-    expect(skill).toContain('suggest using `/opsx:continue`');
-    expect(skill).toContain('archive this change with `/opsx:archive`');
-    // No bare, non-transformable skill-name prose remains.
-    expect(skill).not.toContain('suggest using openspec-continue-change');
-  });
-
-  // The blocked-state answer for an installation without `continue` (#1734).
-  // The conditional's fallback has to stand on its own: the agent gets no
-  // workflow to hand off to, so it needs the whole CLI recovery, not a
-  // shortened version of the installed branch.
-  it('gives the full CLI recovery when continue is not installed', () => {
-    const withoutContinue = resolveOptionalWorkflows(
-      skill,
-      new Set(ALL_WORKFLOWS.filter((id) => id !== 'continue'))
-    );
-    const blocked = withoutContinue.slice(
-      withoutContinue.indexOf('If `state: "blocked"`'),
-      withoutContinue.indexOf('If `state: "all_done"`')
-    );
-
-    expect(blocked).not.toContain('/opsx:continue');
-    expect(blocked).toContain('pause implementation');
-    expect(blocked).toContain('If `missingArtifacts` is non-empty');
-    expect(blocked).toContain('openspec status --change "<name>" --json');
-    expect(blocked).toContain('next `ready` artifact (not `skipped` or `blocked`)');
-    expect(blocked).toContain('openspec instructions "<artifact-id>" --change "<name>" --json');
-    expect(blocked).toContain('Keep the selected `--store <id>` on both commands');
-    expect(blocked).toContain(
-      'Otherwise, follow the CLI instruction to create or repair the schema-configured tracking file'
-    );
-    expect(blocked).toContain(
-      'Do not assume another artifact is ready or start implementation while blocked'
-    );
+  it('uses the CLI recovery from the blocked state before implementation resumes', () => {
+    const blocked = skill.slice(skill.indexOf('If `state: "blocked"`'), skill.indexOf('If `state: "all_done"`'));
+    expect(blocked).toContain('recovery step from the CLI’s `instruction` field');
+    expect(blocked).toContain('Keep the selected store');
   });
 
   const cases = [
@@ -388,11 +325,9 @@ describe('apply skill template generates valid per-target invocations', () => {
     { tool: 'kimi', transform: getSkillReferenceTransformer('kimi'), cont: '/skill:openspec-continue-change', arch: '/skill:openspec-archive-change', apply: '/skill:openspec-apply-change' },
   ];
 
-  for (const { tool, transform, cont, arch, apply } of cases) {
-    it(`emits ${tool} skill invocations for continue, apply, and archive`, () => {
+  for (const { tool, transform, apply } of cases) {
+    it(`emits ${tool} skill invocations for the selected change`, () => {
       const out = transform(skill);
-      expect(out).toContain(cont);
-      expect(out).toContain(arch);
       expect(out).toContain(`${apply} add-auth`);
       // No canonical token survives the rewrite.
       expect(out).not.toMatch(/\/opsx:(continue|apply|archive)/);

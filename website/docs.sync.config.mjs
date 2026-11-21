@@ -147,6 +147,16 @@ export const sections = [
       */
     ],
   },
+  // One page per release that needs action, newest first.
+  {
+    label: 'Upgrading',
+    pages: [
+      // Not `upgrade-to-2-1`: the search index names each section of a page
+      // `<url>-<n>`, so that slug collides with the first section of `upgrade-to-2`.
+      { source: 'help/upgrade-to-2-1.md', slug: 'upgrade-2-1' },
+      { source: 'help/upgrade-to-2.md', slug: 'upgrade-to-2' },
+    ],
+  },
   // TODO (held back 2026-08-21): Help and Legacy are not written yet (FAQ has one
   // answer, Troubleshooting and Migration are headings only), so both sections
   // are hidden from the site until we get to them. The markdown stays in

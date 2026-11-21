@@ -46,7 +46,7 @@
   $releases = if ($env:OPENSPEC_RELEASES_URL) { $env:OPENSPEC_RELEASES_URL.TrimEnd('/') } else { 'https://github.com/Fission-AI/OpenSpec/releases' }
   Assert-Source 'OPENSPEC_RELEASES_URL' $releases
   if ($env:OPENSPEC_DOWNLOAD_URL) { Assert-Source 'OPENSPEC_DOWNLOAD_URL' $env:OPENSPEC_DOWNLOAD_URL }
-  $npmHint = 'Or install with npm (Node.js 22.12+): npm install -g @fission-ai/openspec'
+  $npmHint = 'Or install with npm (Node.js 22.20.0+): npm install -g @fission-ai/openspec'
   $dir = if ($env:OPENSPEC_INSTALL_DIR) { $env:OPENSPEC_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA 'Programs\openspec' }
   # Absolute, so the user PATH entry works from any directory.
   $dir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($dir)
@@ -124,7 +124,12 @@
     # A binary that cannot start at all throws instead of setting an exit code.
     try { $installed = & $exe --version } catch { Write-Verbose "openspec --version failed: $_" }
     if ($LASTEXITCODE -ne 0 -or -not $installed) {
-      throw "openspec install: the downloaded $asset does not run on this machine (needs Windows 10 or later)"
+      # Antivirus that distrusts the file deletes it or stops it from starting
+      # (#2243), which is not a Windows version problem and should not read as one.
+      if (-not (Test-Path -LiteralPath $exe)) {
+        throw "openspec install: $asset was removed before it could run, most likely by your antivirus. $npmHint"
+      }
+      throw "openspec install: the downloaded $asset does not run on this machine. It needs Windows 10 or later; on those, your antivirus may be blocking it. $npmHint"
     }
 
     $target = Join-Path $dir $name

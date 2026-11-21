@@ -5,7 +5,6 @@
  * templates file into workflow-focused modules.
  */
 import type { SkillTemplate, CommandTemplate } from '../types.js';
-import { optionalWorkflow } from '../optional-workflow.js';
 import { STORE_SELECTION_GUIDANCE } from './store-selection.js';
 import { PROJECT_ROOT_GUARD } from './project-root.js';
 
@@ -14,19 +13,21 @@ import { PROJECT_ROOT_GUARD } from './project-root.js';
  * how it normally does that. A profile that selects `archive` gets `sync`
  * injected (see getProfileWorkflows), but an install whose workflow set was
  * read back off disk can still be missing it — in which case the merge has to
- * happen inline rather than be handed to a workflow that is not there.
+ * happen inline rather than be handed to a workflow that is not there. The
+ * text is the same for every profile, so it states both paths.
  */
-const SYNC_INLINE_HANDOFF = optionalWorkflow(
-  'sync',
-  'run the `/opsx:sync` workflow inline (agent-driven intelligent merge)',
-  'perform the delta-to-main-spec merge inline yourself (agent-driven intelligent merge)'
-);
+const SYNC_INLINE_HANDOFF =
+  'run the `/opsx:sync` workflow inline if that skill is installed, or otherwise perform the delta-to-main-spec merge inline yourself (an agent-driven intelligent merge either way)';
 
-const SYNC_GUARDRAIL = optionalWorkflow(
-  'sync',
-  'run the `/opsx:sync` workflow inline (agent-driven)',
-  'perform the delta-to-main-spec merge inline (agent-driven)'
-);
+const SYNC_GUARDRAIL =
+  'run the `/opsx:sync` workflow inline if that skill is installed, or otherwise perform the delta-to-main-spec merge inline yourself (agent-driven either way)';
+
+/**
+ * What the sync workflow guarantees, for the agent that has to do the merge
+ * itself because that skill is not installed. Shared with bulk archive.
+ */
+export const SYNC_FALLBACK_SAFEGUARDS =
+  '- When you merge inline because the sync skill is not installed, keep its safeguards. Delete a spec whose last requirement the delta removes only if the change\'s `.openspec.yaml` declares `retire_capabilities: true`, the spec has no other authored sections, and its path resolves inside the real specs root; otherwise stop before writing. After the merge, run `openspec validate --specs` with the same selected-root flags, and treat a failure as a failed sync: stop and leave `changeRoot` where it is';
 
 export function getArchiveChangeSkillTemplate(): SkillTemplate {
   return {
@@ -123,6 +124,10 @@ ${PROJECT_ROOT_GUARD}
 
 4. **Assess delta spec sync state**
 
+   **Check the archive target first:** Record the target name as \`<target-name>\`: use the change name as-is when it already starts with a \`YYYY-MM-DD-\` prefix; otherwise prepend the current date as \`YYYY-MM-DD-<change-name>\`. Never stack a second date (same rule as \`openspec archive\`).
+
+   If \`<planningHome.changesDir>/archive/<target-name>\` already exists, stop before writing any main spec. Report the collision, name any main specs this run already synced, leave \`changeRoot\` where it is, and suggest renaming the existing archive or this change.
+
    Use \`artifactPaths.specs.existingOutputPaths\` from status JSON as the only
    delta-spec source. If the \`specs\` entry is missing or
    \`existingOutputPaths\` is empty, proceed without a sync prompt and do not infer
@@ -149,6 +154,8 @@ ${PROJECT_ROOT_GUARD}
    - "Sync now" or "Sync anyway" — sync, then verify (below). Do not start any sync while a capability is sync-blocked; explain the blocker and repeat the available choices.
    - Anything else — ask again rather than archiving
 
+   Check the archive target again now. If \`<planningHome.changesDir>/archive/<target-name>\` exists, stop before writing any main spec, leave \`changeRoot\` where it is, and suggest renaming the existing archive or this change.
+
    Before a selected sync writes any main spec, run
    \`openspec instructions specs --change "<name>" --json\` once with the same
    selected-root flags. Require a zero exit status and valid artifact-instruction
@@ -158,7 +165,7 @@ ${PROJECT_ROOT_GUARD}
    form of main specs produced by this merge; do not use them as archive guidance,
    change CLI behavior, or copy the rule text into any output file.
 
-   Then ${optionalWorkflow('sync', 'run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge)', 'perform the delta-to-main-spec merge inline yourself (agent-driven intelligent merge)')} for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching \`specs\` instructions again. Do not delegate it to a background task — step 5 would move \`changeRoot\` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
+   Then run the \`openspec-sync-specs\` workflow inline if that skill is installed, or otherwise perform the delta-to-main-spec merge inline yourself (an agent-driven intelligent merge either way) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching \`specs\` instructions again. Do not delegate it to a background task — step 5 would move \`changeRoot\` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
 
    If the sync reports any stop or blocking condition, treat the sync as failed.
    Stop the archive immediately. Do not perform the post-sync content comparison and do not move its \`changeRoot\`.
@@ -186,11 +193,11 @@ ${PROJECT_ROOT_GUARD}
    mkdir -p "<planningHome.changesDir>/archive"
    \`\`\`
 
-   Generate the target name: use the change name as-is when it already starts with a \`YYYY-MM-DD-\` prefix; otherwise prepend the current date as \`YYYY-MM-DD-<change-name>\`. Never stack a second date (same rule as \`openspec archive\`).
+   Use the \`<target-name>\` recorded in step 4, unchanged.
 
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move \`changeRoot\` to the archive directory
+   **Check again immediately before the move:**
+   - If the target now exists: Fail with error, leave \`changeRoot\` where it is, report any main specs step 4 synced, and suggest renaming the existing archive or this change
+   - If not: Move \`changeRoot\` to the archive directory
 
    \`\`\`bash
    mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
@@ -224,7 +231,8 @@ ${PROJECT_ROOT_GUARD}
 - Don't block archive on warnings - just inform and confirm
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, ${optionalWorkflow('sync', 'run the `openspec-sync-specs` workflow inline (agent-driven)', 'perform the delta-to-main-spec merge inline (agent-driven)')}
+- If sync is requested, run the \`openspec-sync-specs\` workflow inline if that skill is installed, or otherwise perform the delta-to-main-spec merge inline yourself (agent-driven either way)
+${SYNC_FALLBACK_SAFEGUARDS}
 - Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving \`changeRoot\`
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting
 - Apply relevant runtime context and report conflicts; operation guidance remains advisory
@@ -335,6 +343,10 @@ ${PROJECT_ROOT_GUARD}
 
 4. **Assess delta spec sync state**
 
+   **Check the archive target first:** Record the target name as \`<target-name>\`: use the change name as-is when it already starts with a \`YYYY-MM-DD-\` prefix; otherwise prepend the current date as \`YYYY-MM-DD-<change-name>\`. Never stack a second date (same rule as \`openspec archive\`).
+
+   If \`<planningHome.changesDir>/archive/<target-name>\` already exists, stop before writing any main spec. Report the collision, name any main specs this run already synced, leave \`changeRoot\` where it is, and suggest renaming the existing archive or this change.
+
    Use \`artifactPaths.specs.existingOutputPaths\` from status JSON as the only
    delta-spec source. If the \`specs\` entry is missing or
    \`existingOutputPaths\` is empty, proceed without a sync prompt and do not infer
@@ -360,6 +372,8 @@ ${PROJECT_ROOT_GUARD}
    - "Archive without syncing" or "Archive now" — proceed to archive
    - "Sync now" or "Sync anyway" — sync, then verify (below). Do not start any sync while a capability is sync-blocked; explain the blocker and repeat the available choices.
    - Anything else — ask again rather than archiving
+
+   Check the archive target again now. If \`<planningHome.changesDir>/archive/<target-name>\` exists, stop before writing any main spec, leave \`changeRoot\` where it is, and suggest renaming the existing archive or this change.
 
    Before a selected sync writes any main spec, run
    \`openspec instructions specs --change "<name>" --json\` once with the same
@@ -398,11 +412,11 @@ ${PROJECT_ROOT_GUARD}
    mkdir -p "<planningHome.changesDir>/archive"
    \`\`\`
 
-   Generate the target name: use the change name as-is when it already starts with a \`YYYY-MM-DD-\` prefix; otherwise prepend the current date as \`YYYY-MM-DD-<change-name>\`. Never stack a second date (same rule as \`openspec archive\`).
+   Use the \`<target-name>\` recorded in step 4, unchanged.
 
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move \`changeRoot\` to the archive directory
+   **Check again immediately before the move:**
+   - If the target now exists: Fail with error, leave \`changeRoot\` where it is, report any main specs step 4 synced, and suggest renaming the existing archive or this change
+   - If not: Move \`changeRoot\` to the archive directory
 
    \`\`\`bash
    mv "<changeRoot>" "<planningHome.changesDir>/archive/<target-name>"
@@ -474,7 +488,7 @@ Target archive directory already exists.
 **Options:**
 1. Rename the existing archive
 2. Delete the existing archive if it's a duplicate
-3. Wait until a different date to archive
+3. Rename this change, then archive it again
 \`\`\`
 
 **Guardrails**
@@ -484,6 +498,7 @@ Target archive directory already exists.
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
 - If sync is requested, ${SYNC_GUARDRAIL}
+${SYNC_FALLBACK_SAFEGUARDS}
 - Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving \`changeRoot\`
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting
 - Apply relevant runtime context and report conflicts; operation guidance remains advisory

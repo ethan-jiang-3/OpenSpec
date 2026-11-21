@@ -40,12 +40,17 @@ export interface GlobalConfig {
   completionTipSeen?: boolean;
   /** Whether the one-time note about the standalone install has been shown. */
   standaloneTipSeen?: boolean;
+  /**
+   * Where `openspec init` puts skills in a project that has none of its own:
+   * once for this machine (`global`) or in the project (`project`).
+   */
+  skillsScope?: 'global' | 'project';
 }
 
 const DEFAULT_CONFIG: GlobalConfig = {
   featureFlags: {},
   profile: 'core',
-  delivery: 'both',
+  delivery: 'skills',
 };
 
 /**
@@ -256,7 +261,23 @@ export function saveGlobalConfig(config: GlobalConfig, options: SaveGlobalConfig
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  fs.writeFileSync(configPath, serializeGlobalConfig(config), 'utf-8');
+  fs.writeFileSync(configPath, serializeGlobalConfig(withoutUnsetRetiredDelivery(config, configPath)), 'utf-8');
+}
+
+/**
+ * `delivery` is retired: a save never adds it. A value the user set stays;
+ * the default is written only if the file already had the key.
+ */
+function withoutUnsetRetiredDelivery(config: GlobalConfig, configPath: string): GlobalConfig {
+  if (config.delivery !== DEFAULT_CONFIG.delivery) return config;
+  try {
+    const raw = JSON.parse(fs.readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
+    if (raw && typeof raw === 'object' && 'delivery' in raw) return config;
+  } catch {
+    // No file yet, or unreadable: nothing the user set.
+  }
+  const { delivery: _delivery, ...rest } = config;
+  return rest as GlobalConfig;
 }
 
 /** The bytes `saveGlobalConfig` writes, for a caller that only plans the write. */

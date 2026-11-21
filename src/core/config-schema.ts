@@ -17,7 +17,8 @@ export const GlobalConfigSchema = z
     delivery: z
       .enum(['both', 'skills', 'commands'])
       .optional()
-      .default('both'),
+      // Read for older configs; OpenSpec 2.0 installs skills only.
+      .default('skills'),
     workflows: z
       .array(z.string())
       .optional(),
@@ -38,6 +39,7 @@ export const GlobalConfigSchema = z
     // Runtime-managed (like telemetry.noticeSeen); not user-settable via CLI set.
     completionTipSeen: z.boolean().optional(),
     standaloneTipSeen: z.boolean().optional(),
+    skillsScope: z.enum(['global', 'project']).optional(),
   })
   .passthrough();
 
@@ -49,7 +51,7 @@ export type GlobalConfigType = z.infer<typeof GlobalConfigSchema>;
 export const DEFAULT_CONFIG: GlobalConfigType = {
   featureFlags: {},
   profile: 'core',
-  delivery: 'both',
+  delivery: 'skills',
 };
 
 const KNOWN_TOP_LEVEL_KEYS = new Set([
@@ -57,6 +59,7 @@ const KNOWN_TOP_LEVEL_KEYS = new Set([
   'workflows',
   'defaultStore',
   'telemetry',
+  'skillsScope',
 ]);
 
 /** Nested keys users may set under `telemetry` via the CLI. */

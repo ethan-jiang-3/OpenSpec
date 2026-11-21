@@ -34,31 +34,29 @@ describe('profile handoff CLI regressions (#1734)', () => {
     return result.stdout;
   }
 
-  it.each(['skills', 'commands', 'both'])('keeps fresh and refreshed core %s free of optional handoffs', async (delivery) => {
+  it.each(['skills', 'commands', 'both'])('keeps fresh and refreshed core %s on the one generated text', async (delivery) => {
     const configDir = path.join(env.XDG_CONFIG_HOME!, 'openspec');
     await fs.mkdir(configDir, { recursive: true });
     const configFile = path.join(configDir, 'config.json');
     await fs.writeFile(configFile, JSON.stringify({ profile: 'core', delivery }));
     await cli(['init', '--tools', 'claude', '--profile', 'core', '--no-animation', '--force']);
 
-    const files = [
-      ...(delivery !== 'commands' ? getSkillTemplates(CORE_WORKFLOWS).map(({ dirName }) =>
-        path.join(project, '.claude', 'skills', dirName, 'SKILL.md')) : []),
-      ...(delivery !== 'skills' ? CORE_WORKFLOWS.map(id =>
-        path.join(project, '.claude', 'commands', 'opsx', `${id}.md`)) : []),
-    ];
+    // OpenSpec 2.0 installs skills only, whatever the delivery setting says.
+    const files = getSkillTemplates(CORE_WORKFLOWS).map(({ dirName }) =>
+      path.join(project, '.claude', 'skills', dirName, 'SKILL.md'));
     async function assertCore(): Promise<void> {
-      if (delivery !== 'commands') {
-        expect((await fs.readdir(path.join(project, '.claude', 'skills'))).sort())
-          .toEqual(getSkillTemplates(CORE_WORKFLOWS).map(entry => entry.dirName).sort());
-      }
-      if (delivery !== 'skills') {
-        expect((await fs.readdir(path.join(project, '.claude', 'commands', 'opsx'))).sort())
-          .toEqual(CORE_WORKFLOWS.map(id => `${id}.md`).sort());
-      }
+      expect((await fs.readdir(path.join(project, '.claude', 'skills'))).sort())
+        .toEqual(getSkillTemplates(CORE_WORKFLOWS).map(entry => entry.dirName).sort());
+      await expect(fs.access(path.join(project, '.claude', 'commands'))).rejects.toThrow();
       for (const file of files) {
         const content = await fs.readFile(file, 'utf-8');
-        expect(content, file).not.toMatch(/\/opsx:(continue|new)\b|openspec-(continue|new)-change/);
+        // One text for every profile: a skill outside the core set is named
+        // only "if installed", never as a bare handoff.
+        expect(content, file).not.toContain('Stale handoff');
+        expect(content, file).not.toMatch(/\/opsx:|\[\[opsx:/);
+        for (const line of content.split('\n')) {
+          if (/openspec-(continue|new)-change/.test(line)) expect(line, file).toContain('installed');
+        }
       }
     }
     await assertCore();
@@ -74,9 +72,7 @@ describe('profile handoff CLI regressions (#1734)', () => {
     // Explicit opt-in still works; switching back removes the optional files.
     await fs.writeFile(configFile, JSON.stringify({ profile: 'custom', delivery, workflows: ALL_WORKFLOWS }));
     await cli(['update']);
-    const continueFile = delivery === 'commands'
-      ? path.join(project, '.claude', 'commands', 'opsx', 'continue.md')
-      : path.join(project, '.claude', 'skills', 'openspec-continue-change', 'SKILL.md');
+    const continueFile = path.join(project, '.claude', 'skills', 'openspec-continue-change', 'SKILL.md');
     expect(await fs.readFile(continueFile, 'utf-8')).toContain('Continue working on a change');
     await fs.writeFile(configFile, JSON.stringify({ profile: 'core', delivery }));
     await cli(['update']);
